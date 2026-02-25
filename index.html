@@ -4,51 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DartStream Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
-            height: 100dvh; width: 100vw; display: flex; flex-direction: column; overflow: hidden; 
+            height: 100dvh; width: 100vw; display: grid;
+            /* Strict rows: Header(40px), Camera(20%), Scores(Remaining), Controls(90px) */
+            grid-template-rows: 40px 20dvh 1fr 90px;
+            overflow: hidden; 
         }
         
         #setup-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-start { background: var(--blue); color: black; padding: 20px 50px; font-size: 22px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; }
 
-        header { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; flex-shrink: 0; }
+        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; }
         
-        /* Video Section */
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 20dvh; background: #000; flex-shrink: 0; border-bottom: 1px solid #1b4965; }
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; background: #000; border-bottom: 1px solid #1b4965; height: 100%; }
         .v-box { position: relative; height: 100%; border-right: 1px solid #1b4965; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
         .flip-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 20; }
 
-        /* Score Section */
-        .score-area { flex: 1; display: flex; flex-direction: column; padding: 8px; gap: 8px; min-height: 0; overflow: hidden; }
+        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 8px; min-height: 0; }
         .player-card { flex: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
         .stats-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--blue); font-weight: bold; margin-bottom: 2px; }
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .score-val { font-size: clamp(30px, 8dvh, 50px); font-weight: 900; line-height: 1; }
+        .score-val { font-size: clamp(35px, 8dvh, 55px); font-weight: 900; line-height: 1; }
         .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 14px; text-align: right; }
 
-        /* Controls Section */
         .controls { 
-            height: 90px; background: #000; display: flex; padding: 10px; gap: 10px; 
-            border-top: 1px solid #1b4965; flex-shrink: 0;
+            height: 100%; background: #000; display: flex; padding: 10px; gap: 10px; 
+            border-top: 1px solid #1b4965; 
             padding-bottom: calc(10px + env(safe-area-inset-bottom));
         }
-        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 30px; text-align: center; border-radius: 10px; outline: none; }
-        .btn-hit { width: 90px; background: var(--blue); border: none; border-radius: 10px; font-weight: bold; font-size: 18px; color: black; cursor: pointer; }
+        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 32px; text-align: center; border-radius: 10px; outline: none; }
+        .btn-hit { width: 90px; background: var(--blue); border: none; border-radius: 10px; font-weight: bold; font-size: 20px; color: black; cursor: pointer; }
         
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="setup-layer" id="overlay">
+<div id="setup-layer">
     <h1 style="color:var(--blue); margin-bottom:15px;">DARTSTREAM</h1>
     <button class="btn-start" onclick="beginSession()">START MATCH</button>
 </div>
@@ -88,57 +89,39 @@
     <button class="btn-hit" onclick="processHit()">HIT</button>
 </div>
 
-<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-
 <script>
     let stream, peer, conn, facing = "user";
     let state = { turn: 0, p: [{ s: 501, d: 0, pts: 0 }, { s: 501, d: 0, pts: 0 }] };
 
-    // 1. Camera First Logic
     async function beginSession() {
-        const btn = document.querySelector('.btn-start');
-        btn.innerText = "OPENING CAMERA...";
-        
         try {
             stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
             document.getElementById('me').srcObject = stream;
             
-            // If camera works, now start PeerJS
-            setupNetworking();
+            peer = new Peer();
+            peer.on('open', (id) => {
+                document.getElementById('display-id').innerText = id;
+                document.getElementById('setup-layer').style.display = 'none';
+                
+                const joinId = new URLSearchParams(window.location.search).get('join');
+                if (joinId) {
+                    conn = peer.connect(joinId);
+                    peer.call(joinId, stream).on('stream', s => document.getElementById('peer').srcObject = s);
+                }
+            });
+
+            peer.on('call', call => {
+                call.answer(stream);
+                call.on('stream', s => document.getElementById('peer').srcObject = s);
+            });
+
+            peer.on('connection', c => {
+                conn = c;
+                conn.on('data', d => { state = d; updateDisplay(); });
+            });
         } catch (e) {
             alert("Camera failed. Use HTTPS.");
-            btn.innerText = "RETRY";
         }
-    }
-
-    function setupNetworking() {
-        if (typeof Peer === 'undefined') {
-            setTimeout(setupNetworking, 500); // Wait for library if not loaded
-            return;
-        }
-
-        peer = new Peer();
-        peer.on('open', (id) => {
-            document.getElementById('display-id').innerText = id;
-            document.getElementById('setup-layer').style.display = 'none';
-            
-            // Check for invite link
-            const joinId = new URLSearchParams(window.location.search).get('join');
-            if (joinId) {
-                conn = peer.connect(joinId);
-                peer.call(joinId, stream).on('stream', s => document.getElementById('peer').srcObject = s);
-            }
-        });
-
-        peer.on('call', call => {
-            call.answer(stream);
-            call.on('stream', s => document.getElementById('peer').srcObject = s);
-        });
-
-        peer.on('connection', c => {
-            conn = c;
-            conn.on('data', d => { state = d; updateDisplay(); });
-        });
     }
 
     async function swapCam() {
@@ -163,12 +146,11 @@
         updateDisplay();
         if (conn) conn.send(state);
         input.value = '';
-        input.focus();
     }
 
     function getFinishes(s) {
         if (s > 170 || [169, 168, 166, 165, 163, 162, 159].includes(s)) return "";
-        if (s === 170) return "T20 T20 BULL";
+        if (s === 170) return "T20-T20-BULL";
         if (s <= 40 && s % 2 === 0) return "D" + (s/2);
         return "FINISH";
     }
