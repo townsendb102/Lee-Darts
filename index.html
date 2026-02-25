@@ -1,38 +1,136 @@
-    const sounds = { '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'), 'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734') };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DartStream Pro</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        :root { --bg: #020408; --panel: #0d1b2a; --blue: #00d4ff; --border: #1b4965; --accent: #ffcc00; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100dvh; margin: 0; background: var(--bg); color: white; font-family: system-ui, sans-serif; overflow: hidden; display: flex; flex-direction: column; }
+
+        #setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        
+        #menu-panel { position: fixed; top: 0; right: -80%; width: 80%; height: 100%; background: #0a1118; border-left: 1px solid var(--blue); z-index: 999; transition: 0.3s; padding: 20px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+        #menu-panel.open { right: 0; }
+        .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 998; }
+        
+        header { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid var(--blue); flex-shrink: 0; background: #050a10; }
+        .cam-grid { height: 25dvh; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; flex-shrink: 0; }
+        .v-box { background: #000; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; position: relative; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        .score-container { height: 38dvh; display: flex; flex-direction: column; gap: 6px; padding: 8px; flex-shrink: 0; }
+        .p-card { flex: 1; background: var(--panel); border-radius: 12px; border: 1px solid #222; display: flex; align-items: center; justify-content: space-around; }
+        .p-card.active { border-color: var(--blue); background: #122c44; box-shadow: 0 0 10px rgba(0,212,255,0.2); }
+        .p-score { font-size: 48px; font-weight: 900; color: white; margin: 0; }
+        .p-stats { font-size: 11px; color: var(--blue); }
+
+        .controls { height: 32dvh; background: #000; border-top: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .input-row { display: grid; grid-template-columns: 1fr 60px 80px; gap: 6px; flex: 1; }
+        input { background: #111; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 24px; text-align: center; width: 100%; }
+        
+        .btn { border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-hit { background: var(--blue); color: black; font-size: 18px; }
+        .btn-undo { background: #222; color: #888; font-size: 20px; border: 1px solid #444; }
+        .btn-primary { background: var(--blue); color: black; padding: 15px 30px; font-size: 18px; margin-top: 20px; }
+        
+        .friend-item { display: flex; justify-content: space-between; align-items: center; background: #1a2a3a; padding: 10px; margin-bottom: 8px; border-radius: 6px; }
+        .friend-name { font-weight: bold; color: var(--blue); }
+        .friend-id { font-size: 10px; color: #888; display: block; }
+        .add-friend-form { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 5px; margin-bottom: 20px; }
+        .add-friend-form input { font-size: 14px; height: 35px; }
+        
+        #hint { height: 18px; color: var(--accent); font-size: 11px; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="setup-screen">
+    <h1 style="color:var(--blue)">DartStream</h1>
+    <p>Grant camera/audio access to start.</p>
+    <button class="btn btn-primary" id="start-btn" onclick="initApp()">START APP</button>
+</div>
+
+<div class="menu-overlay" id="overlay" onclick="toggleMenu()"></div>
+<div id="menu-panel">
+    <h2 style="color:var(--blue); margin-top:0">Manage Friends</h2>
+    <div class="add-friend-form">
+        <input type="text" id="new-friend-name" placeholder="Name">
+        <input type="text" id="new-friend-id" placeholder="ID">
+        <button onclick="addFriend()" style="background:var(--blue); border:none; border-radius:4px; font-weight:bold">+</button>
+    </div>
+    <div id="friends-list"></div>
+    <hr style="border:0; border-top:1px solid #222; margin:20px 0">
+    <button onclick="flipCamera()" class="btn" style="width:100%; background:#222; color:white; padding:10px; border:1px solid var(--blue)">FLIP CAMERA</button>
+</div>
+
+<header>
+    <div onclick="copyMyID()" style="cursor:pointer">ID: <b id="my-id" style="color:var(--blue)">...</b></div>
+    <div style="display:flex; gap:12px; align-items:center">
+        <span id="conn-status" style="font-size:10px; color:#555">● DISCONNECTED</span>
+        <div onclick="toggleMenu()" style="font-size:24px; cursor:pointer; color:var(--blue)">☰</div>
+    </div>
+</header>
+
+<div class="cam-grid">
+    <div class="v-box"><video id="me" autoplay playsinline muted></video></div>
+    <div class="v-box"><video id="peer" autoplay playsinline></video></div>
+</div>
+
+<div class="score-container">
+    <div class="p-card active" id="c0">
+        <div style="text-align:left"><h2 style="margin:0; font-size:12px; color:#888">YOU</h2><span class="p-stats">AVG: <b id="a0">0</b></span></div>
+        <div class="p-score" id="s0">501</div>
+        <div class="p-stats">LEGS: <b id="l0">0</b></div>
+    </div>
+    <div class="p-card" id="c1">
+        <div style="text-align:left"><h2 style="margin:0; font-size:12px; color:#888" id="p2-label">OPPONENT</h2><span class="p-stats">AVG: <b id="a1">0</b></span></div>
+        <div class="p-score" id="s1">501</div>
+        <div class="p-stats">LEGS: <b id="l1">0</b></div>
+    </div>
+</div>
+
+<div class="controls">
+    <div id="hint"></div>
+    <div class="input-row">
+        <input type="number" id="pts" inputmode="numeric" placeholder="SCORE">
+        <button class="btn btn-undo" onclick="undo()">⟲</button>
+        <button class="btn btn-hit" onclick="hit()">HIT</button>
+    </div>
+</div>
+
+<script>
+    const sounds = { 
+        '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'), 
+        'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734') 
+    };
     
     let peer, conn, localStream, currentFacingMode = "user", friends = JSON.parse(localStorage.getItem('dartFriends') || '[]');
     let state = { turn: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
     let history = null;
 
-    // Fixed initialization function
     async function initApp() {
-        const startBtn = document.querySelector('#setup-screen button');
-        startBtn.innerText = "STARTING...";
-        startBtn.disabled = true;
+        const btn = document.getElementById('start-btn');
+        btn.innerText = "INITIALIZING...";
+        btn.disabled = true;
 
         try {
-            // 1. Get Camera Access
-            localStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: currentFacingMode }, 
-                audio: true 
-            });
+            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
             document.getElementById('me').srcObject = localStream;
             
-            // 2. Setup Peer
             peer = new Peer();
-            
             peer.on('open', id => { 
                 document.getElementById('my-id').innerText = id; 
                 renderFriends();
-                // 3. Only hide screen once ID is ready
                 document.getElementById('setup-screen').style.display = 'none';
             });
 
             peer.on('connection', c => { 
                 conn = c; 
                 setupData(); 
-                document.getElementById('conn-status').innerText = "● CONNECTED";
-                document.getElementById('conn-status').style.color = "var(--blue)";
+                updateStatus(true);
             });
 
             peer.on('call', call => { 
@@ -40,107 +138,78 @@
                 call.on('stream', s => document.getElementById('peer').srcObject = s); 
             });
 
-            // 4. Keep screen awake
-            if ('wakeLock' in navigator) {
-                try { await navigator.wakeLock.request('screen'); } catch(e) {}
-            }
-
+            if ('wakeLock' in navigator) await navigator.wakeLock.request('screen');
         } catch (e) { 
-            console.error(e);
-            alert("Camera Error: Please ensure you are on HTTPS and granted permissions."); 
-            startBtn.innerText = "RETRY START";
-            startBtn.disabled = false;
+            alert("Camera Error. Please use HTTPS."); 
+            btn.innerText = "RETRY";
+            btn.disabled = false;
         }
     }
 
     function toggleMenu() {
-        const menu = document.getElementById('menu-panel');
-        const overlay = document.getElementById('overlay');
-        menu.classList.toggle('open');
-        overlay.style.display = menu.classList.contains('open') ? 'block' : 'none';
+        const isOpen = document.getElementById('menu-panel').classList.toggle('open');
+        document.getElementById('overlay').style.display = isOpen ? 'block' : 'none';
     }
 
-    // Fixed Camera Flip to handle track replacement
     async function flipCamera() {
         currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
-        
-        if (localStream) {
-            localStream.getTracks().forEach(t => t.stop());
-        }
-
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: currentFacingMode }, 
-                audio: true 
-            });
-            document.getElementById('me').srcObject = localStream;
-            
-            // If we have an active connection, we'd normally need to re-call or replace tracks
-            // For now, this refreshes your local view.
-            toggleMenu();
-        } catch (e) {
-            alert("Could not switch camera.");
-        }
+        if(localStream) localStream.getTracks().forEach(t => t.stop());
+        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
+        document.getElementById('me').srcObject = localStream;
+        toggleMenu();
     }
 
     function addFriend() {
-        const nameInput = document.getElementById('new-friend-name');
-        const idInput = document.getElementById('new-friend-id');
-        if(nameInput.value && idInput.value) {
-            friends.push({name: nameInput.value, id: idInput.value});
+        const n = document.getElementById('new-friend-name'), i = document.getElementById('new-friend-id');
+        if(n.value && i.value) {
+            friends.push({name: n.value, id: i.value});
             localStorage.setItem('dartFriends', JSON.stringify(friends));
-            nameInput.value = '';
-            idInput.value = '';
+            n.value = ''; i.value = '';
             renderFriends();
         }
     }
 
-    function deleteFriend(index) {
-        friends.splice(index, 1);
-        localStorage.setItem('dartFriends', JSON.stringify(friends));
-        renderFriends();
-    }
-
     function renderFriends() {
-        const container = document.getElementById('friends-list');
-        container.innerHTML = friends.map((f, i) => `
+        document.getElementById('friends-list').innerHTML = friends.map((f, i) => `
             <div class="friend-item">
-                <div onclick="join('${f.id}', '${f.name}')" style="flex:1; cursor:pointer">
+                <div onclick="join('${f.id}', '${f.name}')" style="flex:1">
                     <span class="friend-name">${f.name}</span>
                     <span class="friend-id">${f.id}</span>
                 </div>
-                <button onclick="deleteFriend(${i})" style="background:none; border:none; color:#ff4444; font-size:18px">×</button>
-            </div>
-        `).join('');
+                <button onclick="deleteFriend(${i})" style="color:red; background:none; border:none">×</button>
+            </div>`).join('');
+    }
+
+    function deleteFriend(i) {
+        friends.splice(i, 1);
+        localStorage.setItem('dartFriends', JSON.stringify(friends));
+        renderFriends();
     }
 
     function join(id, name) {
         document.getElementById('p2-label').innerText = name.toUpperCase();
         conn = peer.connect(id);
         setupData();
-        const call = peer.call(id, localStream);
-        call.on('stream', s => document.getElementById('peer').srcObject = s);
+        peer.call(id, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
         toggleMenu();
-        document.getElementById('conn-status').innerText = "● CONNECTED";
-        document.getElementById('conn-status').style.color = "var(--blue)";
+        updateStatus(true);
     }
 
     function setupData() {
-        conn.on('data', d => { 
-            state = d; 
-            render(); 
-            if(d.snd && sounds[d.snd]) sounds[d.snd].play(); 
-        });
-        conn.on('close', () => {
-            document.getElementById('conn-status').innerText = "● DISCONNECTED";
-            document.getElementById('conn-status').style.color = "#555";
-        });
+        conn.on('data', d => { state = d; render(); if(d.snd) sounds[d.snd].play(); });
+        conn.on('close', () => updateStatus(false));
+    }
+
+    function updateStatus(connected) {
+        const s = document.getElementById('conn-status');
+        s.innerText = connected ? "● CONNECTED" : "● DISCONNECTED";
+        s.style.color = connected ? "var(--blue)" : "#555";
     }
 
     function copyMyID() {
         const id = document.getElementById('my-id').innerText;
         navigator.clipboard.writeText(id);
-        document.getElementById('hint').innerText = "ID COPIED: " + id;
+        document.getElementById('hint').innerText = "COPIED: " + id;
         setTimeout(() => document.getElementById('hint').innerText = "", 2000);
     }
 
@@ -175,3 +244,6 @@
             document.getElementById(`c${i}`).className = i === state.turn ? 'p-card active' : 'p-card';
         });
     }
+</script>
+</body>
+</html>
