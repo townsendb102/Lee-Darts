@@ -11,45 +11,38 @@
         
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
-            height: 100dvh; width: 100vw; position: relative; overflow: hidden;
+            height: 100dvh; width: 100vw; display: grid;
+            /* HEADER (40px) | CAM (180px) | SCORES (Flexible) | CONTROLS (90px) */
+            grid-template-rows: 40px 180px 1fr 90px;
+            overflow: hidden; 
         }
         
-        /* High-Priority Start Overlay */
         #safety-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-start { background: var(--blue); color: black; padding: 20px 50px; font-size: 22px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; }
 
-        header { height: 35px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 10px; }
+        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; }
         
-        /* Video - Locked to 100px */
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 100px; background: #000; border-bottom: 1px solid #1b4965; }
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; background: #000; border-bottom: 1px solid #1b4965; height: 100%; }
         .v-box { position: relative; height: 100%; border-right: 1px solid #1b4965; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        .flip-btn { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 8px; padding: 2px 5px; border-radius: 4px; z-index: 20; }
+        .flip-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 20; }
 
-        /* Score Area - Positioned between Camera and Controls */
-        #score-area { 
-            position: absolute; top: 135px; bottom: 85px; left: 0; right: 0;
-            display: flex; flex-direction: column; padding: 8px; gap: 8px; 
-        }
-        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 8px 12px; border: 2px solid transparent; }
+        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 8px; min-height: 0; }
+        .player-card { flex: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
-        .stats-row { display: flex; justify-content: space-between; font-size: 9px; color: var(--blue); font-weight: bold; margin-bottom: 2px; }
-        .score-row { display: flex; justify-content: space-between; align-items: center; }
-        .score-val { font-size: 40px; font-weight: 900; line-height: 1; }
-        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 13px; text-align: right; }
+        .stats-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--blue); font-weight: bold; margin-bottom: 2px; }
+        .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .score-val { font-size: clamp(35px, 8dvh, 55px); font-weight: 900; line-height: 1; }
+        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 14px; text-align: right; }
 
-        /* Controls - Glued to the absolute bottom of the screen */
-        #footer-controls { 
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 80px; background: #000; display: flex; padding: 10px; gap: 10px; 
-            border-top: 2px solid var(--blue);
-            padding-bottom: env(safe-area-inset-bottom);
+        .controls { 
+            height: 100%; background: #000; display: flex; padding: 10px; gap: 10px; 
+            border-top: 1px solid #1b4965; 
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
         }
-        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 28px; text-align: center; border-radius: 8px; outline: none; }
-        .btn-hit { width: 80px; background: var(--blue); border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: black; cursor: pointer; }
-        
-        .hidden { display: none !important; }
+        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 32px; text-align: center; border-radius: 10px; outline: none; }
+        .btn-hit { width: 90px; background: var(--blue); border: none; border-radius: 10px; font-weight: bold; font-size: 20px; color: black; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -61,18 +54,18 @@
 
 <header>
     <div onclick="copyId()">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
-    <button onclick="shareLink()" style="background:var(--blue); color:black; border:none; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:9px;">INVITE</button>
+    <button onclick="shareLink()" style="background:var(--blue); color:black; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:10px;">INVITE</button>
 </header>
 
 <div class="v-grid">
     <div class="v-box">
         <video id="me" autoplay playsinline muted></video>
-        <div class="flip-btn" onclick="toggleCam()">FLIP</div>
+        <div class="flip-btn" onclick="swapCam()">FLIP</div>
     </div>
     <div class="v-box"><video id="peer" autoplay playsinline></video></div>
 </div>
 
-<div id="score-area">
+<div class="score-area">
     <div id="card-0" class="player-card active">
         <div class="stats-row"><span>AVG: <span id="avg-0">0.0</span></span> <span>DARTS: <span id="d-0">0</span></span></div>
         <div class="score-row">
@@ -89,59 +82,24 @@
     </div>
 </div>
 
-<div id="footer-controls">
+<div class="controls">
     <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
-    <button class="btn-hit" onclick="hitScore()">HIT</button>
+    <button class="btn-hit" onclick="processHit()">HIT</button>
 </div>
 
 <script>
-    let localStream, peer, conn, facing = "user";
+    let stream, peer, conn, facing = "user";
     let state = { turn: 0, p: [{ s: 501, d: 0, pts: 0 }, { s: 501, d: 0, pts: 0 }] };
 
-    async function beginMatch() {
-        const startBtn = document.querySelector('.btn-start');
-        startBtn.innerText = "INITIALIZING...";
-        
-        try {
-            // First: Trigger camera to satisfy mobile browser security
-            localStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: facing }, 
-                audio: true 
-            });
-            document.getElementById('me').srcObject = localStream;
+    function beginMatch() {
+        // Trigger camera immediately on click
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true })
+        .then(s => {
+            stream = s;
+            document.getElementById('me').srcObject = stream;
             
-            // Second: Start Peer networking
+            // Networking starts ONLY after camera success
             peer = new Peer();
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
-                document.getElementById('safety-layer').classList.add('hidden');
-                
-                // Handle incoming invites
-                const joinId = new URLSearchParams(window.location.search).get('join');
-                if (joinId) {
-                    conn = peer.connect(joinId);
-                    peer.call(joinId, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
-                }
-            });
-
-            peer.on('call', call => {
-                call.answer(localStream);
-                call.on('stream', s => document.getElementById('peer').srcObject = s);
-            });
-
-            peer.on('connection', c => {
-                conn = c;
-                conn.on('data', d => { state = d; renderUI(); });
-            });
-        } catch (e) {
-            alert("Camera access denied. Please ensure you are on HTTPS and allow the camera.");
-            startBtn.innerText = "RETRY";
-        }
-    }
-
-    async function toggleCam() {
-        facing = (facing === "user") ? "environment" : "user";
-        if (localStream) localStream.getTracks().forEach(t => t.stop());
-        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } });
-        document.getElementById('me').srcObject = localStream;
-    }
+                document.getElementById('
