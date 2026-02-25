@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream: Pro Match</title>
+    <title>DartStream: Fixed</title>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -15,65 +15,48 @@
             overflow: hidden; 
         }
         
-        /* Setup Layer */
+        /* Layer 1: Setup (The first thing you see) */
         #setup-layer { 
-            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
+            position: fixed; inset: 0; background: var(--dark); z-index: 1000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
         }
 
-        /* Winner Screen Overlay */
+        /* Layer 2: Winner Screen (Only interacts when visible) */
         #winner-screen {
-            position: fixed; inset: 0; background: rgba(2, 4, 8, 0.95); z-index: 20000;
+            position: fixed; inset: 0; background: rgba(2, 4, 8, 0.98); z-index: 2000;
             display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            pointer-events: none; /* Clicks pass through when hidden */
+            opacity: 0;
+            transition: opacity 0.3s;
         }
-        #winner-screen.visible { display: flex; }
-        .winner-name { color: var(--blue); font-size: 3rem; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; }
-        .btn-reset { background: var(--blue); color: black; padding: 15px 40px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; font-size: 18px; }
+        #winner-screen.visible { 
+            display: flex; 
+            pointer-events: auto; /* Clicks work when winner is shown */
+            opacity: 1;
+        }
 
         .setup-card { 
             background: var(--card); padding: 25px; border-radius: 15px; 
             width: 100%; max-width: 320px; border: 1px solid #1b4965;
-            display: flex; flex-direction: column; gap: 10px;
         }
-        .setup-card h2 { color: var(--blue); margin-bottom: 10px; text-align: center; }
-        
-        .input-group { margin-bottom: 10px; }
-        .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-        .setup-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
-        
         .btn-start { 
             background: var(--blue); color: black; width: 100%; padding: 16px; 
-            font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; 
+            font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;
+            position: relative; z-index: 1001; /* Extra insurance */
         }
 
+        /* UI Styles */
+        .winner-name { color: var(--blue); font-size: 3rem; font-weight: 900; margin-bottom: 20px; }
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
-        .header-controls { display: flex; gap: 8px; align-items: center; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; }
-
         .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
         .v-box { position: absolute; inset: 0; display: none; }
         .v-box.visible { display: block; }
-        video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
-
-        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
-        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; }
+        .player-card { flex: 1; background: var(--card); border-radius: 10px; padding: 10px 15px; border: 2px solid transparent; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
-        
-        .p-name { font-size: 14px; color: #fff; font-weight: bold; }
-        .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .score-val { font-size: clamp(35px, 7dvh, 55px); font-weight: 900; line-height: 1; }
-        .legs-count { font-size: 11px; color: #888; }
-        .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
-
-        .controls { 
-            display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; 
-            background: #000; border-top: 1px solid #1b4965; padding-bottom: env(safe-area-inset-bottom);
-        }
-        .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-        .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; }
-        .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; }
-        
+        .score-val { font-size: 45px; font-weight: 900; }
+        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; background: #000; }
         #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
         .hidden { display: none !important; }
     </style>
@@ -82,19 +65,17 @@
 
 <div id="setup-layer">
     <div class="setup-card">
-        <h2>DARTSTREAM</h2>
-        <div class="input-group">
-            <label>Your Name</label>
-            <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
+        <h2 style="text-align:center; color:var(--blue); margin-bottom:15px;">DARTSTREAM</h2>
+        <div style="margin-bottom:10px;">
+            <label style="font-size:10px; color:#888;">YOUR NAME</label>
+            <input type="text" id="name-input" style="width:100%; background:#000; border:1px solid #333; color:white; padding:12px; border-radius:8px;" placeholder="Name...">
         </div>
-        <div class="input-group">
-            <label>Best Of (Legs)</label>
-            <select id="legs-input" class="setup-input">
+        <div style="margin-bottom:20px;">
+            <label style="font-size:10px; color:#888;">BEST OF</label>
+            <select id="legs-input" style="width:100%; background:#000; border:1px solid #333; color:white; padding:12px; border-radius:8px;">
                 <option value="1">1 Leg</option>
                 <option value="3">Best of 3</option>
                 <option value="5" selected>Best of 5</option>
-                <option value="7">Best of 7</option>
-                <option value="11">Best of 11</option>
             </select>
         </div>
         <button id="start-btn" class="btn-start">START MATCH</button>
@@ -103,4 +84,32 @@
 </div>
 
 <div id="winner-screen">
-    <div style="font-size: 1.2rem;
+    <div style="font-size: 1.2rem; color: #888;">MATCH WINNER</div>
+    <div class="winner-name" id="winner-name">PLAYER</div>
+    <button style="background:var(--blue); padding:15px 30px; border-radius:8px; border:none; font-weight:bold;" onclick="location.reload()">NEW MATCH</button>
+</div>
+
+<header>
+    <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
+    <button id="share-btn" style="background:#222; border:1px solid #444; color:var(--blue); padding:4px 10px; border-radius:4px; font-size:10px;">INVITE</button>
+</header>
+
+<div class="v-container">
+    <div id="box-me" class="v-box visible"><video id="me" autoplay playsinline muted></video></div>
+    <div id="box-peer" class="v-box"><video id="peer" autoplay playsinline></video></div>
+</div>
+
+<div class="score-area">
+    <div id="card-0" class="player-card active">
+        <div id="n-0" class="p-name">P1</div>
+        <div class="score-val" id="s-0">501</div>
+        <div style="font-size:12px; color:#888;">LEGS: <span id="l-0" style="color:var(--blue)">0</span></div>
+    </div>
+    <div id="card-1" class="player-card">
+        <div id="n-1" class="p-name">P2</div>
+        <div class="score-val" id="s-1">501</div>
+        <div style="font-size:12px; color:#888;">LEGS: <span id="l-1" style="color:var(--blue)">0</span></div>
+    </div>
+</div>
+
+<div class="controls">
