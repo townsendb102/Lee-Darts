@@ -3,155 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DartStream: Emergency Fix</title>
+    <title>DartStream: The Final Stand</title>
     <style>
-        :root { --blue: #00d4ff; --dark: #020408; }
-        body, html { margin: 0; padding: 0; background: var(--dark); color: white; font-family: sans-serif; height: 100%; overflow: hidden; }
+        body { background: #020408; color: white; font-family: sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* THE OVERLAY: Absolutely covers everything until the button is pressed */
+        /* Layering Fix: Ensuring Setup is the only thing active at start */
         #setup-layer {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #0d1b2a; z-index: 999999;
+            position: fixed; inset: 0; background: #0d1b2a; z-index: 99999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .card { background: #162a3f; padding: 30px; border-radius: 15px; width: 85%; max-width: 300px; text-align: center; border: 1px solid var(--blue); }
-        
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #333; background: #000; color: white; font-size: 16px; }
-        
-        /* Big, Bright, Clickable Button */
-        #start-btn { 
-            width: 100%; padding: 20px; background: var(--blue); color: black; 
-            font-weight: bold; font-size: 20px; border: none; border-radius: 10px; 
-            cursor: pointer; margin-top: 10px; box-shadow: 0 5px 15px rgba(0,212,255,0.4);
-        }
-
-        /* Game UI */
-        #game-ui { display: none; height: 100vh; flex-direction: column; }
-        .video-box { height: 40%; background: #000; position: relative; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        
-        .scores { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; }
-        .p-card { flex: 1; background: #0d1b2a; border-radius: 10px; padding: 15px; border: 2px solid transparent; }
-        .p-card.active { border-color: var(--blue); }
-        .val { font-size: 48px; font-weight: bold; text-align: center; display: block; }
-
-        .keyboard { height: 80px; display: flex; padding: 10px; gap: 10px; background: #000; }
-        #pts-input { flex: 1; font-size: 24px; text-align: center; }
-        #hit-btn { width: 100px; background: var(--blue); color: black; font-weight: bold; border: none; border-radius: 5px; }
-
-        /* Winner Screen Overlay */
         #winner-screen {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            display: none; z-index: 1000000; flex-direction: column;
-            align-items: center; justify-content: center;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
         }
+
+        .card { background: #162a3f; padding: 25px; border-radius: 12px; width: 80%; max-width: 300px; border: 2px solid #00d4ff; }
+        
+        /* Large Touch Target for Mobile */
+        .btn { 
+            display: block; width: 100%; padding: 20px; background: #00d4ff; color: #000; 
+            font-size: 20px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer;
+            margin-top: 15px; text-transform: uppercase;
+        }
+
+        #game-ui { display: none; flex-direction: column; height: 100%; }
+        .score-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #1b4965; margin: 5px; border-radius: 10px; }
+        .active { background: #162a3f; border-color: #00d4ff; }
+        .score-num { font-size: 60px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="setup-layer">
     <div class="card">
-        <h2 style="color:var(--blue); margin:0 0 20px 0;">DARTSTREAM</h2>
-        <input type="text" id="name-input" placeholder="Your Name" value="Player 1">
-        <select id="legs-input">
-            <option value="1">1 Leg</option>
-            <option value="3">Best of 3</option>
-            <option value="5" selected>Best of 5</option>
-        </select>
-        <button id="start-btn">START MATCH</button>
-        <div id="status" style="font-size: 12px; margin-top: 10px; color: #888;">Ready...</div>
+        <h2 style="text-align:center; margin-top:0;">DARTSTREAM</h2>
+        <input type="text" id="p-name" value="Player 1" style="width:100%; padding:10px; box-sizing:border-box;">
+        <button id="start-btn" class="btn">Start Match</button>
+        <p id="debug-log" style="font-size:10px; color:#888; text-align:center; margin-top:10px;">Status: Waiting for click...</p>
     </div>
 </div>
 
 <div id="winner-screen">
-    <h1 id="win-text" style="color:var(--blue); font-size: 3rem;">WINS!</h1>
-    <button onclick="location.reload()" style="padding: 15px 30px; border-radius: 8px; border: none; font-weight: bold;">NEW MATCH</button>
+    <h1 id="win-name" style="color:#00d4ff; font-size:3rem;">P1 WINS!</h1>
+    <button class="btn" style="width:auto; padding:15px 40px;" onclick="location.reload()">Reset</button>
 </div>
 
 <div id="game-ui">
-    <div class="video-box">
-        <video id="local-video" autoplay playsinline muted></video>
+    <div id="box-0" class="score-box active">
+        <div id="name-0">P1</div>
+        <div id="score-0" class="score-num">501</div>
     </div>
-    <div class="scores">
-        <div id="c0" class="p-card active">
-            <span id="n0">P1</span>
-            <span id="s0" class="val">501</span>
-        </div>
-        <div id="c1" class="p-card">
-            <span id="n1">P2</span>
-            <span id="s1" class="val">501</span>
-        </div>
+    <div id="box-1" class="score-box">
+        <div id="name-1">P2</div>
+        <div id="score-1" class="score-num">501</div>
     </div>
-    <div class="keyboard">
-        <input type="number" id="pts-input" pattern="\d*" inputmode="numeric" placeholder="Score">
-        <button id="hit-btn">HIT</button>
+    <div style="padding:10px; background:#000; display:flex; gap:10px;">
+        <input type="number" id="pts" placeholder="Score" style="flex:1; font-size:24px; padding:10px;">
+        <button id="hit-btn" style="padding:10px 20px; background:#00d4ff; font-weight:bold;">HIT</button>
     </div>
 </div>
 
-<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 <script>
-    // Global variables
-    let myStream, peer, conn;
-    let gameState = {
-        p: [{name: "P1", score: 501, legs: 0}, {name: "P2", score: 501, legs: 0}],
-        turn: 0,
-        bestOf: 5,
-        winner: null
+    // Minimal State
+    let state = { p0: 501, p1: 501, turn: 0, winner: null };
+
+    // BUTTON 1: THE START BUTTON
+    const startBtn = document.getElementById('start-btn');
+    const debug = document.getElementById('debug-log');
+
+    startBtn.onclick = function() {
+        console.log("Button clicked");
+        debug.innerText = "Status: Initializing...";
+        
+        // Step 1: Hide setup
+        document.getElementById('setup-layer').style.setProperty('display', 'none', 'important');
+        
+        // Step 2: Show Game
+        document.getElementById('game-ui').style.display = 'flex';
+        
+        // Step 3: Set Name
+        document.getElementById('name-0').innerText = document.getElementById('p-name').value;
     };
 
-    // 1. ATTACH BUTTONS IMMEDIATELY
-    document.getElementById('start-btn').addEventListener('click', function() {
-        console.log("Start clicked");
-        startApp();
-    });
-
-    document.getElementById('hit-btn').addEventListener('click', processHit);
-
-    async function startApp() {
-        const btn = document.getElementById('start-btn');
-        const status = document.getElementById('status');
+    // BUTTON 2: THE HIT BUTTON
+    document.getElementById('hit-btn').onclick = function() {
+        const val = parseInt(document.getElementById('pts').value) || 0;
         
-        btn.disabled = true;
-        status.innerText = "Requesting Camera...";
+        if (state.turn === 0) {
+            state.p0 -= val;
+            if (state.p0 <= 0) { state.p0 = 0; state.winner = document.getElementById('name-0').innerText; }
+            state.turn = 1;
+        } else {
+            state.p1 -= val;
+            if (state.p1 <= 0) { state.p1 = 0; state.winner = "P2"; }
+            state.turn = 0;
+        }
+        
+        updateUI();
+        document.getElementById('pts').value = "";
+    };
 
-        try {
-            // Get Camera
-            myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('local-video').srcObject = myStream;
+    function updateUI() {
+        document.getElementById('score-0').innerText = state.p0;
+        document.getElementById('score-1').innerText = state.p1;
+        
+        document.getElementById('box-0').className = state.turn === 0 ? "score-box active" : "score-box";
+        document.getElementById('box-1').className = state.turn === 1 ? "score-box active" : "score-box";
 
-            // Setup Data
-            gameState.p[0].name = document.getElementById('name-input').value || "Host";
-            gameState.bestOf = parseInt(document.getElementById('legs-input').value);
-
-            // Hide Setup, Show Game
-            document.getElementById('setup-layer').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'flex';
-
-            // Start Peer
-            status.innerText = "Initializing Peer...";
-            peer = new Peer();
-            
-            peer.on('open', id => {
-                console.log("My ID: " + id);
-                // Check if we are joining someone
-                const urlParams = new URLSearchParams(window.location.search);
-                const joinId = urlParams.get('join');
-                if(joinId) connectToPeer(joinId);
-                updateDisplay();
-            });
-
-            peer.on('connection', c => {
-                conn = c;
-                conn.on('data', data => {
-                    gameState = data;
-                    updateDisplay();
-                });
-            });
-
-            peer.on('call', call => {
-                call.answer(myStream);
-                // In a full app, you'd handle the remote video stream here
-            });
-
-        } catch (err) {
+        if (state.winner) {
+            document.getElementById('win-name').innerText = state.winner + " WINS!";
+            document.getElementById('winner-screen').style.display = 'flex';
+        }
+    }
+</script>
+</body>
+</html>
