@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream: Fully Restored</title>
+    <title>DartStream: Failsafe Version</title>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -14,44 +14,27 @@
             overflow: hidden; 
         }
         
-        /* 1. SETUP LAYER - Highest priority at start */
-        #setup-layer { 
-            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-        }
-
-        /* 2. WINNER SCREEN - Only shows when someone wins */
-        #winner-screen {
-            position: fixed; inset: 0; background: rgba(2, 4, 8, 0.98); z-index: 20000;
-            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-        }
-        #winner-screen.visible { display: flex; }
-
-        .setup-card { 
-            background: var(--card); padding: 25px; border-radius: 15px; 
-            width: 100%; max-width: 320px; border: 1px solid #1b4965;
-        }
+        /* Fixed Layering */
+        #setup-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        #winner-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 20000; display: none; flex-direction: column; align-items: center; justify-content: center; }
         
-        .btn-start { 
-            background: var(--blue); color: black; width: 100%; padding: 16px; 
-            font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;
-        }
+        .setup-card { background: var(--card); padding: 30px; border-radius: 15px; width: 90%; max-width: 320px; border: 1px solid var(--blue); }
+        .btn-start { background: var(--blue); color: #000; width: 100%; padding: 18px; font-size: 18px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; }
 
-        /* Video and Scores */
-        header { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
-        .v-container { height: 45dvh; position: relative; background: #000; }
+        header { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background: #000; font-size: 11px; }
+        .v-container { height: 40dvh; position: relative; background: #111; border-bottom: 1px solid #333; }
         .v-box { position: absolute; inset: 0; display: none; }
         .v-box.visible { display: block; }
         video { width: 100%; height: 100%; object-fit: cover; }
-        
-        .score-area { flex: 1; display: flex; flex-direction: column; padding: 8px; gap: 6px; }
-        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; }
-        .player-card.active { border-color: var(--blue); background: var(--active); }
-        .score-val { font-size: clamp(35px, 6dvh, 55px); font-weight: 900; line-height: 1; text-align: center;}
 
-        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; background: #000; padding-bottom: env(safe-area-inset-bottom); }
-        #pts-input { width: 100%; height: 50px; background: #111; border: 1px solid #333; color: white; text-align: center; font-size: 24px; border-radius: 8px; }
-        .btn-hit { background: var(--blue); border: none; border-radius: 8px; font-weight: bold; }
+        .score-area { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 8px; }
+        .p-card { flex: 1; background: var(--card); border-radius: 12px; padding: 15px; border: 2px solid transparent; transition: 0.2s; }
+        .p-card.active { border-color: var(--blue); background: var(--active); }
+        .s-val { font-size: 55px; font-weight: 900; text-align: center; display: block; line-height: 1; }
+        
+        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; gap: 8px; padding: 10px; background: #000; }
+        #pts-input { background: #111; border: 1px solid #333; color: white; border-radius: 8px; text-align: center; font-size: 28px; width: 100%; }
+        .btn-hit { background: var(--blue); border: none; font-weight: bold; border-radius: 8px; }
         
         .hidden { display: none !important; }
     </style>
@@ -60,65 +43,120 @@
 
 <div id="setup-layer">
     <div class="setup-card">
-        <h2 style="text-align: center; color: var(--blue); margin-bottom: 15px;">DARTSTREAM</h2>
-        <input type="text" id="name-input" style="width:100%; padding:12px; background:#000; color:white; border:1px solid #333; margin-bottom:10px;" placeholder="Your Name">
-        <select id="legs-input" style="width:100%; padding:12px; background:#000; color:white; border:1px solid #333; margin-bottom:20px;">
+        <h2 style="text-align:center; color:var(--blue); margin-bottom:15px;">DARTSTREAM</h2>
+        <input type="text" id="name-input" placeholder="Your Name" style="width:100%; padding:12px; background:#000; color:white; border:1px solid #333; border-radius:8px; margin-bottom:10px;">
+        <select id="legs-input" style="width:100%; padding:12px; background:#000; color:white; border:1px solid #333; border-radius:8px;">
             <option value="1">1 Leg</option>
             <option value="3">Best of 3</option>
             <option value="5" selected>Best of 5</option>
         </select>
         <button id="start-btn" class="btn-start">START MATCH</button>
-        <p id="error-log" style="color:red; font-size:10px; margin-top:10px; text-align:center;"></p>
+        <p id="status-msg" style="color:#888; font-size:11px; margin-top:10px; text-align:center;">Ready to play</p>
     </div>
 </div>
 
 <div id="winner-screen">
-    <h1 id="winner-name" style="color:var(--blue); font-size:3rem; margin-bottom:20px;">WINNER</h1>
-    <button onclick="location.reload()" style="padding:15px 30px; border-radius:8px; border:none; background:white; font-weight:bold;">REMATCH</button>
+    <h1 id="win-name" style="color:var(--blue); font-size:3rem;">WINNER</h1>
+    <button onclick="location.reload()" style="padding:15px 30px; border-radius:8px; border:none; font-weight:bold; margin-top:20px;">NEW MATCH</button>
 </div>
 
 <header>
-    <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
-    <div class="header-controls">
-        <button id="flip-btn" style="background:#222; color:white; border:1px solid #444; padding:4px 8px; border-radius:4px;">FLIP</button>
-        <button id="share-btn" style="background:#222; color:var(--blue); border:1px solid #444; padding:4px 8px; border-radius:4px;">INVITE</button>
-    </div>
+    <div>ID: <span id="my-id" style="color:var(--blue)">---</span></div>
+    <button id="share-btn" style="background:none; border:none; color:var(--blue); font-weight:bold;">INVITE</button>
 </header>
 
 <div class="v-container">
-    <div id="box-me" class="v-box visible"><video id="me" autoplay playsinline muted></video></div>
-    <div id="box-peer" class="v-box"><video id="peer" autoplay playsinline></video></div>
+    <div id="box-0" class="v-box visible"><video id="v-0" autoplay playsinline muted></video></div>
+    <div id="box-1" class="v-box"><video id="v-1" autoplay playsinline></video></div>
 </div>
 
 <div class="score-area">
-    <div id="card-0" class="player-card active">
-        <div id="n-0" style="font-weight:bold;">P1</div>
-        <div class="score-val" id="s-0">501</div>
-        <div style="font-size:10px; color:var(--blue)">AVG: <span id="avg-0">0.0</span> | LEGS: <span id="l-0">0</span></div>
+    <div id="card-0" class="p-card active">
+        <div id="n-0" style="font-weight:bold">P1</div>
+        <span id="s-0" class="s-val">501</span>
+        <div style="font-size:11px; color:var(--blue)">AVG: <span id="avg-0">0.0</span> | LEGS: <span id="l-0">0</span></div>
     </div>
-    <div id="card-1" class="player-card">
-        <div id="n-1" style="font-weight:bold;">P2</div>
-        <div class="score-val" id="s-1">501</div>
-        <div style="font-size:10px; color:var(--blue)">AVG: <span id="avg-1">0.0</span> | LEGS: <span id="l-1">0</span></div>
+    <div id="card-1" class="p-card">
+        <div id="n-1" style="font-weight:bold">P2</div>
+        <span id="s-1" class="s-val">501</span>
+        <div style="font-size:11px; color:var(--blue)">AVG: <span id="avg-1">0.0</span> | LEGS: <span id="l-1">0</span></div>
     </div>
 </div>
 
 <div class="controls">
-    <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
-    <button id="undo-btn" style="background:#222; color:white; border-radius:8px;">⟲</button>
+    <input type="number" id="pts-input" pattern="\d*" inputmode="numeric" placeholder="0">
+    <button id="undo-btn" style="background:#222; color:white; border:none; border-radius:8px;">⟲</button>
     <button id="hit-btn" class="btn-hit">HIT</button>
 </div>
 
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-
 <script>
-    let stream, peer, conn, facing = "user";
-    let myIndex = 0;
+    let stream, peer, conn, myIndex = 0;
     let state = { turn: 0, bestOf: 5, winner: null, p: [{name:"P1", s:501, l:0, pts:0, d:0}, {name:"P2", s:501, l:0, pts:0, d:0}] };
     let history = null;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join');
+    // THE BUTTON FIX: Force the UI to show even if Peer/Cam fails
+    document.getElementById('start-btn').onclick = async function() {
+        const status = document.getElementById('status-msg');
+        status.innerText = "Initializing components...";
+        
+        // 1. Instantly update state from inputs
+        state.p[0].name = document.getElementById('name-input').value || "Host";
+        state.bestOf = parseInt(document.getElementById('legs-input').value);
 
-    // Attach events properly
-    document.
+        // 2. Attempt Camera (but don't crash if it fails)
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            document.getElementById('v-0').srcObject = stream;
+        } catch (e) { console.warn("Cam failed:", e); }
+
+        // 3. Attempt PeerJS (but don't crash if it fails)
+        try {
+            peer = new Peer();
+            peer.on('open', id => {
+                document.getElementById('my-id').innerText = id;
+                const urlParams = new URLSearchParams(window.location.search);
+                if(urlParams.get('join')) connect(urlParams.get('join'));
+            });
+            peer.on('connection', c => { conn = c; conn.on('data', d => { state = d; render(); }); });
+            peer.on('call', call => { call.answer(stream); call.on('stream', s => document.getElementById('v-1').srcObject = s); });
+        } catch (e) { console.warn("PeerJS failed:", e); }
+
+        // 4. THE ULTIMATE FIX: Always hide the setup layer last
+        document.getElementById('setup-layer').style.display = 'none';
+        render();
+    };
+
+    function connect(id) {
+        myIndex = 1;
+        state.p[1].name = document.getElementById('name-input').value || "Guest";
+        conn = peer.connect(id);
+        conn.on('open', () => conn.send(state));
+        conn.on('data', d => { state = d; render(); });
+        peer.call(id, stream).on('stream', s => document.getElementById('v-1').srcObject = s);
+    }
+
+    document.getElementById('hit-btn').onclick = processHit;
+    document.getElementById('undo-btn').onclick = () => { if(history){ state = JSON.parse(JSON.stringify(history)); history = null; render(); if(conn) conn.send(state); }};
+
+    function processHit() {
+        const input = document.getElementById('pts-input');
+        const val = parseInt(input.value) || 0;
+        if (val > 180) return;
+        
+        history = JSON.parse(JSON.stringify(state));
+        let p = state.p[state.turn];
+
+        if (p.s - val >= 0 && p.s - val !== 1) {
+            p.s -= val; p.pts += val; p.d += 3;
+            if (p.s === 0) { 
+                p.l++; 
+                if (p.l >= Math.ceil(state.bestOf/2)) state.winner = p.name;
+                else { state.p.forEach(x => x.s = 501); state.turn = (state.turn === 0) ? 1 : 0; }
+            } else { state.turn = (state.turn === 0) ? 1 : 0; }
+        } else { state.turn = (state.turn === 0) ? 1 : 0; }
+        
+        input.value = '';
+        render();
+        if (conn) conn.send(state);
+    }
