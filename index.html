@@ -4,65 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DartStream Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
-            height: 100dvh; width: 100vw; display: flex; flex-direction: column; overflow: hidden; 
+            height: 100dvh; width: 100vw; display: grid;
+            /* HEADER(40px) | CAM(20dvh) | SCORES(Flexible) | CONTROLS(90px) */
+            grid-template-rows: 40px 20dvh 1fr 90px;
+            overflow: hidden; 
         }
         
-        /* The "Wall" - This must work for the app to open */
-        #safety-layer { position: fixed; inset: 0; background: var(--dark); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-start { background: var(--blue); color: black; padding: 25px 60px; font-size: 24px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(0,212,255,0.4); }
+        #setup-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-start { background: var(--blue); color: black; padding: 20px 50px; font-size: 22px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; }
 
-        header { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 12px; flex-shrink: 0; }
+        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; }
         
-        /* Video Grid */
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 20dvh; background: #000; flex-shrink: 0; }
-        .v-box { position: relative; border-right: 1px solid #1b4965; }
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; background: #000; border-bottom: 1px solid #1b4965; height: 100%; }
+        .v-box { position: relative; height: 100%; border-right: 1px solid #1b4965; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        .flip-btn { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 10px; padding: 4px 8px; border-radius: 4px; }
+        .flip-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 20; }
 
-        /* Scores */
-        .score-area { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; justify-content: space-evenly; overflow: hidden; }
-        .player-card { flex: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 15px; border: 2px solid transparent; }
+        /* Score Section - Automatically shrinks to fit the middle zone */
+        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 8px; min-height: 0; }
+        .player-card { flex: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
-        .stats-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--blue); font-weight: bold; margin-bottom: 5px; }
-        .score-row { display: flex; justify-content: space-between; align-items: center; }
-        .score-val { font-size: clamp(40px, 10dvh, 60px); font-weight: 900; line-height: 1; }
+        .stats-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--blue); font-weight: bold; margin-bottom: 2px; }
+        .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        /* Font size dynamically adjusts based on available space */
+        .score-val { font-size: clamp(30px, 8dvh, 50px); font-weight: 900; line-height: 1; }
         .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 14px; text-align: right; }
 
-        /* Controls - Locked to Bottom */
+        /* Controls Section - Locked at the absolute bottom */
         .controls { 
-            height: 90px; background: #000; display: flex; padding: 10px; gap: 10px; 
-            border-top: 1px solid #1b4965; flex-shrink: 0;
-            padding-bottom: env(safe-area-inset-bottom);
+            height: 100%; background: #000; display: flex; padding: 10px; gap: 10px; 
+            border-top: 1px solid #1b4965; 
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
         }
-        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 32px; text-align: center; border-radius: 10px; outline: none; }
-        .btn-hit { width: 100px; background: var(--blue); border: none; border-radius: 10px; font-weight: bold; font-size: 20px; color: black; }
+        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 32px; text-align: center; border-radius: 8px; outline: none; }
+        .btn-hit { width: 90px; background: var(--blue); border: none; border-radius: 10px; font-weight: bold; font-size: 20px; color: black; cursor: pointer; }
         
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="safety-layer">
-    <h1 style="color:var(--blue); margin-bottom:20px;">DARTSTREAM</h1>
-    <button class="btn-start" onclick="forceStart()">START MATCH</button>
+<div id="setup-layer">
+    <h1 style="color:var(--blue); margin-bottom:15px;">DARTSTREAM</h1>
+    <button class="btn-start" onclick="beginMatch()">START MATCH</button>
 </div>
 
 <header>
     <div onclick="copyId()">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
-    <button onclick="shareInvite()" style="background:var(--blue); color:black; border:none; padding:5px 12px; border-radius:5px; font-weight:bold; font-size:11px;">INVITE</button>
+    <button onclick="shareInvite()" style="background:var(--blue); color:black; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:10px;">INVITE</button>
 </header>
 
 <div class="v-grid">
     <div class="v-box">
         <video id="me" autoplay playsinline muted></video>
-        <div class="flip-btn" onclick="flipCam()">FLIP</div>
+        <div class="flip-btn" onclick="toggleCam()">FLIP</div>
     </div>
     <div class="v-box"><video id="peer" autoplay playsinline></video></div>
 </div>
@@ -70,85 +74,79 @@
 <div class="score-area">
     <div id="card-0" class="player-card active">
         <div class="stats-row"><span>AVG: <span id="avg-0">0.0</span></span> <span>DARTS: <span id="d-0">0</span></span></div>
-        <div class="score-row"><div class="score-val" id="s-0">501</div><div class="checkout-hint" id="out-0"></div></div>
+        <div class="score-row">
+            <div class="score-val" id="s-0">501</div>
+            <div class="checkout-hint" id="out-0"></div>
+        </div>
     </div>
     <div id="card-1" class="player-card">
         <div class="stats-row"><span>AVG: <span id="avg-1">0.0</span></span> <span>DARTS: <span id="d-1">0</span></span></div>
-        <div class="score-row"><div class="score-val" id="s-1">501</div><div class="checkout-hint" id="out-1"></div></div>
+        <div class="score-row">
+            <div class="score-val" id="s-1">501</div>
+            <div class="checkout-hint" id="out-1"></div>
+        </div>
     </div>
 </div>
 
 <div class="controls">
     <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
-    <button class="btn-hit" onclick="doHit()">HIT</button>
+    <button class="btn-hit" onclick="hitScore()">HIT</button>
 </div>
 
-<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-
 <script>
-    let localStream, peer, conn, currentFacing = "user";
-    let state = { turn: 0, p: [{ s: 501, d: 0, t: 0 }, { s: 501, d: 0, t: 0 }] };
+    let localStream, peer, conn, facing = "user";
+    let state = { turn: 0, p: [{ s: 501, d: 0, pts: 0 }, { s: 501, d: 0, pts: 0 }] };
 
-    // --- STEP 1: OPEN CAMERA (NO DELAY) ---
-    async function forceStart() {
+    async function beginMatch() {
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: currentFacing }, audio: true 
-            });
+            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
             document.getElementById('me').srcObject = localStream;
-            document.getElementById('safety-layer').classList.add('hidden');
-            
-            // --- STEP 2: START NETWORK AFTER APP IS VISIBLE ---
-            initNetwork();
+            peer = new Peer();
+            peer.on('open', (id) => {
+                document.getElementById('display-id').innerText = id;
+                document.getElementById('setup-screen').style.display = 'none';
+                const joinId = new URLSearchParams(window.location.search).get('join');
+                if (joinId) {
+                    conn = peer.connect(joinId);
+                    peer.call(joinId, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
+                }
+            });
+            peer.on('call', call => {
+                call.answer(localStream);
+                call.on('stream', s => document.getElementById('peer').srcObject = s);
+            });
+            peer.on('connection', c => {
+                conn = c;
+                conn.on('data', d => { state = d; render(); });
+            });
         } catch (e) {
-            alert("Please use HTTPS and allow camera access.");
+            alert("Camera failed. Use HTTPS.");
         }
     }
 
-    function initNetwork() {
-        if (typeof Peer === 'undefined') { setTimeout(initNetwork, 500); return; }
-        peer = new Peer();
-        peer.on('open', (id) => {
-            document.getElementById('display-id').innerText = id;
-            const joinId = new URLSearchParams(window.location.search).get('join');
-            if (joinId) {
-                conn = peer.connect(joinId);
-                peer.call(joinId, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
-            }
-        });
-        peer.on('call', call => {
-            call.answer(localStream);
-            call.on('stream', s => document.getElementById('peer').srcObject = s);
-        });
-        peer.on('connection', c => {
-            conn = c;
-            conn.on('data', d => { state = d; render(); });
-        });
-    }
-
-    async function flipCam() {
-        currentFacing = currentFacing === "user" ? "environment" : "user";
+    async function toggleCam() {
+        facing = (facing === "user") ? "environment" : "user";
         if (localStream) localStream.getTracks().forEach(t => t.stop());
-        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing } });
+        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } });
         document.getElementById('me').srcObject = localStream;
     }
 
-    function doHit() {
-        const input = document.getElementById('pts-input');
-        const val = parseInt(input.value) || 0;
+    function hitScore() {
+        const el = document.getElementById('pts-input');
+        const val = parseInt(el.value) || 0;
         if (val > 180) return;
         let p = state.p[state.turn];
         if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.t += val; p.d += 3;
-            if (p.s === 0) { alert("Game Shot!"); p.s = 501; p.d = 0; p.t = 0; }
+            p.s -= val; p.pts += val; p.d += 3;
+            if (p.s === 0) { alert("Game Won!"); p.s = 501; p.d = 0; p.pts = 0; }
         } else { p.d += 3; }
-        state.turn = state.turn === 0 ? 1 : 0;
+        state.turn = (state.turn === 0) ? 1 : 0;
         render();
         if (conn) conn.send(state);
-        input.value = '';
+        el.value = '';
     }
 
-    function getCheckout(s) {
+    function getFinishes(s) {
         if (s > 170 || [169, 168, 166, 165, 163, 162, 159].includes(s)) return "";
         if (s === 170) return "T20-T20-BULL";
         if (s <= 40 && s % 2 === 0) return "D" + (s/2);
@@ -159,17 +157,22 @@
         state.p.forEach((p, i) => {
             document.getElementById(`s-${i}`).innerText = p.s;
             document.getElementById(`d-${i}`).innerText = p.d;
-            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.t / p.d) * 3).toFixed(1) : "0.0";
-            document.getElementById(`card-${i}`).className = state.turn === i ? "player-card active" : "player-card";
-            document.getElementById(`out-${i}`).innerText = state.turn === i ? getCheckout(p.s) : "";
+            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
+            document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
+            document.getElementById(`out-${i}`).innerText = (state.turn === i) ? getFinishes(p.s) : "";
         });
     }
 
     function shareInvite() {
         const id = document.getElementById('display-id').innerText;
         const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) navigator.share({ title: 'Join My Darts Match', url: url });
-        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
+        if (navigator.share) navigator.share({ title: 'Join Darts', url: url });
+        else { navigator.clipboard.writeText(url); alert("Link copied!"); }
+    }
+
+    function copyId() {
+        navigator.clipboard.writeText(document.getElementById('display-id').innerText);
+        alert("ID Copied");
     }
 </script>
 </body>
