@@ -3,231 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DartStream: Electric Blue Edition</title>
+    <title>DartStream: Compact Blue</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        /* Blue-Themed Color Palette */
         :root { 
-            --deep-bg: #04080f; 
-            --panel-blue: #0d1b2a; 
-            --electric-blue: #00b4d8; 
-            --sky-blue: #90e0ef;
-            --border-blue: #1b4965;
-            --white: #edf2f4;
+            --deep-bg: #020408; 
+            --electric-blue: #00d4ff; 
+            --card-blue: #0d1b2a;
+            --border: #1b4965;
         }
         
+        * { box-sizing: border-box; }
         html, body { 
             height: 100%; margin: 0; background: var(--deep-bg); 
-            color: var(--white); font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
-            overflow: hidden; touch-action: manipulation;
+            color: white; font-family: sans-serif; overflow: hidden;
         }
 
-        .app-shell { display: flex; flex-direction: column; height: 100vh; }
-
-        /* Top Navigation */
-        .top-nav { 
-            background: #000; 
-            padding: 10px; 
-            border-bottom: 2px solid var(--electric-blue); 
-            display: flex; 
-            justify-content: space-between; 
-            font-size: 0.75rem; 
-            align-items: center; 
+        .app-shell { 
+            display: flex; flex-direction: column; 
+            height: 100vh; width: 100vw; padding: 5px;
         }
 
-        /* Video Section */
-        .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #000; padding: 4px; flex-shrink: 0; }
-        .v-box { aspect-ratio: 4/3; background: #011627; border-radius: 6px; position: relative; overflow: hidden; border: 1px solid var(--border-blue); }
+        /* 1. Header & ID */
+        .header { 
+            display: flex; justify-content: space-between; align-items: center;
+            height: 35px; font-size: 11px; padding: 0 5px;
+        }
+
+        /* 2. Compact Video Row */
+        .video-row { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px; 
+            height: 110px; margin-bottom: 5px;
+        }
+        .v-box { 
+            background: #000; border: 1px solid var(--border); 
+            border-radius: 6px; position: relative; overflow: hidden;
+        }
         video { width: 100%; height: 100%; object-fit: cover; }
-        .v-label { position: absolute; top: 6px; left: 6px; font-size: 10px; background: rgba(0, 119, 182, 0.8); padding: 2px 6px; border-radius: 3px; color: white; font-weight: bold; }
+        .label { 
+            position: absolute; bottom: 2px; left: 4px; font-size: 8px; 
+            background: rgba(0,0,0,0.6); padding: 1px 4px; color: var(--electric-blue); 
+        }
 
-        /* Scoring Cards */
-        .middle-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 12px; gap: 10px; }
-        .score-row { display: flex; gap: 10px; }
+        /* 3. Score Grid */
+        .score-row { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; 
+            height: 100px; margin-bottom: 5px;
+        }
         .p-card { 
-            flex: 1; 
-            background: var(--panel-blue); 
-            padding: 12px; 
-            border-radius: 12px; 
-            border: 2px solid #222; 
-            transition: 0.3s; 
-            text-align: center; 
+            background: var(--card-blue); border-radius: 10px; 
+            border: 1px solid #222; text-align: center; padding: 8px;
+            display: flex; flex-direction: column; justify-content: center;
         }
-        .p-card.active { 
-            border-color: var(--electric-blue); 
-            background: #122c44;
-            box-shadow: 0 0 15px rgba(0, 180, 216, 0.4); 
-        }
-        .p-card h3 { margin: 0; font-size: 0.8rem; color: var(--sky-blue); text-transform: uppercase; letter-spacing: 1px; }
-        .p-card .score { font-size: 3rem; font-weight: 900; color: var(--white); margin: 5px 0; }
-        .p-card .stats { font-size: 0.7rem; color: var(--sky-blue); opacity: 0.8; }
+        .p-card.active { border-color: var(--electric-blue); background: #122c44; }
+        .p-name { font-size: 10px; color: #888; margin-bottom: 2px; }
+        .p-score { font-size: 32px; font-weight: 900; color: var(--electric-blue); margin: 0; }
+        .p-stats { font-size: 9px; color: #aaa; }
 
-        /* Blue Chat System */
-        .chat-view { 
-            flex: 1; 
-            background: #020a14; 
-            border-radius: 10px; 
-            border: 1px solid var(--border-blue); 
-            display: flex; 
-            flex-direction: column; 
-            min-height: 120px; 
+        /* 4. Chat - Condensed */
+        .chat-area { 
+            flex: 1; background: #050a12; border: 1px solid var(--border);
+            border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;
+            margin-bottom: 5px;
         }
-        #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 0.85rem; }
-        .msg { margin-bottom: 6px; padding: 7px 12px; border-radius: 8px; width: fit-content; max-width: 85%; line-height: 1.3; }
-        .msg.me { background: var(--electric-blue); color: #000; margin-left: auto; font-weight: 500; }
-        .msg.them { background: var(--border-blue); color: var(--white); }
+        #msgs { flex: 1; overflow-y: auto; padding: 5px; font-size: 11px; }
+        .m { margin-bottom: 3px; border-radius: 4px; padding: 3px 6px; width: fit-content; max-width: 90%; }
+        .m.me { background: var(--electric-blue); color: #000; margin-left: auto; }
+        .m.them { background: var(--border); }
 
-        /* Bottom Controls */
-        .input-bar { background: #000; padding: 15px; border-top: 1px solid var(--border-blue); display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
-        input { background: #0b132b; border: 1px solid var(--border-blue); color: white; border-radius: 8px; padding: 14px; font-size: 1.4rem; text-align: center; }
-        input:focus { outline: none; border-color: var(--sky-blue); box-shadow: 0 0 8px rgba(144, 224, 239, 0.4); }
-        .btn { background: var(--electric-blue); color: #000; border: none; font-weight: 800; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 1rem; }
-        .btn:active { background: var(--sky-blue); transform: scale(0.96); }
-        
-        #check-hint { text-align: center; color: var(--sky-blue); font-size: 0.9rem; font-weight: bold; height: 20px; margin-bottom: 5px; }
+        /* 5. Input Bar */
+        .hint { height: 18px; font-size: 11px; color: #ffcc00; text-align: center; font-weight: bold; }
+        .input-bar { 
+            height: 60px; display: grid; grid-template-columns: 1fr 60px 80px; gap: 5px;
+        }
+        input { 
+            background: #000; border: 1px solid var(--border); color: white; 
+            border-radius: 8px; text-align: center; font-size: 20px; width: 100%;
+        }
+        .btn { 
+            background: var(--electric-blue); color: black; border: none; 
+            border-radius: 8px; font-weight: bold; font-size: 12px;
+        }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
-    <div class="top-nav">
-        <div>YOUR ID: <b id="my-id" style="color:var(--sky-blue)">---</b></div>
-        <div style="display:flex; gap:6px">
-            <input type="text" id="peer-id" placeholder="Friend ID" style="font-size:11px; padding:5px; width:90px; height:24px; font-size: 10px;">
-            <button class="btn" onclick="joinMatch()" style="padding:2px 10px; font-size:11px; height:24px;">LINK</button>
+    <div class="header">
+        <span>ID: <b id="my-id" style="color:var(--electric-blue)">---</b></span>
+        <div style="display:flex; gap:3px">
+            <input type="text" id="p-id" placeholder="Friend ID" style="font-size:9px; width:70px; height:22px">
+            <button class="btn" onclick="join()" style="height:22px; padding:0 8px">LINK</button>
         </div>
     </div>
 
-    <div class="cam-grid">
-        <div class="v-box"><video id="local-video" autoplay playsinline muted></video><div class="v-label">MY BOARD</div></div>
-        <div class="v-box"><video id="remote-video" autoplay playsinline></video><div class="v-label">OPPONENT</div></div>
+    <div class="video-row">
+        <div class="v-box"><video id="v-me" autoplay playsinline muted></video><div class="label">ME</div></div>
+        <div class="v-box"><video id="v-peer" autoplay playsinline></video><div class="label">THEM</div></div>
     </div>
 
-    <div class="middle-content">
-        <div class="score-row">
-            <div class="p-card active" id="c0">
-                <h3>Player 1</h3>
-                <div class="score" id="s0">501</div>
-                <div class="stats">AVG: <span id="a0">0.0</span> | LEGS: <span id="l0">0</span></div>
-            </div>
-            <div class="p-card" id="c1">
-                <h3>Player 2</h3>
-                <div class="score" id="s1">501</div>
-                <div class="stats">AVG: <span id="a1">0.0</span> | LEGS: <span id="l1">0</span></div>
-            </div>
+    <div class="score-row">
+        <div class="p-card active" id="c0">
+            <div class="p-name">PLAYER 1</div>
+            <div class="p-score" id="s0">501</div>
+            <div class="p-stats">AVG: <span id="a0">0</span> | L: <span id="l0">0</span></div>
         </div>
-
-        <div class="chat-view">
-            <div id="chat-msgs"></div>
-            <div style="display:flex; padding:8px; gap:6px; border-top:1px solid var(--border-blue)">
-                <input type="text" id="chat-in" placeholder="Message..." style="font-size:0.9rem; padding:8px; flex:1; text-align:left">
-                <button class="btn" onclick="sendChatMsg()" style="padding:8px 14px">↑</button>
-            </div>
+        <div class="p-card" id="c1">
+            <div class="p-name">PLAYER 2</div>
+            <div class="p-score" id="s1">501</div>
+            <div class="p-stats">AVG: <span id="a1">0</span> | L: <span id="l1">0</span></div>
         </div>
     </div>
 
+    <div class="chat-area">
+        <div id="msgs"></div>
+    </div>
+
+    <div class="hint" id="hint"></div>
     <div class="input-bar">
-        <div style="grid-column: span 2;">
-            <div id="check-hint"></div>
-        </div>
-        <input type="number" id="pts-in" inputmode="numeric" placeholder="SCORE">
-        <button class="btn" onclick="submitDarts()">HIT</button>
+        <input type="number" id="pts" inputmode="numeric" placeholder="SCORE">
+        <button class="btn" onclick="chatToggle()" style="background:#222; color:white">CHAT</button>
+        <button class="btn" onclick="hit()">HIT</button>
     </div>
 </div>
 
 <script>
-    const checkouts = {170:"T20 T20 BULL",167:"T20 T19 BULL",164:"T20 T18 BULL",161:"T20 T17 BULL",160:"T20 T20 D20",158:"T20 T20 D19",141:"T20 T19 D12",121:"T20 T15 D8",100:"T20 D20",80:"T20 D10",60:"20 D20",40:"D20",32:"D16",24:"D12",16:"D8",8:"D4",4:"D2",2:"D1"};
+    const checkouts = {170:"T20-T20-BULL",167:"T20-T19-BULL",160:"T20-T20-D20",100:"T20-D20",80:"T20-D10",60:"20-D20",40:"D20",32:"D16",24:"D12",16:"D8",8:"D4",4:"D2",2:"D1"};
     const sounds = {
         '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'),
-        'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734'),
-        'bust': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649732')
+        'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734')
     };
 
-    let peer, conn, localStream, wakeLock = null;
-    let state = { turn: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
-
-    const lockScreen = async () => { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} };
+    let peer, conn, stream, wl;
+    let st = { t: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
 
     peer = new Peer();
-    peer.on('open', id => { 
-        document.getElementById('my-id').innerText = id; 
-        startCam(); 
-        lockScreen();
-    });
+    peer.on('open', id => { document.getElementById('my-id').innerText = id; cam(); lock(); });
+    peer.on('connection', c => { conn = c; listen(); });
+    peer.on('call', call => { call.answer(stream); call.on('stream', s => document.getElementById('v-peer').srcObject = s); });
 
-    async function startCam() {
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
-            document.getElementById('local-video').srcObject = localStream;
-        } catch (e) { console.log("Cam error: Ensure HTTPS is used."); }
+    async function lock() { try { wl = await navigator.wakeLock.request('screen'); } catch(e) {} }
+    async function cam() { 
+        stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}, audio:true});
+        document.getElementById('v-me').srcObject = stream;
     }
 
-    peer.on('connection', c => { conn = c; initData(); });
-    peer.on('call', call => { 
-        call.answer(localStream); 
-        call.on('stream', s => document.getElementById('remote-video').srcObject = s);
-    });
-
-    function joinMatch() {
-        const id = document.getElementById('peer-id').value;
+    function join() {
+        const id = document.getElementById('p-id').value;
         conn = peer.connect(id);
-        initData();
-        peer.call(id, localStream).on('stream', s => document.getElementById('remote-video').srcObject = s);
+        listen();
+        peer.call(id, stream).on('stream', s => document.getElementById('v-peer').srcObject = s);
     }
 
-    function initData() {
+    function listen() {
         conn.on('data', d => {
-            if(d.type === 'msg') pushMsg(d.t, 'them');
-            else { state = d; render(); if(d.snd) sounds[d.snd].play(); }
+            if(d.type === 'chat') addMsg(d.m, 'them');
+            else { st = d; render(); if(d.snd) sounds[d.snd].play(); }
         });
     }
 
-    function submitDarts() {
-        const input = document.getElementById('pts-in');
-        const val = parseInt(input.value) || 0;
-        if(val > 180) return;
+    function hit() {
+        let el = document.getElementById('pts');
+        let v = parseInt(el.value) || 0;
+        let p = st.p[st.t];
+        let snd = (v === 180) ? '180' : null;
 
-        let p = state.p[state.turn];
-        let snd = (val === 180) ? '180' : null;
+        if (p.s - v >= 0 && p.s - v !== 1) {
+            p.s -= v; p.pts += v; p.d += 3;
+            if (p.s === 0) { p.l++; st.p.forEach(x => x.s = 501); snd = 'win'; }
+            else { st.t = st.t === 0 ? 1 : 0; }
+        } else { st.t = st.t === 0 ? 1 : 0; }
 
-        if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.pts += val; p.d += 3;
-            if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); snd = 'win'; }
-            else { state.turn = state.turn === 0 ? 1 : 0; }
-        } else {
-            snd = 'bust';
-            state.turn = state.turn === 0 ? 1 : 0;
-        }
-
-        state.snd = snd;
+        st.snd = snd;
         if(snd) sounds[snd].play();
         render();
-        if(conn) conn.send(state);
-        input.value = '';
-    }
-
-    function render() {
-        state.p.forEach((p, i) => {
-            document.getElementById(`s${i}`).innerText = p.s;
-            document.getElementById(`l${i}`).innerText = p.l;
-            document.getElementById(`a${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-            document.getElementById(`c${i}`).className = i === state.turn ? 'p-card active' : 'p-card';
-        });
-        const cur = state.p[state.turn].s;
-        document.getElementById('check-hint').innerText = checkouts[cur] || (cur <= 170 ? "Finish On A Double" : "");
-    }
-
-    function sendChatMsg() {
-        const el = document.getElementById('chat-in');
-        if(!el.value || !conn) return;
-        conn.send({type:'msg', t: el.value});
-        pushMsg(el.value, 'me');
+        if(conn) conn.send(st);
         el.value = '';
     }
 
-    function pushMsg(t, side) {
-        const wall = document.getElementById('chat-msgs');
-        wall.innerHTML += `<div class="msg ${side}">${t}</div>`;
+    function render() {
+        st.p.forEach((p, i) => {
+            document.getElementById(`s${i}`).innerText = p.s;
+            document.getElementById(`l${i}`).innerText = p.l;
+            document.getElementById(`a${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0";
+            document.getElementById(`c${i}`).className = i === st.t ? 'p-card active' : 'p-card';
+        });
+        document.getElementById('hint').innerText = checkouts[st.p[st.t].s] || "";
+    }
+
+    function chatToggle() {
+        let m = prompt("Enter Message:");
+        if(m && conn) {
+            conn.send({type:'chat', m: m});
+            addMsg(m, 'me');
+        }
+    }
+
+    function addMsg(m, side) {
+        const wall = document.getElementById('msgs');
+        wall.innerHTML += `<div class="m ${side}">${m}</div>`;
         wall.scrollTop = wall.scrollHeight;
     }
 </script>
