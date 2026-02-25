@@ -3,41 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DartStream Fix</title>
+    <title>DartStream Pro Stats</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
     <style>
         body { margin: 0; background: #020408; color: white; font-family: sans-serif; overflow: hidden; }
+        #setup-screen { position: fixed; inset: 0; background: #020408; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #start-btn { background: #00d4ff; color: #000; border: none; padding: 25px 60px; font-size: 24px; font-weight: bold; border-radius: 50px; cursor: pointer; }
         
-        /* The Overlay */
-        #setup-screen { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #020408; z-index: 10000; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
+        header { height: 50px; border-bottom: 1px solid #1b4965; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; font-size: 14px; }
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 25vh; background: #000; }
+        video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* The Button - Made extra large for easy tapping */
-        #start-btn { 
-            background: #00d4ff; color: #000; 
-            border: none; padding: 25px 60px; 
-            font-size: 24px; font-weight: bold; border-radius: 50px;
-            cursor: pointer; -webkit-appearance: none;
-            touch-action: manipulation;
-        }
-
-        #start-btn:active { background: #ffcc00; transform: scale(0.95); }
-
-        #status-msg { margin-top: 20px; color: #888; font-size: 14px; text-align: center; padding: 0 20px; }
-
-        /* App Layout */
-        header { height: 50px; border-bottom: 1px solid #1b4965; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 30vh; background: #000; }
-        video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        .scores { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; height: 40vh; }
-        .card { flex: 1; background: #0d1b2a; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 60px; border: 2px solid transparent; }
+        .scores { height: 45vh; display: flex; flex-direction: column; padding: 10px; gap: 8px; }
+        .card { flex: 1; background: #0d1b2a; border-radius: 12px; display: flex; padding: 15px; position: relative; border: 2px solid transparent; }
         .card.active { border-color: #00d4ff; background: #122c44; }
-        .controls { height: 80px; display: flex; padding: 10px; gap: 10px; background: #000; }
-        input { flex: 1; font-size: 30px; text-align: center; border-radius: 10px; border: none; }
-        button.hit { width: 100px; background: #00d4ff; border: none; border-radius: 10px; font-weight: bold; }
+        
+        .p-main { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .p-score { font-size: 55px; font-weight: 900; margin: 0; }
+        .p-stats { font-size: 12px; color: #00d4ff; font-weight: bold; }
+        
+        .checkout-hint { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); text-align: right; color: #ffcc00; font-weight: bold; font-size: 16px; }
+
+        .controls { height: 100px; display: flex; padding: 10px; gap: 10px; background: #000; border-top: 1px solid #1b4965; }
+        input { flex: 1; font-size: 35px; text-align: center; border-radius: 10px; border: none; background: #111; color: white; }
+        button.hit { width: 100px; background: #00d4ff; border: none; border-radius: 10px; font-weight: bold; font-size: 20px; }
+        #status-msg { color: #888; font-size: 12px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -45,12 +35,13 @@
 <div id="setup-screen">
     <h1 style="color:#00d4ff">DARTSTREAM</h1>
     <button id="start-btn">START APP</button>
-    <div id="status-msg">Tap the button to enable Camera</div>
+    <div id="status-msg">Check HTTPS & Permissions</div>
 </div>
 
 <header>
     <div>ID: <span id="my-id">...</span></div>
-    <button onclick="shareLink()" style="background:#1b4965; color:white; border:none; padding:5px 10px; border-radius:5px;">INVITE</button>
+    <div id="darts-thrown" style="color:#888">Darts: 0</div>
+    <button onclick="shareLink()" style="background:#1b4965; color:white; border:none; padding:5px 12px; border-radius:5px;">INVITE</button>
 </header>
 
 <div class="v-grid">
@@ -59,101 +50,143 @@
 </div>
 
 <div class="scores">
-    <div id="c0" class="card active">501</div>
-    <div id="c1" class="card">501</div>
+    <div id="c0" class="card active">
+        <div class="p-main">
+            <p class="p-stats">AVG: <span id="avg0">0.0</span> | DARTS: <span id="d0">0</span></p>
+            <h2 class="p-score" id="s0">501</h2>
+        </div>
+        <div class="checkout-hint" id="out0"></div>
+    </div>
+    <div id="c1" class="card">
+        <div class="p-main">
+            <p class="p-stats">AVG: <span id="avg1">0.0</span> | DARTS: <span id="d1">0</span></p>
+            <h2 class="p-score" id="s1">501</h2>
+        </div>
+        <div class="checkout-hint" id="out1"></div>
+    </div>
 </div>
 
 <div class="controls">
-    <input type="number" id="pts" placeholder="0" inputmode="numeric">
+    <input type="number" id="pts" placeholder="HIT" inputmode="numeric">
     <button class="hit" onclick="doHit()">HIT</button>
 </div>
 
 <script>
-    const msg = (t) => { document.getElementById('status-msg').innerText = t; };
+    // Simplified Checkout Data (Focusing on common finishes)
+    const checkouts = {
+        170: "T20 T20 DB", 167: "T20 T19 DB", 164: "T20 T18 DB", 161: "T20 T17 DB", 160: "T20 T20 D20",
+        121: "T20 11 D25", 100: "T20 D20", 80: "T20 D10", 60: "S20 D20", 40: "D20", 32: "D16"
+        // Logic below will show "Finishable" for others
+    };
+
     let localStream, peer, conn;
-    let state = { turn: 0, s: [501, 501] };
+    let state = { 
+        turn: 0, 
+        p: [
+            { s: 501, darts: 0, totalPts: 0 }, 
+            { s: 501, darts: 0, totalPts: 0 }
+        ] 
+    };
 
-    // Wait for full window load
     window.onload = () => {
-        msg("Ready. Tap START.");
-        
-        document.getElementById('start-btn').addEventListener('click', async function() {
-            msg("Initializing... please wait.");
-            this.style.display = 'none'; // Hide button to prevent double-click
-
+        document.getElementById('start-btn').onclick = async function() {
+            this.style.display = 'none';
             try {
-                // 1. Camera
-                localStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" }, 
-                    audio: true 
-                });
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('me').srcObject = localStream;
-                msg("Camera active. Connecting to network...");
-
-                // 2. PeerJS
                 peer = new Peer();
-
                 peer.on('open', (id) => {
                     document.getElementById('my-id').innerText = id;
                     document.getElementById('setup-screen').style.display = 'none';
                     checkInvite();
                 });
-
                 peer.on('call', (call) => {
                     call.answer(localStream);
                     call.on('stream', s => document.getElementById('peer').srcObject = s);
                 });
-
                 peer.on('connection', c => {
                     conn = c;
                     conn.on('data', d => { state = d; updateUI(); });
                 });
-
-                peer.on('error', e => {
-                    alert("Network Error: " + e.type);
-                    location.reload(); 
-                });
-
             } catch (err) {
-                msg("Error: " + err.message);
+                alert("Camera failed. Use HTTPS.");
                 this.style.display = 'block';
-                this.innerText = "TRY AGAIN";
-                alert("Please use HTTPS and allow camera access.");
             }
-        });
+        };
     };
 
     function doHit() {
-        let p = document.getElementById('pts');
-        let v = parseInt(p.value) || 0;
-        state.s[state.turn] -= v;
+        let input = document.getElementById('pts');
+        let val = parseInt(input.value) || 0;
+        if (val > 180) return;
+
+        let player = state.p[state.turn];
+        
+        // Bust logic
+        if (player.s - val < 0 || player.s - val === 1) {
+            // Bust: darts count but score doesn't change
+            player.darts += 3;
+        } else {
+            player.s -= val;
+            player.totalPts += val;
+            player.darts += 3;
+            
+            if (player.s === 0) {
+                alert("Winner!");
+                resetGame();
+            }
+        }
+
         state.turn = state.turn === 0 ? 1 : 0;
         updateUI();
         if(conn) conn.send(state);
-        p.value = '';
+        input.value = '';
+    }
+
+    function getCheckout(score) {
+        if (score > 170) return "";
+        if (checkouts[score]) return checkouts[score];
+        // Dynamic hint for basic doubles
+        if (score <= 40 && score % 2 === 0) return "D" + (score / 2);
+        if (score <= 50) return "Finishable";
+        return "Finish";
     }
 
     function updateUI() {
-        document.getElementById('c0').innerText = state.s[0];
-        document.getElementById('c1').innerText = state.s[1];
-        document.getElementById('c0').className = state.turn === 0 ? 'card active' : 'card';
-        document.getElementById('c1').className = state.turn === 1 ? 'card active' : 'card';
+        state.p.forEach((p, i) => {
+            document.getElementById(`s${i}`).innerText = p.s;
+            document.getElementById(`d${i}`).innerText = p.darts;
+            
+            // Average Calculation (3-dart avg)
+            let avg = p.darts > 0 ? (p.totalPts / (p.darts / 3)).toFixed(1) : "0.0";
+            document.getElementById(`avg${i}`).innerText = avg;
+            
+            // Checkout Logic
+            document.getElementById(`out${i}`).innerText = (state.turn === i) ? getCheckout(p.s) : "";
+            
+            document.getElementById(`c${i}`).className = (state.turn === i) ? "card active" : "card";
+        });
+        document.getElementById('darts-thrown').innerText = "Darts: " + state.p[0].darts;
+    }
+
+    function resetGame() {
+        state.p.forEach(p => { p.s = 501; p.darts = 0; p.totalPts = 0; });
+        state.turn = 0;
     }
 
     function shareLink() {
         const id = document.getElementById('my-id').innerText;
         const url = window.location.origin + window.location.pathname + '?join=' + id;
         navigator.clipboard.writeText(url);
-        alert("Invite link copied to clipboard!");
+        alert("Link Copied!");
     }
 
     function checkInvite() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const joinId = urlParams.get('join');
+        const params = new URLSearchParams(window.location.search);
+        const joinId = params.get('join');
         if (joinId) {
             conn = peer.connect(joinId);
-            const call = peer.call(joinId, localStream);
-            call.on('stream', s => document.getElementById('peer').srcObject = s);
+            peer.call(joinId, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
         }
     }
 </script>
