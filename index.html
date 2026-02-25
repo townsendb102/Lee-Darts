@@ -100,7 +100,7 @@
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 
 <script>
-    let localStream, peer, conn, facing = "user";
+        let localStream, peer, conn, currentFacing = "user";
     let state = { turn: 0, p: [{ s: 501, l: 0, pts: 0, d: 0 }, { s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
 
@@ -108,7 +108,10 @@
         const startBtn = document.querySelector('.btn-start');
         startBtn.innerText = "OPENING...";
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: currentFacing }, 
+                audio: true 
+            });
             document.getElementById('me').srcObject = localStream;
             document.getElementById('setup-layer').classList.add('hidden');
             
@@ -132,10 +135,33 @@
     }
 
     async function swapCam() {
-        facing = (facing === "user") ? "environment" : "user";
-        if (localStream) localStream.getTracks().forEach(t => t.stop());
-        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
-        document.getElementById('me').srcObject = localStream;
+        // Toggle the preference
+        currentFacing = (currentFacing === "user") ? "environment" : "user";
+        
+        if (localStream) {
+            // Stop old tracks
+            localStream.getTracks().forEach(t => t.stop());
+            
+            try {
+                // Request new camera
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: currentFacing }, 
+                    audio: true 
+                });
+                
+                // Update local video element
+                document.getElementById('me').srcObject = localStream;
+
+                // If currently in a call, replace the video track for your friend
+                if (peer && conn) {
+                    const videoTrack = localStream.getVideoTracks()[0];
+                    const sender = peer._connections[conn.peer][0].peerConnection.getSenders().find(s => s.track.kind === 'video');
+                    if (sender) sender.replaceTrack(videoTrack);
+                }
+            } catch (e) {
+                alert("Could not switch to back camera.");
+            }
+        }
     }
 
     function processScore() {
@@ -200,6 +226,8 @@
         const id = document.getElementById('display-id').innerText;
         navigator.clipboard.writeText(id);
         alert("ID Copied");
+    }
+
     }
 </script>
 </body>
