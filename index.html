@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream Pro: Fixed Scaling</title>
+    <title>DartStream: 50/50 Split</title>
     <style>
-        :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; --gold: #ffcc00; }
+        :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* The main fix: Use 100dvh (dynamic viewport height) and a strict grid */
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            /* Explicitly defined rows: Header (40px) | Camera (30%) | Scores (Flexible) | Controls (90px) */
-            grid-template-rows: 40px 30dvh 1fr 90px;
+            /* Header (40px) | Camera (45%) | Scores (45%) | Controls (10%) */
+            grid-template-rows: 40px 45dvh 1fr 80px;
             overflow: hidden; 
         }
         
@@ -22,35 +21,32 @@
 
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-bottom: 1px solid #1b4965; font-size: 11px; }
         .header-controls { display: flex; gap: 5px; align-items: center; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; }
+        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
 
         .v-grid { display: grid; grid-template-columns: 1fr 1fr; background: #000; border-bottom: 1px solid #1b4965; height: 100%; }
         .v-box { position: relative; height: 100%; border-right: 1px solid #1b4965; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 
-        /* Scoring section that shrinks/grows to fit the gap */
-        .score-area { display: flex; flex-direction: column; padding: 6px; gap: 6px; min-height: 0; }
-        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
+        .score-area { display: flex; flex-direction: column; padding: 6px; gap: 4px; min-height: 0; }
+        .player-card { flex: 1; background: var(--card); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; padding: 8px 12px; border: 2px solid transparent; min-height: 0; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
-        .stats-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--blue); font-weight: bold; margin-bottom: 2px; }
+        .p-label { font-size: 9px; color: #888; margin-bottom: 1px; }
+        .stats-row { display: flex; justify-content: space-between; font-size: 9px; color: var(--blue); font-weight: bold; }
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        
-        /* Font scaling: Uses clamp to ensure text stays legible but never overflows */
-        .score-val { font-size: clamp(30px, 9dvh, 60px); font-weight: 900; line-height: 1; }
-        .checkout-suggestion { color: var(--gold); font-weight: bold; font-size: 14px; text-align: right; max-width: 45%; }
-        .legs-count { font-size: 10px; color: var(--blue); }
+        .score-val { font-size: clamp(35px, 7dvh, 50px); font-weight: 900; line-height: 1; }
+        .legs-count { font-size: 9px; color: var(--blue); }
 
-        /* The Control bar: Locked at the absolute bottom */
         .controls { 
-            display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 10px; gap: 10px; 
+            display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 6px; gap: 6px; 
             background: #000; border-top: 1px solid #1b4965;
-            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
         }
-        #pts-input { width: 100%; height: 100%; background: #111; border: 1px solid #333; color: white; text-align: center; font-size: 32px; outline: none; border-radius: 8px; }
-        .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
+        .score-input-box { background: #000; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .btn-undo { background: #222; border: 1px solid #444; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; }
+        .btn-hit { background: var(--blue); border: none; border-radius: 6px; color: black; font-weight: bold; font-size: 18px; display: flex; align-items: center; justify-content: center; }
         
+        #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 28px; outline: none; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -58,14 +54,14 @@
 
 <div id="setup-layer">
     <h1 style="color:var(--blue); margin-bottom:15px;">DARTSTREAM</h1>
-    <button class="btn-start" onclick="beginMatch()">START MATCH</button>
+    <button class="btn-start" onclick="initApp()">START MATCH</button>
 </div>
 
 <header>
     <div onclick="copyId()">ID: <span id="display-id" style="color:var(--blue); font-size: 9px;">...</span></div>
     <div class="header-controls">
         <button class="header-btn" onclick="swapCam()">FLIP</button>
-        <button class="header-btn" onclick="shareLink()">LINK</button>
+        <button class="header-btn" id="invite-btn" onclick="shareLink()">LINK</button>
     </div>
 </header>
 
@@ -76,134 +72,94 @@
 
 <div class="score-area">
     <div id="card-0" class="player-card active">
-        <div class="stats-row"><span>AVG: <span id="avg-0">0.0</span></span> <span>LEGS: <span id="l-0">0</span></span></div>
+        <div class="p-label">P1</div>
         <div class="score-row">
+            <div class="stats-row">AVG: <span id="avg-0">0</span></div>
             <div class="score-val" id="s-0">501</div>
-            <div class="checkout-suggestion" id="finish-0"></div>
+            <div class="legs-count">LEGS: <span id="l-0">0</span></div>
         </div>
     </div>
     <div id="card-1" class="player-card">
-        <div class="stats-row"><span>AVG: <span id="avg-1">0.0</span></span> <span>LEGS: <span id="l-1">0</span></span></div>
+        <div class="p-label">P2</div>
         <div class="score-row">
+            <div class="stats-row">AVG: <span id="avg-1">0</span></div>
             <div class="score-val" id="s-1">501</div>
-            <div class="checkout-suggestion" id="finish-1"></div>
+            <div class="legs-count">LEGS: <span id="l-1">0</span></div>
         </div>
     </div>
 </div>
 
 <div class="controls">
-    <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
+    <div class="score-input-box">
+        <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
+    </div>
     <button class="btn-undo" onclick="undo()">⟲</button>
-    <button class="btn-hit" onclick="processScore()">HIT</button>
+    <button class="btn-hit" onclick="processHit()">HIT</button>
 </div>
 
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 
 <script>
-        let localStream, peer, conn, currentFacing = "user";
+    let stream, peer, conn, facing = "user";
     let state = { turn: 0, p: [{ s: 501, l: 0, pts: 0, d: 0 }, { s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
 
-    async function beginMatch() {
-        const startBtn = document.querySelector('.btn-start');
-        startBtn.innerText = "OPENING...";
+    async function initApp() {
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: currentFacing }, 
-                audio: true 
-            });
-            document.getElementById('me').srcObject = localStream;
-            document.getElementById('setup-layer').classList.add('hidden');
-            
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
+            document.getElementById('me').srcObject = stream;
             peer = new Peer();
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
+                document.getElementById('setup-layer').classList.add('hidden');
                 autoJoin();
             });
             peer.on('call', call => {
-                call.answer(localStream);
+                call.answer(stream);
                 call.on('stream', s => document.getElementById('peer').srcObject = s);
             });
             peer.on('connection', c => {
                 conn = c;
-                conn.on('data', d => { state = d; renderUI(); });
+                conn.on('data', d => { state = d; render(); });
             });
         } catch (e) {
-            alert("Camera failed. Ensure you use HTTPS.");
-            startBtn.innerText = "RETRY";
+            alert("Camera failed. Use HTTPS.");
         }
     }
 
     async function swapCam() {
-        // Toggle the preference
-        currentFacing = (currentFacing === "user") ? "environment" : "user";
-        
-        if (localStream) {
-            // Stop old tracks
-            localStream.getTracks().forEach(t => t.stop());
-            
-            try {
-                // Request new camera
-                localStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: currentFacing }, 
-                    audio: true 
-                });
-                
-                // Update local video element
-                document.getElementById('me').srcObject = localStream;
-
-                // If currently in a call, replace the video track for your friend
-                if (peer && conn) {
-                    const videoTrack = localStream.getVideoTracks()[0];
-                    const sender = peer._connections[conn.peer][0].peerConnection.getSenders().find(s => s.track.kind === 'video');
-                    if (sender) sender.replaceTrack(videoTrack);
-                }
-            } catch (e) {
-                alert("Could not switch to back camera.");
-            }
-        }
+        facing = (facing === "user") ? "environment" : "user";
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
+        document.getElementById('me').srcObject = stream;
     }
 
-    function processScore() {
+    function processHit() {
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value) || 0;
         if (val > 180) return;
-        
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
-        
         if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val; p.pts += val; p.d += 3;
             if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); }
             else { state.turn = (state.turn === 0) ? 1 : 0; }
-        } else {
-            state.turn = (state.turn === 0) ? 1 : 0;
-        }
-
-        renderUI();
+        } else { state.turn = (state.turn === 0) ? 1 : 0; }
+        render();
         if (conn) conn.send(state);
         input.value = '';
-        input.focus();
     }
 
     function undo() {
-        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; renderUI(); if(conn) conn.send(state); }
+        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if(conn) conn.send(state); }
     }
 
-    function getCheckout(s) {
-        if (s > 170 || [169, 168, 166, 165, 163, 162, 159].includes(s)) return "";
-        if (s === 170) return "T20 T20 BULL";
-        if (s <= 40 && s % 2 === 0) return "D" + (s/2);
-        return "FINISH ZONE";
-    }
-
-    function renderUI() {
+    function render() {
         state.p.forEach((p, i) => {
             document.getElementById(`s-${i}`).innerText = p.s;
             document.getElementById(`l-${i}`).innerText = p.l;
-            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
+            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0";
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
-            document.getElementById(`finish-${i}`).innerText = (state.turn === i) ? getCheckout(p.s) : "";
         });
     }
 
@@ -218,16 +174,13 @@
         const id = new URLSearchParams(window.location.search).get('join');
         if (id && peer) {
             conn = peer.connect(id);
-            peer.call(id, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
+            peer.call(id, stream).on('stream', s => document.getElementById('peer').srcObject = s);
         }
     }
 
     function copyId() {
-        const id = document.getElementById('display-id').innerText;
-        navigator.clipboard.writeText(id);
+        navigator.clipboard.writeText(document.getElementById('display-id').innerText);
         alert("ID Copied");
-    }
-
     }
 </script>
 </body>
