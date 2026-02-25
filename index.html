@@ -3,50 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DartStream Live</title>
+    <title>DartStream Live + Chat</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --neon-green: #00ff88; --accent-pink: #e91e63; --bg-dark: #121212; --panel-bg: #1e1e1e; }
+        :root { --neon-green: #00ff88; --bg-dark: #121212; --panel-bg: #1e1e1e; }
         body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         
-        /* Peer Setup Header */
-        .connection-bar { background: #333; padding: 10px; display: flex; gap: 10px; align-items: center; justify-content: center; font-size: 0.9rem; }
-        
+        .connection-bar { background: #333; padding: 10px; display: flex; gap: 10px; align-items: center; justify-content: center; font-size: 0.8rem; border-bottom: 2px solid #444; }
         .app-container { display: flex; flex: 1; overflow: hidden; }
 
-        /* Video Section - Split View */
-        .video-section { flex: 1.2; background: #000; display: grid; grid-template-rows: 1fr 1fr; gap: 5px; padding: 5px; border-right: 2px solid #333; }
-        .video-container { position: relative; background: #222; border-radius: 8px; overflow: hidden; }
+        /* Video Section */
+        .video-section { flex: 1.5; background: #000; display: grid; grid-template-rows: 1fr 1fr; gap: 5px; padding: 5px; }
+        .video-container { position: relative; background: #222; border-radius: 8px; overflow: hidden; border: 1px solid #333; }
         video { width: 100%; height: 100%; object-fit: cover; }
-        .video-label { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }
+        .video-label { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; z-index: 10; }
 
-        /* Score Section */
-        .score-section { flex: 1; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; background: var(--panel-bg); }
-        .player-card { padding: 15px; border-radius: 12px; border: 2px solid transparent; opacity: 0.4; background: #2a2a2a; }
-        .player-card.active { opacity: 1; border-color: var(--neon-green); box-shadow: 0 0 15px rgba(0,255,136,0.1); }
+        /* Sidebar Section (Scores + Chat) */
+        .sidebar { flex: 1; display: flex; flex-direction: column; background: var(--panel-bg); border-left: 2px solid #333; }
         
-        .stats-row { display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px; }
-        .score-val { font-size: 4rem; font-weight: 800; margin: 0; text-align: center; }
+        .score-area { padding: 15px; flex-shrink: 0; }
+        .player-card { padding: 12px; border-radius: 10px; background: #2a2a2a; margin-bottom: 10px; opacity: 0.4; border: 2px solid transparent; }
+        .player-card.active { opacity: 1; border-color: var(--neon-green); }
+        .score-val { font-size: 3.5rem; font-weight: 800; margin: 0; text-align: center; }
+
+        /* Chat System */
+        .chat-container { flex: 1; display: flex; flex-direction: column; background: #181818; margin: 10px; border-radius: 8px; overflow: hidden; border: 1px solid #333; }
+        #chat-wall { flex: 1; padding: 10px; overflow-y: auto; font-size: 0.9rem; display: flex; flex-direction: column; gap: 5px; }
+        .msg { padding: 5px 10px; border-radius: 5px; max-width: 80%; width: fit-content; }
+        .msg.me { background: var(--neon-green); color: black; align-self: flex-end; }
+        .msg.them { background: #444; color: white; align-self: flex-start; }
         
-        .input-area { background: #2a2a2a; padding: 20px; border-radius: 12px; text-align: center; }
-        input { width: 80%; padding: 12px; font-size: 1.5rem; border-radius: 8px; border: none; background: #121212; color: white; text-align: center; margin-bottom: 10px; }
-        button { padding: 10px 20px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
-        .btn-main { background: var(--neon-green); color: black; }
-        .btn-alt { background: #444; color: white; }
+        .chat-input-row { display: flex; padding: 10px; gap: 5px; background: #222; }
+        .chat-input-row input { flex: 1; padding: 8px; border-radius: 4px; border: none; background: #121212; color: white; }
+
+        .controls { padding: 15px; background: #222; text-align: center; }
+        input[type="number"] { width: 70%; padding: 10px; font-size: 1.5rem; text-align: center; margin-bottom: 10px; border-radius: 5px; border: none; }
+        button { padding: 10px 15px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-send { background: var(--neon-green); color: black; }
     </style>
 </head>
 <body>
 
 <div class="connection-bar">
-    <span>Your ID: <b id="my-id">...</b></span>
-    <input type="text" id="remote-id" placeholder="Friend's ID" style="width: 150px; font-size: 0.8rem;">
-    <button class="btn-main" onclick="connectToFriend()" style="padding: 5px 10px;">Connect</button>
+    <span>My ID: <b id="my-id">...</b></span>
+    <input type="text" id="remote-id" placeholder="Friend's ID">
+    <button class="btn-send" onclick="connectToFriend()">Connect</button>
 </div>
 
 <div class="app-container">
     <section class="video-section">
         <div class="video-container">
-            <span class="video-label">YOU (MY BOARD)</span>
+            <span class="video-label">YOU</span>
             <video id="local-video" autoplay playsinline muted></video>
         </div>
         <div class="video-container">
@@ -55,27 +62,35 @@
         </div>
     </section>
 
-    <section class="score-section">
-        <div id="players-container">
+    <section class="sidebar">
+        <div class="score-area">
             <div class="player-card active" id="card-0">
-                <div class="stats-row"><span>Sets: <b id="p0-sets">0</b> | Legs: <b id="p0-legs">0</b></span> <span>Avg: <b id="p0-avg">0.00</b></span></div>
-                <h2 id="p0-name">Player 1</h2>
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem;">
+                    <span>Legs: <b id="p0-legs">0</b></span>
+                    <span>Avg: <b id="p0-avg">0.00</b></span>
+                </div>
                 <p class="score-val" id="p0-score">501</p>
             </div>
             <div class="player-card" id="card-1">
-                <div class="stats-row"><span>Sets: <b id="p1-sets">0</b> | Legs: <b id="p1-legs">0</b></span> <span>Avg: <b id="p1-avg">0.00</b></span></div>
-                <h2 id="p1-name">Player 2</h2>
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem;">
+                    <span>Legs: <b id="p1-legs">0</b></span>
+                    <span>Avg: <b id="p1-avg">0.00</b></span>
+                </div>
                 <p class="score-val" id="p1-score">501</p>
             </div>
         </div>
 
-        <div class="input-area">
-            <div id="checkout-hint" style="color:#ffcc00; margin-bottom: 5px;"></div>
-            <input type="number" id="score-input" placeholder="Enter Score">
-            <div>
-                <button class="btn-main" onclick="submitTurn()">Submit</button>
-                <button class="btn-alt" onclick="undo()">Undo</button>
+        <div class="chat-container">
+            <div id="chat-wall"></div>
+            <div class="chat-input-row">
+                <input type="text" id="chat-input" placeholder="Say something...">
+                <button class="btn-send" onclick="sendChat()">Send</button>
             </div>
+        </div>
+
+        <div class="controls">
+            <input type="number" id="score-input" placeholder="Score">
+            <button class="btn-send" style="width:100%" onclick="submitTurn()">Submit Points</button>
         </div>
     </section>
 </div>
@@ -84,106 +99,91 @@
     let peer, conn, localStream;
     let gameState = {
         currentPlayer: 0,
-        players: [
-            {score: 501, legs: 0, sets: 0, totalPoints: 0, darts: 0},
-            {score: 501, legs: 0, sets: 0, totalPoints: 0, darts: 0}
-        ]
+        players: [{score: 501, legs: 0, totalPoints: 0, darts: 0}, {score: 501, legs: 0, totalPoints: 0, darts: 0}]
     };
 
-    // Initialize Peer
-    peer = new Peer(); 
-
-    peer.on('open', id => {
-        document.getElementById('my-id').innerText = id;
-        startCamera(); // Auto-start camera on load
+    peer = new Peer();
+    peer.on('open', id => { document.getElementById('my-id').innerText = id; startCamera(); });
+    
+    peer.on('connection', c => { 
+        conn = c; 
+        setupListeners(); 
     });
 
-    // Handle incoming connections (When friend connects to YOU)
-    peer.on('connection', c => {
-        conn = c;
-        setupDataListeners();
-    });
-
-    // Handle incoming video calls
     peer.on('call', call => {
         call.answer(localStream);
-        call.on('stream', remoteStream => {
-            document.getElementById('remote-video').srcObject = remoteStream;
-        });
+        call.on('stream', s => document.getElementById('remote-video').srcObject = s);
     });
 
     async function startCamera() {
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('local-video').srcObject = localStream;
-        } catch (e) { alert("Camera Permission Denied"); }
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById('local-video').srcObject = localStream;
     }
 
     function connectToFriend() {
-        const remoteId = document.getElementById('remote-id').value;
-        conn = peer.connect(remoteId);
-        setupDataListeners();
-        
-        // Start Video Call
-        const call = peer.call(remoteId, localStream);
-        call.on('stream', remoteStream => {
-            document.getElementById('remote-video').srcObject = remoteStream;
-        });
+        const id = document.getElementById('remote-id').value;
+        conn = peer.connect(id);
+        setupListeners();
+        peer.call(id, localStream).on('stream', s => document.getElementById('remote-video').srcObject = s);
     }
 
-    function setupDataListeners() {
+    function setupListeners() {
         conn.on('data', data => {
-            gameState = data; // Sync local state with received state
-            updateUI();
+            if (data.type === 'chat') {
+                addChatMessage(data.msg, 'them');
+            } else {
+                gameState = data;
+                updateUI();
+            }
         });
-        alert("Connected to friend!");
     }
 
-    function sync() {
-        if (conn) conn.send(gameState);
-    }
-
-    // --- REMAINDER OF YOUR SCORING LOGIC ---
-    function submitTurn() {
-        const input = document.getElementById('score-input');
-        const points = parseInt(input.value) || 0;
-        if (points > 180) return;
-
-        let p = gameState.players[gameState.currentPlayer];
-        let newScore = p.score - points;
-
-        if (newScore === 0) {
-            p.score = 0; p.totalPoints += points; p.darts += 3;
-            handleLegWin();
-        } else if (newScore > 1) {
-            p.score = newScore; p.totalPoints += points; p.darts += 3;
-            gameState.currentPlayer = gameState.currentPlayer === 0 ? 1 : 0;
-        } else {
-            alert("BUST");
-            gameState.currentPlayer = gameState.currentPlayer === 0 ? 1 : 0;
-        }
-
-        updateUI();
-        sync(); // Send new score to friend
+    function sendChat() {
+        const input = document.getElementById('chat-input');
+        const msg = input.value;
+        if (!msg || !conn) return;
+        conn.send({ type: 'chat', msg: msg });
+        addChatMessage(msg, 'me');
         input.value = '';
     }
 
-    function handleLegWin() {
+    function addChatMessage(text, side) {
+        const wall = document.getElementById('chat-wall');
+        const div = document.createElement('div');
+        div.className = `msg ${side}`;
+        div.innerText = text;
+        wall.appendChild(div);
+        wall.scrollTop = wall.scrollHeight;
+    }
+
+    function submitTurn() {
+        const input = document.getElementById('score-input');
+        const pts = parseInt(input.value) || 0;
         let p = gameState.players[gameState.currentPlayer];
-        p.legs++;
-        gameState.players.forEach(pl => pl.score = 501);
-        alert("Leg Won!");
+        
+        if (p.score - pts >= 0 && p.score - pts !== 1) {
+            p.score -= pts;
+            p.totalPoints += pts;
+            p.darts += 3;
+            if (p.score === 0) { p.legs++; gameState.players.forEach(x => x.score = 501); }
+            else { gameState.currentPlayer = gameState.currentPlayer === 0 ? 1 : 0; }
+        } else { alert("BUST"); gameState.currentPlayer = gameState.currentPlayer === 0 ? 1 : 0; }
+
+        updateUI();
+        if (conn) conn.send(gameState);
+        input.value = '';
     }
 
     function updateUI() {
         gameState.players.forEach((p, i) => {
             document.getElementById(`p${i}-score`).innerText = p.score;
             document.getElementById(`p${i}-legs`).innerText = p.legs;
-            const avg = p.darts > 0 ? ((p.totalPoints / p.darts) * 3).toFixed(2) : "0.00";
-            document.getElementById(`p${i}-avg`).innerText = avg;
+            document.getElementById(`p${i}-avg`).innerText = p.darts > 0 ? ((p.totalPoints / p.darts) * 3).toFixed(2) : "0.00";
             document.getElementById(`card-${i}`).className = i === gameState.currentPlayer ? "player-card active" : "player-card";
         });
     }
+
+    document.getElementById('chat-input').addEventListener('keypress', e => { if(e.key === 'Enter') sendChat(); });
 </script>
 </body>
 </html>
