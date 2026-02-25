@@ -11,39 +11,42 @@
         
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
-            height: 100%; min-height: 100dvh; display: flex; flex-direction: column;
+            height: 100dvh; width: 100vw; position: relative; overflow: hidden;
         }
         
         #safety-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-start { background: var(--blue); color: black; padding: 18px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; }
 
-        header { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; flex-shrink: 0; }
+        header { height: 35px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 10px; }
         
-        /* Fixed Video Size to prevent layout shifts */
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 120px; background: #000; flex-shrink: 0; }
+        /* Video - Strictly 100px to save space */
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 100px; background: #000; border-bottom: 1px solid #1b4965; }
         .v-box { position: relative; height: 100%; border-right: 1px solid #1b4965; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        .flip-btn { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 9px; padding: 2px 6px; border-radius: 4px; z-index: 20; }
+        .flip-btn { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 8px; padding: 2px 5px; border-radius: 4px; z-index: 20; }
 
-        /* Flexible Score Area */
-        .score-area { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; padding-bottom: 100px; /* Space for fixed controls */ }
-        .player-card { background: var(--card); border-radius: 12px; display: flex; flex-direction: column; padding: 12px 15px; border: 2px solid transparent; min-height: 100px; }
-        .player-card.active { border-color: var(--blue); background: var(--active); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        
-        .stats-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--blue); font-weight: bold; margin-bottom: 5px; }
-        .score-row { display: flex; justify-content: space-between; align-items: center; }
-        .score-val { font-size: 45px; font-weight: 900; line-height: 1; }
-        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 14px; text-align: right; }
-
-        /* Floating Controls - Glued to bottom of screen */
-        .controls { 
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            height: 90px; background: #000; display: flex; padding: 10px; gap: 10px; 
-            border-top: 2px solid var(--blue); 
-            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        /* Score Area - Forced to fit the middle gap */
+        .score-area { 
+            position: absolute; top: 135px; bottom: 85px; left: 0; right: 0;
+            display: flex; flex-direction: column; padding: 8px; gap: 8px; 
         }
-        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 30px; text-align: center; border-radius: 10px; outline: none; }
-        .btn-hit { width: 90px; background: var(--blue); border: none; border-radius: 10px; font-weight: bold; font-size: 20px; color: black; }
+        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 8px 12px; border: 2px solid transparent; }
+        .player-card.active { border-color: var(--blue); background: var(--active); }
+        
+        .stats-row { display: flex; justify-content: space-between; font-size: 9px; color: var(--blue); font-weight: bold; margin-bottom: 2px; }
+        .score-row { display: flex; justify-content: space-between; align-items: center; }
+        .score-val { font-size: 40px; font-weight: 900; line-height: 1; }
+        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 13px; text-align: right; }
+
+        /* Controls - Absolutely locked to the bottom */
+        .controls { 
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            height: 80px; background: #000; display: flex; padding: 10px; gap: 10px; 
+            border-top: 2px solid var(--blue);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 28px; text-align: center; border-radius: 8px; outline: none; }
+        .btn-hit { width: 80px; background: var(--blue); border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: black; }
         
         .hidden { display: none !important; }
     </style>
@@ -57,7 +60,7 @@
 
 <header>
     <div onclick="copyMyId()">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
-    <button onclick="shareMatchLink()" style="background:var(--blue); color:black; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:10px;">INVITE</button>
+    <button onclick="shareMatchLink()" style="background:var(--blue); color:black; border:none; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:9px;">INVITE</button>
 </header>
 
 <div class="v-grid">
@@ -98,35 +101,29 @@
         try {
             stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
             document.getElementById('me').srcObject = stream;
-            
             peer = new Peer();
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('safety-layer').style.display = 'none';
-                
                 const joinId = new URLSearchParams(window.location.search).get('join');
                 if (joinId) {
                     conn = peer.connect(joinId);
                     peer.call(joinId, stream).on('stream', s => document.getElementById('peer').srcObject = s);
                 }
             });
-
             peer.on('call', call => {
                 call.answer(stream);
-                call.on('stream', s => document.getElementById('peer-video').srcObject = s);
+                call.on('stream', s => document.getElementById('peer').srcObject = s);
             });
-
             peer.on('connection', c => {
                 conn = c;
                 conn.on('data', d => { state = d; updateDisplay(); });
             });
-        } catch (e) {
-            alert("Please use HTTPS and allow camera access.");
-        }
+        } catch (e) { alert("Enable Camera & HTTPS"); }
     }
 
     async function swapCam() {
-        facing = facing === "user" ? "environment" : "user";
+        facing = (facing === "user") ? "environment" : "user";
         if (stream) stream.getTracks().forEach(t => t.stop());
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } });
         document.getElementById('me').srcObject = stream;
@@ -136,29 +133,22 @@
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value) || 0;
         if (val > 180) return;
-
         let p = state.p[state.turn];
         if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val; p.pts += val; p.d += 3;
-            if (p.s === 0) { alert("Match Won!"); resetGame(); }
+            if (p.s === 0) { alert("Winner!"); p.s = 501; p.d = 0; p.pts = 0; }
         } else { p.d += 3; }
-
-        state.turn = state.turn === 0 ? 1 : 0;
+        state.turn = (state.turn === 0) ? 1 : 0;
         updateDisplay();
         if (conn) conn.send(state);
         input.value = '';
     }
 
-    function resetGame() {
-        state.p.forEach(p => { p.s = 501; p.d = 0; p.pts = 0; });
-        state.turn = 0;
-    }
-
     function getFinishes(s) {
         if (s > 170 || [169, 168, 166, 165, 163, 162, 159].includes(s)) return "";
-        if (s === 170) return "T20 T20 BULL";
+        if (s === 170) return "T20-T20-BULL";
         if (s <= 40 && s % 2 === 0) return "D" + (s/2);
-        return "OUT ZONE";
+        return "FINISH";
     }
 
     function updateDisplay() {
@@ -166,21 +156,16 @@
             document.getElementById(`s-${i}`).innerText = p.s;
             document.getElementById(`d-${i}`).innerText = p.d;
             document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-            document.getElementById(`card-${i}`).className = state.turn === i ? "player-card active" : "player-card";
-            document.getElementById(`out-${i}`).innerText = state.turn === i ? getFinishes(p.s) : "";
+            document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
+            document.getElementById(`out-${i}`).innerText = (state.turn === i) ? getFinishes(p.s) : "";
         });
     }
 
     function shareMatchLink() {
         const id = document.getElementById('display-id').innerText;
         const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) navigator.share({ title: 'Join DartStream', url: url });
-        else { navigator.clipboard.writeText(url); alert("Invite Link Copied!"); }
-    }
-
-    function copyMyId() {
-        navigator.clipboard.writeText(document.getElementById('display-id').innerText);
-        alert("ID Copied");
+        if (navigator.share) navigator.share({ title: 'Join Darts', url: url });
+        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
     }
 </script>
 </body>
