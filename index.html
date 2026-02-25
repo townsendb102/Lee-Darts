@@ -14,19 +14,20 @@
             height: 100dvh; width: 100vw; position: relative; overflow: hidden;
         }
         
+        /* High-Priority Start Overlay */
         #safety-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-start { background: var(--blue); color: black; padding: 18px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; }
+        .btn-start { background: var(--blue); color: black; padding: 20px 50px; font-size: 22px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; }
 
         header { height: 35px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 10px; }
         
-        /* Video - Strictly 100px to save space */
+        /* Video - Locked to 100px */
         .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 100px; background: #000; border-bottom: 1px solid #1b4965; }
         .v-box { position: relative; height: 100%; border-right: 1px solid #1b4965; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
         .flip-btn { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 8px; padding: 2px 5px; border-radius: 4px; z-index: 20; }
 
-        /* Score Area - Forced to fit the middle gap */
-        .score-area { 
+        /* Score Area - Positioned between Camera and Controls */
+        #score-area { 
             position: absolute; top: 135px; bottom: 85px; left: 0; right: 0;
             display: flex; flex-direction: column; padding: 8px; gap: 8px; 
         }
@@ -38,15 +39,15 @@
         .score-val { font-size: 40px; font-weight: 900; line-height: 1; }
         .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 13px; text-align: right; }
 
-        /* Controls - Absolutely locked to the bottom */
-        .controls { 
+        /* Controls - Glued to the absolute bottom of the screen */
+        #footer-controls { 
             position: absolute; bottom: 0; left: 0; width: 100%;
             height: 80px; background: #000; display: flex; padding: 10px; gap: 10px; 
             border-top: 2px solid var(--blue);
             padding-bottom: env(safe-area-inset-bottom);
         }
         #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 28px; text-align: center; border-radius: 8px; outline: none; }
-        .btn-hit { width: 80px; background: var(--blue); border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: black; }
+        .btn-hit { width: 80px; background: var(--blue); border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: black; cursor: pointer; }
         
         .hidden { display: none !important; }
     </style>
@@ -55,23 +56,23 @@
 
 <div id="safety-layer">
     <h1 style="color:var(--blue); margin-bottom:15px;">DARTSTREAM</h1>
-    <button class="btn-start" onclick="beginSession()">START MATCH</button>
+    <button class="btn-start" onclick="beginMatch()">START MATCH</button>
 </div>
 
 <header>
-    <div onclick="copyMyId()">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
-    <button onclick="shareMatchLink()" style="background:var(--blue); color:black; border:none; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:9px;">INVITE</button>
+    <div onclick="copyId()">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
+    <button onclick="shareLink()" style="background:var(--blue); color:black; border:none; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:9px;">INVITE</button>
 </header>
 
 <div class="v-grid">
     <div class="v-box">
         <video id="me" autoplay playsinline muted></video>
-        <div class="flip-btn" onclick="swapCam()">FLIP</div>
+        <div class="flip-btn" onclick="toggleCam()">FLIP</div>
     </div>
     <div class="v-box"><video id="peer" autoplay playsinline></video></div>
 </div>
 
-<div class="score-area">
+<div id="score-area">
     <div id="card-0" class="player-card active">
         <div class="stats-row"><span>AVG: <span id="avg-0">0.0</span></span> <span>DARTS: <span id="d-0">0</span></span></div>
         <div class="score-row">
@@ -88,85 +89,59 @@
     </div>
 </div>
 
-<div class="controls">
+<div id="footer-controls">
     <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
-    <button class="btn-hit" onclick="processHit()">HIT</button>
+    <button class="btn-hit" onclick="hitScore()">HIT</button>
 </div>
 
 <script>
-    let stream, peer, conn, facing = "user";
+    let localStream, peer, conn, facing = "user";
     let state = { turn: 0, p: [{ s: 501, d: 0, pts: 0 }, { s: 501, d: 0, pts: 0 }] };
 
-    async function beginSession() {
+    async function beginMatch() {
+        const startBtn = document.querySelector('.btn-start');
+        startBtn.innerText = "INITIALIZING...";
+        
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
-            document.getElementById('me').srcObject = stream;
+            // First: Trigger camera to satisfy mobile browser security
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: facing }, 
+                audio: true 
+            });
+            document.getElementById('me').srcObject = localStream;
+            
+            // Second: Start Peer networking
             peer = new Peer();
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
-                document.getElementById('safety-layer').style.display = 'none';
+                document.getElementById('safety-layer').classList.add('hidden');
+                
+                // Handle incoming invites
                 const joinId = new URLSearchParams(window.location.search).get('join');
                 if (joinId) {
                     conn = peer.connect(joinId);
-                    peer.call(joinId, stream).on('stream', s => document.getElementById('peer').srcObject = s);
+                    peer.call(joinId, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
                 }
             });
+
             peer.on('call', call => {
-                call.answer(stream);
+                call.answer(localStream);
                 call.on('stream', s => document.getElementById('peer').srcObject = s);
             });
+
             peer.on('connection', c => {
                 conn = c;
-                conn.on('data', d => { state = d; updateDisplay(); });
+                conn.on('data', d => { state = d; renderUI(); });
             });
-        } catch (e) { alert("Enable Camera & HTTPS"); }
+        } catch (e) {
+            alert("Camera access denied. Please ensure you are on HTTPS and allow the camera.");
+            startBtn.innerText = "RETRY";
+        }
     }
 
-    async function swapCam() {
+    async function toggleCam() {
         facing = (facing === "user") ? "environment" : "user";
-        if (stream) stream.getTracks().forEach(t => t.stop());
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } });
-        document.getElementById('me').srcObject = stream;
+        if (localStream) localStream.getTracks().forEach(t => t.stop());
+        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } });
+        document.getElementById('me').srcObject = localStream;
     }
-
-    function processHit() {
-        const input = document.getElementById('pts-input');
-        const val = parseInt(input.value) || 0;
-        if (val > 180) return;
-        let p = state.p[state.turn];
-        if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.pts += val; p.d += 3;
-            if (p.s === 0) { alert("Winner!"); p.s = 501; p.d = 0; p.pts = 0; }
-        } else { p.d += 3; }
-        state.turn = (state.turn === 0) ? 1 : 0;
-        updateDisplay();
-        if (conn) conn.send(state);
-        input.value = '';
-    }
-
-    function getFinishes(s) {
-        if (s > 170 || [169, 168, 166, 165, 163, 162, 159].includes(s)) return "";
-        if (s === 170) return "T20-T20-BULL";
-        if (s <= 40 && s % 2 === 0) return "D" + (s/2);
-        return "FINISH";
-    }
-
-    function updateDisplay() {
-        state.p.forEach((p, i) => {
-            document.getElementById(`s-${i}`).innerText = p.s;
-            document.getElementById(`d-${i}`).innerText = p.d;
-            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-            document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
-            document.getElementById(`out-${i}`).innerText = (state.turn === i) ? getFinishes(p.s) : "";
-        });
-    }
-
-    function shareMatchLink() {
-        const id = document.getElementById('display-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) navigator.share({ title: 'Join Darts', url: url });
-        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
-    }
-</script>
-</body>
-</html>
