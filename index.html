@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream: 50/50 Split</title>
+    <title>DartStream: Dynamic Switch</title>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -11,7 +11,7 @@
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            /* Header (40px) | Camera (45%) | Scores (45%) | Controls (10%) */
+            /* Header | Dynamic Camera | Scores | Controls */
             grid-template-rows: 40px 45dvh 1fr 80px;
             overflow: hidden; 
         }
@@ -23,9 +23,12 @@
         .header-controls { display: flex; gap: 5px; align-items: center; }
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
 
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; background: #000; border-bottom: 1px solid #1b4965; height: 100%; }
-        .v-box { position: relative; height: 100%; border-right: 1px solid #1b4965; }
+        /* The Camera Container: Now single-view */
+        .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
+        .v-box { position: absolute; inset: 0; display: none; }
+        .v-box.visible { display: block; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
+        .cam-label { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.5); padding: 2px 6px; font-size: 10px; border-radius: 4px; color: var(--blue); }
 
         .score-area { display: flex; flex-direction: column; padding: 6px; gap: 4px; min-height: 0; }
         .player-card { flex: 1; background: var(--card); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; padding: 8px 12px; border: 2px solid transparent; min-height: 0; }
@@ -65,9 +68,15 @@
     </div>
 </header>
 
-<div class="v-grid">
-    <div class="v-box"><video id="me" autoplay playsinline muted></video></div>
-    <div class="v-box"><video id="peer" autoplay playsinline></video></div>
+<div class="v-container">
+    <div id="box-me" class="v-box visible">
+        <div class="cam-label">YOU</div>
+        <video id="me" autoplay playsinline muted></video>
+    </div>
+    <div id="box-peer" class="v-box">
+        <div class="cam-label">OPPONENT</div>
+        <video id="peer" autoplay playsinline></video>
+    </div>
 </div>
 
 <div class="score-area">
@@ -101,6 +110,7 @@
 
 <script>
     let stream, peer, conn, facing = "user";
+    let myIndex = 0; // Host is 0, Joiner is 1
     let state = { turn: 0, p: [{ s: 501, l: 0, pts: 0, d: 0 }, { s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
 
@@ -161,6 +171,16 @@
             document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0";
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
+
+        // --- NEW VIDEO SWITCH LOGIC ---
+        // If it's my turn, show 'me'. If it's the other's turn, show 'peer'.
+        if (state.turn === myIndex) {
+            document.getElementById('box-me').classList.add('visible');
+            document.getElementById('box-peer').classList.remove('visible');
+        } else {
+            document.getElementById('box-me').classList.remove('visible');
+            document.getElementById('box-peer').classList.add('visible');
+        }
     }
 
     function shareLink() {
@@ -173,8 +193,12 @@
     function autoJoin() {
         const id = new URLSearchParams(window.location.search).get('join');
         if (id && peer) {
+            myIndex = 1; // I am the joiner, so I am Player 2
             conn = peer.connect(id);
-            peer.call(id, stream).on('stream', s => document.getElementById('peer').srcObject = s);
+            peer.call(id, stream).on('stream', s => {
+                document.getElementById('peer').srcObject = s;
+                render(); // Re-render once stream is connected to ensure correct box visibility
+            });
         }
     }
 
