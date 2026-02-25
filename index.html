@@ -17,29 +17,33 @@
         
         /* Setup & Winner Layers */
         #setup-layer, #winner-layer { 
-            position: fixed; inset: 0; background: rgba(2, 4, 8, 0.95); z-index: 10000; 
+            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
         }
         .setup-card { 
             background: var(--card); padding: 25px; border-radius: 15px; 
             width: 100%; max-width: 320px; border: 1px solid #1b4965;
-            display: flex; flex-direction: column; gap: 10px; text-align: center;
+            display: flex; flex-direction: column; gap: 15px; text-align: center;
         }
-        .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
+        .setup-card h2 { color: var(--blue); margin-bottom: 5px; letter-spacing: 1px; }
         
-        .input-group { margin-bottom: 10px; text-align: left; }
+        .input-group { text-align: left; }
         .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
         .setup-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
         
-        .btn-start, .btn-reset { 
-            background: var(--blue); color: black; width: 100%; padding: 16px; 
-            font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; 
-            margin-top: 10px;
+        /* Re-added and styled START button */
+        .btn-start { 
+            background: var(--blue); color: #000; width: 100%; padding: 16px; 
+            font-size: 18px; font-weight: 800; border: none; border-radius: 8px; 
+            cursor: pointer; margin-top: 10px; transition: transform 0.1s;
         }
+        .btn-start:active { transform: scale(0.98); background: #00b4d8; }
+
+        .btn-reset { background: var(--gold); color: black; width: 100%; padding: 16px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; }
 
         /* Winner Screen Specifics */
-        #winner-layer h1 { color: var(--gold); font-size: 3rem; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
-        #winner-name { font-size: 1.5rem; margin-bottom: 20px; }
+        #winner-layer h1 { color: var(--gold); font-size: 3rem; margin-bottom: 5px; }
+        #winner-name { font-size: 1.2rem; margin-bottom: 20px; font-weight: bold; text-transform: uppercase; }
 
         /* Header */
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
@@ -55,7 +59,7 @@
 
         /* Scoring Area */
         .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
-        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; transition: 0.3s; }
+        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
         .p-name { font-size: 14px; color: #fff; font-weight: bold; }
@@ -83,7 +87,7 @@
         <h2>DARTSTREAM</h2>
         <div class="input-group">
             <label>Your Name</label>
-            <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
+            <input type="text" id="name-input" class="setup-input" placeholder="Enter name..." maxlength="12">
         </div>
         <div class="input-group">
             <label>Match Length</label>
@@ -94,4 +98,27 @@
                 <option value="7">Best of 7 (First to 4)</option>
             </select>
         </div>
-        <button id="start-btn" class
+        <button id="start-btn" class="btn-start">START MATCH</button>
+        <p id="error-log" style="color: #ff4d4d; font-size: 10px; margin-top: 5px; text-align: center;"></p>
+    </div>
+</div>
+
+<div id="winner-layer" class="hidden">
+    <div class="setup-card">
+        <h1>🏆</h1>
+        <div id="winner-name">PLAYER WINS!</div>
+        <button onclick="location.reload()" class="btn-reset">PLAY AGAIN</button>
+    </div>
+</div>
+
+<header>
+    <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
+    <div class="header-controls">
+        <button class="header-btn" id="flip-btn">FLIP</button>
+        <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
+    </div>
+</header>
+
+<div class="v-container">
+    <div id="box-me" class="v-box visible">
+        <div class="cam-label">
