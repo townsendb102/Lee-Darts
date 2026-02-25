@@ -3,50 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream: Final Fix</title>
+    <title>DartStream: Stable</title>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; --gold: #ffd700; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
         
-        body { 
-            background: var(--dark); color: white; font-family: system-ui, sans-serif; 
-            height: 100dvh; width: 100vw; display: grid;
-            grid-template-rows: 40px 45dvh 1fr 80px;
-            overflow: hidden; 
-        }
+        body { background: var(--dark); color: white; height: 100dvh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* Layer Management */
-        #setup-layer, #winner-layer { 
-            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-        }
+        /* Screens */
+        .layer { position: fixed; inset: 0; background: var(--dark); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .hidden { display: none !important; }
 
-        .setup-card { 
-            background: var(--card); padding: 25px; border-radius: 15px; 
-            width: 100%; max-width: 320px; border: 1px solid #1b4965;
-            display: flex; flex-direction: column; gap: 15px; text-align: center;
-        }
+        .card { background: var(--card); padding: 25px; border-radius: 15px; width: 100%; max-width: 320px; border: 1px solid #1b4965; text-align: center; }
         
-        .input-group { text-align: left; }
+        .input-group { text-align: left; margin-bottom: 15px; }
         .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
         .setup-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
         
-        /* Critical Buttons */
-        .btn-start { background: var(--blue); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; }
-        .btn-reset { background: var(--gold); color: black; width: 100%; padding: 16px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
+        .btn-main { background: var(--blue); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-gold { background: var(--gold); color: #000; margin-top: 15px; }
 
-        /* Scoring & UI */
-        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
-        .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
-        .v-box { position: absolute; inset: 0; display: none; }
-        .v-box.visible { display: block; }
-        video { width: 100%; height: 100%; object-fit: cover; background: #111; }
+        /* Game Layout */
+        header { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; }
+        .v-container { height: 45dvh; position: relative; background: #000; }
+        video { width: 100%; height: 100%; object-fit: cover; }
         
-        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; }
-        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; }
-        .player-card.active { border-color: var(--blue); background: var(--active); }
-        .score-val { font-size: clamp(35px, 7dvh, 55px); font-weight: 900; }
+        .score-area { flex: 1; display: flex; flex-direction: column; padding: 8px; gap: 6px; }
+        .p-card { flex: 1; background: var(--card); border-radius: 10px; padding: 10px 15px; border: 2px solid transparent; display: flex; flex-direction: column; justify-content: center; }
+        .p-card.active { border-color: var(--blue); background: var(--active); }
+        .s-val { font-size: 45px; font-weight: 900; }
         
-        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; background: #000; padding-bottom: env(safe-area-inset-bottom); }
-        #pts-input { width: 100%; height: 100%; background: #111; border: 1px solid #333; color: white; text-align: center; font-size: 32px; border-radius: 8px; outline: none; }
+        .controls { height: 80px; display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; background: #000; }
+        #pts-input { width: 100%; background: #111; border: 1px solid #333; color: white; text-align: center; font-size: 32px; border-radius: 8px; outline: none; }
+    </style>
+</head>
+<body>
+
+<div id="setup-layer" class="layer">
+    <div class="card">
+        <h2 style="color: var(--blue); margin-bottom: 20px;">DARTSTREAM</h2>
+        <div class="input-group">
+            <label>Name</label>
+            <input type="text" id="name-input" class="setup-input" placeholder="Player 1" maxlength="12">
+        </div>
+        <div class="input-group">
+            <label>Match Length</label>
+            <select id="legs-input" class="setup-input">
+                <option value="1">1 Leg</option>
+                <option value="3">Best of 3</option>
+                <option value="5" selected>Best of 5</option>
+            </select>
+        </div>
+        <button class="btn-main" onclick="startMatch()">START MATCH</button>
+        <p id="msg" style="font-size: 10px; color: #888; margin-top: 10px;"></p>
+    </div>
+</div>
+
+<div id="winner-layer" class="layer hidden">
+    <div class="card">
+        <h1 style="font-size: 3rem;">🏆</h1>
+        <h2 id="winner-txt">PLAYER WINS!</h2>
+        <button class="btn-main btn-gold" onclick="location.reload()">NEW MATCH</button>
+    </div>
+</div>
+
+<header>
+    <div>ID: <span id="my-id" style="color:var(--blue);">...</span></div>
+    <button onclick="swap()" style="background:#222; color:white; border:none; padding:4px 8px; border-radius:4px;">FLIP</button>
+</header>
+
+<div class="v-container">
+    <video id="v-me" autoplay playsinline muted></video>
+</div>
+
+<div class="score-area">
+    <div id="pc-0" class="p-card active">
+        <div id="pn-0" style="font-size:12px;">P1</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div id="ps-0" class="s-val">501</div>
+            <div style="text-align:right; font-size:10px;">LEGS <span id="pl-0" style="font-size:16px; color:var(--blue); display:block;">0</span></div>
+        </div>
+    </div>
+    <div id="pc-1" class="p-card">
+        <div id="pn-1" style="font-size:12px;">P2</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div id="ps-1" class="s-val">501</div>
+            <div style="text-align:right; font-size:10px;">LEGS <span id="pl-1" style="font-size:16px; color:var(--blue); display:block;">0</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+    <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
+    <button onclick="undo()" style="background:#222; color:white; border:none; border-radius:8px; font-size:20px;">⟲</button>
+    <button onclick="hit()" style="background:var(--blue); border:none; border-radius:8px; font-weight:bold; font-size:20px;">HIT</button>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+<script>
+    let stream, peer, conn, mode = "user", myIdx = 0;
+    let state = { turn: 0, bestOf: 5, win: null, p: [{n:"P1", s:501, l:0}, {n:"P2", s:501, l:0}] };
+    let back = null;
+
+    async function startMatch() {
+        const msg = document.getElementById('msg');
+        msg.innerText = "Accessing camera...";
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode }, audio: true });
+            document.getElementById('v-me').srcObject = stream;
+            
+            peer = new Peer();
+            peer.on('open', id => {
+                document.getElementById('my-id').innerText = id;
+                document.getElementById('setup-layer').classList.add('hidden');
+                state.p[0].n = document.getElementById('name-input').value || "Host";
+                state.bestOf = parseInt(document.getElementById
