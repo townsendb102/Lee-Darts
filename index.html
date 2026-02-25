@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream: Final Fix</title>
+    <title>DartStream: Camera Flip</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { --bg: #020408; --panel: #0d1b2a; --blue: #00d4ff; --border: #1b4965; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100dvh; margin: 0; background: var(--bg); color: white; font-family: system-ui, sans-serif; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* Setup Overlay - To prevent the "Close Bubbles" error */
         #setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         
         header { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-bottom: 1px solid var(--blue); flex-shrink: 0; }
         .cam-grid { height: 25dvh; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; flex-shrink: 0; }
-        .v-box { background: #000; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .v-box { background: #000; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; position: relative; }
         video { width: 100%; height: 100%; object-fit: cover; }
 
         .score-container { height: 38dvh; display: flex; flex-direction: column; gap: 6px; padding: 8px; flex-shrink: 0; }
@@ -33,6 +32,9 @@
         .btn-undo { background: #222; color: #888; font-size: 20px; border: 1px solid #444; }
         .btn-primary { background: var(--blue); color: black; padding: 15px 30px; font-size: 18px; margin-top: 20px; }
         
+        /* New Flip Button Style */
+        .btn-flip { background: #333; color: white; border-radius: 4px; font-size: 10px; padding: 0 8px; height: 24px; border: 1px solid var(--blue); }
+        
         #hint { height: 18px; color: #ffcc00; font-size: 11px; font-weight: bold; text-align: center; }
     </style>
 </head>
@@ -41,13 +43,13 @@
 <div id="setup-screen">
     <h1 style="color:var(--blue)">DartStream</h1>
     <p>Grant camera/audio access to start the match.</p>
-    <p style="font-size: 12px; color: #888;">Ensure no other apps (like Messenger bubbles) are over your screen.</p>
     <button class="btn btn-primary" onclick="initApp()">START APP & CAMERA</button>
 </div>
 
 <header>
     <span>ID: <b id="my-id" style="color:var(--blue)">...</b></span>
     <div style="display:flex; gap:5px">
+        <button class="btn-flip" onclick="flipCamera()">FLIP</button>
         <input type="text" id="p-id" placeholder="Friend ID" style="width:70px; height:24px; font-size:10px;">
         <button onclick="join()" style="background:var(--blue); border:none; border-radius:4px; font-size:10px; padding:0 8px; font-weight:bold">LINK</button>
     </div>
@@ -83,30 +85,54 @@
 <script>
     const sounds = { '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'), 'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734') };
     
-    let peer, conn, localStream, wakeLock;
+    let peer, conn, localStream, wakeLock, currentCall;
+    let currentFacingMode = "user"; // "user" = front, "environment" = back
     let state = { turn: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
     let history = null;
 
     async function initApp() {
         try {
-            // 1. Request Camera/Audio
-            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
-            document.getElementById('me').srcObject = localStream;
+            await startCamera();
             
-            // 2. Start PeerJS
             peer = new Peer();
             peer.on('open', id => document.getElementById('my-id').innerText = id);
             peer.on('connection', c => { conn = c; setupData(); });
-            peer.on('call', call => { call.answer(localStream); call.on('stream', s => document.getElementById('peer').srcObject = s); });
+            peer.on('call', call => { 
+                currentCall = call;
+                call.answer(localStream); 
+                call.on('stream', s => document.getElementById('peer').srcObject = s); 
+            });
 
-            // 3. Keep screen awake
             if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
-
-            // 4. Hide Setup Screen
             document.getElementById('setup-screen').style.display = 'none';
         } catch (e) {
-            alert("Error: Ensure you are using HTTPS and have no app overlays (like chat bubbles) active.");
+            alert("Error: " + e.message);
         }
+    }
+
+    async function startCamera() {
+        // If there's an existing stream, stop all tracks first
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
+        
+        localStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: currentFacingMode }, 
+            audio: true 
+        });
+        document.getElementById('me').srcObject = localStream;
+
+        // If a call is active, replace the stream for the peer
+        if (currentCall && currentCall.peerConnection) {
+            const videoTrack = localStream.getVideoTracks()[0];
+            const sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
+            if (sender) sender.replaceTrack(videoTrack);
+        }
+    }
+
+    async function flipCamera() {
+        currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+        await startCamera();
     }
 
     function setupData() {
@@ -118,24 +144,23 @@
         if(!id) return;
         conn = peer.connect(id);
         setupData();
-        peer.call(id, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
+        currentCall = peer.call(id, localStream);
+        currentCall.on('stream', s => document.getElementById('peer').srcObject = s);
     }
 
+    // ... (rest of your hit, undo, render logic remains the same)
     function hit() {
         let el = document.getElementById('pts');
         let v = parseInt(el.value) || 0;
         if (v > 180) return;
-
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
         let snd = (v === 180) ? '180' : null;
-
         if (p.s - v >= 0 && p.s - v !== 1) {
             p.s -= v; p.pts += v; p.d += 3;
             if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); snd = 'win'; }
             else { state.turn = state.turn === 0 ? 1 : 0; }
         } else { state.turn = state.turn === 0 ? 1 : 0; }
-
         state.snd = snd;
         if(snd) sounds[snd].play();
         render();
