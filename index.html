@@ -11,8 +11,8 @@
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            /* HEADER(40px) | CAM(20dvh) | SCORES(Flexible) | CONTROLS(120px) */
-            grid-template-rows: 40px 20dvh 1fr 120px;
+            /* HEADER(40px) | CAM(15dvh) | SCORES(Flexible) | CONTROLS(120px) */
+            grid-template-rows: 40px 15dvh 1fr 120px;
             overflow: hidden; 
         }
         
@@ -23,7 +23,8 @@
         .header-controls { display: flex; gap: 5px; align-items: center; }
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
 
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; background: #000; border-bottom: 1px solid #1b4965; height: 100%; }
+        /* Strictly limited camera height */
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; background: #000; border-bottom: 1px solid #1b4965; height: 100%; max-height: 100px; }
         .v-box { position: relative; height: 100%; border-right: 1px solid #1b4965; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 
@@ -37,7 +38,6 @@
         .score-val { font-size: clamp(40px, 8dvh, 60px); font-weight: 900; line-height: 1; }
         .legs-count { font-size: 10px; color: var(--blue); }
 
-        /* The Big HIT Button Controls */
         .controls { 
             display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; 
             background: #000; border-top: 1px solid #1b4965;
@@ -106,33 +106,25 @@
     let history = null;
 
     async function initApp() {
-        const btn = document.querySelector('.btn-start');
-        btn.innerText = "OPENING...";
         try {
-            // Trigger camera first for mobile security
             stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
             document.getElementById('me').srcObject = stream;
-            
-            // Start networking
             peer = new Peer();
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('setup-layer').classList.add('hidden');
                 autoJoin();
             });
-
             peer.on('call', call => {
                 call.answer(stream);
                 call.on('stream', s => document.getElementById('peer').srcObject = s);
             });
-
             peer.on('connection', c => {
                 conn = c;
                 conn.on('data', d => { state = d; render(); });
             });
         } catch (e) {
-            alert("Camera failed. Use HTTPS and allow access.");
-            btn.innerText = "RETRY";
+            alert("Camera failed. Use HTTPS.");
         }
     }
 
@@ -147,18 +139,13 @@
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value) || 0;
         if (val > 180) return;
-
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
-
         if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val; p.pts += val; p.d += 3;
             if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); }
             else { state.turn = (state.turn === 0) ? 1 : 0; }
-        } else {
-            state.turn = (state.turn === 0) ? 1 : 0;
-        }
-
+        } else { state.turn = (state.turn === 0) ? 1 : 0; }
         render();
         if (conn) conn.send(state);
         input.value = '';
@@ -193,8 +180,7 @@
     }
 
     function copyId() {
-        const id = document.getElementById('display-id').innerText;
-        navigator.clipboard.writeText(id);
+        navigator.clipboard.writeText(document.getElementById('display-id').innerText);
         alert("ID Copied");
     }
 </script>
