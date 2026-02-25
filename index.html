@@ -12,7 +12,7 @@
 
         #setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         
-        #menu-panel { position: fixed; top: 0; right: -80%; width: 80%; height: 100%; background: #0a1118; border-left: 1px solid var(--blue); z-index: 999; transition: 0.3s; padding: 20px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+        #menu-panel { position: fixed; top: 0; right: -80%; width: 80%; height: 100%; background: #0a1118; border-left: 1px solid var(--blue); z-index: 999; transition: 0.3s; padding: 20px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); overflow-y: auto; }
         #menu-panel.open { right: 0; }
         .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 998; }
         
@@ -56,194 +56,13 @@
 <div class="menu-overlay" id="overlay" onclick="toggleMenu()"></div>
 <div id="menu-panel">
     <h2 style="color:var(--blue); margin-top:0">Manage Friends</h2>
+    
+    <button onclick="shareInvite()" class="btn" style="width:100%; background:var(--blue); color:black; padding:12px; margin-bottom:20px;">✉ INVITE VIA LINK</button>
+
     <div class="add-friend-form">
         <input type="text" id="new-friend-name" placeholder="Name">
         <input type="text" id="new-friend-id" placeholder="ID">
         <button onclick="addFriend()" style="background:var(--blue); border:none; border-radius:4px; font-weight:bold">+</button>
     </div>
     <div id="friends-list"></div>
-    <hr style="border:0; border-top:1px solid #222; margin:20px 0">
-    <button onclick="flipCamera()" class="btn" style="width:100%; background:#222; color:white; padding:10px; border:1px solid var(--blue)">FLIP CAMERA</button>
-</div>
-
-<header>
-    <div onclick="copyMyID()" style="cursor:pointer">ID: <b id="my-id" style="color:var(--blue)">...</b></div>
-    <div style="display:flex; gap:12px; align-items:center">
-        <span id="conn-status" style="font-size:10px; color:#555">● DISCONNECTED</span>
-        <div onclick="toggleMenu()" style="font-size:24px; cursor:pointer; color:var(--blue)">☰</div>
-    </div>
-</header>
-
-<div class="cam-grid">
-    <div class="v-box"><video id="me" autoplay playsinline muted></video></div>
-    <div class="v-box"><video id="peer" autoplay playsinline></video></div>
-</div>
-
-<div class="score-container">
-    <div class="p-card active" id="c0">
-        <div style="text-align:left"><h2 style="margin:0; font-size:12px; color:#888">YOU</h2><span class="p-stats">AVG: <b id="a0">0</b></span></div>
-        <div class="p-score" id="s0">501</div>
-        <div class="p-stats">LEGS: <b id="l0">0</b></div>
-    </div>
-    <div class="p-card" id="c1">
-        <div style="text-align:left"><h2 style="margin:0; font-size:12px; color:#888" id="p2-label">OPPONENT</h2><span class="p-stats">AVG: <b id="a1">0</b></span></div>
-        <div class="p-score" id="s1">501</div>
-        <div class="p-stats">LEGS: <b id="l1">0</b></div>
-    </div>
-</div>
-
-<div class="controls">
-    <div id="hint"></div>
-    <div class="input-row">
-        <input type="number" id="pts" inputmode="numeric" placeholder="SCORE">
-        <button class="btn btn-undo" onclick="undo()">⟲</button>
-        <button class="btn btn-hit" onclick="hit()">HIT</button>
-    </div>
-</div>
-
-<script>
-    const sounds = { 
-        '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'), 
-        'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734') 
-    };
-    
-    let peer, conn, localStream, currentFacingMode = "user", friends = JSON.parse(localStorage.getItem('dartFriends') || '[]');
-    let state = { turn: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
-    let history = null;
-
-    async function initApp() {
-        const btn = document.getElementById('start-btn');
-        btn.innerText = "INITIALIZING...";
-        btn.disabled = true;
-
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
-            document.getElementById('me').srcObject = localStream;
-            
-            peer = new Peer();
-            peer.on('open', id => { 
-                document.getElementById('my-id').innerText = id; 
-                renderFriends();
-                document.getElementById('setup-screen').style.display = 'none';
-            });
-
-            peer.on('connection', c => { 
-                conn = c; 
-                setupData(); 
-                updateStatus(true);
-            });
-
-            peer.on('call', call => { 
-                call.answer(localStream); 
-                call.on('stream', s => document.getElementById('peer').srcObject = s); 
-            });
-
-            if ('wakeLock' in navigator) await navigator.wakeLock.request('screen');
-        } catch (e) { 
-            alert("Camera Error. Please use HTTPS."); 
-            btn.innerText = "RETRY";
-            btn.disabled = false;
-        }
-    }
-
-    function toggleMenu() {
-        const isOpen = document.getElementById('menu-panel').classList.toggle('open');
-        document.getElementById('overlay').style.display = isOpen ? 'block' : 'none';
-    }
-
-    async function flipCamera() {
-        currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
-        if(localStream) localStream.getTracks().forEach(t => t.stop());
-        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
-        document.getElementById('me').srcObject = localStream;
-        toggleMenu();
-    }
-
-    function addFriend() {
-        const n = document.getElementById('new-friend-name'), i = document.getElementById('new-friend-id');
-        if(n.value && i.value) {
-            friends.push({name: n.value, id: i.value});
-            localStorage.setItem('dartFriends', JSON.stringify(friends));
-            n.value = ''; i.value = '';
-            renderFriends();
-        }
-    }
-
-    function renderFriends() {
-        document.getElementById('friends-list').innerHTML = friends.map((f, i) => `
-            <div class="friend-item">
-                <div onclick="join('${f.id}', '${f.name}')" style="flex:1">
-                    <span class="friend-name">${f.name}</span>
-                    <span class="friend-id">${f.id}</span>
-                </div>
-                <button onclick="deleteFriend(${i})" style="color:red; background:none; border:none">×</button>
-            </div>`).join('');
-    }
-
-    function deleteFriend(i) {
-        friends.splice(i, 1);
-        localStorage.setItem('dartFriends', JSON.stringify(friends));
-        renderFriends();
-    }
-
-    function join(id, name) {
-        document.getElementById('p2-label').innerText = name.toUpperCase();
-        conn = peer.connect(id);
-        setupData();
-        peer.call(id, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
-        toggleMenu();
-        updateStatus(true);
-    }
-
-    function setupData() {
-        conn.on('data', d => { state = d; render(); if(d.snd) sounds[d.snd].play(); });
-        conn.on('close', () => updateStatus(false));
-    }
-
-    function updateStatus(connected) {
-        const s = document.getElementById('conn-status');
-        s.innerText = connected ? "● CONNECTED" : "● DISCONNECTED";
-        s.style.color = connected ? "var(--blue)" : "#555";
-    }
-
-    function copyMyID() {
-        const id = document.getElementById('my-id').innerText;
-        navigator.clipboard.writeText(id);
-        document.getElementById('hint').innerText = "COPIED: " + id;
-        setTimeout(() => document.getElementById('hint').innerText = "", 2000);
-    }
-
-    function hit() {
-        let el = document.getElementById('pts');
-        let v = parseInt(el.value) || 0;
-        if (v > 180) return;
-        history = JSON.parse(JSON.stringify(state));
-        let p = state.p[state.turn];
-        let snd = (v === 180) ? '180' : null;
-        if (p.s - v >= 0 && p.s - v !== 1) {
-            p.s -= v; p.pts += v; p.d += 3;
-            if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); snd = 'win'; }
-            else { state.turn = state.turn === 0 ? 1 : 0; }
-        } else { state.turn = state.turn === 0 ? 1 : 0; }
-        state.snd = snd;
-        if(snd) sounds[snd].play();
-        render();
-        if(conn) conn.send(state);
-        el.value = '';
-    }
-
-    function undo() {
-        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if(conn) conn.send(state); }
-    }
-
-    function render() {
-        state.p.forEach((p, i) => {
-            document.getElementById(`s${i}`).innerText = p.s;
-            document.getElementById(`l${i}`).innerText = p.l;
-            document.getElementById(`a${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0";
-            document.getElementById(`c${i}`).className = i === state.turn ? 'p-card active' : 'p-card';
-        });
-    }
-</script>
-</body>
-</html>
+    <hr style="border:0; border-top:1px solid #222;
