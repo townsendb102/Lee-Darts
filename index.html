@@ -3,99 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DartStream Mobile Pro</title>
+    <title>DartStream: Electric Blue Edition</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --lite-blue: #00d4ff; --bg-black: #050505; --card-bg: #121212; }
+        /* Blue-Themed Color Palette */
+        :root { 
+            --deep-bg: #04080f; 
+            --panel-blue: #0d1b2a; 
+            --electric-blue: #00b4d8; 
+            --sky-blue: #90e0ef;
+            --border-blue: #1b4965;
+            --white: #edf2f4;
+        }
         
-        /* Prevents scrolling/bouncing on mobile */
         html, body { 
-            height: 100%; margin: 0; background: var(--bg-black); 
-            color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+            height: 100%; margin: 0; background: var(--deep-bg); 
+            color: var(--white); font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
             overflow: hidden; touch-action: manipulation;
         }
 
         .app-shell { display: flex; flex-direction: column; height: 100vh; }
 
-        /* Connection Bar */
-        .top-nav { background: #000; padding: 8px; border-bottom: 1px solid var(--lite-blue); display: flex; justify-content: space-between; font-size: 0.7rem; align-items: center; }
+        /* Top Navigation */
+        .top-nav { 
+            background: #000; 
+            padding: 10px; 
+            border-bottom: 2px solid var(--electric-blue); 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.75rem; 
+            align-items: center; 
+        }
 
-        /* Video Section - Stacks on Mobile, Side-by-side on Desktop */
+        /* Video Section */
         .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #000; padding: 4px; flex-shrink: 0; }
-        .v-box { aspect-ratio: 4/3; background: #111; border-radius: 6px; position: relative; overflow: hidden; border: 1px solid #222; }
+        .v-box { aspect-ratio: 4/3; background: #011627; border-radius: 6px; position: relative; overflow: hidden; border: 1px solid var(--border-blue); }
         video { width: 100%; height: 100%; object-fit: cover; }
-        .v-label { position: absolute; top: 4px; left: 4px; font-size: 10px; background: rgba(0,0,0,0.7); padding: 2px 5px; border-radius: 3px; color: var(--lite-blue); border: 0.5px solid var(--lite-blue); }
+        .v-label { position: absolute; top: 6px; left: 6px; font-size: 10px; background: rgba(0, 119, 182, 0.8); padding: 2px 6px; border-radius: 3px; color: white; font-weight: bold; }
 
-        /* Scoring & Stats */
-        .middle-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; }
-        .score-row { display: flex; gap: 8px; margin-bottom: 10px; }
-        .p-card { flex: 1; background: var(--card-bg); padding: 10px; border-radius: 10px; border: 1px solid #333; transition: 0.3s; text-align: center; }
-        .p-card.active { border-color: var(--lite-blue); box-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
-        .p-card h3 { margin: 0; font-size: 0.8rem; color: #888; }
-        .p-card .score { font-size: 2.8rem; font-weight: 900; color: var(--lite-blue); margin: 5px 0; }
+        /* Scoring Cards */
+        .middle-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 12px; gap: 10px; }
+        .score-row { display: flex; gap: 10px; }
+        .p-card { 
+            flex: 1; 
+            background: var(--panel-blue); 
+            padding: 12px; 
+            border-radius: 12px; 
+            border: 2px solid #222; 
+            transition: 0.3s; 
+            text-align: center; 
+        }
+        .p-card.active { 
+            border-color: var(--electric-blue); 
+            background: #122c44;
+            box-shadow: 0 0 15px rgba(0, 180, 216, 0.4); 
+        }
+        .p-card h3 { margin: 0; font-size: 0.8rem; color: var(--sky-blue); text-transform: uppercase; letter-spacing: 1px; }
+        .p-card .score { font-size: 3rem; font-weight: 900; color: var(--white); margin: 5px 0; }
+        .p-card .stats { font-size: 0.7rem; color: var(--sky-blue); opacity: 0.8; }
 
-        /* Chat Window */
-        .chat-view { flex: 1; background: #0a0a0a; border-radius: 8px; border: 1px solid #222; display: flex; flex-direction: column; margin-bottom: 10px; min-height: 100px; }
-        #chat-msgs { flex: 1; overflow-y: auto; padding: 8px; font-size: 0.8rem; }
-        .msg { margin-bottom: 5px; padding: 5px 10px; border-radius: 4px; width: fit-content; max-width: 80%; }
-        .msg.me { background: #0056b3; margin-left: auto; }
-        .msg.them { background: #333; }
+        /* Blue Chat System */
+        .chat-view { 
+            flex: 1; 
+            background: #020a14; 
+            border-radius: 10px; 
+            border: 1px solid var(--border-blue); 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 120px; 
+        }
+        #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 0.85rem; }
+        .msg { margin-bottom: 6px; padding: 7px 12px; border-radius: 8px; width: fit-content; max-width: 85%; line-height: 1.3; }
+        .msg.me { background: var(--electric-blue); color: #000; margin-left: auto; font-weight: 500; }
+        .msg.them { background: var(--border-blue); color: var(--white); }
 
-        /* Fixed Bottom Controls */
-        .input-bar { background: #000; padding: 12px; border-top: 1px solid #333; display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
-        input { background: #1a1a1a; border: 1px solid #444; color: white; border-radius: 8px; padding: 12px; font-size: 1.2rem; text-align: center; }
-        .btn { background: var(--lite-blue); color: black; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
+        /* Bottom Controls */
+        .input-bar { background: #000; padding: 15px; border-top: 1px solid var(--border-blue); display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+        input { background: #0b132b; border: 1px solid var(--border-blue); color: white; border-radius: 8px; padding: 14px; font-size: 1.4rem; text-align: center; }
+        input:focus { outline: none; border-color: var(--sky-blue); box-shadow: 0 0 8px rgba(144, 224, 239, 0.4); }
+        .btn { background: var(--electric-blue); color: #000; border: none; font-weight: 800; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 1rem; }
+        .btn:active { background: var(--sky-blue); transform: scale(0.96); }
         
-        .stats-btn { font-size: 0.6rem; padding: 4px; color: var(--lite-blue); background: transparent; border: 1px solid var(--lite-blue); border-radius: 4px; margin-top: 5px; width: 100%; cursor: pointer; }
+        #check-hint { text-align: center; color: var(--sky-blue); font-size: 0.9rem; font-weight: bold; height: 20px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
     <div class="top-nav">
-        <div>ID: <b id="my-id" style="color:var(--lite-blue)">---</b></div>
-        <div style="display:flex; gap:4px">
-            <input type="text" id="peer-id" placeholder="Friend ID" style="font-size:10px; padding:4px; width:80px">
-            <button class="btn" onclick="join()" style="padding:4px 8px; font-size:10px">Link</button>
+        <div>YOUR ID: <b id="my-id" style="color:var(--sky-blue)">---</b></div>
+        <div style="display:flex; gap:6px">
+            <input type="text" id="peer-id" placeholder="Friend ID" style="font-size:11px; padding:5px; width:90px; height:24px; font-size: 10px;">
+            <button class="btn" onclick="joinMatch()" style="padding:2px 10px; font-size:11px; height:24px;">LINK</button>
         </div>
     </div>
 
     <div class="cam-grid">
-        <div class="v-box"><video id="local-video" autoplay playsinline muted></video><div class="v-label">LOCAL</div></div>
-        <div class="v-box"><video id="remote-video" autoplay playsinline></video><div class="v-label">FRIEND</div></div>
+        <div class="v-box"><video id="local-video" autoplay playsinline muted></video><div class="v-label">MY BOARD</div></div>
+        <div class="v-box"><video id="remote-video" autoplay playsinline></video><div class="v-label">OPPONENT</div></div>
     </div>
 
     <div class="middle-content">
         <div class="score-row">
             <div class="p-card active" id="c0">
-                <h3>P1 • AVG: <span id="a0">0</span></h3>
+                <h3>Player 1</h3>
                 <div class="score" id="s0">501</div>
-                <div style="font-size:0.7rem">Legs: <span id="l0">0</span></div>
+                <div class="stats">AVG: <span id="a0">0.0</span> | LEGS: <span id="l0">0</span></div>
             </div>
             <div class="p-card" id="c1">
-                <h3>P2 • AVG: <span id="a1">0</span></h3>
+                <h3>Player 2</h3>
                 <div class="score" id="s1">501</div>
-                <div style="font-size:0.7rem">Legs: <span id="l1">0</span></div>
+                <div class="stats">AVG: <span id="a1">0.0</span> | LEGS: <span id="l1">0</span></div>
             </div>
         </div>
 
         <div class="chat-view">
             <div id="chat-msgs"></div>
-            <div style="display:flex; padding:5px; gap:4px; border-top:1px solid #222">
-                <input type="text" id="chat-in" placeholder="Chat..." style="font-size:0.8rem; padding:6px; flex:1; text-align:left">
-                <button class="btn" onclick="sendChat()" style="padding:4px 10px">↑</button>
+            <div style="display:flex; padding:8px; gap:6px; border-top:1px solid var(--border-blue)">
+                <input type="text" id="chat-in" placeholder="Message..." style="font-size:0.9rem; padding:8px; flex:1; text-align:left">
+                <button class="btn" onclick="sendChatMsg()" style="padding:8px 14px">↑</button>
             </div>
         </div>
-        <button class="stats-btn" onclick="toggleStats()">VIEW FULL STATS</button>
     </div>
 
     <div class="input-bar">
+        <div style="grid-column: span 2;">
+            <div id="check-hint"></div>
+        </div>
         <input type="number" id="pts-in" inputmode="numeric" placeholder="SCORE">
-        <button class="btn" onclick="submitScore()">HIT</button>
+        <button class="btn" onclick="submitDarts()">HIT</button>
     </div>
 </div>
 
 <script>
+    const checkouts = {170:"T20 T20 BULL",167:"T20 T19 BULL",164:"T20 T18 BULL",161:"T20 T17 BULL",160:"T20 T20 D20",158:"T20 T20 D19",141:"T20 T19 D12",121:"T20 T15 D8",100:"T20 D20",80:"T20 D10",60:"20 D20",40:"D20",32:"D16",24:"D12",16:"D8",8:"D4",4:"D2",2:"D1"};
     const sounds = {
         '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'),
         'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734'),
@@ -103,114 +144,91 @@
     };
 
     let peer, conn, localStream, wakeLock = null;
-    let data = { turn: 0, p: [{s:501, l:0, pts:0, d:0, s60:0, s100:0, s140:0}, {s:501, l:0, pts:0, d:0, s60:0, s100:0, s140:0}] };
+    let state = { turn: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
 
-    // Request Wake Lock to keep screen on
-    const requestWakeLock = async () => {
-        try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
-    };
+    const lockScreen = async () => { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} };
 
     peer = new Peer();
     peer.on('open', id => { 
         document.getElementById('my-id').innerText = id; 
-        initCam(); 
-        requestWakeLock();
+        startCam(); 
+        lockScreen();
     });
 
-    async function initCam() {
+    async function startCam() {
         try {
             localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
-            const v = document.getElementById('local-video');
-            v.srcObject = localStream;
-            // Crucial for mobile: prevents full-screen takeover
-            v.setAttribute('autoplay', '');
-            v.setAttribute('muted', '');
-            v.setAttribute('playsinline', '');
-        } catch (e) { alert("Camera failed. Use HTTPS."); }
+            document.getElementById('local-video').srcObject = localStream;
+        } catch (e) { console.log("Cam error: Ensure HTTPS is used."); }
     }
 
-    peer.on('connection', c => { conn = c; handleData(); });
+    peer.on('connection', c => { conn = c; initData(); });
     peer.on('call', call => { 
         call.answer(localStream); 
-        call.on('stream', s => {
-            const rv = document.getElementById('remote-video');
-            rv.srcObject = s;
-            rv.setAttribute('playsinline', '');
-        });
+        call.on('stream', s => document.getElementById('remote-video').srcObject = s);
     });
 
-    function join() {
+    function joinMatch() {
         const id = document.getElementById('peer-id').value;
         conn = peer.connect(id);
-        handleData();
-        peer.call(id, localStream).on('stream', s => {
-            document.getElementById('remote-video').srcObject = s;
-        });
+        initData();
+        peer.call(id, localStream).on('stream', s => document.getElementById('remote-video').srcObject = s);
     }
 
-    function handleData() {
+    function initData() {
         conn.on('data', d => {
-            if(d.type === 'msg') renderMsg(d.text, 'them');
-            else { data = d; refresh(); if(d.sound) sounds[d.sound].play(); }
+            if(d.type === 'msg') pushMsg(d.t, 'them');
+            else { state = d; render(); if(d.snd) sounds[d.snd].play(); }
         });
     }
 
-    function submitScore() {
+    function submitDarts() {
         const input = document.getElementById('pts-in');
         const val = parseInt(input.value) || 0;
         if(val > 180) return;
 
-        let p = data.p[data.turn];
-        let snd = null;
-
-        if (val === 180) snd = '180';
-        else if (val >= 140) p.s140++;
-        else if (val >= 100) p.s100++;
-        else if (val >= 60) p.s60++;
+        let p = state.p[state.turn];
+        let snd = (val === 180) ? '180' : null;
 
         if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val; p.pts += val; p.d += 3;
-            if (p.s === 0) { p.l++; data.p.forEach(x => x.s = 501); snd = 'win'; }
-            else { data.turn = data.turn === 0 ? 1 : 0; }
+            if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); snd = 'win'; }
+            else { state.turn = state.turn === 0 ? 1 : 0; }
         } else {
             snd = 'bust';
-            data.turn = data.turn === 0 ? 1 : 0;
+            state.turn = state.turn === 0 ? 1 : 0;
         }
 
-        data.sound = snd;
+        state.snd = snd;
         if(snd) sounds[snd].play();
-        refresh();
-        if(conn) conn.send(data);
+        render();
+        if(conn) conn.send(state);
         input.value = '';
     }
 
-    function refresh() {
-        data.p.forEach((p, i) => {
+    function render() {
+        state.p.forEach((p, i) => {
             document.getElementById(`s${i}`).innerText = p.s;
             document.getElementById(`l${i}`).innerText = p.l;
-            document.getElementById(`a${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : 0;
-            document.getElementById(`c${i}`).className = i === data.turn ? 'p-card active' : 'p-card';
+            document.getElementById(`a${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
+            document.getElementById(`c${i}`).className = i === state.turn ? 'p-card active' : 'p-card';
         });
+        const cur = state.p[state.turn].s;
+        document.getElementById('check-hint').innerText = checkouts[cur] || (cur <= 170 ? "Finish On A Double" : "");
     }
 
-    function sendChat() {
+    function sendChatMsg() {
         const el = document.getElementById('chat-in');
         if(!el.value || !conn) return;
-        conn.send({type:'msg', text: el.value});
-        renderMsg(el.value, 'me');
+        conn.send({type:'msg', t: el.value});
+        pushMsg(el.value, 'me');
         el.value = '';
     }
 
-    function renderMsg(t, side) {
+    function pushMsg(t, side) {
         const wall = document.getElementById('chat-msgs');
         wall.innerHTML += `<div class="msg ${side}">${t}</div>`;
         wall.scrollTop = wall.scrollHeight;
-    }
-
-    function toggleStats() {
-        const p1 = data.p[0];
-        const p2 = data.p[1];
-        alert(`STATS BREAKDOWN:\n\nP1: 60+(${p1.s60}) 100+(${p1.s100}) 140+(${p1.s140})\nP2: 60+(${p2.s60}) 100+(${p2.s100}) 140+(${p2.s140})`);
     }
 </script>
 </body>
