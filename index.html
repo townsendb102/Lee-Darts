@@ -2,188 +2,216 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DartStream Live + Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DartStream Mobile Pro</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --neon-green: #00ff88; --bg-dark: #121212; --panel-bg: #1e1e1e; }
-        body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        :root { --lite-blue: #00d4ff; --bg-black: #050505; --card-bg: #121212; }
         
-        .connection-bar { background: #333; padding: 10px; display: flex; gap: 10px; align-items: center; justify-content: center; font-size: 0.8rem; border-bottom: 2px solid #444; }
-        .app-container { display: flex; flex: 1; overflow: hidden; }
+        /* Prevents scrolling/bouncing on mobile */
+        html, body { 
+            height: 100%; margin: 0; background: var(--bg-black); 
+            color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+            overflow: hidden; touch-action: manipulation;
+        }
 
-        /* Video Section */
-        .video-section { flex: 1.5; background: #000; display: grid; grid-template-rows: 1fr 1fr; gap: 5px; padding: 5px; }
-        .video-container { position: relative; background: #222; border-radius: 8px; overflow: hidden; border: 1px solid #333; }
+        .app-shell { display: flex; flex-direction: column; height: 100vh; }
+
+        /* Connection Bar */
+        .top-nav { background: #000; padding: 8px; border-bottom: 1px solid var(--lite-blue); display: flex; justify-content: space-between; font-size: 0.7rem; align-items: center; }
+
+        /* Video Section - Stacks on Mobile, Side-by-side on Desktop */
+        .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #000; padding: 4px; flex-shrink: 0; }
+        .v-box { aspect-ratio: 4/3; background: #111; border-radius: 6px; position: relative; overflow: hidden; border: 1px solid #222; }
         video { width: 100%; height: 100%; object-fit: cover; }
-        .video-label { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; z-index: 10; }
+        .v-label { position: absolute; top: 4px; left: 4px; font-size: 10px; background: rgba(0,0,0,0.7); padding: 2px 5px; border-radius: 3px; color: var(--lite-blue); border: 0.5px solid var(--lite-blue); }
 
-        /* Sidebar Section (Scores + Chat) */
-        .sidebar { flex: 1; display: flex; flex-direction: column; background: var(--panel-bg); border-left: 2px solid #333; }
+        /* Scoring & Stats */
+        .middle-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; }
+        .score-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .p-card { flex: 1; background: var(--card-bg); padding: 10px; border-radius: 10px; border: 1px solid #333; transition: 0.3s; text-align: center; }
+        .p-card.active { border-color: var(--lite-blue); box-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
+        .p-card h3 { margin: 0; font-size: 0.8rem; color: #888; }
+        .p-card .score { font-size: 2.8rem; font-weight: 900; color: var(--lite-blue); margin: 5px 0; }
+
+        /* Chat Window */
+        .chat-view { flex: 1; background: #0a0a0a; border-radius: 8px; border: 1px solid #222; display: flex; flex-direction: column; margin-bottom: 10px; min-height: 100px; }
+        #chat-msgs { flex: 1; overflow-y: auto; padding: 8px; font-size: 0.8rem; }
+        .msg { margin-bottom: 5px; padding: 5px 10px; border-radius: 4px; width: fit-content; max-width: 80%; }
+        .msg.me { background: #0056b3; margin-left: auto; }
+        .msg.them { background: #333; }
+
+        /* Fixed Bottom Controls */
+        .input-bar { background: #000; padding: 12px; border-top: 1px solid #333; display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
+        input { background: #1a1a1a; border: 1px solid #444; color: white; border-radius: 8px; padding: 12px; font-size: 1.2rem; text-align: center; }
+        .btn { background: var(--lite-blue); color: black; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
         
-        .score-area { padding: 15px; flex-shrink: 0; }
-        .player-card { padding: 12px; border-radius: 10px; background: #2a2a2a; margin-bottom: 10px; opacity: 0.4; border: 2px solid transparent; }
-        .player-card.active { opacity: 1; border-color: var(--neon-green); }
-        .score-val { font-size: 3.5rem; font-weight: 800; margin: 0; text-align: center; }
-
-        /* Chat System */
-        .chat-container { flex: 1; display: flex; flex-direction: column; background: #181818; margin: 10px; border-radius: 8px; overflow: hidden; border: 1px solid #333; }
-        #chat-wall { flex: 1; padding: 10px; overflow-y: auto; font-size: 0.9rem; display: flex; flex-direction: column; gap: 5px; }
-        .msg { padding: 5px 10px; border-radius: 5px; max-width: 80%; width: fit-content; }
-        .msg.me { background: var(--neon-green); color: black; align-self: flex-end; }
-        .msg.them { background: #444; color: white; align-self: flex-start; }
-        
-        .chat-input-row { display: flex; padding: 10px; gap: 5px; background: #222; }
-        .chat-input-row input { flex: 1; padding: 8px; border-radius: 4px; border: none; background: #121212; color: white; }
-
-        .controls { padding: 15px; background: #222; text-align: center; }
-        input[type="number"] { width: 70%; padding: 10px; font-size: 1.5rem; text-align: center; margin-bottom: 10px; border-radius: 5px; border: none; }
-        button { padding: 10px 15px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-send { background: var(--neon-green); color: black; }
+        .stats-btn { font-size: 0.6rem; padding: 4px; color: var(--lite-blue); background: transparent; border: 1px solid var(--lite-blue); border-radius: 4px; margin-top: 5px; width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="connection-bar">
-    <span>My ID: <b id="my-id">...</b></span>
-    <input type="text" id="remote-id" placeholder="Friend's ID">
-    <button class="btn-send" onclick="connectToFriend()">Connect</button>
-</div>
-
-<div class="app-container">
-    <section class="video-section">
-        <div class="video-container">
-            <span class="video-label">YOU</span>
-            <video id="local-video" autoplay playsinline muted></video>
+<div class="app-shell">
+    <div class="top-nav">
+        <div>ID: <b id="my-id" style="color:var(--lite-blue)">---</b></div>
+        <div style="display:flex; gap:4px">
+            <input type="text" id="peer-id" placeholder="Friend ID" style="font-size:10px; padding:4px; width:80px">
+            <button class="btn" onclick="join()" style="padding:4px 8px; font-size:10px">Link</button>
         </div>
-        <div class="video-container">
-            <span class="video-label">OPPONENT</span>
-            <video id="remote-video" autoplay playsinline></video>
-        </div>
-    </section>
+    </div>
 
-    <section class="sidebar">
-        <div class="score-area">
-            <div class="player-card active" id="card-0">
-                <div style="display:flex; justify-content:space-between; font-size:0.7rem;">
-                    <span>Legs: <b id="p0-legs">0</b></span>
-                    <span>Avg: <b id="p0-avg">0.00</b></span>
-                </div>
-                <p class="score-val" id="p0-score">501</p>
+    <div class="cam-grid">
+        <div class="v-box"><video id="local-video" autoplay playsinline muted></video><div class="v-label">LOCAL</div></div>
+        <div class="v-box"><video id="remote-video" autoplay playsinline></video><div class="v-label">FRIEND</div></div>
+    </div>
+
+    <div class="middle-content">
+        <div class="score-row">
+            <div class="p-card active" id="c0">
+                <h3>P1 • AVG: <span id="a0">0</span></h3>
+                <div class="score" id="s0">501</div>
+                <div style="font-size:0.7rem">Legs: <span id="l0">0</span></div>
             </div>
-            <div class="player-card" id="card-1">
-                <div style="display:flex; justify-content:space-between; font-size:0.7rem;">
-                    <span>Legs: <b id="p1-legs">0</b></span>
-                    <span>Avg: <b id="p1-avg">0.00</b></span>
-                </div>
-                <p class="score-val" id="p1-score">501</p>
+            <div class="p-card" id="c1">
+                <h3>P2 • AVG: <span id="a1">0</span></h3>
+                <div class="score" id="s1">501</div>
+                <div style="font-size:0.7rem">Legs: <span id="l1">0</span></div>
             </div>
         </div>
 
-        <div class="chat-container">
-            <div id="chat-wall"></div>
-            <div class="chat-input-row">
-                <input type="text" id="chat-input" placeholder="Say something...">
-                <button class="btn-send" onclick="sendChat()">Send</button>
+        <div class="chat-view">
+            <div id="chat-msgs"></div>
+            <div style="display:flex; padding:5px; gap:4px; border-top:1px solid #222">
+                <input type="text" id="chat-in" placeholder="Chat..." style="font-size:0.8rem; padding:6px; flex:1; text-align:left">
+                <button class="btn" onclick="sendChat()" style="padding:4px 10px">↑</button>
             </div>
         </div>
+        <button class="stats-btn" onclick="toggleStats()">VIEW FULL STATS</button>
+    </div>
 
-        <div class="controls">
-            <input type="number" id="score-input" placeholder="Score">
-            <button class="btn-send" style="width:100%" onclick="submitTurn()">Submit Points</button>
-        </div>
-    </section>
+    <div class="input-bar">
+        <input type="number" id="pts-in" inputmode="numeric" placeholder="SCORE">
+        <button class="btn" onclick="submitScore()">HIT</button>
+    </div>
 </div>
 
 <script>
-    let peer, conn, localStream;
-    let gameState = {
-        currentPlayer: 0,
-        players: [{score: 501, legs: 0, totalPoints: 0, darts: 0}, {score: 501, legs: 0, totalPoints: 0, darts: 0}]
+    const sounds = {
+        '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'),
+        'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734'),
+        'bust': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649732')
+    };
+
+    let peer, conn, localStream, wakeLock = null;
+    let data = { turn: 0, p: [{s:501, l:0, pts:0, d:0, s60:0, s100:0, s140:0}, {s:501, l:0, pts:0, d:0, s60:0, s100:0, s140:0}] };
+
+    // Request Wake Lock to keep screen on
+    const requestWakeLock = async () => {
+        try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
     };
 
     peer = new Peer();
-    peer.on('open', id => { document.getElementById('my-id').innerText = id; startCamera(); });
-    
-    peer.on('connection', c => { 
-        conn = c; 
-        setupListeners(); 
+    peer.on('open', id => { 
+        document.getElementById('my-id').innerText = id; 
+        initCam(); 
+        requestWakeLock();
     });
 
-    peer.on('call', call => {
-        call.answer(localStream);
-        call.on('stream', s => document.getElementById('remote-video').srcObject = s);
-    });
-
-    async function startCamera() {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        document.getElementById('local-video').srcObject = localStream;
+    async function initCam() {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
+            const v = document.getElementById('local-video');
+            v.srcObject = localStream;
+            // Crucial for mobile: prevents full-screen takeover
+            v.setAttribute('autoplay', '');
+            v.setAttribute('muted', '');
+            v.setAttribute('playsinline', '');
+        } catch (e) { alert("Camera failed. Use HTTPS."); }
     }
 
-    function connectToFriend() {
-        const id = document.getElementById('remote-id').value;
+    peer.on('connection', c => { conn = c; handleData(); });
+    peer.on('call', call => { 
+        call.answer(localStream); 
+        call.on('stream', s => {
+            const rv = document.getElementById('remote-video');
+            rv.srcObject = s;
+            rv.setAttribute('playsinline', '');
+        });
+    });
+
+    function join() {
+        const id = document.getElementById('peer-id').value;
         conn = peer.connect(id);
-        setupListeners();
-        peer.call(id, localStream).on('stream', s => document.getElementById('remote-video').srcObject = s);
+        handleData();
+        peer.call(id, localStream).on('stream', s => {
+            document.getElementById('remote-video').srcObject = s;
+        });
     }
 
-    function setupListeners() {
-        conn.on('data', data => {
-            if (data.type === 'chat') {
-                addChatMessage(data.msg, 'them');
-            } else {
-                gameState = data;
-                updateUI();
-            }
+    function handleData() {
+        conn.on('data', d => {
+            if(d.type === 'msg') renderMsg(d.text, 'them');
+            else { data = d; refresh(); if(d.sound) sounds[d.sound].play(); }
+        });
+    }
+
+    function submitScore() {
+        const input = document.getElementById('pts-in');
+        const val = parseInt(input.value) || 0;
+        if(val > 180) return;
+
+        let p = data.p[data.turn];
+        let snd = null;
+
+        if (val === 180) snd = '180';
+        else if (val >= 140) p.s140++;
+        else if (val >= 100) p.s100++;
+        else if (val >= 60) p.s60++;
+
+        if (p.s - val >= 0 && p.s - val !== 1) {
+            p.s -= val; p.pts += val; p.d += 3;
+            if (p.s === 0) { p.l++; data.p.forEach(x => x.s = 501); snd = 'win'; }
+            else { data.turn = data.turn === 0 ? 1 : 0; }
+        } else {
+            snd = 'bust';
+            data.turn = data.turn === 0 ? 1 : 0;
+        }
+
+        data.sound = snd;
+        if(snd) sounds[snd].play();
+        refresh();
+        if(conn) conn.send(data);
+        input.value = '';
+    }
+
+    function refresh() {
+        data.p.forEach((p, i) => {
+            document.getElementById(`s${i}`).innerText = p.s;
+            document.getElementById(`l${i}`).innerText = p.l;
+            document.getElementById(`a${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : 0;
+            document.getElementById(`c${i}`).className = i === data.turn ? 'p-card active' : 'p-card';
         });
     }
 
     function sendChat() {
-        const input = document.getElementById('chat-input');
-        const msg = input.value;
-        if (!msg || !conn) return;
-        conn.send({ type: 'chat', msg: msg });
-        addChatMessage(msg, 'me');
-        input.value = '';
+        const el = document.getElementById('chat-in');
+        if(!el.value || !conn) return;
+        conn.send({type:'msg', text: el.value});
+        renderMsg(el.value, 'me');
+        el.value = '';
     }
 
-    function addChatMessage(text, side) {
-        const wall = document.getElementById('chat-wall');
-        const div = document.createElement('div');
-        div.className = `msg ${side}`;
-        div.innerText = text;
-        wall.appendChild(div);
+    function renderMsg(t, side) {
+        const wall = document.getElementById('chat-msgs');
+        wall.innerHTML += `<div class="msg ${side}">${t}</div>`;
         wall.scrollTop = wall.scrollHeight;
     }
 
-    function submitTurn() {
-        const input = document.getElementById('score-input');
-        const pts = parseInt(input.value) || 0;
-        let p = gameState.players[gameState.currentPlayer];
-        
-        if (p.score - pts >= 0 && p.score - pts !== 1) {
-            p.score -= pts;
-            p.totalPoints += pts;
-            p.darts += 3;
-            if (p.score === 0) { p.legs++; gameState.players.forEach(x => x.score = 501); }
-            else { gameState.currentPlayer = gameState.currentPlayer === 0 ? 1 : 0; }
-        } else { alert("BUST"); gameState.currentPlayer = gameState.currentPlayer === 0 ? 1 : 0; }
-
-        updateUI();
-        if (conn) conn.send(gameState);
-        input.value = '';
+    function toggleStats() {
+        const p1 = data.p[0];
+        const p2 = data.p[1];
+        alert(`STATS BREAKDOWN:\n\nP1: 60+(${p1.s60}) 100+(${p1.s100}) 140+(${p1.s140})\nP2: 60+(${p2.s60}) 100+(${p2.s100}) 140+(${p2.s140})`);
     }
-
-    function updateUI() {
-        gameState.players.forEach((p, i) => {
-            document.getElementById(`p${i}-score`).innerText = p.score;
-            document.getElementById(`p${i}-legs`).innerText = p.legs;
-            document.getElementById(`p${i}-avg`).innerText = p.darts > 0 ? ((p.totalPoints / p.darts) * 3).toFixed(2) : "0.00";
-            document.getElementById(`card-${i}`).className = i === gameState.currentPlayer ? "player-card active" : "player-card";
-        });
-    }
-
-    document.getElementById('chat-input').addEventListener('keypress', e => { if(e.key === 'Enter') sendChat(); });
 </script>
 </body>
 </html>
