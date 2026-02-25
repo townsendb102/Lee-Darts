@@ -12,39 +12,39 @@
         body { 
             background: var(--dark); color: white; 
             font-family: system-ui, sans-serif; 
-            height: 100dvh; display: flex; flex-direction: column; overflow: hidden; 
+            height: 100dvh; width: 100vw;
+            display: flex; flex-direction: column; overflow: hidden; 
         }
         
-        /* Start Screen Overlay */
         #safety-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-start { background: var(--blue); color: black; padding: 20px 50px; font-size: 22px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; }
 
-        header { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 12px; flex-shrink: 0; }
+        header { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; flex-shrink: 0; }
         
-        /* Video - Compact for Mobile */
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 20dvh; background: #000; flex-shrink: 0; }
-        .v-box { position: relative; border-right: 1px solid #1b4965; }
+        /* Video - Fixed Height to prevent jumping */
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 120px; background: #000; flex-shrink: 0; }
+        .v-box { position: relative; border-right: 1px solid #1b4965; height: 100%; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        .flip-btn { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.7); color: var(--blue); border: 1px solid var(--blue); font-size: 10px; padding: 3px 8px; border-radius: 4px; }
+        .flip-btn { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.7); color: var(--blue); border: 1px solid var(--blue); font-size: 10px; padding: 3px 8px; border-radius: 4px; z-index: 20; }
 
-        /* Scores and Stats */
-        .score-area { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; justify-content: space-evenly; }
-        .player-card { flex: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 15px; border: 2px solid transparent; position: relative; }
-        .player-card.active { border-color: var(--blue); background: var(--active); box-shadow: 0 0 15px rgba(0,212,255,0.1); }
+        /* Scores - Dynamic Area */
+        .score-area { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 8px; min-height: 0; }
+        .player-card { flex: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 12px 15px; border: 2px solid transparent; min-height: 0; }
+        .player-card.active { border-color: var(--blue); background: var(--active); }
         
-        .stats-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--blue); font-weight: bold; margin-bottom: 5px; }
+        .stats-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--blue); font-weight: bold; margin-bottom: 2px; }
         .score-row { display: flex; justify-content: space-between; align-items: center; }
-        .score-val { font-size: clamp(45px, 9dvh, 65px); font-weight: 900; line-height: 1; }
-        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 16px; text-align: right; max-width: 40%; }
+        .score-val { font-size: clamp(35px, 7vh, 60px); font-weight: 900; line-height: 1; }
+        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 14px; text-align: right; }
 
-        /* Input Control Bar */
+        /* Controls - Fixed at bottom */
         .controls { 
-            height: 90px; background: #000; display: flex; padding: 10px; gap: 10px; 
+            height: 80px; background: #000; display: flex; padding: 10px; gap: 10px; 
             border-top: 1px solid #1b4965; flex-shrink: 0;
             padding-bottom: calc(10px + env(safe-area-inset-bottom));
         }
-        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 35px; text-align: center; border-radius: 10px; outline: none; }
-        .btn-hit { width: 100px; background: var(--blue); border: none; border-radius: 10px; font-weight: bold; font-size: 22px; color: black; cursor: pointer; }
+        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 30px; text-align: center; border-radius: 8px; outline: none; }
+        .btn-hit { width: 90px; background: var(--blue); border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: black; cursor: pointer; }
         
         .hidden { display: none !important; }
     </style>
@@ -58,7 +58,7 @@
 
 <header>
     <div onclick="copyId()">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
-    <button onclick="shareInvite()" style="background:var(--blue); color:black; border:none; padding:5px 12px; border-radius:5px; font-weight:bold; font-size:11px;">INVITE FRIEND</button>
+    <button onclick="shareInvite()" style="background:var(--blue); color:black; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:10px;">SHARE LINK</button>
 </header>
 
 <div class="v-grid">
@@ -101,39 +101,30 @@
     let localStream, peer, conn, currentFacing = "user";
     let state = { turn: 0, p: [{ s: 501, d: 0, t: 0 }, { s: 501, d: 0, t: 0 }] };
 
-    // --- Bulletproof Start Logic ---
     document.addEventListener('click', async (e) => {
         if (e.target.id === 'start-trigger') {
             const btn = e.target;
             btn.innerText = "INITIALIZING...";
-            btn.disabled = true;
-
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing }, audio: true });
                 document.getElementById('me').srcObject = localStream;
-                
                 peer = new Peer();
                 peer.on('open', (id) => {
                     document.getElementById('display-id').innerText = id;
                     document.getElementById('safety-layer').classList.add('hidden');
                     autoJoin();
                 });
-
                 peer.on('call', (call) => {
                     call.answer(localStream);
                     call.on('stream', s => document.getElementById('peer').srcObject = s);
                 });
-
                 peer.on('connection', c => {
                     conn = c;
                     conn.on('data', d => { state = d; render(); });
                 });
-
-                peer.on('error', () => { alert("Connection error. Refreshing..."); location.reload(); });
             } catch (err) {
-                alert("Camera error. Use HTTPS and allow access.");
-                btn.disabled = false;
-                btn.innerText = "RETRY MATCH";
+                alert("Camera error. Use HTTPS.");
+                btn.innerText = "RETRY";
             }
         }
     });
@@ -149,25 +140,20 @@
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value) || 0;
         if (val > 180) return;
-
         let p = state.p[state.turn];
         if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val; p.t += val; p.d += 3;
-            if (p.s === 0) { alert("Game Shot!"); p.s = 501; p.d = 0; p.t = 0; }
-        } else {
-            p.d += 3; // Bust logic
-        }
-
+            if (p.s === 0) { alert("Game Won!"); p.s = 501; p.d = 0; p.t = 0; }
+        } else { p.d += 3; }
         state.turn = state.turn === 0 ? 1 : 0;
         render();
         if (conn) conn.send(state);
         input.value = '';
-        input.focus();
     }
 
     function getCheckout(s) {
         if (s > 170 || [169, 168, 166, 165, 163, 162, 159].includes(s)) return "";
-        if (s === 170) return "T20-T20-BULL";
+        if (s === 170) return "T20 T20 BULL";
         if (s <= 40 && s % 2 === 0) return "D" + (s/2);
         return "FINISH";
     }
@@ -185,8 +171,8 @@
     function shareInvite() {
         const id = document.getElementById('display-id').innerText;
         const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) navigator.share({ title: 'Join DartStream', url: url });
-        else { navigator.clipboard.writeText(url); alert("Invite link copied!"); }
+        if (navigator.share) navigator.share({ title: 'DartStream', url: url });
+        else { navigator.clipboard.writeText(url); alert("Copied!"); }
     }
 
     function autoJoin() {
