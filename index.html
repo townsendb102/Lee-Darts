@@ -3,60 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream: Perfect Fit</title>
+    <title>DartStream Pro: Undo</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { 
-            --bg: #020408; --panel: #0d1b2a; --blue: #00d4ff; --border: #1b4965;
-        }
-        
-        /* The Secret Sauce: Dynamic Viewport Height */
+        :root { --bg: #020408; --panel: #0d1b2a; --blue: #00d4ff; --border: #1b4965; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { 
             height: 100dvh; margin: 0; background: var(--bg); 
-            color: white; font-family: system-ui, -apple-system;
+            color: white; font-family: system-ui, sans-serif;
             overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* 1. Ultra-Slim Header */
         header { 
-            height: 40px; display: flex; align-items: center; justify-content: space-between;
-            padding: 0 10px; border-bottom: 1px solid var(--blue); font-size: 12px; flex-shrink: 0;
+            height: 44px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 10px; border-bottom: 1px solid var(--blue); flex-shrink: 0;
         }
 
-        /* 2. Scalable Video Area (Takes 25% of height) */
-        .video-grid { 
-            height: 25dvh; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; flex-shrink: 0;
-        }
-        .v-box { background: #000; border: 1px solid var(--border); border-radius: 6px; position: relative; overflow: hidden; }
-        video { width: 100%; height: 100%; object-fit: cover; }
+        .cam-grid { height: 25dvh; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; flex-shrink: 0; }
+        .v-box { background: #000; border: 1px solid var(--border); border-radius: 8px; position: relative; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        .v-btn { position: absolute; inset: 0; background: rgba(0,0,0,0.8); border: none; color: var(--blue); font-size: 10px; font-weight: bold; }
 
-        /* 3. Main Score Area (Takes 45% of height) */
-        .score-container { 
-            height: 45dvh; display: flex; flex-direction: column; gap: 8px; padding: 10px; flex-shrink: 0;
-        }
-        .p-card { 
-            flex: 1; background: var(--panel); border-radius: 12px; border: 1px solid #222;
-            display: flex; align-items: center; justify-content: space-around; padding: 0 15px;
-        }
-        .p-card.active { border-color: var(--blue); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); background: #122c44; }
-        .p-info { text-align: left; }
-        .p-info h2 { margin: 0; font-size: 14px; color: #888; }
-        .p-info span { font-size: 11px; color: var(--blue); }
-        .p-score { font-size: 50px; font-weight: 900; color: white; margin: 0; }
+        .score-container { height: 40dvh; display: flex; flex-direction: column; gap: 6px; padding: 8px; flex-shrink: 0; }
+        .p-card { flex: 1; background: var(--panel); border-radius: 12px; border: 1px solid #222; display: flex; align-items: center; justify-content: space-around; }
+        .p-card.active { border-color: var(--blue); background: #122c44; box-shadow: 0 0 10px rgba(0,212,255,0.2); }
+        .p-score { font-size: 48px; font-weight: 900; color: white; margin: 0; }
+        .p-stats { font-size: 11px; color: var(--blue); }
 
-        /* 4. Input & Controls (Takes 20% of height) */
-        .controls { 
-            height: 30dvh; background: #000; border-top: 1px solid var(--border);
-            padding: 10px; display: grid; grid-template-columns: 2fr 1fr; gap: 8px; align-items: center;
-        }
-        .input-wrap { display: flex; flex-direction: column; gap: 5px; }
-        input { 
-            background: #111; border: 1px solid var(--border); color: white; 
-            border-radius: 8px; padding: 15px; font-size: 24px; text-align: center; width: 100%;
-        }
-        .btn-hit { background: var(--blue); color: black; border: none; border-radius: 8px; font-weight: bold; font-size: 18px; height: 100%; }
+        .controls { height: 35dvh; background: #000; border-top: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .input-row { display: grid; grid-template-columns: 1fr 60px 80px; gap: 6px; flex: 1; }
+        input { background: #111; border: 1px solid var(--border); color: white; border-radius: 8px; padding: 0; font-size: 32px; text-align: center; width: 100%; }
         
-        #hint { height: 20px; color: #ffcc00; font-size: 12px; font-weight: bold; text-align: center; }
+        .btn { border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-hit { background: var(--blue); color: black; font-size: 20px; }
+        .btn-undo { background: #222; color: #888; font-size: 24px; border: 1px solid #444; }
+        .btn-cam { background: transparent; color: var(--blue); border: 1px solid var(--border); font-size: 10px; padding: 5px; }
+        
+        #hint { height: 18px; color: #ffcc00; font-size: 12px; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
@@ -65,93 +48,119 @@
     <span>ID: <b id="my-id" style="color:var(--blue)">...</b></span>
     <div style="display:flex; gap:5px">
         <input type="text" id="p-id" placeholder="Friend ID" style="width:70px; height:24px; font-size:10px; padding:0 5px">
-        <button onclick="join()" style="background:var(--blue); border:none; border-radius:4px; font-size:10px; padding:0 8px">LINK</button>
+        <button onclick="join()" style="background:var(--blue); border:none; border-radius:4px; font-size:10px; padding:0 8px; color:black; font-weight:bold">LINK</button>
     </div>
 </header>
 
-<div class="video-grid">
-    <div class="v-box"><video id="me" autoplay playsinline muted></video></div>
+<div class="cam-grid">
+    <div class="v-box">
+        <video id="me" autoplay playsinline muted></video>
+        <button id="cam-trigger" class="v-btn" onclick="initCam()">TAP TO ENABLE CAMERA</button>
+    </div>
     <div class="v-box"><video id="peer" autoplay playsinline></video></div>
 </div>
 
 <div class="score-container">
     <div class="p-card active" id="c0">
-        <div class="p-info"><h2>PLAYER 1</h2><span>AVG: <b id="a0">0</b> | L: <b id="l0">0</b></span></div>
+        <div style="text-align:left"><h2 style="margin:0; font-size:14px; color:#888">P1</h2><span class="p-stats">AVG: <b id="a0">0</b></span></div>
         <div class="p-score" id="s0">501</div>
+        <div class="p-stats">LEGS: <b id="l0">0</b></div>
     </div>
     <div class="p-card" id="c1">
-        <div class="p-info"><h2>PLAYER 2</h2><span>AVG: <b id="a1">0</b> | L: <b id="l1">0</b></span></div>
+        <div style="text-align:left"><h2 style="margin:0; font-size:14px; color:#888">P2</h2><span class="p-stats">AVG: <b id="a1">0</b></span></div>
         <div class="p-score" id="s1">501</div>
+        <div class="p-stats">LEGS: <b id="l1">0</b></div>
     </div>
 </div>
 
 <div class="controls">
-    <div class="input-wrap">
-        <div id="hint"></div>
-        <input type="number" id="pts" inputmode="numeric" placeholder="SCORE">
+    <div id="hint"></div>
+    <div class="input-row">
+        <input type="number" id="pts" inputmode="numeric" placeholder="0">
+        <button class="btn btn-undo" onclick="undo()">⟲</button>
+        <button class="btn btn-hit" onclick="hit()">HIT</button>
     </div>
-    <button class="btn-hit" onclick="hit()">HIT</button>
+    <button class="btn btn-cam" onclick="toggleCam()">SWITCH CAMERA (FRONT/BACK)</button>
 </div>
 
 <script>
-    const sounds = {
-        '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'),
-        'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734')
-    };
-    const checks = {170:"T20 T20 BULL",167:"T20 T19 BULL",160:"T20 T20 D20",100:"T20 D20",80:"T20 D10",60:"20 D20",40:"D20",32:"D16",24:"D12",16:"D8",8:"D4",4:"D2",2:"D1"};
+    const sounds = { '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'), 'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734') };
+    const checks = {170:"T20-T20-BULL",167:"T20-T19-BULL",160:"T20-T20-D20",100:"T20-D20",80:"T20-D10",60:"20-D20",40:"D20",32:"D16",16:"D8",8:"D4",4:"D2",2:"D1"};
 
-    let peer, conn, stream, wl;
-    let st = { turn: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
+    let peer, conn, localStream, wakeLock, currentFacing = "user";
+    let state = { turn: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
+    let history = null;
 
     peer = new Peer();
-    peer.on('open', id => { document.getElementById('my-id').innerText = id; cam(); lock(); });
+    peer.on('open', id => document.getElementById('my-id').innerText = id);
     peer.on('connection', c => { conn = c; listen(); });
-    peer.on('call', call => { call.answer(stream); call.on('stream', s => document.getElementById('peer').srcObject = s); });
+    peer.on('call', call => { call.answer(localStream); call.on('stream', s => document.getElementById('peer').srcObject = s); });
 
-    async function lock() { try { wl = await navigator.wakeLock.request('screen'); } catch(e) {} }
-    async function cam() { 
-        stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}, audio:true});
-        document.getElementById('me').srcObject = stream;
+    async function initCam() {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing }, audio: true });
+            document.getElementById('me').srcObject = localStream;
+            document.getElementById('cam-trigger').style.display = 'none';
+            if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+        } catch (e) { alert("Camera Error: Use HTTPS"); }
+    }
+
+    async function toggleCam() {
+        currentFacing = currentFacing === "user" ? "environment" : "user";
+        if(localStream) { localStream.getTracks().forEach(t => t.stop()); await initCam(); }
     }
 
     function join() {
         const id = document.getElementById('p-id').value;
+        if(!localStream) return alert("Enable camera first!");
         conn = peer.connect(id);
         listen();
-        peer.call(id, stream).on('stream', s => document.getElementById('peer').srcObject = s);
+        peer.call(id, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
     }
 
     function listen() {
-        conn.on('data', d => { st = d; render(); if(d.snd) sounds[d.snd].play(); });
+        conn.on('data', d => { state = d; render(); if(d.snd) sounds[d.snd].play(); });
     }
 
     function hit() {
         let el = document.getElementById('pts');
         let v = parseInt(el.value) || 0;
-        let p = st.p[st.turn];
+        if (v > 180) return;
+
+        history = JSON.parse(JSON.stringify(state)); // Save for Undo
+        let p = state.p[state.turn];
         let snd = (v === 180) ? '180' : null;
 
         if (p.s - v >= 0 && p.s - v !== 1) {
             p.s -= v; p.pts += v; p.d += 3;
-            if (p.s === 0) { p.l++; st.p.forEach(x => x.s = 501); snd = 'win'; }
-            else { st.turn = st.turn === 0 ? 1 : 0; }
-        } else { st.turn = st.turn === 0 ? 1 : 0; }
+            if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); snd = 'win'; }
+            else { state.turn = state.turn === 0 ? 1 : 0; }
+        } else { state.turn = state.turn === 0 ? 1 : 0; }
 
-        st.snd = snd;
+        state.snd = snd;
         if(snd) sounds[snd].play();
         render();
-        if(conn) conn.send(st);
+        if(conn) conn.send(state);
         el.value = '';
     }
 
+    function undo() {
+        if (history) {
+            state = JSON.parse(JSON.stringify(history));
+            history = null;
+            render();
+            if(conn) conn.send(state);
+        }
+    }
+
     function render() {
-        st.p.forEach((p, i) => {
+        state.p.forEach((p, i) => {
             document.getElementById(`s${i}`).innerText = p.s;
             document.getElementById(`l${i}`).innerText = p.l;
             document.getElementById(`a${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0";
-            document.getElementById(`c${i}`).className = i === st.turn ? 'p-card active' : 'p-card';
+            document.getElementById(`c${i}`).className = i === state.turn ? 'p-card active' : 'p-card';
         });
-        document.getElementById('hint').innerText = checks[st.p[st.turn].s] || "";
+        document.getElementById('hint').innerText = checks[state.p[state.turn].s] || "";
     }
 </script>
 </body>
