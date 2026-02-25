@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Dart Stream Scorer</title>
+    <style>
+        :root { --neon-green: #00ff88; --accent-pink: #e91e63; --bg-dark: #121212; --panel-bg: #1e1e1e; }
+        body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
+        .app-container { display: flex; height: 100vh; }
+
+        /* Video Section */
+        .video-section { flex: 1.2; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border-right: 2px solid #333; }
+        video { width: 95%; border-radius: 8px; transform: scaleX(-1); border: 2px solid #444; background: #222; }
+        .cam-controls { position: absolute; bottom: 20px; display: flex; gap: 10px; }
+
+        /* Score Section */
+        .score-section { flex: 1; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; background: var(--panel-bg); }
+        .player-card { padding: 20px; border-radius: 12px; border: 2px solid transparent; transition: 0.3s; opacity: 0.4; background: #2a2a2a; margin-bottom: 15px; }
+        .player-card.active { opacity: 1; border-color: var(--neon-green); transform: scale(1.02); box-shadow: 0 0 20px rgba(0,255,136,0.1); }
+        
+        .stats-row { display: flex; justify-content: space-between; font-size: 0.8rem; text-transform: uppercase; color: #888; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px; }
+        .stats-row b { color: var(--neon-green); }
+        .score-val { font-size: 5rem; font-weight: 800; margin: 0; text-align: center; }
+        
+        .input-area { background: #2a2a2a; padding: 20px; border-radius: 12px; text-align: center; }
+        input { width: 80%; padding: 15px; font-size: 2rem; border-radius: 8px; border: none; background: #121212; color: white; text-align: center; margin-bottom: 15px; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+        button { padding: 12px 24px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .btn-main { background: var(--neon-green); color: black; }
+        .btn-alt { background: #444; color: white; }
+        #checkout-hint { height: 30px; color: #ffcc00; font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <section class="video-section">
+        <video id="webcam" autoplay playsinline></video>
+        <div class="cam-controls">
+            <button class="btn-alt" onclick="startCamera()">Start Camera</button>
+            <button class="btn-alt" onclick="toggleFilter()">High Contrast</button>
+        </div>
+    </section>
+
+    <section class="score-section">
+        <div id="players-container">
+            <div class="player-card active" id="card-0">
+                <div class="stats-row">
+                    <span>Sets: <b id="p0-sets">0</b> | Legs: <b id="p0-legs">0</b></span>
+                    <span>Avg: <b id="p0-avg">0.00</b></span>
+                </div>
+                <h2>Player 1</h2>
+                <p class="score-val" id="p0-score">501</p>
+            </div>
+            <div class="player-card" id="card-1">
+                <div class="stats-row">
+                    <span>Sets: <b id="p1-sets">0</b> | Legs: <b id="p1-legs">0</b></span>
+                    <span>Avg: <b id="p1-avg">0.00</b></span>
+                </div>
+                <h2>Player 2</h2>
+                <p class="score-val" id="p1-score">501</p>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div id="checkout-hint"></div>
+            <input type="number" id="score-input" placeholder="0" autofocus>
+            <div class="btn-group">
+                <button class="btn-main" onclick="submitTurn()">Submit Score</button>
+                <button class="btn-alt" onclick="undo()">Undo</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    const checkouts = {170:"T20 T20 BULL",167:"T20 T19 BULL",164:"T20 T18 BULL",161:"T20 T17 BULL",160:"T20 T20 D20",158:"T20 T20 D19",141:"T20 T19 D12",121:"T20 T15 D8",100:"T20 D20",80:"T20 D10",60:"20 D20",40:"D20",32:"D16",24:"D12",16:"D8",8:"D4",4:"D2",2:"D1"};
+
+    let gameState = {
+        currentPlayer: 0,
+        players: [
+            {score: 501, legs: 0, sets: 0, totalPoints: 0, darts: 0},
+            {score: 501, legs: 0, sets: 0, totalPoints: 0, darts: 0}
+        ]
+    };
+    let history = null;
+
+    function startCamera() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(s => document.getElementById('webcam').srcObject = s)
+            .catch(e => alert("Camera error: " + e));
+    }
+
+    function toggleFilter() {
+        const v = document.getElementById('webcam');
+        v.style.filter = v.style.filter ? "" : "contrast(1.5) brightness(1.2) saturate(1.2)";
+    }
+
+    function submitTurn() {
+        const input = document.getElementById('score-input');
+        const points = parseInt(input.value) || 0;
+        if (points > 180) return alert("Max score is 180");
+
+        history = JSON.parse(JSON.stringify(gameState));
+        let p = gameState.players[gameState.currentPlayer];
+        let newScore = p.score - points;
+
+        // Bust Logic
+        if (newScore < 0 || newScore === 1) {
+            alert("BUST!");
+        } else if (newScore === 0) {
+            p.score = 0;
+            p.totalPoints += points;
+            p.darts += 3;
+            handleLegWin();
+            return;
+        } else {
+            p.score = newScore;
+            p.totalPoints += points;
+            p.darts += 3;
+        }
+
+        gameState.currentPlayer = gameState.currentPlayer === 0 ? 1 : 0;
+        updateUI();
+        input.value = '';
+        input.focus();
+    }
+
+    function handleLegWin() {
+        let p = gameState.players[gameState.currentPlayer];
+        p.legs++;
+        if (p.legs >= 3) {
+            p.sets++;
+            gameState.players.forEach(pl => pl.legs = 0);
+            alert(p.name + " WINS THE SET!");
+        }
+        gameState.players.forEach(pl => pl.score = 501);
+        updateUI();
+    }
+
+    function undo() {
+        if (history) {
+            gameState = JSON.parse(JSON.stringify(history));
+            history = null;
+            updateUI();
+        }
+    }
+
+    function updateUI() {
+        gameState.players.forEach((p, i) => {
+            document.getElementById(`p${i}-score`).innerText = p.score;
+            document.getElementById(`p${i}-legs`).innerText = p.legs;
+            document.getElementById(`p${i}-sets`).innerText = p.sets;
+            const avg = p.darts > 0 ? ((p.totalPoints / p.darts) * 3).toFixed(2) : "0.00";
+            document.getElementById(`p${i}-avg`).innerText = avg;
+            document.getElementById(`card-${i}`).className = i === gameState.currentPlayer ? "player-card active" : "player-card";
+        });
+
+        const currentScore = gameState.players[gameState.currentPlayer].score;
+        document.getElementById('checkout-hint').innerText = checkouts[currentScore] || (currentScore <= 170 ? "Finish Available" : "");
+    }
+
+    document.getElementById('score-input').addEventListener('keypress', e => {
+        if (e.key === 'Enter') submitTurn();
+    });
+</script>
+
+</body>
+</html>
