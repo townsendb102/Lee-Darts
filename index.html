@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream: 50/50 Split</title>
+    <title>DartStream: Pro Checkout</title>
     <style>
-        :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
+        :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; --gold: #ffcc00; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            /* Header (40px) | Camera (45%) | Scores (45%) | Controls (10%) */
+            /* Header (40px) | Camera (45%) | Scores (45%) | Controls (80px) */
             grid-template-rows: 40px 45dvh 1fr 80px;
             overflow: hidden; 
         }
@@ -28,13 +28,16 @@
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 
         .score-area { display: flex; flex-direction: column; padding: 6px; gap: 4px; min-height: 0; }
-        .player-card { flex: 1; background: var(--card); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; padding: 8px 12px; border: 2px solid transparent; min-height: 0; }
+        .player-card { flex: 1; background: var(--card); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; padding: 8px 12px; border: 2px solid transparent; min-height: 0; position: relative; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
         .p-label { font-size: 9px; color: #888; margin-bottom: 1px; }
         .stats-row { display: flex; justify-content: space-between; font-size: 9px; color: var(--blue); font-weight: bold; }
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .score-val { font-size: clamp(35px, 7dvh, 50px); font-weight: 900; line-height: 1; }
+        
+        /* Checkout Suggestion Style */
+        .checkout-box { color: var(--gold); font-weight: bold; font-size: 12px; text-align: right; max-width: 50%; line-height: 1.2; }
         .legs-count { font-size: 9px; color: var(--blue); }
 
         .controls { 
@@ -61,7 +64,7 @@
     <div onclick="copyId()">ID: <span id="display-id" style="color:var(--blue); font-size: 9px;">...</span></div>
     <div class="header-controls">
         <button class="header-btn" onclick="swapCam()">FLIP</button>
-        <button class="header-btn" id="invite-btn" onclick="shareLink()">LINK</button>
+        <button class="header-btn" onclick="shareLink()">LINK</button>
     </div>
 </header>
 
@@ -73,18 +76,18 @@
 <div class="score-area">
     <div id="card-0" class="player-card active">
         <div class="p-label">P1</div>
+        <div class="stats-row">AVG: <span id="avg-0">0</span> <span class="legs-count">LEGS: <span id="l-0">0</span></span></div>
         <div class="score-row">
-            <div class="stats-row">AVG: <span id="avg-0">0</span></div>
             <div class="score-val" id="s-0">501</div>
-            <div class="legs-count">LEGS: <span id="l-0">0</span></div>
+            <div class="checkout-box" id="finish-0"></div>
         </div>
     </div>
     <div id="card-1" class="player-card">
         <div class="p-label">P2</div>
+        <div class="stats-row">AVG: <span id="avg-1">0</span> <span class="legs-count">LEGS: <span id="l-1">0</span></span></div>
         <div class="score-row">
-            <div class="stats-row">AVG: <span id="avg-1">0</span></div>
             <div class="score-val" id="s-1">501</div>
-            <div class="legs-count">LEGS: <span id="l-1">0</span></div>
+            <div class="checkout-box" id="finish-1"></div>
         </div>
     </div>
 </div>
@@ -104,84 +107,9 @@
     let state = { turn: 0, p: [{ s: 501, l: 0, pts: 0, d: 0 }, { s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
 
-    async function initApp() {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
-            document.getElementById('me').srcObject = stream;
-            peer = new Peer();
-            peer.on('open', (id) => {
-                document.getElementById('display-id').innerText = id;
-                document.getElementById('setup-layer').classList.add('hidden');
-                autoJoin();
-            });
-            peer.on('call', call => {
-                call.answer(stream);
-                call.on('stream', s => document.getElementById('peer').srcObject = s);
-            });
-            peer.on('connection', c => {
-                conn = c;
-                conn.on('data', d => { state = d; render(); });
-            });
-        } catch (e) {
-            alert("Camera failed. Use HTTPS.");
-        }
-    }
-
-    async function swapCam() {
-        facing = (facing === "user") ? "environment" : "user";
-        if (stream) stream.getTracks().forEach(t => t.stop());
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
-        document.getElementById('me').srcObject = stream;
-    }
-
-    function processHit() {
-        const input = document.getElementById('pts-input');
-        const val = parseInt(input.value) || 0;
-        if (val > 180) return;
-        history = JSON.parse(JSON.stringify(state));
-        let p = state.p[state.turn];
-        if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.pts += val; p.d += 3;
-            if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); }
-            else { state.turn = (state.turn === 0) ? 1 : 0; }
-        } else { state.turn = (state.turn === 0) ? 1 : 0; }
-        render();
-        if (conn) conn.send(state);
-        input.value = '';
-    }
-
-    function undo() {
-        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if(conn) conn.send(state); }
-    }
-
-    function render() {
-        state.p.forEach((p, i) => {
-            document.getElementById(`s-${i}`).innerText = p.s;
-            document.getElementById(`l-${i}`).innerText = p.l;
-            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0";
-            document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
-        });
-    }
-
-    function shareLink() {
-        const id = document.getElementById('display-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) navigator.share({ title: 'Join My Darts Match', url: url });
-        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
-    }
-
-    function autoJoin() {
-        const id = new URLSearchParams(window.location.search).get('join');
-        if (id && peer) {
-            conn = peer.connect(id);
-            peer.call(id, stream).on('stream', s => document.getElementById('peer').srcObject = s);
-        }
-    }
-
-    function copyId() {
-        navigator.clipboard.writeText(document.getElementById('display-id').innerText);
-        alert("ID Copied");
-    }
-</script>
-</body>
-</html>
+    // Checkout table for major scores
+    const checkouts = {
+        170: "T20 T20 BULL", 167: "T20 T19 BULL", 164: "T20 T18 BULL", 161: "T20 T17 BULL", 160: "T20 T20 D20",
+        158: "T20 T20 D19", 157: "T20 T19 D20", 156: "T20 T20 D18", 155: "T20 T19 D19", 154: "T20 T18 D20",
+        150: "T20 T18 D18", 140: "T20 T16 D16", 130: "T20 T18 D8", 121: "T20 T11 D14", 100: "T20 D20",
+        90: "T18 D18", 80: "T20 D10", 70: "T10 D20", 60: "S20 D20", 50: "S
