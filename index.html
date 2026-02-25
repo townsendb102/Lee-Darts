@@ -3,78 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <title>DartStream</title>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        :root { --bg: #020408; --panel: #0d1b2a; --blue: #00d4ff; --border: #1b4965; --accent: #ffcc00; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100dvh; margin: 0; background: var(--bg); color: white; font-family: system-ui, sans-serif; overflow: hidden; display: flex; flex-direction: column; }
+        :root { --bg: #020408; --blue: #00d4ff; }
+        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        #setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        #debug-log { font-size: 10px; color: #ff4444; margin-top: 10px; max-width: 80%; overflow-wrap: break-word; }
-        
-        #menu-panel { position: fixed; top: 0; right: -80%; width: 80%; height: 100%; background: #0a1118; border-left: 1px solid var(--blue); z-index: 999; transition: 0.3s; padding: 20px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); overflow-y: auto; }
+        /* Setup Screen - Forced to the very front */
+        #setup-screen { 
+            position: fixed; inset: 0; background: var(--bg); 
+            z-index: 9999; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
+            padding: 20px; pointer-events: all; 
+        }
+
+        .btn-primary { 
+            background: var(--blue); color: black; 
+            padding: 20px 50px; border: none; border-radius: 12px; 
+            font-size: 22px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 20px rgba(0,212,255,0.4);
+        }
+
+        header { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; }
+        .cam-grid { height: 25vh; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; }
+        .v-box { background: #111; border-radius: 8px; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        .score-container { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .p-card { flex: 1; background: #0d1b2a; border-radius: 12px; display: flex; align-items: center; justify-content: space-around; font-size: 40px; }
+        .active { border: 2px solid var(--blue); }
+
+        .controls { height: 100px; background: #000; display: flex; padding: 10px; gap: 5px; }
+        input { flex: 1; background: #111; color: white; border: 1px solid #333; font-size: 30px; text-align: center; border-radius: 8px; }
+        .btn-hit { width: 100px; background: var(--blue); border-radius: 8px; color: black; font-weight: bold; }
+
+        #menu-panel { position: fixed; top: 0; right: -80%; width: 80%; height: 100%; background: #0a1118; z-index: 9000; transition: 0.3s; padding: 20px; border-left: 1px solid var(--blue); }
         #menu-panel.open { right: 0; }
-        .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 998; }
-        
-        header { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid var(--blue); flex-shrink: 0; background: #050a10; }
-        .cam-grid { height: 25dvh; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; flex-shrink: 0; }
-        .v-box { background: #000; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; position: relative; }
-        video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-
-        .score-container { height: 38dvh; display: flex; flex-direction: column; gap: 6px; padding: 8px; flex-shrink: 0; }
-        .p-card { flex: 1; background: var(--panel); border-radius: 12px; border: 1px solid #222; display: flex; align-items: center; justify-content: space-around; }
-        .p-card.active { border-color: var(--blue); background: #122c44; box-shadow: 0 0 10px rgba(0,212,255,0.2); }
-        .p-score { font-size: 48px; font-weight: 900; color: white; margin: 0; }
-        .p-stats { font-size: 11px; color: var(--blue); }
-
-        .controls { height: 32dvh; background: #000; border-top: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 5px; }
-        .input-row { display: grid; grid-template-columns: 1fr 60px 80px; gap: 6px; flex: 1; }
-        input { background: #111; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 24px; text-align: center; width: 100%; }
-        
-        .btn { border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-hit { background: var(--blue); color: black; font-size: 18px; }
-        .btn-undo { background: #222; color: #888; font-size: 20px; border: 1px solid #444; }
-        .btn-primary { background: var(--blue); color: black; padding: 15px 40px; font-size: 20px; margin-top: 20px; }
-        
-        .friend-item { display: flex; justify-content: space-between; align-items: center; background: #1a2a3a; padding: 10px; margin-bottom: 8px; border-radius: 6px; }
-        .friend-name { font-weight: bold; color: var(--blue); }
-        .friend-id { font-size: 10px; color: #888; display: block; }
-        .add-friend-form { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 5px; margin-bottom: 20px; }
-        
-        #hint { height: 18px; color: var(--accent); font-size: 11px; font-weight: bold; text-align: center; }
+        #debug-text { font-size: 12px; color: #ff4444; margin-top: 15px; }
     </style>
 </head>
 <body>
 
 <div id="setup-screen">
-    <h1 style="color:var(--blue); margin-bottom: 5px;">DartStream</h1>
-    <p style="margin-top: 0; font-size: 14px;">Camera & Scoreboard Pro</p>
-    <button class="btn btn-primary" id="start-btn">START APP</button>
-    <div id="debug-log"></div>
-</div>
-
-<div class="menu-overlay" id="overlay" onclick="toggleMenu()"></div>
-<div id="menu-panel">
-    <h2 style="color:var(--blue); margin-top:0">Match Menu</h2>
-    <button onclick="shareInvite()" class="btn" style="width:100%; background:var(--blue); color:black; padding:12px; margin-bottom:20px;">✉ INVITE FRIEND</button>
-
-    <div class="add-friend-form">
-        <input type="text" id="new-friend-name" placeholder="Name" style="font-size:14px; height:35px;">
-        <input type="text" id="new-friend-id" placeholder="ID" style="font-size:14px; height:35px;">
-        <button onclick="addFriend()" style="background:var(--blue); border:none; border-radius:4px; font-weight:bold">+</button>
-    </div>
-    <div id="friends-list"></div>
-    <hr style="border:0; border-top:1px solid #222; margin:20px 0">
-    <button onclick="flipCamera()" class="btn" style="width:100%; background:#222; color:white; padding:10px; border:1px solid var(--blue)">FLIP CAMERA</button>
+    <h1 style="color:var(--blue)">DartStream</h1>
+    <button class="btn-primary" id="main-start-btn">START APP</button>
+    <div id="debug-text">Waiting for interaction...</div>
 </div>
 
 <header>
-    <div onclick="copyMyID()" style="cursor:pointer">ID: <b id="my-id" style="color:var(--blue)">...</b></div>
-    <div style="display:flex; gap:12px; align-items:center">
-        <span id="conn-status" style="font-size:10px; color:#555">● DISCONNECTED</span>
-        <div onclick="toggleMenu()" style="font-size:24px; cursor:pointer; color:var(--blue)">☰</div>
-    </div>
+    <span>ID: <b id="my-id">...</b></span>
+    <button onclick="toggleMenu()" style="background:none; border:none; color:var(--blue); font-size:24px;">☰</button>
 </header>
 
 <div class="cam-grid">
@@ -83,210 +61,114 @@
 </div>
 
 <div class="score-container">
-    <div class="p-card active" id="c0">
-        <div style="text-align:left"><h2 style="margin:0; font-size:12px; color:#888">YOU</h2><span class="p-stats">AVG: <b id="a0">0</b></span></div>
-        <div class="p-score" id="s0">501</div>
-        <div class="p-stats">LEGS: <b id="l0">0</b></div>
-    </div>
-    <div class="p-card" id="c1">
-        <div style="text-align:left"><h2 style="margin:0; font-size:12px; color:#888" id="p2-label">OPPONENT</h2><span class="p-stats">AVG: <b id="a1">0</b></span></div>
-        <div class="p-score" id="s1">501</div>
-        <div class="p-stats">LEGS: <b id="l1">0</b></div>
-    </div>
+    <div class="p-card active" id="c0">501</div>
+    <div class="p-card" id="c1">501</div>
 </div>
 
 <div class="controls">
-    <div id="hint"></div>
-    <div class="input-row">
-        <input type="number" id="pts" inputmode="numeric" placeholder="SCORE">
-        <button class="btn btn-undo" onclick="undo()">⟲</button>
-        <button class="btn btn-hit" onclick="hit()">HIT</button>
-    </div>
+    <input type="number" id="pts" inputmode="numeric" placeholder="SCORE">
+    <button class="btn-hit" onclick="hit()">HIT</button>
+</div>
+
+<div id="menu-panel">
+    <button onclick="shareInvite()" style="width:100%; padding:15px; margin-bottom:10px;">Invite Friend</button>
+    <button onclick="flipCamera()" style="width:100%; padding:15px;">Flip Camera</button>
+    <button onclick="toggleMenu()" style="width:100%; padding:15px; margin-top:20px;">Close</button>
 </div>
 
 <script>
-    const log = (msg) => { document.getElementById('debug-log').innerText = msg; console.log(msg); };
-    const sounds = { 
-        '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'), 
-        'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734') 
-    };
-    
-    let peer, conn, localStream, currentFacingMode = "user", friends = JSON.parse(localStorage.getItem('dartFriends') || '[]');
-    let state = { turn: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
-    let history = null;
+    const dbg = (txt) => { document.getElementById('debug-text').innerText = txt; };
+    let localStream, peer, conn, currentFacingMode = "user";
+    let state = { turn: 0, s: [501, 501] };
 
-    // Direct Event Listener is more reliable than onclick in HTML for some mobile browsers
-    document.getElementById('start-btn').addEventListener('click', async () => {
-        const btn = document.getElementById('start-btn');
-        btn.disabled = true;
-        btn.innerText = "OPENING CAMERA...";
-        
+    // --- FORCED CLICK HANDLER ---
+    document.getElementById('main-start-btn').onclick = async function() {
+        dbg("Button clicked! Checking camera...");
+        this.disabled = true;
+        this.innerText = "LOADING...";
+
         try {
-            log("Requesting camera...");
+            // 1. Get Camera
             localStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: currentFacingMode }, 
                 audio: true 
             });
             document.getElementById('me').srcObject = localStream;
-            
-            log("Initializing PeerJS...");
+            dbg("Camera OK. Starting Peer...");
+
+            // 2. Setup Peer
             peer = new Peer();
             
-            peer.on('open', id => { 
-                log(""); // Clear log
-                document.getElementById('my-id').innerText = id; 
-                renderFriends();
+            peer.on('open', (id) => {
+                document.getElementById('my-id').innerText = id;
                 document.getElementById('setup-screen').style.display = 'none';
-                checkUrlForInvite(); 
+                checkUrl();
             });
 
-            peer.on('error', err => {
-                log("Peer Error: " + err.type);
-                btn.disabled = false;
-                btn.innerText = "RETRY START";
+            peer.on('call', (call) => {
+                call.answer(localStream);
+                call.on('stream', (s) => document.getElementById('peer').srcObject = s);
             });
 
-            peer.on('connection', c => { 
-                conn = c; 
-                setupData(); 
-                updateStatus(true);
+            peer.on('connection', (c) => {
+                conn = c;
+                conn.on('data', (d) => { state = d; render(); });
             });
 
-            peer.on('call', call => { 
-                call.answer(localStream); 
-                call.on('stream', s => document.getElementById('peer').srcObject = s); 
+            peer.on('error', (err) => {
+                dbg("Peer Error: " + err.type);
+                this.disabled = false;
             });
 
-            if ('wakeLock' in navigator) await navigator.wakeLock.request('screen').catch(()=>{});
-
-        } catch (e) { 
-            log("Error: " + e.message);
-            btn.disabled = false;
-            btn.innerText = "RETRY START";
-            alert("Please use HTTPS and grant camera access.");
+        } catch (e) {
+            dbg("Error: " + e.message);
+            this.disabled = false;
+            this.innerText = "RETRY START";
         }
-    });
+    };
+
+    // --- MENU & INVITE ---
+    function toggleMenu() { document.getElementById('menu-panel').classList.toggle('open'); }
 
     function shareInvite() {
-        const myId = document.getElementById('my-id').innerText;
-        if (myId === "...") return;
-        const inviteUrl = `${window.location.origin}${window.location.pathname}?join=${myId}`;
-        if (navigator.share) {
-            navigator.share({ title: 'DartStream Invite', url: inviteUrl }).catch(()=>{});
-        } else {
-            navigator.clipboard.writeText(inviteUrl);
-            alert("Invite link copied!");
-        }
+        const id = document.getElementById('my-id').innerText;
+        const url = window.location.href.split('?')[0] + '?join=' + id;
+        navigator.clipboard.writeText(url);
+        alert("Invite link copied!");
     }
 
-    function checkUrlForInvite() {
+    function checkUrl() {
         const params = new URLSearchParams(window.location.search);
         const joinId = params.get('join');
-        if (joinId && joinId !== document.getElementById('my-id').innerText) {
-            join(joinId, "Inviter");
-            window.history.replaceState({}, document.title, window.location.pathname);
+        if (joinId) {
+            conn = peer.connect(joinId);
+            peer.call(joinId, localStream).on('stream', (s) => document.getElementById('peer').srcObject = s);
         }
-    }
-
-    function toggleMenu() {
-        const menu = document.getElementById('menu-panel');
-        const isOpen = menu.classList.toggle('open');
-        document.getElementById('overlay').style.display = isOpen ? 'block' : 'none';
     }
 
     async function flipCamera() {
         currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
-        if(localStream) localStream.getTracks().forEach(t => t.stop());
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
-            document.getElementById('me').srcObject = localStream;
-        } catch(e) { log("Flip failed: " + e.message); }
+        localStream.getTracks().forEach(t => t.stop());
+        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
+        document.getElementById('me').srcObject = localStream;
         toggleMenu();
     }
 
-    function join(id, name) {
-        document.getElementById('p2-label').innerText = name.toUpperCase();
-        conn = peer.connect(id);
-        setupData();
-        peer.call(id, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
-        updateStatus(true);
-    }
-
-    function setupData() {
-        conn.on('data', d => { state = d; render(); if(d.snd) sounds[d.snd].play(); });
-        conn.on('close', () => updateStatus(false));
-    }
-
-    function updateStatus(connected) {
-        const s = document.getElementById('conn-status');
-        s.innerText = connected ? "● CONNECTED" : "● DISCONNECTED";
-        s.style.color = connected ? "var(--blue)" : "#555";
-    }
-
-    function addFriend() {
-        const n = document.getElementById('new-friend-name'), i = document.getElementById('new-friend-id');
-        if(n.value && i.value) {
-            friends.push({name: n.value, id: i.value});
-            localStorage.setItem('dartFriends', JSON.stringify(friends));
-            n.value = ''; i.value = '';
-            renderFriends();
-        }
-    }
-
-    function renderFriends() {
-        document.getElementById('friends-list').innerHTML = friends.map((f, i) => `
-            <div class="friend-item">
-                <div onclick="join('${f.id}', '${f.name}')" style="flex:1">
-                    <span class="friend-name">${f.name}</span>
-                    <span class="friend-id">${f.id}</span>
-                </div>
-                <button onclick="deleteFriend(${i})" style="color:red; background:none; border:none">×</button>
-            </div>`).join('');
-    }
-
-    function deleteFriend(i) {
-        friends.splice(i, 1);
-        localStorage.setItem('dartFriends', JSON.stringify(friends));
-        renderFriends();
-    }
-
-    function copyMyID() {
-        const id = document.getElementById('my-id').innerText;
-        navigator.clipboard.writeText(id);
-        document.getElementById('hint').innerText = "COPIED ID: " + id;
-        setTimeout(() => document.getElementById('hint').innerText = "", 2000);
-    }
-
+    // --- SIMPLE GAME LOGIC ---
     function hit() {
-        let el = document.getElementById('pts');
-        let v = parseInt(el.value) || 0;
-        if (v > 180) return;
-        history = JSON.parse(JSON.stringify(state));
-        let p = state.p[state.turn];
-        let snd = (v === 180) ? '180' : null;
-        if (p.s - v >= 0 && p.s - v !== 1) {
-            p.s -= v; p.pts += v; p.d += 3;
-            if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); snd = 'win'; }
-            else { state.turn = state.turn === 0 ? 1 : 0; }
-        } else { state.turn = state.turn === 0 ? 1 : 0; }
-        state.snd = snd;
-        if(snd) sounds[snd].play();
+        let val = parseInt(document.getElementById('pts').value) || 0;
+        state.s[state.turn] -= val;
+        state.turn = state.turn === 0 ? 1 : 0;
         render();
         if(conn) conn.send(state);
-        el.value = '';
-    }
-
-    function undo() {
-        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if(conn) conn.send(state); }
+        document.getElementById('pts').value = '';
     }
 
     function render() {
-        state.p.forEach((p, i) => {
-            document.getElementById(`s${i}`).innerText = p.s;
-            document.getElementById(`l${i}`).innerText = p.l;
-            document.getElementById(`a${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0";
-            document.getElementById(`c${i}`).className = i === state.turn ? 'p-card active' : 'p-card';
-        });
+        document.getElementById('c0').innerText = state.s[0];
+        document.getElementById('c1').innerText = state.s[1];
+        document.getElementById('c0').className = state.turn === 0 ? 'p-card active' : 'p-card';
+        document.getElementById('c1').className = state.turn === 1 ? 'p-card active' : 'p-card';
     }
 </script>
 </body>
