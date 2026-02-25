@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream: Final Fix</title>
+    <title>DartStream: Permanent Fix</title>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; --gold: #ffd700; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -15,151 +15,99 @@
             overflow: hidden; 
         }
         
-        /* Setup & Win Layers */
         #setup-layer, #win-layer { 
-            position: fixed; inset: 0; background: rgba(2, 4, 8, 0.95); z-index: 10000; 
+            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
         }
         
-        #win-layer { background: radial-gradient(circle, #162a3f 0%, #020408 100%); z-index: 10001; }
-
         .setup-card, .win-card { 
             background: var(--card); padding: 25px; border-radius: 15px; 
             width: 100%; max-width: 320px; border: 1px solid #1b4965;
-            display: flex; flex-direction: column; gap: 10px; text-align: center;
+            display: flex; flex-direction: column; gap: 10px;
         }
-        
-        .win-card h1 { color: var(--gold); font-size: 2.5rem; margin-bottom: 5px; }
-        .win-card p { font-size: 1.2rem; margin-bottom: 20px; color: #ccc; }
 
-        .setup-card h2 { color: var(--blue); margin-bottom: 10px; text-align: center; }
-        
-        .input-group { margin-bottom: 10px; text-align: left; }
-        .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-        .setup-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
-        
         .btn-start, .btn-reset { 
             background: var(--blue); color: black; width: 100%; padding: 16px; 
-            font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; 
+            font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;
+            transition: opacity 0.2s;
         }
-        .btn-reset { background: var(--gold); }
+        .btn-start:active { opacity: 0.7; }
 
-        /* Header */
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
-        .header-controls { display: flex; gap: 8px; align-items: center; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; }
-
-        /* Video System */
         .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
         .v-box { position: absolute; inset: 0; display: none; }
         .v-box.visible { display: block; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
-
-        /* Scoring Area */
-        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
-        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
+        
+        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; }
+        .player-card { flex: 1; background: var(--card); border-radius: 10px; padding: 10px 15px; border: 2px solid transparent; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
-        
-        .p-name { font-size: 14px; color: #fff; font-weight: bold; }
-        .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .score-val { font-size: clamp(35px, 7dvh, 55px); font-weight: 900; line-height: 1; }
-        .legs-count { font-size: 11px; color: #888; }
-        .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
+        .score-val { font-size: 45px; font-weight: 900; }
 
-        .controls { 
-            display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; 
-            background: #000; border-top: 1px solid #1b4965; padding-bottom: env(safe-area-inset-bottom);
-        }
-        .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-        .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; }
-        .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; }
+        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; background: #000; }
+        #pts-input { width: 100%; background: #111; border: 1px solid #333; color: white; text-align: center; font-size: 32px; border-radius: 8px; }
         
-        #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
         .hidden { display: none !important; }
+        #error-log { font-size: 12px; margin-top: 15px; text-align: center; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <div id="setup-layer">
     <div class="setup-card">
-        <h2>DARTSTREAM</h2>
-        <div class="input-group">
-            <label>Your Name</label>
-            <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
-        </div>
-        <div class="input-group">
-            <label>Best Of (Legs)</label>
-            <select id="legs-input" class="setup-input">
-                <option value="1">1 Leg (First to 1)</option>
-                <option value="3">Best of 3 (First to 2)</option>
-                <option value="5" selected>Best of 5 (First to 3)</option>
-                <option value="7">Best of 7 (First to 4)</option>
-                <option value="11">Best of 11 (First to 6)</option>
-            </select>
-        </div>
+        <h2 style="text-align:center; color:var(--blue)">DARTSTREAM</h2>
+        <input type="text" id="name-input" style="padding:12px; border-radius:8px; border:1px solid #333; background:#000; color:white;" placeholder="Enter Name">
+        <select id="legs-input" style="padding:12px; border-radius:8px; border:1px solid #333; background:#000; color:white;">
+            <option value="1">Best of 1</option>
+            <option value="3">Best of 3</option>
+            <option value="5" selected>Best of 5</option>
+        </select>
         <button id="start-btn" class="btn-start">START MATCH</button>
-        <p id="error-log" style="color: #ff4d4d; font-size: 10px; margin-top: 10px; text-align: center;"></p>
+        <div id="error-log">Ready to play.</div>
     </div>
 </div>
 
 <div id="win-layer" class="hidden">
-    <div class="win-card">
-        <div style="font-size: 50px;">🏆</div>
-        <h1 id="winner-name">WINNER</h1>
-        <p>Match Completed</p>
-        <button onclick="location.reload()" class="btn-reset">NEW MATCH</button>
+    <div class="win-card" style="text-align:center">
+        <h1 style="color:var(--gold)">🏆 WINNER!</h1>
+        <h2 id="winner-name" style="margin:10px 0"></h2>
+        <button onclick="location.reload()" class="btn-reset">PLAY AGAIN</button>
     </div>
 </div>
 
 <header>
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
-    <div class="header-controls">
-        <button class="header-btn" id="flip-btn">FLIP</button>
-        <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
-    </div>
+    <button onclick="shareInvite()" style="background:none; border:none; color:var(--blue); font-size:10px;">INVITE GUEST</button>
 </header>
 
 <div class="v-container">
-    <div id="box-me" class="v-box visible">
-        <div class="cam-label">YOU</div>
-        <video id="me" autoplay playsinline muted></video>
-    </div>
-    <div id="box-peer" class="v-box">
-        <div class="cam-label">OPPONENT</div>
-        <video id="peer" autoplay playsinline></video>
-    </div>
+    <div id="box-me" class="v-box visible"><video id="me" autoplay playsinline muted></video></div>
+    <div id="box-peer" class="v-box"><video id="peer" autoplay playsinline></video></div>
 </div>
 
 <div class="score-area">
     <div id="card-0" class="player-card active">
-        <div class="p-name" id="n-0">P1</div>
-        <div class="score-row">
-            <div style="font-size:10px; color:var(--blue)">AVG: <span id="avg-0">0.0</span></div>
-            <div class="score-val" id="s-0">501</div>
-            <div class="legs-count"><span id="l-0">0</span>LEGS</div>
-        </div>
+        <div id="n-0">P1</div>
+        <div class="score-val" id="s-0">501</div>
+        <div style="font-size:12px">Legs: <span id="l-0">0</span></div>
     </div>
     <div id="card-1" class="player-card">
-        <div class="p-name" id="n-1">P2</div>
-        <div class="score-row">
-            <div style="font-size:10px; color:var(--blue)">AVG: <span id="avg-1">0.0</span></div>
-            <div class="score-val" id="s-1">501</div>
-            <div class="legs-count"><span id="l-1">0</span>LEGS</div>
-        </div>
+        <div id="n-1">P2</div>
+        <div class="score-val" id="s-1">501</div>
+        <div style="font-size:12px">Legs: <span id="l-1">0</span></div>
     </div>
 </div>
 
 <div class="controls">
-    <div class="score-input-box"><input type="number" id="pts-input" placeholder="0" inputmode="numeric"></div>
-    <button class="btn-undo" id="undo-btn">⟲</button>
-    <button class="btn-hit" id="hit-btn">HIT</button>
+    <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
+    <button onclick="undo()" style="background:#222; color:white; border-radius:8px; border:1px solid #444;">⟲</button>
+    <button onclick="processHit()" style="background:var(--blue); border:none; border-radius:8px; font-weight:bold;">HIT</button>
 </div>
 
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 
 <script>
-    let stream, peer, conn, facing = "user";
+    let stream, peer, conn;
     let myIndex = 0;
     let state = { turn: 0, bestOf: 5, winner: null, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
@@ -167,94 +115,22 @@
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
 
-    window.addEventListener('load', () => {
-        document.getElementById('start-btn').onclick = initApp;
-        document.getElementById('flip-btn').onclick = swapCam;
-        document.getElementById('share-btn').onclick = shareInvite;
-        document.getElementById('undo-btn').onclick = undo;
-        document.getElementById('hit-btn').onclick = processHit;
-    });
-
-    async function initApp() {
+    // PERMANENT FIX: The click handler must be direct and robust
+    document.getElementById('start-btn').addEventListener('click', async function() {
         const log = document.getElementById('error-log');
-        log.innerText = "Accessing Camera...";
-
+        this.disabled = true;
+        this.innerText = "INITIALIZING...";
+        
         try {
+            log.innerHTML = "Step 1: Requesting Camera...";
+            // Force camera request immediately on click
             stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: facing }, 
+                video: { facingMode: "user" }, 
                 audio: true 
             });
             document.getElementById('me').srcObject = stream;
-            
-            log.innerText = "Connecting...";
+
+            log.innerHTML = "Step 2: Starting Peer Engine...";
             peer = new Peer();
 
-            peer.on('open', (id) => {
-                document.getElementById('display-id').innerText = id;
-                document.getElementById('setup-layer').classList.add('hidden');
-                
-                state.p[0].name = document.getElementById('name-input').value || "Host";
-                state.bestOf = parseInt(document.getElementById('legs-input').value);
-
-                if (joinId) {
-                    myIndex = 1;
-                    state.p[1].name = document.getElementById('name-input').value || "Guest";
-                    connectToMatch(joinId);
-                }
-                render();
-            });
-
-            peer.on('call', call => {
-                call.answer(stream);
-                call.on('stream', s => {
-                    document.getElementById('peer').srcObject = s;
-                });
-            });
-
-            peer.on('connection', c => {
-                conn = c;
-                conn.on('open', () => conn.send({ type: 'SYNC', state }));
-                conn.on('data', d => handleData(d));
-            });
-
-        } catch (e) {
-            log.innerText = "HTTPS required for camera. Error: " + e.message;
-        }
-    }
-
-    function connectToMatch(id) {
-        conn = peer.connect(id);
-        conn.on('open', () => conn.send({ type: 'JOIN', name: state.p[1].name }));
-        conn.on('data', d => handleData(d));
-        peer.call(id, stream).on('stream', s => {
-            document.getElementById('peer').srcObject = s;
-        });
-    }
-
-    function handleData(data) {
-        if (data.type === 'SYNC') {
-            state.bestOf = data.state.bestOf;
-            state.p[0].name = data.state.p[0].name;
-        } else if (data.type === 'JOIN') {
-            state.p[1].name = data.name;
-        } else {
-            state = data;
-        }
-        render();
-    }
-
-    async function swapCam() {
-        if (!stream) return;
-        facing = (facing === "user") ? "environment" : "user";
-        stream.getTracks().forEach(t => t.stop());
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
-        document.getElementById('me').srcObject = stream;
-    }
-
-    function processHit() {
-        if (state.winner) return;
-        const input = document.getElementById('pts-input');
-        const val = parseInt(input.value) || 0;
-        if (val > 180) return;
-        
-        history = JSON.parse(JSON.
+            peer.
