@@ -2,173 +2,159 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream</title>
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DartStream Fix</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
     <style>
-        :root { --bg: #020408; --blue: #00d4ff; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-
-        /* Setup Screen - Forced to the very front */
+        body { margin: 0; background: #020408; color: white; font-family: sans-serif; overflow: hidden; }
+        
+        /* The Overlay */
         #setup-screen { 
-            position: fixed; inset: 0; background: var(--bg); 
-            z-index: 9999; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; 
-            padding: 20px; pointer-events: all; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #020408; z-index: 10000; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .btn-primary { 
-            background: var(--blue); color: black; 
-            padding: 20px 50px; border: none; border-radius: 12px; 
-            font-size: 22px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 20px rgba(0,212,255,0.4);
+        /* The Button - Made extra large for easy tapping */
+        #start-btn { 
+            background: #00d4ff; color: #000; 
+            border: none; padding: 25px 60px; 
+            font-size: 24px; font-weight: bold; border-radius: 50px;
+            cursor: pointer; -webkit-appearance: none;
+            touch-action: manipulation;
         }
 
-        header { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; }
-        .cam-grid { height: 25vh; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; }
-        .v-box { background: #111; border-radius: 8px; overflow: hidden; }
-        video { width: 100%; height: 100%; object-fit: cover; }
+        #start-btn:active { background: #ffcc00; transform: scale(0.95); }
 
-        .score-container { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
-        .p-card { flex: 1; background: #0d1b2a; border-radius: 12px; display: flex; align-items: center; justify-content: space-around; font-size: 40px; }
-        .active { border: 2px solid var(--blue); }
+        #status-msg { margin-top: 20px; color: #888; font-size: 14px; text-align: center; padding: 0 20px; }
 
-        .controls { height: 100px; background: #000; display: flex; padding: 10px; gap: 5px; }
-        input { flex: 1; background: #111; color: white; border: 1px solid #333; font-size: 30px; text-align: center; border-radius: 8px; }
-        .btn-hit { width: 100px; background: var(--blue); border-radius: 8px; color: black; font-weight: bold; }
-
-        #menu-panel { position: fixed; top: 0; right: -80%; width: 80%; height: 100%; background: #0a1118; z-index: 9000; transition: 0.3s; padding: 20px; border-left: 1px solid var(--blue); }
-        #menu-panel.open { right: 0; }
-        #debug-text { font-size: 12px; color: #ff4444; margin-top: 15px; }
+        /* App Layout */
+        header { height: 50px; border-bottom: 1px solid #1b4965; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 30vh; background: #000; }
+        video { width: 100%; height: 100%; object-fit: cover; background: #111; }
+        .scores { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; height: 40vh; }
+        .card { flex: 1; background: #0d1b2a; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 60px; border: 2px solid transparent; }
+        .card.active { border-color: #00d4ff; background: #122c44; }
+        .controls { height: 80px; display: flex; padding: 10px; gap: 10px; background: #000; }
+        input { flex: 1; font-size: 30px; text-align: center; border-radius: 10px; border: none; }
+        button.hit { width: 100px; background: #00d4ff; border: none; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="setup-screen">
-    <h1 style="color:var(--blue)">DartStream</h1>
-    <button class="btn-primary" id="main-start-btn">START APP</button>
-    <div id="debug-text">Waiting for interaction...</div>
+    <h1 style="color:#00d4ff">DARTSTREAM</h1>
+    <button id="start-btn">START APP</button>
+    <div id="status-msg">Tap the button to enable Camera</div>
 </div>
 
 <header>
-    <span>ID: <b id="my-id">...</b></span>
-    <button onclick="toggleMenu()" style="background:none; border:none; color:var(--blue); font-size:24px;">☰</button>
+    <div>ID: <span id="my-id">...</span></div>
+    <button onclick="shareLink()" style="background:#1b4965; color:white; border:none; padding:5px 10px; border-radius:5px;">INVITE</button>
 </header>
 
-<div class="cam-grid">
-    <div class="v-box"><video id="me" autoplay playsinline muted></video></div>
-    <div class="v-box"><video id="peer" autoplay playsinline></video></div>
+<div class="v-grid">
+    <video id="me" autoplay playsinline muted></video>
+    <video id="peer" autoplay playsinline></video>
 </div>
 
-<div class="score-container">
-    <div class="p-card active" id="c0">501</div>
-    <div class="p-card" id="c1">501</div>
+<div class="scores">
+    <div id="c0" class="card active">501</div>
+    <div id="c1" class="card">501</div>
 </div>
 
 <div class="controls">
-    <input type="number" id="pts" inputmode="numeric" placeholder="SCORE">
-    <button class="btn-hit" onclick="hit()">HIT</button>
-</div>
-
-<div id="menu-panel">
-    <button onclick="shareInvite()" style="width:100%; padding:15px; margin-bottom:10px;">Invite Friend</button>
-    <button onclick="flipCamera()" style="width:100%; padding:15px;">Flip Camera</button>
-    <button onclick="toggleMenu()" style="width:100%; padding:15px; margin-top:20px;">Close</button>
+    <input type="number" id="pts" placeholder="0" inputmode="numeric">
+    <button class="hit" onclick="doHit()">HIT</button>
 </div>
 
 <script>
-    const dbg = (txt) => { document.getElementById('debug-text').innerText = txt; };
-    let localStream, peer, conn, currentFacingMode = "user";
+    const msg = (t) => { document.getElementById('status-msg').innerText = t; };
+    let localStream, peer, conn;
     let state = { turn: 0, s: [501, 501] };
 
-    // --- FORCED CLICK HANDLER ---
-    document.getElementById('main-start-btn').onclick = async function() {
-        dbg("Button clicked! Checking camera...");
-        this.disabled = true;
-        this.innerText = "LOADING...";
+    // Wait for full window load
+    window.onload = () => {
+        msg("Ready. Tap START.");
+        
+        document.getElementById('start-btn').addEventListener('click', async function() {
+            msg("Initializing... please wait.");
+            this.style.display = 'none'; // Hide button to prevent double-click
 
-        try {
-            // 1. Get Camera
-            localStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: currentFacingMode }, 
-                audio: true 
-            });
-            document.getElementById('me').srcObject = localStream;
-            dbg("Camera OK. Starting Peer...");
+            try {
+                // 1. Camera
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" }, 
+                    audio: true 
+                });
+                document.getElementById('me').srcObject = localStream;
+                msg("Camera active. Connecting to network...");
 
-            // 2. Setup Peer
-            peer = new Peer();
-            
-            peer.on('open', (id) => {
-                document.getElementById('my-id').innerText = id;
-                document.getElementById('setup-screen').style.display = 'none';
-                checkUrl();
-            });
+                // 2. PeerJS
+                peer = new Peer();
 
-            peer.on('call', (call) => {
-                call.answer(localStream);
-                call.on('stream', (s) => document.getElementById('peer').srcObject = s);
-            });
+                peer.on('open', (id) => {
+                    document.getElementById('my-id').innerText = id;
+                    document.getElementById('setup-screen').style.display = 'none';
+                    checkInvite();
+                });
 
-            peer.on('connection', (c) => {
-                conn = c;
-                conn.on('data', (d) => { state = d; render(); });
-            });
+                peer.on('call', (call) => {
+                    call.answer(localStream);
+                    call.on('stream', s => document.getElementById('peer').srcObject = s);
+                });
 
-            peer.on('error', (err) => {
-                dbg("Peer Error: " + err.type);
-                this.disabled = false;
-            });
+                peer.on('connection', c => {
+                    conn = c;
+                    conn.on('data', d => { state = d; updateUI(); });
+                });
 
-        } catch (e) {
-            dbg("Error: " + e.message);
-            this.disabled = false;
-            this.innerText = "RETRY START";
-        }
+                peer.on('error', e => {
+                    alert("Network Error: " + e.type);
+                    location.reload(); 
+                });
+
+            } catch (err) {
+                msg("Error: " + err.message);
+                this.style.display = 'block';
+                this.innerText = "TRY AGAIN";
+                alert("Please use HTTPS and allow camera access.");
+            }
+        });
     };
 
-    // --- MENU & INVITE ---
-    function toggleMenu() { document.getElementById('menu-panel').classList.toggle('open'); }
-
-    function shareInvite() {
-        const id = document.getElementById('my-id').innerText;
-        const url = window.location.href.split('?')[0] + '?join=' + id;
-        navigator.clipboard.writeText(url);
-        alert("Invite link copied!");
-    }
-
-    function checkUrl() {
-        const params = new URLSearchParams(window.location.search);
-        const joinId = params.get('join');
-        if (joinId) {
-            conn = peer.connect(joinId);
-            peer.call(joinId, localStream).on('stream', (s) => document.getElementById('peer').srcObject = s);
-        }
-    }
-
-    async function flipCamera() {
-        currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
-        localStream.getTracks().forEach(t => t.stop());
-        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
-        document.getElementById('me').srcObject = localStream;
-        toggleMenu();
-    }
-
-    // --- SIMPLE GAME LOGIC ---
-    function hit() {
-        let val = parseInt(document.getElementById('pts').value) || 0;
-        state.s[state.turn] -= val;
+    function doHit() {
+        let p = document.getElementById('pts');
+        let v = parseInt(p.value) || 0;
+        state.s[state.turn] -= v;
         state.turn = state.turn === 0 ? 1 : 0;
-        render();
+        updateUI();
         if(conn) conn.send(state);
-        document.getElementById('pts').value = '';
+        p.value = '';
     }
 
-    function render() {
+    function updateUI() {
         document.getElementById('c0').innerText = state.s[0];
         document.getElementById('c1').innerText = state.s[1];
-        document.getElementById('c0').className = state.turn === 0 ? 'p-card active' : 'p-card';
-        document.getElementById('c1').className = state.turn === 1 ? 'p-card active' : 'p-card';
+        document.getElementById('c0').className = state.turn === 0 ? 'card active' : 'card';
+        document.getElementById('c1').className = state.turn === 1 ? 'card active' : 'card';
+    }
+
+    function shareLink() {
+        const id = document.getElementById('my-id').innerText;
+        const url = window.location.origin + window.location.pathname + '?join=' + id;
+        navigator.clipboard.writeText(url);
+        alert("Invite link copied to clipboard!");
+    }
+
+    function checkInvite() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const joinId = urlParams.get('join');
+        if (joinId) {
+            conn = peer.connect(joinId);
+            const call = peer.call(joinId, localStream);
+            call.on('stream', s => document.getElementById('peer').srcObject = s);
+        }
     }
 </script>
 </body>
