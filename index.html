@@ -3,38 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream: Stable</title>
+    <title>DartStream: Debug</title>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; --gold: #ffd700; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
-        
-        body { background: var(--dark); color: white; height: 100dvh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
-        
-        /* Screens */
-        .layer { position: fixed; inset: 0; background: var(--dark); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        body { background: var(--dark); color: white; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+        .layer { position: fixed; inset: 0; background: var(--dark); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .hidden { display: none !important; }
-
         .card { background: var(--card); padding: 25px; border-radius: 15px; width: 100%; max-width: 320px; border: 1px solid #1b4965; text-align: center; }
+        .setup-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; margin-bottom: 15px; outline: none; }
+        .btn-main { background: var(--blue); color: #000; width: 100%; padding: 18px; font-size: 18px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; display: block; }
+        #status-log { font-size: 10px; color: #888; margin-top: 15px; background: #000; padding: 5px; border-radius: 4px; min-height: 20px; }
         
-        .input-group { text-align: left; margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-        .setup-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
-        
-        .btn-main { background: var(--blue); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; }
-        .btn-gold { background: var(--gold); color: #000; margin-top: 15px; }
-
-        /* Game Layout */
-        header { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; }
-        .v-container { height: 45dvh; position: relative; background: #000; }
+        /* Game UI */
+        header { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #333; }
+        .v-container { height: 40dvh; background: #000; position: relative; }
         video { width: 100%; height: 100%; object-fit: cover; }
-        
-        .score-area { flex: 1; display: flex; flex-direction: column; padding: 8px; gap: 6px; }
-        .p-card { flex: 1; background: var(--card); border-radius: 10px; padding: 10px 15px; border: 2px solid transparent; display: flex; flex-direction: column; justify-content: center; }
+        .score-area { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 8px; }
+        .p-card { flex: 1; background: var(--card); border-radius: 10px; padding: 10px; border: 2px solid transparent; display: flex; align-items: center; justify-content: space-between; }
         .p-card.active { border-color: var(--blue); background: var(--active); }
-        .s-val { font-size: 45px; font-weight: 900; }
-        
-        .controls { height: 80px; display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; background: #000; }
-        #pts-input { width: 100%; background: #111; border: 1px solid #333; color: white; text-align: center; font-size: 32px; border-radius: 8px; outline: none; }
+        .s-val { font-size: 40px; font-weight: 900; }
+        .controls { height: 80px; display: grid; grid-template-columns: 2fr 1fr; padding: 10px; gap: 10px; background: #000; }
+        #pts-input { background: #111; border: 1px solid #333; color: white; text-align: center; font-size: 28px; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -42,20 +32,14 @@
 <div id="setup-layer" class="layer">
     <div class="card">
         <h2 style="color: var(--blue); margin-bottom: 20px;">DARTSTREAM</h2>
-        <div class="input-group">
-            <label>Name</label>
-            <input type="text" id="name-input" class="setup-input" placeholder="Player 1" maxlength="12">
-        </div>
-        <div class="input-group">
-            <label>Match Length</label>
-            <select id="legs-input" class="setup-input">
-                <option value="1">1 Leg</option>
-                <option value="3">Best of 3</option>
-                <option value="5" selected>Best of 5</option>
-            </select>
-        </div>
-        <button class="btn-main" onclick="startMatch()">START MATCH</button>
-        <p id="msg" style="font-size: 10px; color: #888; margin-top: 10px;"></p>
+        <input type="text" id="name-input" class="setup-input" placeholder="Your Name">
+        <select id="legs-input" class="setup-input">
+            <option value="1">1 Leg</option>
+            <option value="3">Best of 3</option>
+            <option value="5" selected>Best of 5</option>
+        </select>
+        <button id="start-btn" class="btn-main">START MATCH</button>
+        <div id="status-log">Console: Waiting for user...</div>
     </div>
 </div>
 
@@ -63,13 +47,13 @@
     <div class="card">
         <h1 style="font-size: 3rem;">🏆</h1>
         <h2 id="winner-txt">PLAYER WINS!</h2>
-        <button class="btn-main btn-gold" onclick="location.reload()">NEW MATCH</button>
+        <button class="btn-main" onclick="location.reload()" style="background:var(--gold); margin-top:20px;">NEW MATCH</button>
     </div>
 </div>
 
 <header>
-    <div>ID: <span id="my-id" style="color:var(--blue);">...</span></div>
-    <button onclick="swap()" style="background:#222; color:white; border:none; padding:4px 8px; border-radius:4px;">FLIP</button>
+    <div id="my-id">ID: Connecting...</div>
+    <button onclick="swap()" style="background:#333; color:white; border:none; padding:5px 10px; border-radius:4px;">CAM</button>
 </header>
 
 <div class="v-container">
@@ -78,43 +62,110 @@
 
 <div class="score-area">
     <div id="pc-0" class="p-card active">
-        <div id="pn-0" style="font-size:12px;">P1</div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div id="ps-0" class="s-val">501</div>
-            <div style="text-align:right; font-size:10px;">LEGS <span id="pl-0" style="font-size:16px; color:var(--blue); display:block;">0</span></div>
-        </div>
+        <div><div id="pn-0">P1</div><div id="ps-0" class="s-val">501</div></div>
+        <div style="text-align:right;">LEGS<br><span id="pl-0" style="font-size:20px; color:var(--blue);">0</span></div>
     </div>
     <div id="pc-1" class="p-card">
-        <div id="pn-1" style="font-size:12px;">P2</div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div id="ps-1" class="s-val">501</div>
-            <div style="text-align:right; font-size:10px;">LEGS <span id="pl-1" style="font-size:16px; color:var(--blue); display:block;">0</span></div>
-        </div>
+        <div><div id="pn-1">P2</div><div id="ps-1" class="s-val">501</div></div>
+        <div style="text-align:right;">LEGS<br><span id="pl-1" style="font-size:20px; color:var(--blue);">0</span></div>
     </div>
 </div>
 
 <div class="controls">
-    <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
-    <button onclick="undo()" style="background:#222; color:white; border:none; border-radius:8px; font-size:20px;">⟲</button>
+    <input type="number" id="pts-input" placeholder="Score" inputmode="numeric">
     <button onclick="hit()" style="background:var(--blue); border:none; border-radius:8px; font-weight:bold; font-size:20px;">HIT</button>
 </div>
 
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 <script>
+    const log = document.getElementById('status-log');
     let stream, peer, conn, mode = "user", myIdx = 0;
     let state = { turn: 0, bestOf: 5, win: null, p: [{n:"P1", s:501, l:0}, {n:"P2", s:501, l:0}] };
-    let back = null;
 
-    async function startMatch() {
-        const msg = document.getElementById('msg');
-        msg.innerText = "Accessing camera...";
+    // Use a very explicit Event Listener
+    document.getElementById('start-btn').addEventListener('click', function() {
+        log.innerText = "Step 1: Button Clicked...";
+        init();
+    });
+
+    async function init() {
         try {
+            log.innerText = "Step 2: Requesting Camera...";
             stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode }, audio: true });
             document.getElementById('v-me').srcObject = stream;
             
+            log.innerText = "Step 3: Starting Networking...";
             peer = new Peer();
+            
             peer.on('open', id => {
-                document.getElementById('my-id').innerText = id;
+                log.innerText = "Step 4: Success!";
+                document.getElementById('my-id').innerText = "ID: " + id;
                 document.getElementById('setup-layer').classList.add('hidden');
+                
                 state.p[0].n = document.getElementById('name-input').value || "Host";
-                state.bestOf = parseInt(document.getElementById
+                state.bestOf = parseInt(document.getElementById('legs-input').value);
+                
+                const j = new URLSearchParams(window.location.search).get('join');
+                if(j) { myIdx = 1; state.p[1].n = document.getElementById('name-input').value || "Guest"; connect(j); }
+                updateUI();
+            });
+
+            peer.on('error', err => { log.innerText = "Network Error: " + err.type; });
+            peer.on('connection', c => { conn = c; conn.on('data', d => { state = d; updateUI(); })});
+
+        } catch(e) {
+            log.innerText = "FATAL ERROR: " + e.message;
+            console.error(e);
+        }
+    }
+
+    function connect(id) {
+        conn = peer.connect(id);
+        conn.on('open', () => conn.send(state));
+        conn.on('data', d => { state = d; updateUI(); });
+    }
+
+    function hit() {
+        if(state.win !== null) return;
+        const input = document.getElementById('pts-input');
+        const val = parseInt(input.value) || 0;
+        if(val > 180) return;
+
+        let p = state.p[state.turn];
+        if(p.s - val >= 0 && p.s - val !== 1) {
+            p.s -= val;
+            if(p.s === 0) {
+                p.l++;
+                if(p.l >= Math.ceil(state.bestOf/2)) state.win = state.turn;
+                else state.p.forEach(x => x.s = 501);
+            } else { state.turn = state.turn === 0 ? 1 : 0; }
+        } else { state.turn = state.turn === 0 ? 1 : 0; }
+        
+        input.value = '';
+        updateUI();
+        if(conn) conn.send(state);
+    }
+
+    function updateUI() {
+        state.p.forEach((p, i) => {
+            document.getElementById('pn-'+i).innerText = p.n;
+            document.getElementById('ps-'+i).innerText = p.s;
+            document.getElementById('pl-'+i).innerText = p.l;
+            document.getElementById('pc-'+i).className = state.turn === i ? "p-card active" : "p-card";
+        });
+        if(state.win !== null) {
+            document.getElementById('winner-txt').innerText = state.p[state.win].n + " WINS!";
+            document.getElementById('winner-layer').classList.remove('hidden');
+        }
+    }
+
+    async function swap() {
+        mode = mode === "user" ? "environment" : "user";
+        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode }, audio: true });
+        stream.getTracks().forEach(t => t.stop());
+        stream = newStream;
+        document.getElementById('v-me').srcObject = stream;
+    }
+</script>
+</body>
+</html>
