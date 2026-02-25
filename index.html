@@ -3,45 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DartStream Pro Stats</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <title>DartStream Reset</title>
     <style>
-        body { margin: 0; background: #020408; color: white; font-family: sans-serif; overflow: hidden; }
-        #setup-screen { position: fixed; inset: 0; background: #020408; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #start-btn { background: #00d4ff; color: #000; border: none; padding: 25px 60px; font-size: 24px; font-weight: bold; border-radius: 50px; cursor: pointer; }
+        /* Force the button to be on top of EVERYTHING */
+        #safety-layer {
+            position: fixed; inset: 0; 
+            background: #020408; z-index: 99999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        #big-start-btn {
+            background: #00d4ff; color: black;
+            padding: 30px 60px; font-size: 28px;
+            font-weight: bold; border: none; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,212,255,0.5);
+            -webkit-appearance: none; touch-action: manipulation;
+        }
+        /* Visual feedback to prove the click works */
+        #big-start-btn:active { background: #ffcc00; }
         
-        header { height: 50px; border-bottom: 1px solid #1b4965; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; font-size: 14px; }
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 25vh; background: #000; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-
-        .scores { height: 45vh; display: flex; flex-direction: column; padding: 10px; gap: 8px; }
-        .card { flex: 1; background: #0d1b2a; border-radius: 12px; display: flex; padding: 15px; position: relative; border: 2px solid transparent; }
-        .card.active { border-color: #00d4ff; background: #122c44; }
-        
-        .p-main { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .p-score { font-size: 55px; font-weight: 900; margin: 0; }
-        .p-stats { font-size: 12px; color: #00d4ff; font-weight: bold; }
-        
-        .checkout-hint { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); text-align: right; color: #ffcc00; font-weight: bold; font-size: 16px; }
-
-        .controls { height: 100px; display: flex; padding: 10px; gap: 10px; background: #000; border-top: 1px solid #1b4965; }
-        input { flex: 1; font-size: 35px; text-align: center; border-radius: 10px; border: none; background: #111; color: white; }
-        button.hit { width: 100px; background: #00d4ff; border: none; border-radius: 10px; font-weight: bold; font-size: 20px; }
-        #status-msg { color: #888; font-size: 12px; margin-top: 10px; }
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; }
+        .hidden { display: none !important; }
+        header { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background: #0d1b2a; }
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 30vh; }
+        video { width: 100%; height: 100%; object-fit: cover; background: #222; }
+        .score-box { height: 40vh; display: flex; flex-direction: column; padding: 10px; gap: 10px; }
+        .card { flex: 1; background: #122c44; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 3px solid transparent; }
+        .active { border-color: #00d4ff; }
+        .controls { height: 80px; display: flex; padding: 10px; gap: 10px; }
+        input { flex: 1; font-size: 30px; text-align: center; border-radius: 10px; border: none; }
     </style>
 </head>
 <body>
 
-<div id="setup-screen">
+<div id="safety-layer">
     <h1 style="color:#00d4ff">DARTSTREAM</h1>
-    <button id="start-btn">START APP</button>
-    <div id="status-msg">Check HTTPS & Permissions</div>
+    <button id="big-start-btn">TAP TO START</button>
+    <p id="err-log" style="color: #666; font-size: 12px; margin-top: 20px;">v1.0.4 - Waiting for tap</p>
 </div>
 
 <header>
     <div>ID: <span id="my-id">...</span></div>
-    <div id="darts-thrown" style="color:#888">Darts: 0</div>
-    <button onclick="shareLink()" style="background:#1b4965; color:white; border:none; padding:5px 12px; border-radius:5px;">INVITE</button>
+    <div id="dart-count">Darts: 0</div>
 </header>
 
 <div class="v-grid">
@@ -49,144 +52,113 @@
     <video id="peer" autoplay playsinline></video>
 </div>
 
-<div class="scores">
+<div class="score-box">
     <div id="c0" class="card active">
-        <div class="p-main">
-            <p class="p-stats">AVG: <span id="avg0">0.0</span> | DARTS: <span id="d0">0</span></p>
-            <h2 class="p-score" id="s0">501</h2>
-        </div>
-        <div class="checkout-hint" id="out0"></div>
+        <div style="font-size:12px; color:#00d4ff">AVG: <span id="a0">0</span></div>
+        <div id="s0" style="font-size:50px; font-weight:bold">501</div>
+        <div id="out0" style="font-size:14px; color:#ffcc00"></div>
     </div>
     <div id="c1" class="card">
-        <div class="p-main">
-            <p class="p-stats">AVG: <span id="avg1">0.0</span> | DARTS: <span id="d1">0</span></p>
-            <h2 class="p-score" id="s1">501</h2>
-        </div>
-        <div class="checkout-hint" id="out1"></div>
+        <div style="font-size:12px; color:#00d4ff">AVG: <span id="a1">0</span></div>
+        <div id="s1" style="font-size:50px; font-weight:bold">501</div>
+        <div id="out1" style="font-size:14px; color:#ffcc00"></div>
     </div>
 </div>
 
 <div class="controls">
-    <input type="number" id="pts" placeholder="HIT" inputmode="numeric">
-    <button class="hit" onclick="doHit()">HIT</button>
+    <input type="number" id="pts" placeholder="0" inputmode="numeric">
+    <button onclick="hit()" style="width:100px; background:#00d4ff; font-weight:bold; border:none; border-radius:10px;">HIT</button>
 </div>
 
+<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+
 <script>
-    // Simplified Checkout Data (Focusing on common finishes)
-    const checkouts = {
-        170: "T20 T20 DB", 167: "T20 T19 DB", 164: "T20 T18 DB", 161: "T20 T17 DB", 160: "T20 T20 D20",
-        121: "T20 11 D25", 100: "T20 D20", 80: "T20 D10", 60: "S20 D20", 40: "D20", 32: "D16"
-        // Logic below will show "Finishable" for others
-    };
-
+    const log = (m) => document.getElementById('err-log').innerText = m;
     let localStream, peer, conn;
-    let state = { 
-        turn: 0, 
-        p: [
-            { s: 501, darts: 0, totalPts: 0 }, 
-            { s: 501, darts: 0, totalPts: 0 }
-        ] 
+    let state = { turn: 0, p: [{s:501, d:0, total:0}, {s:501, d:0, total:0}] };
+
+    // BIND THE BUTTON MANUALLY
+    document.getElementById('big-start-btn').onclick = async function() {
+        log("Step 1: Button Pressed...");
+        this.innerText = "OPENING...";
+        
+        try {
+            log("Step 2: Accessing Camera...");
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            document.getElementById('me').srcObject = localStream;
+
+            log("Step 3: Starting Peer...");
+            peer = new Peer();
+            
+            peer.on('open', (id) => {
+                document.getElementById('my-id').innerText = id;
+                document.getElementById('safety-layer').classList.add('hidden');
+                checkInvite();
+            });
+
+            peer.on('call', (call) => {
+                call.answer(localStream);
+                call.on('stream', s => document.getElementById('peer').srcObject = s);
+            });
+
+            peer.on('connection', c => {
+                conn = c;
+                conn.on('data', d => { state = d; render(); });
+            });
+
+        } catch (e) {
+            log("ERROR: " + e.message);
+            alert("Please use HTTPS and allow camera access.");
+            this.innerText = "RETRY";
+        }
     };
 
-    window.onload = () => {
-        document.getElementById('start-btn').onclick = async function() {
-            this.style.display = 'none';
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('me').srcObject = localStream;
-                peer = new Peer();
-                peer.on('open', (id) => {
-                    document.getElementById('my-id').innerText = id;
-                    document.getElementById('setup-screen').style.display = 'none';
-                    checkInvite();
-                });
-                peer.on('call', (call) => {
-                    call.answer(localStream);
-                    call.on('stream', s => document.getElementById('peer').srcObject = s);
-                });
-                peer.on('connection', c => {
-                    conn = c;
-                    conn.on('data', d => { state = d; updateUI(); });
-                });
-            } catch (err) {
-                alert("Camera failed. Use HTTPS.");
-                this.style.display = 'block';
-            }
-        };
-    };
-
-    function doHit() {
+    function hit() {
         let input = document.getElementById('pts');
         let val = parseInt(input.value) || 0;
-        if (val > 180) return;
+        let p = state.p[state.turn];
 
-        let player = state.p[state.turn];
-        
-        // Bust logic
-        if (player.s - val < 0 || player.s - val === 1) {
-            // Bust: darts count but score doesn't change
-            player.darts += 3;
+        if (p.s - val >= 0 && p.s - val !== 1) {
+            p.s -= val;
+            p.total += val;
+            p.d += 3;
+            if (p.s === 0) { alert("Win!"); reset(); }
+            state.turn = state.turn === 0 ? 1 : 0;
         } else {
-            player.s -= val;
-            player.totalPts += val;
-            player.darts += 3;
-            
-            if (player.s === 0) {
-                alert("Winner!");
-                resetGame();
-            }
+            p.d += 3; // Bust
+            state.turn = state.turn === 0 ? 1 : 0;
         }
 
-        state.turn = state.turn === 0 ? 1 : 0;
-        updateUI();
+        render();
         if(conn) conn.send(state);
         input.value = '';
     }
 
-    function getCheckout(score) {
-        if (score > 170) return "";
-        if (checkouts[score]) return checkouts[score];
-        // Dynamic hint for basic doubles
-        if (score <= 40 && score % 2 === 0) return "D" + (score / 2);
-        if (score <= 50) return "Finishable";
-        return "Finish";
-    }
-
-    function updateUI() {
+    function render() {
         state.p.forEach((p, i) => {
             document.getElementById(`s${i}`).innerText = p.s;
-            document.getElementById(`d${i}`).innerText = p.darts;
+            document.getElementById(`a${i}`).innerText = p.d > 0 ? ((p.total / p.d) * 3).toFixed(1) : "0";
+            document.getElementById(`c${i}`).className = state.turn === i ? 'card active' : 'card';
             
-            // Average Calculation (3-dart avg)
-            let avg = p.darts > 0 ? (p.totalPts / (p.darts / 3)).toFixed(1) : "0.0";
-            document.getElementById(`avg${i}`).innerText = avg;
-            
-            // Checkout Logic
-            document.getElementById(`out${i}`).innerText = (state.turn === i) ? getCheckout(p.s) : "";
-            
-            document.getElementById(`c${i}`).className = (state.turn === i) ? "card active" : "card";
+            // Basic checkout hint
+            let out = document.getElementById(`out${i}`);
+            if (state.turn === i && p.s <= 170) {
+                out.innerText = p.s <= 40 && p.s % 2 === 0 ? "Target: D" + (p.s/2) : "Finish Zone";
+            } else { out.innerText = ""; }
         });
-        document.getElementById('darts-thrown').innerText = "Darts: " + state.p[0].darts;
+        document.getElementById('dart-count').innerText = "Darts: " + state.p[0].d;
     }
 
-    function resetGame() {
-        state.p.forEach(p => { p.s = 501; p.darts = 0; p.totalPts = 0; });
+    function reset() {
+        state.p.forEach(p => { p.s = 501; p.d = 0; p.total = 0; });
         state.turn = 0;
     }
 
-    function shareLink() {
-        const id = document.getElementById('my-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?join=' + id;
-        navigator.clipboard.writeText(url);
-        alert("Link Copied!");
-    }
-
     function checkInvite() {
-        const params = new URLSearchParams(window.location.search);
-        const joinId = params.get('join');
-        if (joinId) {
-            conn = peer.connect(joinId);
-            peer.call(joinId, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
+        const id = new URLSearchParams(window.location.search).get('join');
+        if (id) {
+            conn = peer.connect(id);
+            peer.call(id, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
         }
     }
 </script>
