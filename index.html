@@ -9,13 +9,12 @@
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* Force body to be exactly the height of the screen */
         body { 
             background: var(--dark); color: white; 
             font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw;
             display: grid;
-            grid-template-rows: 40px 18dvh 1fr 90px; /* Header, Cam, Scores, Controls */
+            grid-template-rows: 44px 20dvh 1fr 100px; /* Header, Cam, Scores, Controls */
             overflow: hidden; 
         }
         
@@ -27,28 +26,25 @@
         .v-grid { display: grid; grid-template-columns: 1fr 1fr; background: #000; border-bottom: 1px solid #1b4965; }
         .v-box { position: relative; height: 100%; border-right: 1px solid #1b4965; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        .flip-btn { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 9px; padding: 2px 6px; border-radius: 4px; z-index: 20; }
+        .flip-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 20; }
 
-        /* Scores - Scale fonts based on available space */
-        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
+        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 8px; min-height: 0; }
         .player-card { flex: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 8px 15px; border: 2px solid transparent; min-height: 0; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
-        .stats-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--blue); font-weight: bold; margin-bottom: 2px; }
+        .stats-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--blue); font-weight: bold; margin-bottom: 2px; }
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         
-        /* Reduced font size to prevent overlapping */
-        .score-val { font-size: clamp(30px, 10dvh, 50px); font-weight: 900; line-height: 1; }
-        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 13px; text-align: right; max-width: 40%; }
+        .score-val { font-size: clamp(35px, 8dvh, 55px); font-weight: 900; line-height: 1; }
+        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 14px; text-align: right; }
 
-        /* Controls - Fixed height at the bottom */
         .controls { 
-            background: #000; display: flex; padding: 10px; gap: 10px; 
+            background: #000; display: grid; grid-template-columns: 1fr 100px; padding: 10px; gap: 10px; 
             border-top: 1px solid #1b4965; 
             padding-bottom: calc(10px + env(safe-area-inset-bottom));
         }
-        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 28px; text-align: center; border-radius: 8px; outline: none; }
-        .btn-hit { width: 85px; background: var(--blue); border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: black; cursor: pointer; }
+        #pts-input { background: #111; border: 1px solid #333; color: white; font-size: 32px; text-align: center; border-radius: 10px; outline: none; width: 100%; }
+        .btn-hit { background: var(--blue); border: none; border-radius: 10px; font-weight: bold; font-size: 20px; color: black; cursor: pointer; height: 100%; }
         
         .hidden { display: none !important; }
     </style>
@@ -57,12 +53,12 @@
 
 <div id="safety-layer">
     <h1 style="color:var(--blue); margin-bottom:15px;">DARTSTREAM</h1>
-    <button class="btn-start" id="start-trigger">START MATCH</button>
+    <button class="btn-start" id="start-match-btn">START MATCH</button>
 </div>
 
 <header>
-    <div onclick="copyId()" style="cursor:pointer">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
-    <button onclick="shareInvite()" style="background:var(--blue); color:black; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:10px;">SHARE</button>
+    <div onclick="copyId()">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
+    <button onclick="shareInvite()" style="background:var(--blue); color:black; border:none; padding:5px 12px; border-radius:5px; font-weight:bold; font-size:10px;">INVITE</button>
 </header>
 
 <div class="v-grid">
@@ -80,4 +76,110 @@
             <span>DARTS: <span id="d-0">0</span></span>
         </div>
         <div class="score-row">
-            <div class="score-val" id="s-0">5
+            <div class="score-val" id="s-0">501</div>
+            <div class="checkout-hint" id="out-0"></div>
+        </div>
+    </div>
+    <div id="card-1" class="player-card">
+        <div class="stats-row">
+            <span>AVG: <span id="avg-1">0.0</span></span>
+            <span>DARTS: <span id="d-1">0</span></span>
+        </div>
+        <div class="score-row">
+            <div class="score-val" id="s-1">501</div>
+            <div class="checkout-hint" id="out-1"></div>
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+    <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
+    <button class="btn-hit" onclick="doHit()">HIT</button>
+</div>
+
+<script>
+    let localStream, peer, conn, currentFacing = "user";
+    let state = { turn: 0, p: [{ s: 501, d: 0, t: 0 }, { s: 501, d: 0, t: 0 }] };
+
+    // --- Resilient Start Handler ---
+    document.getElementById('start-match-btn').onclick = async function() {
+        this.innerText = "STARTING...";
+        this.disabled = true;
+
+        try {
+            // Step 1: Secure Camera (Crucial for Mobile)
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: currentFacing }, 
+                audio: true 
+            });
+            document.getElementById('me').srcObject = localStream;
+            
+            // Step 2: Initialize Networking
+            peer = new Peer();
+            peer.on('open', (id) => {
+                document.getElementById('display-id').innerText = id;
+                document.getElementById('safety-layer').classList.add('hidden');
+                autoJoin();
+            });
+
+            peer.on('call', (call) => {
+                call.answer(localStream);
+                call.on('stream', s => document.getElementById('peer').srcObject = s);
+            });
+
+            peer.on('connection', c => {
+                conn = c;
+                conn.on('data', d => { state = d; render(); });
+            });
+
+            peer.on('error', (err) => {
+                console.error(err);
+                if(err.type === 'browser-incompatible') alert("Browser not supported.");
+            });
+
+        } catch (err) {
+            alert("Camera failed. Use HTTPS and a modern browser (Safari/Chrome).");
+            this.disabled = false;
+            this.innerText = "RETRY";
+        }
+    };
+
+    async function flipCamera() {
+        currentFacing = currentFacing === "user" ? "environment" : "user";
+        if (localStream) localStream.getTracks().forEach(t => t.stop());
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing } });
+            document.getElementById('me').srcObject = localStream;
+        } catch(e) { alert("Flip failed."); }
+    }
+
+    function doHit() {
+        const input = document.getElementById('pts-input');
+        const val = parseInt(input.value) || 0;
+        if (val > 180) return;
+        
+        let p = state.p[state.turn];
+        if (p.s - val >= 0 && p.s - val !== 1) {
+            p.s -= val; p.t += val; p.d += 3;
+            if (p.s === 0) { alert("Game Shot!"); p.s = 501; p.d = 0; p.t = 0; }
+        } else {
+            p.d += 3; // Bust
+        }
+
+        state.turn = state.turn === 0 ? 1 : 0;
+        render();
+        if (conn) conn.send(state);
+        input.value = '';
+        input.focus();
+    }
+
+    function getCheckout(s) {
+        if (s > 170 || [169, 168, 166, 165, 163, 162, 159].includes(s)) return "";
+        if (s === 170) return "T20 T20 BULL";
+        if (s <= 40 && s % 2 === 0) return "D" + (s/2);
+        return "OUT ZONE";
+    }
+
+    function render() {
+        state.p.forEach((p, i) => {
+            document.
