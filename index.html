@@ -65,4 +65,108 @@
         <button onclick="addFriend()" style="background:var(--blue); border:none; border-radius:4px; font-weight:bold">+</button>
     </div>
     <div id="friends-list"></div>
-    <hr style="border:0; border-top:1px solid #222;
+    <hr style="border:0; border-top:1px solid #222; margin:20px 0">
+    <button onclick="flipCamera()" class="btn" style="width:100%; background:#222; color:white; padding:10px; border:1px solid var(--blue)">FLIP CAMERA</button>
+</div>
+
+<header>
+    <div onclick="copyMyID()" style="cursor:pointer">ID: <b id="my-id" style="color:var(--blue)">...</b></div>
+    <div style="flex:1; text-align:center; font-size:10px; color:var(--accent)" id="header-hint"></div>
+    <div style="display:flex; gap:12px; align-items:center">
+        <span id="conn-status" style="font-size:10px; color:#555">● DISCONNECTED</span>
+        <div onclick="toggleMenu()" style="font-size:24px; cursor:pointer; color:var(--blue)">☰</div>
+    </div>
+</header>
+
+<div class="cam-grid">
+    <div class="v-box"><video id="me" autoplay playsinline muted></video></div>
+    <div class="v-box"><video id="peer" autoplay playsinline></video></div>
+</div>
+
+<div class="score-container">
+    <div class="p-card active" id="c0">
+        <div style="text-align:left"><h2 style="margin:0; font-size:12px; color:#888">YOU</h2><span class="p-stats">AVG: <b id="a0">0</b></span></div>
+        <div class="p-score" id="s0">501</div>
+        <div class="p-stats">LEGS: <b id="l0">0</b></div>
+    </div>
+    <div class="p-card" id="c1">
+        <div style="text-align:left"><h2 style="margin:0; font-size:12px; color:#888" id="p2-label">OPPONENT</h2><span class="p-stats">AVG: <b id="a1">0</b></span></div>
+        <div class="p-score" id="s1">501</div>
+        <div class="p-stats">LEGS: <b id="l1">0</b></div>
+    </div>
+</div>
+
+<div class="controls">
+    <div id="hint"></div>
+    <div class="input-row">
+        <input type="number" id="pts" inputmode="numeric" placeholder="SCORE">
+        <button class="btn btn-undo" onclick="undo()">⟲</button>
+        <button class="btn btn-hit" onclick="hit()">HIT</button>
+    </div>
+</div>
+
+<script>
+    const sounds = { 
+        '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'), 
+        'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734') 
+    };
+    
+    let peer, conn, localStream, currentFacingMode = "user", friends = JSON.parse(localStorage.getItem('dartFriends') || '[]');
+    let state = { turn: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
+    let history = null;
+
+    // --- CRITICAL FIX: APP INITIALIZATION ---
+    async function initApp() {
+        const btn = document.getElementById('start-btn');
+        btn.innerText = "STARTING...";
+        btn.disabled = true;
+
+        try {
+            // 1. Get Camera
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: currentFacingMode }, 
+                audio: true 
+            });
+            document.getElementById('me').srcObject = localStream;
+            
+            // 2. Setup Peer
+            peer = new Peer();
+            
+            peer.on('open', id => { 
+                document.getElementById('my-id').innerText = id; 
+                renderFriends();
+                document.getElementById('setup-screen').style.display = 'none';
+                checkUrlForInvite(); 
+            });
+
+            peer.on('error', err => {
+                console.error("PeerJS Error:", err);
+                alert("Connection Error: " + err.type);
+            });
+
+            peer.on('connection', c => { 
+                conn = c; 
+                setupData(); 
+                updateStatus(true);
+            });
+
+            peer.on('call', call => { 
+                call.answer(localStream); 
+                call.on('stream', s => document.getElementById('peer').srcObject = s); 
+            });
+
+            if ('wakeLock' in navigator) await navigator.wakeLock.request('screen').catch(()=>{});
+        } catch (e) { 
+            console.error("Init Error:", e);
+            alert("Please ensure you are using HTTPS and have granted camera permissions."); 
+            btn.innerText = "RETRY START";
+            btn.disabled = false;
+        }
+    }
+
+    // --- INVITE & URL HANDLER ---
+    function shareInvite() {
+        const myId = document.getElementById('my-id').innerText;
+        if (myId === "...") return alert("Wait for ID to load!");
+        
+        const
