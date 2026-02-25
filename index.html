@@ -1,12 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DartStream: Final Fix</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        :root { --bg: #020408; --panel: #0d1b2a; --blue: #00d4ff; --border: #1b4965; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100dvh; margin: 0; background: var(--bg); color: white; font-family: system-ui, sans-serif; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* Setup Overlay - To prevent the "Close Bubbles" error */
+        #setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        
+        header { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-bottom: 1px solid var(--blue); flex-shrink: 0; }
+        .cam-grid { height: 25dvh; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; flex-shrink: 0; }
+        .v-box { background: #000; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        .score-container { height: 38dvh; display: flex; flex-direction: column; gap: 6px; padding: 8px; flex-shrink: 0; }
+        .p-card { flex: 1; background: var(--panel); border-radius: 12px; border: 1px solid #222; display: flex; align-items: center; justify-content: space-around; }
+        .p-card.active { border-color: var(--blue); background: #122c44; box-shadow: 0 0 10px rgba(0,212,255,0.2); }
+        .p-score { font-size: 48px; font-weight: 900; color: white; margin: 0; }
+        .p-stats { font-size: 11px; color: var(--blue); }
+
+        .controls { height: 32dvh; background: #000; border-top: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .input-row { display: grid; grid-template-columns: 1fr 60px 80px; gap: 6px; flex: 1; }
+        input { background: #111; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 28px; text-align: center; width: 100%; }
+        
+        .btn { border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-hit { background: var(--blue); color: black; font-size: 18px; }
+        .btn-undo { background: #222; color: #888; font-size: 20px; border: 1px solid #444; }
+        .btn-primary { background: var(--blue); color: black; padding: 15px 30px; font-size: 18px; margin-top: 20px; }
+        
+        #hint { height: 18px; color: #ffcc00; font-size: 11px; font-weight: bold; text-align: center; }
+    </style>
+</head>
 <body>
+
+<div id="setup-screen">
+    <h1 style="color:var(--blue)">DartStream</h1>
+    <p>Grant camera/audio access to start the match.</p>
+    <p style="font-size: 12px; color: #888;">Ensure no other apps (like Messenger bubbles) are over your screen.</p>
+    <button class="btn btn-primary" onclick="initApp()">START APP & CAMERA</button>
+</div>
+
 <header>
-    <div style="display:flex; flex-direction:column">
-        <span>ID: <b id="my-id" style="color:var(--blue)">...</b></span>
-        <button onclick="initCam()" id="cam-auth-btn" style="background:red; color:white; border:none; border-radius:4px; font-size:10px; padding:2px 5px; margin-top:2px;">TAP TO ALLOW CAMERA</button>
-    </div>
+    <span>ID: <b id="my-id" style="color:var(--blue)">...</b></span>
     <div style="display:flex; gap:5px">
-        <input type="text" id="p-id" placeholder="Friend ID" style="width:70px; height:24px; font-size:10px; padding:0 5px">
-        <button onclick="join()" class="btn" style="background:var(--blue); padding:0 8px; color:black; height:24px">LINK</button>
+        <input type="text" id="p-id" placeholder="Friend ID" style="width:70px; height:24px; font-size:10px;">
+        <button onclick="join()" style="background:var(--blue); border:none; border-radius:4px; font-size:10px; padding:0 8px; font-weight:bold">LINK</button>
     </div>
 </header>
 
@@ -15,38 +58,103 @@
     <div class="v-box"><video id="peer" autoplay playsinline></video></div>
 </div>
 
+<div class="score-container">
+    <div class="p-card active" id="c0">
+        <div style="text-align:left"><h2 style="margin:0; font-size:12px; color:#888">P1</h2><span class="p-stats">AVG: <b id="a0">0</b></span></div>
+        <div class="p-score" id="s0">501</div>
+        <div class="p-stats">LEGS: <b id="l0">0</b></div>
+    </div>
+    <div class="p-card" id="c1">
+        <div style="text-align:left"><h2 style="margin:0; font-size:12px; color:#888">P2</h2><span class="p-stats">AVG: <b id="a1">0</b></span></div>
+        <div class="p-score" id="s1">501</div>
+        <div class="p-stats">LEGS: <b id="l1">0</b></div>
+    </div>
+</div>
+
+<div class="controls">
+    <div id="hint"></div>
+    <div class="input-row">
+        <input type="number" id="pts" inputmode="numeric" placeholder="0">
+        <button class="btn btn-undo" onclick="undo()">⟲</button>
+        <button class="btn btn-hit" onclick="hit()">HIT</button>
+    </div>
+</div>
+
 <script>
-    // UPDATED CAMERA LOGIC
-    async function initCam() {
-        const btn = document.getElementById('cam-auth-btn');
-        
-        // Use standard constraints - simpler is better for permissions
-        const constraints = { 
-            video: { facingMode: currentFacing }, 
-            audio: true 
-        };
+    const sounds = { '180': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649735'), 'win': new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=649734') };
+    
+    let peer, conn, localStream, wakeLock;
+    let state = { turn: 0, p: [{s:501, l:0, pts:0, d:0}, {s:501, l:0, pts:0, d:0}] };
+    let history = null;
 
+    async function initApp() {
         try {
-            // This is the line that triggers the browser pop-up
-            localStream = await navigator.mediaDevices.getUserMedia(constraints);
+            // 1. Request Camera/Audio
+            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
+            document.getElementById('me').srcObject = localStream;
             
-            const v = document.getElementById('me');
-            v.srcObject = localStream;
-            
-            // Clean up UI after success
-            btn.style.background = "var(--blue)";
-            btn.innerText = "CAMERA ACTIVE";
-            btn.disabled = true;
+            // 2. Start PeerJS
+            peer = new Peer();
+            peer.on('open', id => document.getElementById('my-id').innerText = id);
+            peer.on('connection', c => { conn = c; setupData(); });
+            peer.on('call', call => { call.answer(localStream); call.on('stream', s => document.getElementById('peer').srcObject = s); });
 
-            // Keep screen awake
+            // 3. Keep screen awake
             if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
-            
+
+            // 4. Hide Setup Screen
+            document.getElementById('setup-screen').style.display = 'none';
         } catch (e) {
-            console.error(e);
-            alert("PERMISSION ERROR: Please close all other apps (Facebook Bubbles, etc.) and ensure you are on HTTPS.");
+            alert("Error: Ensure you are using HTTPS and have no app overlays (like chat bubbles) active.");
         }
     }
-    
-    // ... Rest of your PeerJS and Scoring logic remains the same ...
+
+    function setupData() {
+        conn.on('data', d => { state = d; render(); if(d.snd) sounds[d.snd].play(); });
+    }
+
+    function join() {
+        const id = document.getElementById('p-id').value;
+        if(!id) return;
+        conn = peer.connect(id);
+        setupData();
+        peer.call(id, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
+    }
+
+    function hit() {
+        let el = document.getElementById('pts');
+        let v = parseInt(el.value) || 0;
+        if (v > 180) return;
+
+        history = JSON.parse(JSON.stringify(state));
+        let p = state.p[state.turn];
+        let snd = (v === 180) ? '180' : null;
+
+        if (p.s - v >= 0 && p.s - v !== 1) {
+            p.s -= v; p.pts += v; p.d += 3;
+            if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); snd = 'win'; }
+            else { state.turn = state.turn === 0 ? 1 : 0; }
+        } else { state.turn = state.turn === 0 ? 1 : 0; }
+
+        state.snd = snd;
+        if(snd) sounds[snd].play();
+        render();
+        if(conn) conn.send(state);
+        el.value = '';
+    }
+
+    function undo() {
+        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if(conn) conn.send(state); }
+    }
+
+    function render() {
+        state.p.forEach((p, i) => {
+            document.getElementById(`s${i}`).innerText = p.s;
+            document.getElementById(`l${i}`).innerText = p.l;
+            document.getElementById(`a${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0";
+            document.getElementById(`c${i}`).className = i === state.turn ? 'p-card active' : 'p-card';
+        });
+    }
 </script>
 </body>
+</html>
