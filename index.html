@@ -142,4 +142,219 @@
         <div class="p-name" id="n-1">P2</div>
         <div class="score-row">
             <div style="font-size:10px; color:var(--blue)">AVG: <span id="avg-1">0.0</span></div>
-            <div class="score-val" id="s-1">501
+            <div class="score-val" id="s-1">501</div>
+            <div class="legs-count"><span id="l-1">0</span>LEGS</div>
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+    <div class="score-input-box"><input type="number" id="pts-input" placeholder="0" inputmode="numeric"></div>
+    <button class="btn-undo" id="undo-btn">⟲</button>
+    <button class="btn-hit" id="hit-btn">HIT</button>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+
+<script>
+    let stream, peer, conn, facing = "user";
+    let myIndex = 0;
+    let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
+    let history = null;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinId = urlParams.get('join');
+
+    // Using your original, highly-compatible window.onload method
+    window.addEventListener('load', () => {
+        document.getElementById('start-btn').onclick = initApp;
+        document.getElementById('flip-btn').onclick = swapCam;
+        document.getElementById('share-btn').onclick = shareInvite;
+        document.getElementById('undo-btn').onclick = undo;
+        document.getElementById('hit-btn').onclick = processHit;
+        document.getElementById('rematch-btn').onclick = triggerRematch;
+        
+        // Enter key to submit score
+        const ptsInput = document.getElementById('pts-input');
+        if (ptsInput) {
+            ptsInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    processHit();
+                }
+            });
+        }
+    });
+
+    async function initApp() {
+        const log = document.getElementById('error-log');
+        const startBtn = document.getElementById('start-btn');
+        
+        startBtn.disabled = true;
+        log.innerText = "Accessing Camera...";
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: facing }, 
+                audio: true 
+            });
+            document.getElementById('me').srcObject = stream;
+            
+            log.innerText = "Connecting to server...";
+            peer = new Peer();
+
+            peer.on('open', (id) => {
+                document.getElementById('display-id').innerText = id;
+                document.getElementById('setup-layer').classList.add('hidden');
+                
+                state.p[0].name = document.getElementById('name-input').value || "Host";
+                state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+
+                if (joinId) {
+                    myIndex = 1;
+                    state.p[1].name = document.getElementById('name-input').value || "Guest";
+                    connectToMatch(joinId);
+                }
+                render();
+            });
+
+            peer.on('call', call => {
+                call.answer(stream);
+                call.on('stream', s => {
+                    document.getElementById('peer').srcObject = s;
+                    render();
+                });
+            });
+
+            peer.on('connection', c => {
+                conn = c;
+                conn.on('open', () => conn.send({ type: 'SYNC', state }));
+                conn.on('data', d => handleData(d));
+            });
+
+            peer.on('error', err => {
+                log.innerText = "Connection Error: " + err.type;
+                startBtn.disabled = false;
+            });
+
+        } catch (e) {
+            log.innerText = "Camera access denied or unavailable. (" + e.message + ")";
+            startBtn.disabled = false;
+        }
+    }
+
+    function connectToMatch(id) {
+        conn = peer.connect(id);
+        conn.on('open', () => conn.send({ type: 'JOIN', name: state.p[1].name }));
+        conn.on('data', d => handleData(d));
+        peer.call(id, stream).on('stream', s => {
+            document.getElementById('peer').srcObject = s;
+            render();
+        });
+    }
+
+    function handleData(data) {
+        if (data.type === 'SYNC') {
+            state.bestOf = data.state.bestOf;
+            state.p[0].name = data.state.p[0].name;
+        } else if (data.type === 'JOIN') {
+            state.p[1].name = data.name;
+        } else {
+            state = data; 
+        }
+        render();
+    }
+
+    async function swapCam() {
+        if (!stream) return;
+        facing = (facing === "user") ? "environment" : "user";
+        stream.getTracks().forEach(t => t.stop());
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
+        document.getElementById('me').srcObject = stream;
+    }
+
+    function processHit() {
+        const input = document.getElementById('pts-input');
+        const val = parseInt(input.value);
+        
+        // Prevent empty input or inputs over 180
+        if (isNaN(val) || val < 0 || val > 180) return;
+        
+        history = JSON.parse(JSON.stringify(state));
+        let p = state.p[state.turn];
+        
+        if (p.s - val >= 0 && p.s - val !== 1) {
+            p.s -= val; p.pts += val; p.d += 3;
+            if (p.s === 0) { 
+                p.l++; 
+                const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
+                
+                if (p.l >= legsRequiredToWin) {
+                    state.winner = state.turn; 
+                } else {
+                    state.p.forEach(x => x.s = 501); 
+                    state.turn = (state.turn === 0) ? 1 : 0; 
+                }
+            } else { 
+                state.turn = (state.turn === 0) ? 1 : 0; 
+            }
+        } else { 
+            state.turn = (state.turn === 0) ? 1 : 0; 
+        }
+        
+        render();
+        if (conn) conn.send(state);
+        input.value = '';
+        input.focus(); // Brings keyboard back up automatically on mobile
+    }
+
+    function undo() {
+        if (history) { 
+            state = JSON.parse(JSON.stringify(history)); 
+            history = null; 
+            render(); 
+            if(conn) conn.send(state); 
+        }
+    }
+
+    function triggerRematch() {
+        state.p.forEach(x => { x.s = 501; x.l = 0; x.pts = 0; x.d = 0; });
+        state.turn = 0;
+        delete state.winner; 
+        history = null;
+        render();
+        if (conn) conn.send(state);
+    }
+
+    function render() {
+        state.p.forEach((p, i) => {
+            document.getElementById(`n-${i}`).innerText = p.name;
+            document.getElementById(`s-${i}`).innerText = p.s;
+            document.getElementById(`l-${i}`).innerText = p.l;
+            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
+            document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
+        });
+        
+        document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+        document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+
+        const winnerLayer = document.getElementById('winner-layer');
+        if (state.winner !== undefined) {
+            const w = state.p[state.winner];
+            document.getElementById('winner-name').innerText = w.name + " WINS!";
+            document.getElementById('winner-stats').innerText = "Match Average: " + (w.d > 0 ? ((w.pts / w.d) * 3).toFixed(1) : "0.0");
+            winnerLayer.classList.remove('hidden');
+        } else {
+            winnerLayer.classList.add('hidden');
+        }
+    }
+
+    function shareInvite() {
+        const id = document.getElementById('display-id').innerText;
+        const url = window.location.origin + window.location.pathname + '?join=' + id;
+        if (navigator.share) navigator.share({ title: 'Darts Match', url });
+        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
+    }
+</script>
+</body>
+</html>
