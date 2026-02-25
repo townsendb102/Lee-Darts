@@ -7,34 +7,38 @@
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body { 
             margin: 0; background: var(--dark); color: white; 
             font-family: system-ui, -apple-system, sans-serif; 
             height: 100dvh; display: flex; flex-direction: column; overflow: hidden; 
         }
         
-        /* Start Screen */
+        /* Start Screen Overlay */
         #safety-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-start { background: var(--blue); color: black; padding: 20px 50px; font-size: 22px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; }
+        .btn-start { background: var(--blue); color: black; padding: 18px 45px; font-size: 20px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; }
 
-        /* Responsive Layout */
-        header { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid #1b4965; font-size: 12px; flex-shrink: 0; }
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 22dvh; background: #000; flex-shrink: 0; }
+        /* Header Area */
+        header { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid #1b4965; font-size: 11px; flex-shrink: 0; }
+        
+        /* Video Section - Compressed for Mobile */
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 18dvh; background: #000; flex-shrink: 0; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 
-        .score-area { flex: 1; display: flex; flex-direction: column; padding: 8px; gap: 6px; overflow: hidden; }
-        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 12px; border: 2px solid transparent; }
+        /* Score Section - Dynamic Growth */
+        .score-area { flex: 1; display: flex; flex-direction: column; padding: 6px; gap: 6px; overflow: hidden; }
+        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; transition: background 0.2s; }
         .player-card.active { border-color: var(--blue); background: #162a3f; }
         
-        .big-num { font-size: clamp(40px, 10dvh, 55px); font-weight: 900; line-height: 1; margin: 0; }
-        .stats-box { font-size: 10px; color: var(--blue); margin-bottom: 4px; }
-        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 14px; margin-top: 2px; height: 18px; }
+        .big-num { font-size: clamp(45px, 12dvh, 65px); font-weight: 900; line-height: 1; margin: 0; }
+        .stats-box { font-size: 10px; color: var(--blue); margin-bottom: 2px; font-weight: bold; text-transform: uppercase; }
+        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 14px; text-align: right; }
 
-        /* Fixed Bottom Controls */
-        .input-bar { height: 85px; background: #000; display: flex; padding: 10px; gap: 8px; border-top: 1px solid #1b4965; flex-shrink: 0; }
+        /* Bottom Control Bar */
+        .input-bar { height: 80px; background: #000; display: flex; padding: 8px; gap: 8px; border-top: 1px solid #1b4965; flex-shrink: 0; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
         #score-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 32px; text-align: center; border-radius: 8px; outline: none; }
-        .btn-hit { width: 80px; background: var(--blue); border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: black; }
+        .btn-hit { width: 75px; background: var(--blue); border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: black; }
         
         .hidden { display: none !important; }
     </style>
@@ -42,13 +46,13 @@
 <body>
 
 <div id="safety-layer">
-    <h1 style="color:var(--blue); margin-bottom:30px;">DARTSTREAM</h1>
+    <h1 style="color:var(--blue); margin-bottom:20px;">DARTSTREAM</h1>
     <button class="btn-start" onclick="initApp()">START MATCH</button>
 </div>
 
 <header>
     <div onclick="copyId()" style="cursor:pointer">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
-    <button onclick="shareInvite()" style="background:var(--blue); color:black; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:11px;">INVITE FRIEND</button>
+    <button onclick="shareInvite()" style="background:var(--blue); color:black; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:10px;">INVITE FRIEND</button>
 </header>
 
 <div class="v-grid">
@@ -80,84 +84,4 @@
 
 <script>
     let localStream, peer, conn;
-    let state = { turn: 0, p: [{ s: 501, d: 0, pts: 0 }, { s: 501, d: 0, pts: 0 }] };
-
-    async function initApp() {
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('local-cam').srcObject = localStream;
-            peer = new Peer();
-            peer.on('open', (id) => {
-                document.getElementById('display-id').innerText = id;
-                document.getElementById('safety-layer').classList.add('hidden');
-                checkUrlInvite();
-            });
-            peer.on('call', (call) => {
-                call.answer(localStream);
-                call.on('stream', s => document.getElementById('peer-cam').srcObject = s);
-            });
-            peer.on('connection', c => {
-                conn = c;
-                conn.on('data', d => { state = d; render(); });
-            });
-        } catch (e) { alert("Enable Camera and use HTTPS"); }
-    }
-
-    function shareInvite() {
-        const id = document.getElementById('display-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) {
-            navigator.share({ title: 'DartStream', text: 'Join my darts match!', url: url });
-        } else {
-            navigator.clipboard.writeText(url);
-            alert("Invite link copied!");
-        }
-    }
-
-    function submitScore() {
-        const input = document.getElementById('score-input');
-        const val = parseInt(input.value) || 0;
-        if (val > 180) return;
-        let p = state.p[state.turn];
-        if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.pts += val; p.d += 3;
-            if (p.s === 0) { alert("Winner!"); p.s = 501; p.d = 0; p.pts = 0; }
-        } else { p.d += 3; }
-        state.turn = state.turn === 0 ? 1 : 0;
-        render();
-        if (conn) conn.send(state);
-        input.value = '';
-    }
-
-    function getCheckout(s) {
-        if (s > 170 || s === 169 || s === 168 || s === 166 || s === 165 || s === 163 || s === 162 || s === 159) return "";
-        if (s === 170) return "T20-T20-BULL";
-        if (s <= 40 && s % 2 === 0) return "D" + (s/2);
-        return "Finishable";
-    }
-
-    function render() {
-        state.p.forEach((p, i) => {
-            document.getElementById(`score-${i}`).innerText = p.s;
-            document.getElementById(`darts-${i}`).innerText = p.d;
-            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-            document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
-            document.getElementById(`out-${i}`).innerText = (state.turn === i) ? getCheckout(p.s) : "";
-        });
-    }
-
-    function checkUrlInvite() {
-        const joinId = new URLSearchParams(window.location.search).get('join');
-        if (joinId && peer) {
-            conn = peer.connect(joinId);
-            peer.call(joinId, localStream).on('stream', s => document.getElementById('peer-cam').srcObject = s);
-        }
-    }
-    
-    function copyId() {
-        navigator.clipboard.writeText(document.getElementById('display-id').innerText);
-        alert("ID Copied");
-    }
-</script>
-</body>
-</html>
+    let state = { turn: 0, p
