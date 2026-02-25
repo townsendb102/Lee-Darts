@@ -9,42 +9,46 @@
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
+        /* Force body to be exactly the height of the screen */
         body { 
             background: var(--dark); color: white; 
             font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw;
-            display: flex; flex-direction: column; overflow: hidden; 
+            display: grid;
+            grid-template-rows: 40px 18dvh 1fr 90px; /* Header, Cam, Scores, Controls */
+            overflow: hidden; 
         }
         
         #safety-layer { position: fixed; inset: 0; background: var(--dark); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-start { background: var(--blue); color: black; padding: 20px 50px; font-size: 22px; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; }
 
-        header { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; flex-shrink: 0; }
+        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; }
         
-        /* Video - Fixed Height to prevent jumping */
-        .v-grid { display: grid; grid-template-columns: 1fr 1fr; height: 120px; background: #000; flex-shrink: 0; }
-        .v-box { position: relative; border-right: 1px solid #1b4965; height: 100%; }
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; background: #000; border-bottom: 1px solid #1b4965; }
+        .v-box { position: relative; height: 100%; border-right: 1px solid #1b4965; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        .flip-btn { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.7); color: var(--blue); border: 1px solid var(--blue); font-size: 10px; padding: 3px 8px; border-radius: 4px; z-index: 20; }
+        .flip-btn { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.8); color: var(--blue); border: 1px solid var(--blue); font-size: 9px; padding: 2px 6px; border-radius: 4px; z-index: 20; }
 
-        /* Scores - Dynamic Area */
-        .score-area { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 8px; min-height: 0; }
-        .player-card { flex: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 12px 15px; border: 2px solid transparent; min-height: 0; }
+        /* Scores - Scale fonts based on available space */
+        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
+        .player-card { flex: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 8px 15px; border: 2px solid transparent; min-height: 0; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
         .stats-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--blue); font-weight: bold; margin-bottom: 2px; }
-        .score-row { display: flex; justify-content: space-between; align-items: center; }
-        .score-val { font-size: clamp(35px, 7vh, 60px); font-weight: 900; line-height: 1; }
-        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 14px; text-align: right; }
+        .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        /* Reduced font size to prevent overlapping */
+        .score-val { font-size: clamp(30px, 10dvh, 50px); font-weight: 900; line-height: 1; }
+        .checkout-hint { color: #ffcc00; font-weight: bold; font-size: 13px; text-align: right; max-width: 40%; }
 
-        /* Controls - Fixed at bottom */
+        /* Controls - Fixed height at the bottom */
         .controls { 
-            height: 80px; background: #000; display: flex; padding: 10px; gap: 10px; 
-            border-top: 1px solid #1b4965; flex-shrink: 0;
+            background: #000; display: flex; padding: 10px; gap: 10px; 
+            border-top: 1px solid #1b4965; 
             padding-bottom: calc(10px + env(safe-area-inset-bottom));
         }
-        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 30px; text-align: center; border-radius: 8px; outline: none; }
-        .btn-hit { width: 90px; background: var(--blue); border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: black; cursor: pointer; }
+        #pts-input { flex: 1; background: #111; border: 1px solid #333; color: white; font-size: 28px; text-align: center; border-radius: 8px; outline: none; }
+        .btn-hit { width: 85px; background: var(--blue); border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: black; cursor: pointer; }
         
         .hidden { display: none !important; }
     </style>
@@ -57,8 +61,8 @@
 </div>
 
 <header>
-    <div onclick="copyId()">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
-    <button onclick="shareInvite()" style="background:var(--blue); color:black; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:10px;">SHARE LINK</button>
+    <div onclick="copyId()" style="cursor:pointer">ID: <span id="display-id" style="color:var(--blue)">...</span></div>
+    <button onclick="shareInvite()" style="background:var(--blue); color:black; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:10px;">SHARE</button>
 </header>
 
 <div class="v-grid">
@@ -76,112 +80,4 @@
             <span>DARTS: <span id="d-0">0</span></span>
         </div>
         <div class="score-row">
-            <div class="score-val" id="s-0">501</div>
-            <div class="checkout-hint" id="out-0"></div>
-        </div>
-    </div>
-    <div id="card-1" class="player-card">
-        <div class="stats-row">
-            <span>AVG: <span id="avg-1">0.0</span></span>
-            <span>DARTS: <span id="d-1">0</span></span>
-        </div>
-        <div class="score-row">
-            <div class="score-val" id="s-1">501</div>
-            <div class="checkout-hint" id="out-1"></div>
-        </div>
-    </div>
-</div>
-
-<div class="controls">
-    <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
-    <button class="btn-hit" onclick="doHit()">HIT</button>
-</div>
-
-<script>
-    let localStream, peer, conn, currentFacing = "user";
-    let state = { turn: 0, p: [{ s: 501, d: 0, t: 0 }, { s: 501, d: 0, t: 0 }] };
-
-    document.addEventListener('click', async (e) => {
-        if (e.target.id === 'start-trigger') {
-            const btn = e.target;
-            btn.innerText = "INITIALIZING...";
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing }, audio: true });
-                document.getElementById('me').srcObject = localStream;
-                peer = new Peer();
-                peer.on('open', (id) => {
-                    document.getElementById('display-id').innerText = id;
-                    document.getElementById('safety-layer').classList.add('hidden');
-                    autoJoin();
-                });
-                peer.on('call', (call) => {
-                    call.answer(localStream);
-                    call.on('stream', s => document.getElementById('peer').srcObject = s);
-                });
-                peer.on('connection', c => {
-                    conn = c;
-                    conn.on('data', d => { state = d; render(); });
-                });
-            } catch (err) {
-                alert("Camera error. Use HTTPS.");
-                btn.innerText = "RETRY";
-            }
-        }
-    });
-
-    async function flipCamera() {
-        currentFacing = currentFacing === "user" ? "environment" : "user";
-        if (localStream) localStream.getTracks().forEach(t => t.stop());
-        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing } });
-        document.getElementById('me').srcObject = localStream;
-    }
-
-    function doHit() {
-        const input = document.getElementById('pts-input');
-        const val = parseInt(input.value) || 0;
-        if (val > 180) return;
-        let p = state.p[state.turn];
-        if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.t += val; p.d += 3;
-            if (p.s === 0) { alert("Game Won!"); p.s = 501; p.d = 0; p.t = 0; }
-        } else { p.d += 3; }
-        state.turn = state.turn === 0 ? 1 : 0;
-        render();
-        if (conn) conn.send(state);
-        input.value = '';
-    }
-
-    function getCheckout(s) {
-        if (s > 170 || [169, 168, 166, 165, 163, 162, 159].includes(s)) return "";
-        if (s === 170) return "T20 T20 BULL";
-        if (s <= 40 && s % 2 === 0) return "D" + (s/2);
-        return "FINISH";
-    }
-
-    function render() {
-        state.p.forEach((p, i) => {
-            document.getElementById(`s-${i}`).innerText = p.s;
-            document.getElementById(`d-${i}`).innerText = p.d;
-            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.t / p.d) * 3).toFixed(1) : "0.0";
-            document.getElementById(`card-${i}`).className = state.turn === i ? "player-card active" : "player-card";
-            document.getElementById(`out-${i}`).innerText = state.turn === i ? getCheckout(p.s) : "";
-        });
-    }
-
-    function shareInvite() {
-        const id = document.getElementById('display-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) navigator.share({ title: 'DartStream', url: url });
-        else { navigator.clipboard.writeText(url); alert("Copied!"); }
-    }
-
-    function autoJoin() {
-        const id = new URLSearchParams(window.location.search).get('join');
-        if (id && peer) {
-            conn = peer.connect(id);
-            peer.call(id, localStream).on('stream', s => document.getElementById('peer').srcObject = s);
-        }
-    }
-</script>
-</body>
-</html>
+            <div class="score-val" id="s-0">5
