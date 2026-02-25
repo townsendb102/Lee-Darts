@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DartStream: Final Fix</title>
     <style>
-        :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
+        :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; --gold: #ffd700; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
         body { 
@@ -15,28 +15,34 @@
             overflow: hidden; 
         }
         
-        /* Setup Layer - Ensure it is always visible and scrollable if needed */
-        #setup-layer { 
-            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
+        /* Setup & Win Layers */
+        #setup-layer, #win-layer { 
+            position: fixed; inset: 0; background: rgba(2, 4, 8, 0.95); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-            overflow-y: auto;
         }
-        .setup-card { 
+        
+        #win-layer { background: radial-gradient(circle, #162a3f 0%, #020408 100%); z-index: 10001; }
+
+        .setup-card, .win-card { 
             background: var(--card); padding: 25px; border-radius: 15px; 
             width: 100%; max-width: 320px; border: 1px solid #1b4965;
-            display: flex; flex-direction: column; gap: 10px;
+            display: flex; flex-direction: column; gap: 10px; text-align: center;
         }
+        
+        .win-card h1 { color: var(--gold); font-size: 2.5rem; margin-bottom: 5px; }
+        .win-card p { font-size: 1.2rem; margin-bottom: 20px; color: #ccc; }
+
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; text-align: center; }
         
-        .input-group { margin-bottom: 10px; }
+        .input-group { margin-bottom: 10px; text-align: left; }
         .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
         .setup-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
         
-        .btn-start { 
+        .btn-start, .btn-reset { 
             background: var(--blue); color: black; width: 100%; padding: 16px; 
             font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; 
-            margin-top: 10px; display: block !important; visibility: visible !important;
         }
+        .btn-reset { background: var(--gold); }
 
         /* Header */
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
@@ -85,15 +91,24 @@
         <div class="input-group">
             <label>Best Of (Legs)</label>
             <select id="legs-input" class="setup-input">
-                <option value="1">1 Leg</option>
-                <option value="3">Best of 3</option>
-                <option value="5" selected>Best of 5</option>
-                <option value="7">Best of 7</option>
-                <option value="11">Best of 11</option>
+                <option value="1">1 Leg (First to 1)</option>
+                <option value="3">Best of 3 (First to 2)</option>
+                <option value="5" selected>Best of 5 (First to 3)</option>
+                <option value="7">Best of 7 (First to 4)</option>
+                <option value="11">Best of 11 (First to 6)</option>
             </select>
         </div>
         <button id="start-btn" class="btn-start">START MATCH</button>
         <p id="error-log" style="color: #ff4d4d; font-size: 10px; margin-top: 10px; text-align: center;"></p>
+    </div>
+</div>
+
+<div id="win-layer" class="hidden">
+    <div class="win-card">
+        <div style="font-size: 50px;">🏆</div>
+        <h1 id="winner-name">WINNER</h1>
+        <p>Match Completed</p>
+        <button onclick="location.reload()" class="btn-reset">NEW MATCH</button>
     </div>
 </div>
 
@@ -146,13 +161,12 @@
 <script>
     let stream, peer, conn, facing = "user";
     let myIndex = 0;
-    let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
+    let state = { turn: 0, bestOf: 5, winner: null, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
 
-    // Attach events using JS for better mobile reliability
     window.addEventListener('load', () => {
         document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
@@ -194,7 +208,6 @@
                 call.answer(stream);
                 call.on('stream', s => {
                     document.getElementById('peer').srcObject = s;
-                    render();
                 });
             });
 
@@ -215,7 +228,6 @@
         conn.on('data', d => handleData(d));
         peer.call(id, stream).on('stream', s => {
             document.getElementById('peer').srcObject = s;
-            render();
         });
     }
 
@@ -240,43 +252,9 @@
     }
 
     function processHit() {
+        if (state.winner) return;
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value) || 0;
         if (val > 180) return;
-        history = JSON.parse(JSON.stringify(state));
-        let p = state.p[state.turn];
-        if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.pts += val; p.d += 3;
-            if (p.s === 0) { p.l++; state.p.forEach(x => x.s = 501); }
-            else { state.turn = (state.turn === 0) ? 1 : 0; }
-        } else { state.turn = (state.turn === 0) ? 1 : 0; }
-        render();
-        if (conn) conn.send(state);
-        input.value = '';
-    }
-
-    function undo() {
-        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if(conn) conn.send(state); }
-    }
-
-    function render() {
-        state.p.forEach((p, i) => {
-            document.getElementById(`n-${i}`).innerText = p.name;
-            document.getElementById(`s-${i}`).innerText = p.s;
-            document.getElementById(`l-${i}`).innerText = p.l;
-            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-            document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
-        });
-        document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-        document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
-    }
-
-    function shareInvite() {
-        const id = document.getElementById('display-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) navigator.share({ title: 'Darts Match', url });
-        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
-    }
-</script>
-</body>
-</html>
+        
+        history = JSON.parse(JSON.
