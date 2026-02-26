@@ -75,10 +75,6 @@
         
         #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
         .hidden { display: none !important; }
-        
-        /* Spectator View Adjustments */
-        body.spectator-mode { grid-template-rows: 40px 45dvh 1fr; }
-        body.spectator-mode .controls { display: none; }
     </style>
 </head>
 <body>
@@ -90,7 +86,7 @@
             <label>Your Name</label>
             <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
         </div>
-        <div class="input-group" id="legs-setup-group">
+        <div class="input-group">
             <label>Best Of (Legs)</label>
             <select id="legs-input" class="setup-input">
                 <option value="1">1 Leg</option>
@@ -118,18 +114,17 @@
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
         <button class="header-btn" id="flip-btn">FLIP</button>
-        <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE P2</button>
-        <button class="header-btn" id="spectate-btn" style="color: #ffaa00;">SPECTATE</button>
+        <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
     </div>
 </header>
 
 <div class="v-container">
     <div id="box-me" class="v-box visible">
-        <div class="cam-label" id="label-me">YOU</div>
+        <div class="cam-label">YOU</div>
         <video id="me" autoplay playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
-        <div class="cam-label" id="label-peer">OPPONENT</div>
+        <div class="cam-label">OPPONENT</div>
         <video id="peer" autoplay playsinline></video>
     </div>
 </div>
@@ -167,33 +162,18 @@
     let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
 
+    // Camera State Logic
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user";
     let currentCamIndex = 0;
 
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
-    const spectateId = urlParams.get('spectate');
-    
-    let isSpectator = !!spectateId;
-    let spectatorConns = [];
 
     window.addEventListener('load', () => {
-        // Hide the "Best Of" selection and change button text if the user is a guest (joining via a link)
-        if (joinId) {
-            document.getElementById('legs-setup-group').classList.add('hidden');
-            document.getElementById('start-btn').innerText = 'JOIN MATCH';
-        }
-
-        if (isSpectator) {
-            initSpectator();
-        } else {
-            document.getElementById('start-btn').onclick = initApp;
-        }
-        
+        document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
-        document.getElementById('share-btn').onclick = () => shareLink('join');
-        document.getElementById('spectate-btn').onclick = () => shareLink('spectate');
+        document.getElementById('share-btn').onclick = shareInvite;
         document.getElementById('undo-btn').onclick = undo;
         document.getElementById('hit-btn').onclick = processHit;
         document.getElementById('rematch-btn').onclick = triggerRematch;
@@ -209,40 +189,6 @@
         }
     });
 
-    // --- Spectator Initialization ---
-    function initSpectator() {
-        document.body.classList.add('spectator-mode');
-        document.getElementById('setup-layer').classList.add('hidden');
-        document.getElementById('display-id').innerText = "SPECTATING";
-        document.getElementById('flip-btn').classList.add('hidden');
-        document.getElementById('share-btn').classList.add('hidden');
-        document.getElementById('spectate-btn').classList.add('hidden');
-        
-        document.getElementById('label-me').innerText = "HOST";
-        document.getElementById('label-peer').innerText = "GUEST";
-        document.getElementById('me').muted = false; // Allow spectator to hear the host
-
-        peer = new Peer();
-        peer.on('open', (id) => {
-            conn = peer.connect(spectateId);
-            conn.on('open', () => conn.send({ type: 'SPECTATOR_JOIN', id: id }));
-            conn.on('data', d => handleData(d));
-        });
-
-        // Listen for incoming video calls from players
-        peer.on('call', call => {
-            call.answer(); 
-            call.on('stream', s => {
-                if (call.metadata && call.metadata.role === 'P2') {
-                    document.getElementById('peer').srcObject = s;
-                } else {
-                    document.getElementById('me').srcObject = s;
-                }
-            });
-        });
-    }
-
-    // --- Normal Player Initialization ---
     async function initApp() {
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
@@ -250,6 +196,7 @@
         log.innerText = "Accessing Camera...";
 
         try {
+            // Intelligent initial setup: environment for phones, default for laptops
             let constraints = { video: true, audio: true };
             if (isMobile) {
                 constraints.video = { facingMode: "environment" };
@@ -257,6 +204,7 @@
             }
 
             stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async () => {
+                // Failsafe backup
                 isMobile = false;
                 return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             });
@@ -270,11 +218,10 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('setup-layer').classList.add('hidden');
                 
-                // Only the Host determines the length of the match
-                if (!joinId) {
-                    state.p[0].name = document.getElementById('name-input').value || "Host";
-                    state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                } else {
+                state.p[0].name = document.getElementById('name-input').value || "Host";
+                state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+
+                if (joinId) {
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     connectToMatch(joinId);
@@ -292,21 +239,9 @@
             });
 
             peer.on('connection', c => {
-                c.on('data', d => {
-                    if (d.type === 'SPECTATOR_JOIN') {
-                        spectatorConns.push(c);
-                        c.send({ type: 'SYNC', state });
-                        if (stream) peer.call(d.id, stream, { metadata: { role: 'HOST' } });
-                        if (conn && conn.open) conn.send({ type: 'SPECTATOR_ADDED', id: d.id });
-                    } else if (d.type === 'JOIN') {
-                        conn = c;
-                        state.p[1].name = d.name;
-                        broadcastState();
-                        render();
-                    } else {
-                        handleData(d);
-                    }
-                });
+                conn = c;
+                conn.on('open', () => conn.send({ type: 'SYNC', state }));
+                conn.on('data', d => handleData(d));
             });
 
             peer.on('error', err => {
@@ -333,65 +268,76 @@
     }
 
     function handleData(data) {
-        // When Guest receives the SYNC from Host, their local state (including BestOf) gets overwritten
         if (data.type === 'SYNC') {
-            state = data.state;
+            state.bestOf = data.state.bestOf;
+            state.p[0].name = data.state.p[0].name;
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
-        } else if (data.type === 'SPECTATOR_ADDED') {
-            if (stream) peer.call(data.id, stream, { metadata: { role: 'P2' } });
-            return;
         } else {
             state = data; 
-            if (!joinId && !isSpectator) {
-                broadcastState();
-            }
         }
         render();
     }
 
-    function broadcastState() {
-        if (isSpectator) return;
-        if (conn && conn.open) conn.send(state);
-        spectatorConns.forEach(sc => {
-            if (sc.open) sc.send(state);
-        });
-    }
-
     async function swapCam() {
         if (!stream) return;
+        
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const videoCameras = devices.filter(d => d.kind === 'videoinput');
-            if (videoCameras.length <= 1) { alert("Only one camera found on this device."); return; }
+            
+            if (videoCameras.length <= 1) {
+                alert("Only one camera found on this device.");
+                return;
+            }
 
+            // 1. Isolate the video track. Leave audio alone!
             const oldVideoTrack = stream.getVideoTracks()[0];
+            
+            // 2. Stop ONLY the video to free up the hardware
             oldVideoTrack.stop();
             
             let newStream;
+            
+            // 3. Request specific camera based on device type
             if (isMobile) {
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
                 try {
-                    newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: currentFacingMode } } });
-                } catch (e) { isMobile = false; }
+                    newStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: { exact: currentFacingMode } } 
+                    });
+                } catch (e) {
+                    isMobile = false; // Fallback if phone rejects exact facing mode
+                }
             }
+            
             if (!isMobile) {
+                // Standard laptop method
                 currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
-                newStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId } } });
+                newStream = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId } }
+                });
             }
 
             const newVideoTrack = newStream.getVideoTracks()[0];
+
+            // 4. Safely update your local stream
             stream.removeTrack(oldVideoTrack);
             stream.addTrack(newVideoTrack);
             document.getElementById('me').srcObject = stream;
 
+            // 5. Instantly push the new track to your opponent without breaking the call
             if (currentCall && currentCall.peerConnection) {
                 const senders = currentCall.peerConnection.getSenders();
                 const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-                if (videoSender) await videoSender.replaceTrack(newVideoTrack);
+                if (videoSender) {
+                    await videoSender.replaceTrack(newVideoTrack);
+                }
             }
+            
         } catch (e) {
             alert("Recovering camera connection...");
+            // Absolute worst-case scenario: pull the default camera back up
             const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: true });
             const recoveredTrack = recoveredStream.getVideoTracks()[0];
             stream.addTrack(recoveredTrack);
@@ -407,6 +353,7 @@
     function processHit() {
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
+        
         if (isNaN(val) || val < 0 || val > 180) return;
         
         history = JSON.parse(JSON.stringify(state));
@@ -417,13 +364,22 @@
             if (p.s === 0) { 
                 p.l++; 
                 const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
-                if (p.l >= legsRequiredToWin) state.winner = state.turn; 
-                else { state.p.forEach(x => x.s = 501); state.turn = (state.turn === 0) ? 1 : 0; }
-            } else state.turn = (state.turn === 0) ? 1 : 0; 
-        } else state.turn = (state.turn === 0) ? 1 : 0; 
+                
+                if (p.l >= legsRequiredToWin) {
+                    state.winner = state.turn; 
+                } else {
+                    state.p.forEach(x => x.s = 501); 
+                    state.turn = (state.turn === 0) ? 1 : 0; 
+                }
+            } else { 
+                state.turn = (state.turn === 0) ? 1 : 0; 
+            }
+        } else { 
+            state.turn = (state.turn === 0) ? 1 : 0; 
+        }
         
         render();
-        broadcastState();
+        if (conn) conn.send(state);
         input.value = '';
         input.focus(); 
     }
@@ -433,18 +389,17 @@
             state = JSON.parse(JSON.stringify(history)); 
             history = null; 
             render(); 
-            broadcastState(); 
+            if(conn) conn.send(state); 
         }
     }
 
     function triggerRematch() {
-        if (isSpectator) return;
         state.p.forEach(x => { x.s = 501; x.l = 0; x.pts = 0; x.d = 0; });
         state.turn = 0;
         delete state.winner; 
         history = null;
         render();
-        broadcastState();
+        if (conn) conn.send(state);
     }
 
     function render() {
@@ -456,13 +411,8 @@
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
-        if (!isSpectator) {
-            document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-            document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
-        } else {
-            document.getElementById('box-me').className = (state.turn === 0) ? "v-box visible" : "v-box";
-            document.getElementById('box-peer').className = (state.turn === 1) ? "v-box visible" : "v-box";
-        }
+        document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+        document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
 
         const winnerLayer = document.getElementById('winner-layer');
         if (state.winner !== undefined) {
@@ -470,23 +420,16 @@
             document.getElementById('winner-name').innerText = w.name + " WINS!";
             document.getElementById('winner-stats').innerText = "Match Average: " + (w.d > 0 ? ((w.pts / w.d) * 3).toFixed(1) : "0.0");
             winnerLayer.classList.remove('hidden');
-            if(isSpectator) document.getElementById('rematch-btn').classList.add('hidden');
         } else {
             winnerLayer.classList.add('hidden');
         }
     }
 
-    function shareLink(type) {
+    function shareInvite() {
         const id = document.getElementById('display-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?' + type + '=' + id;
-        const title = type === 'join' ? 'Play Darts' : 'Spectate Darts Match';
-        
-        if (navigator.share) {
-            navigator.share({ title, url });
-        } else { 
-            navigator.clipboard.writeText(url); 
-            alert(type === 'join' ? "Invite Link Copied!" : "Spectator Link Copied!"); 
-        }
+        const url = window.location.origin + window.location.pathname + '?join=' + id;
+        if (navigator.share) navigator.share({ title: 'Darts Match', url });
+        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
     }
 </script>
 </body>
