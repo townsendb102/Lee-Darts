@@ -619,6 +619,40 @@
     }
 
     
+
+function startPlayerCall(id) {
+        if (!stream) return;
+
+        currentCall = peer.call(id, stream);
+
+        currentCall.on('stream', s => {
+            attachPeerVideo(s);
+            render();
+        });
+
+        currentCall.on('error', err => {
+            console.warn("Call failed:", err);
+        });
+}
+
+function startSpectatorCall(id) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+
+        const dummyStream = canvas.captureStream(1);
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
+        dummyStream.addTrack(dummyAudio);
+
+        const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
+
+        specCall.on('stream', s => {
+            attachPeerVideo(s);
+            render();
+        });
+}
+
 function connectToMatch(id, isSpectator = false) {
 
         if (!peer || peer.disconnected) {
@@ -627,13 +661,10 @@ function connectToMatch(id, isSpectator = false) {
             return;
         }
 
-        console.log("Connecting to host:", id);
-
         const c = peer.connect(id, { reliable: true });
         conns.push(c);
 
         c.on('open', () => {
-            console.log("Data channel open");
 
             if (!isSpectator) {
                 c.send({ type: 'JOIN', name: state.p[1].name });
@@ -656,41 +687,7 @@ function connectToMatch(id, isSpectator = false) {
 
         c.on('data', d => handleData(d));
 }
-);
-        
-        c.on('data', d => handleData(d));
-        
-        if (isSpectator) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1; canvas.height = 1;
-            const dummyStream = canvas.captureStream(1); 
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
-            dummyStream.addTrack(dummyAudio);
-            
-            const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
-            specCall.on('stream', s => { attachPeerVideo(s); render(); });
-        } else {
-            currentCall = peer.call(id, stream);
-            limitVideoBitrate(currentCall.peerConnection, 1500); // 1.5 Mbps Limiter
-            
-            currentCall.on('stream', s => { 
-                attachPeerVideo(s); 
-                render(); 
 
-                // Listen for P2P connection issues
-                currentCall.peerConnection.addEventListener('iceconnectionstatechange', () => {
-                    const state = currentCall.peerConnection.iceConnectionState;
-                    const overlay = document.getElementById('reconnect-overlay');
-                    if (state === 'disconnected' || state === 'failed') {
-                        if (overlay) overlay.classList.add('visible');
-                    } else if (state === 'connected' || state === 'completed') {
-                        if (overlay) overlay.classList.remove('visible');
-                    }
-                });
-            });
-        }
-    }
 
     function handleData(data) {
         if (data.type === 'CAM_PAUSED') {
@@ -900,39 +897,7 @@ function connectToMatch(id, isSpectator = false) {
         }
     }
 
-    
-function startPlayerCall(id) {
-        if (!stream) return;
-
-        currentCall = peer.call(id, stream);
-        currentCall.on('stream', s => {
-            attachPeerVideo(s);
-            render();
-        });
-
-        currentCall.on('error', err => {
-            console.warn("Call failed:", err);
-        });
-}
-
-function startSpectatorCall(id) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1;
-        canvas.height = 1;
-
-        const dummyStream = canvas.captureStream(1);
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
-        dummyStream.addTrack(dummyAudio);
-
-        const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
-        specCall.on('stream', s => {
-            attachPeerVideo(s);
-            render();
-        });
-}
-
-function render() {
+    function render() {
         state.p.forEach((p, i) => {
             document.getElementById(`n-${i}`).innerText = p.name;
             document.getElementById(`s-${i}`).innerText = p.s;
