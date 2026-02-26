@@ -15,18 +15,12 @@
             overflow: hidden; 
         }
 
-        /* --- SPECTATOR MODE OVERRIDES --- */
-        body.spectator-mode {
-            grid-template-rows: 40px 45dvh 1fr 0px 25px; 
-        }
+        body.spectator-mode { grid-template-rows: 40px 45dvh 1fr 0px 25px; }
         body.spectator-mode .controls,
         body.spectator-mode .header-controls,
-        body.spectator-mode #legs-group {
-            display: none !important;
-        }
+        body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { display: none !important; }
         body.spectator-mode #box-peer { display: block !important; }
-        /* -------------------------------- */
         
         #setup-layer, #winner-layer { 
             position: fixed; inset: 0 0 25px 0; background: var(--dark); z-index: 10000; 
@@ -44,7 +38,6 @@
         }
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
         
-        /* Stats Table */
         .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
         .stats-table th { color: white; padding-bottom: 10px; font-size: 18px; width: 30%; }
         .stats-table th:nth-child(2) { color: var(--blue); font-size: 12px; width: 40%; }
@@ -134,40 +127,14 @@
 <div id="winner-layer" class="hidden">
     <div class="setup-card">
         <h1 id="winner-name" style="color: white; margin: 10px 0 20px 0; font-size: 24px;">P1 Wins!</h1>
-        
         <table class="stats-table">
-            <tr>
-                <th id="ws-n0">P1</th>
-                <th>STATS</th>
-                <th id="ws-n1">P2</th>
-            </tr>
-            <tr>
-                <td id="ws-avg0">0.0</td>
-                <td>Match Avg</td>
-                <td id="ws-avg1">0.0</td>
-            </tr>
-            <tr>
-                <td id="ws-f90">0.0</td>
-                <td>First 9 Avg</td>
-                <td id="ws-f91">0.0</td>
-            </tr>
-            <tr>
-                <td id="ws-hc0">-</td>
-                <td>High Out</td>
-                <td id="ws-hc1">-</td>
-            </tr>
-            <tr>
-                <td id="ws-1400">0</td>
-                <td>140+</td>
-                <td id="ws-1401">0</td>
-            </tr>
-            <tr>
-                <td id="ws-1800">0</td>
-                <td>180s</td>
-                <td id="ws-1801">0</td>
-            </tr>
+            <tr><th id="ws-n0">P1</th><th>STATS</th><th id="ws-n1">P2</th></tr>
+            <tr><td id="ws-avg0">0.0</td><td>Match Avg</td><td id="ws-avg1">0.0</td></tr>
+            <tr><td id="ws-f90">0.0</td><td>First 9 Avg</td><td id="ws-f91">0.0</td></tr>
+            <tr><td id="ws-hc0">-</td><td>High Out</td><td id="ws-hc1">-</td></tr>
+            <tr><td id="ws-1400">0</td><td>140+</td><td id="ws-1401">0</td></tr>
+            <tr><td id="ws-1800">0</td><td>180s</td><td id="ws-1801">0</td></tr>
         </table>
-
         <button id="rematch-btn" class="btn-start">REMATCH</button>
     </div>
 </div>
@@ -231,14 +198,10 @@
     let myIndex = 0;
     let isMuted = false;
     
-    let state = { 
-        turn: 0, 
-        bestOf: 5, 
-        p: [
-            { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
-            { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }
-        ] 
-    };
+    let state = { turn: 0, bestOf: 5, p: [
+        { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
+        { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }
+    ]};
     let history = null;
 
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -293,11 +256,17 @@
         3:"1 D1",2:"D1"
     };
 
-    function broadcast(data) {
-        conns.forEach(c => {
-            if (c && c.open) c.send(data);
-        });
+    function broadcast(data) { conns.forEach(c => { if (c && c.open) c.send(data); }); }
+
+    // APPLE HACK: Global invisible listener. The moment an iOS user taps anywhere, unlock the opponent's video.
+    function unlockAudio() {
+        const peerVideo = document.getElementById('peer');
+        if (peerVideo && peerVideo.paused && peerVideo.srcObject) {
+            peerVideo.play().catch(e => console.log("Unlock failed", e));
+        }
     }
+    document.body.addEventListener('click', unlockAudio);
+    document.body.addEventListener('touchstart', unlockAudio);
 
     window.addEventListener('load', () => {
         if (spectateId) {
@@ -321,10 +290,7 @@
         const ptsInput = document.getElementById('pts-input');
         if (ptsInput) {
             ptsInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    processHit();
-                }
+                if (e.key === 'Enter') { e.preventDefault(); processHit(); }
             });
         }
     });
@@ -334,19 +300,18 @@
         const startBtn = document.getElementById('start-btn');
         startBtn.disabled = true;
 
-        // SAFARI HACK: Force the opponent's video element to unlock its audio context during the button click gesture
-        document.getElementById('peer').play().catch(e => { /* Ignore empty source error */ });
-
         try {
             if (!spectateId) {
                 log.innerText = "Accessing Camera...";
+                // APPLE HACK 2: Removed "exact" requirement for facing mode to prevent OverconstrainedError
                 let constraints = { video: true, audio: true };
                 if (isMobile) {
                     constraints.video = { facingMode: "environment" };
                     currentFacingMode = "environment";
                 }
 
-                stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async () => {
+                stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async (err) => {
+                    console.warn("Primary camera access failed, falling back.", err);
                     isMobile = false;
                     return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 });
@@ -355,14 +320,12 @@
             
             log.innerText = "Connecting to server...";
             
-            // APPLE / SAFARI FIX: Expanded STUN list to increase firewall punch-through chances
             peer = new Peer({
                 config: {
                     'iceServers': [
                         { urls: 'stun:stun.l.google.com:19302' },
                         { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun.cloudflare.com:3478' },
-                        { urls: 'stun:stun.miwifi.com:3478' }
+                        { urls: 'stun:stun.cloudflare.com:3478' }
                     ]
                 }
             });
@@ -371,9 +334,8 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('setup-layer').classList.add('hidden');
                 
-                if (spectateId) {
-                    connectToMatch(spectateId, true);
-                } else if (joinId) {
+                if (spectateId) { connectToMatch(spectateId, true); } 
+                else if (joinId) {
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     connectToMatch(joinId, false);
@@ -381,7 +343,6 @@
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
                 }
-                
                 render();
             });
 
@@ -394,14 +355,7 @@
                     call.answer(stream);
                     call.on('stream', s => {
                         currentCall = call;
-                        if(s) {
-                            const peerVideo = document.getElementById('peer');
-                            peerVideo.srcObject = s;
-                            // Slight delay allows Safari to register the incoming media tracks
-                            setTimeout(() => {
-                                peerVideo.play().catch(e => console.warn("Autoplay blocked by browser", e));
-                            }, 250);
-                        }
+                        if(s) { attachPeerVideo(s); }
                         render();
                     });
                 }
@@ -412,9 +366,7 @@
                 c.on('open', () => c.send({ type: 'SYNC', state }));
                 c.on('data', d => {
                     handleData(d);
-                    if (myIndex === 0 && d.type !== 'JOIN') {
-                        broadcast(state);
-                    }
+                    if (myIndex === 0 && d.type !== 'JOIN') { broadcast(state); }
                 });
             });
 
@@ -424,9 +376,18 @@
             });
 
         } catch (e) {
-            log.innerText = "Access denied or error. (" + e.message + ")";
+            log.innerText = "Camera/Mic access denied. (" + e.message + ")";
             startBtn.disabled = false;
         }
+    }
+
+    function attachPeerVideo(s) {
+        const peerVideo = document.getElementById('peer');
+        peerVideo.srcObject = s;
+        // Wait until iOS says the metadata is actually loaded before forcing play
+        peerVideo.onloadedmetadata = () => {
+            peerVideo.play().catch(e => console.warn("Waiting for user tap to play video", e));
+        };
     }
 
     function connectToMatch(id, isSpectator = false) {
@@ -443,31 +404,15 @@
             const canvas = document.createElement('canvas');
             canvas.width = 1; canvas.height = 1;
             const dummyStream = canvas.captureStream(1); 
-            
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
             dummyStream.addTrack(dummyAudio);
             
             const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
-            
-            specCall.on('stream', s => {
-                const peerVideo = document.getElementById('peer');
-                peerVideo.srcObject = s;
-                setTimeout(() => {
-                    peerVideo.play().catch(e => console.warn("Spectator autoplay blocked", e));
-                }, 250);
-                render();
-            });
+            specCall.on('stream', s => { attachPeerVideo(s); render(); });
         } else {
             currentCall = peer.call(id, stream);
-            currentCall.on('stream', s => {
-                const peerVideo = document.getElementById('peer');
-                peerVideo.srcObject = s;
-                setTimeout(() => {
-                    peerVideo.play().catch(e => console.warn("Autoplay blocked by browser", e));
-                }, 250);
-                render();
-            });
+            currentCall.on('stream', s => { attachPeerVideo(s); render(); });
         }
     }
 
@@ -480,12 +425,9 @@
         } else {
             if (data.p) {
                 data.p.forEach(player => {
-                    player.ld = player.ld ?? 0;
-                    player.f9pts = player.f9pts ?? 0;
-                    player.f9d = player.f9d ?? 0;
-                    player.hc = player.hc ?? 0;
-                    player.n140 = player.n140 ?? 0;
-                    player.n180 = player.n180 ?? 0;
+                    player.ld = player.ld ?? 0; player.f9pts = player.f9pts ?? 0;
+                    player.f9d = player.f9d ?? 0; player.hc = player.hc ?? 0;
+                    player.n140 = player.n140 ?? 0; player.n180 = player.n180 ?? 0;
                 });
             }
             state = data; 
@@ -497,48 +439,34 @@
         if (stream && stream.getAudioTracks().length > 0) {
             isMuted = !isMuted;
             stream.getAudioTracks()[0].enabled = !isMuted;
-            
             const btn = document.getElementById('mute-btn');
             if (isMuted) {
-                btn.innerText = "UNMUTE";
-                btn.style.color = "#aaa";
-                btn.style.borderColor = "#666";
+                btn.innerText = "UNMUTE"; btn.style.color = "#aaa"; btn.style.borderColor = "#666";
             } else {
-                btn.innerText = "MUTE";
-                btn.style.color = "#ff4d4d";
-                btn.style.borderColor = "#444";
+                btn.innerText = "MUTE"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444";
             }
         }
     }
 
     async function swapCam() {
         if (!stream) return;
-        
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const videoCameras = devices.filter(d => d.kind === 'videoinput');
-            
-            if (videoCameras.length <= 1) {
-                alert("Only one camera found on this device.");
-                return;
-            }
+            if (videoCameras.length <= 1) { alert("Only one camera found on this device."); return; }
 
             const oldVideoTrack = stream.getVideoTracks()[0];
             oldVideoTrack.stop();
-            
             let newStream;
             
             if (isMobile) {
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
                 try {
                     newStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: { exact: currentFacingMode } } 
+                        video: { facingMode: currentFacingMode } 
                     });
-                } catch (e) {
-                    isMobile = false; 
-                }
+                } catch (e) { isMobile = false; }
             }
-            
             if (!isMobile) {
                 currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
                 newStream = await navigator.mediaDevices.getUserMedia({
@@ -554,9 +482,7 @@
             if (currentCall && currentCall.peerConnection) {
                 const senders = currentCall.peerConnection.getSenders();
                 const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-                if (videoSender) {
-                    await videoSender.replaceTrack(newVideoTrack);
-                }
+                if (videoSender) { await videoSender.replaceTrack(newVideoTrack); }
             }
         } catch (e) {
             alert("Recovering camera connection...");
@@ -564,7 +490,6 @@
             const recoveredTrack = recoveredStream.getVideoTracks()[0];
             stream.addTrack(recoveredTrack);
             document.getElementById('me').srcObject = stream;
-            
             if (currentCall && currentCall.peerConnection) {
                 const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
                 if (videoSender) await videoSender.replaceTrack(recoveredTrack);
@@ -577,64 +502,42 @@
 
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
-        
         if (isNaN(val) || val < 0 || val > 180) return;
         
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
 
-        p.ld = p.ld ?? 0;
-        p.f9pts = p.f9pts ?? 0;
-        p.f9d = p.f9d ?? 0;
-        p.hc = p.hc ?? 0;
-        p.n140 = p.n140 ?? 0;
-        p.n180 = p.n180 ?? 0;
+        p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0; p.f9d = p.f9d ?? 0;
+        p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
         
-        if (p.ld < 9) { 
-            p.f9d += 3; 
-        }
-        p.d += 3;
-        p.ld += 3;
+        if (p.ld < 9) { p.f9d += 3; }
+        p.d += 3; p.ld += 3;
 
         if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; 
-            p.pts += val; 
-            
+            p.s -= val; p.pts += val; 
             if (p.ld <= 9) { p.f9pts += val; }
-
-            if (val === 180) p.n180++;
-            else if (val >= 140) p.n140++;
+            if (val === 180) p.n180++; else if (val >= 140) p.n140++;
 
             if (p.s === 0) { 
                 if (val > p.hc) p.hc = val; 
                 p.l++; 
                 const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
-                
-                if (p.l >= legsRequiredToWin) {
-                    state.winner = state.turn; 
-                } else {
+                if (p.l >= legsRequiredToWin) { state.winner = state.turn; } 
+                else {
                     state.p.forEach(x => { x.s = 501; x.ld = 0; }); 
                     state.turn = (state.turn === 0) ? 1 : 0; 
                 }
-            } else { 
-                state.turn = (state.turn === 0) ? 1 : 0; 
-            }
-        } else { 
-            state.turn = (state.turn === 0) ? 1 : 0; 
-        }
+            } else { state.turn = (state.turn === 0) ? 1 : 0; }
+        } else { state.turn = (state.turn === 0) ? 1 : 0; }
         
-        render();
-        broadcast(state);
-        input.value = '';
-        input.blur(); 
+        render(); broadcast(state);
+        input.value = ''; input.blur(); 
     }
 
     function undo() {
         if (history) { 
-            state = JSON.parse(JSON.stringify(history)); 
-            history = null; 
-            render(); 
-            broadcast(state);
+            state = JSON.parse(JSON.stringify(history)); history = null; 
+            render(); broadcast(state);
         }
     }
 
@@ -643,11 +546,8 @@
             x.s = 501; x.l = 0; x.pts = 0; x.d = 0; 
             x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
         });
-        state.turn = 0;
-        delete state.winner; 
-        history = null;
-        render();
-        broadcast(state);
+        state.turn = 0; delete state.winner; history = null;
+        render(); broadcast(state);
     }
 
     function render() {
@@ -663,17 +563,11 @@
         if (!spectateId) {
             const ptsInput = document.getElementById('pts-input');
             const hitBtn = document.getElementById('hit-btn');
-            
             if (state.turn === myIndex) {
-                ptsInput.disabled = false;
-                hitBtn.disabled = false;
-                ptsInput.placeholder = "0";
+                ptsInput.disabled = false; hitBtn.disabled = false; ptsInput.placeholder = "0";
             } else {
-                ptsInput.disabled = true;
-                hitBtn.disabled = true;
-                ptsInput.placeholder = "Waiting...";
+                ptsInput.disabled = true; hitBtn.disabled = true; ptsInput.placeholder = "Waiting...";
             }
-
             document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
             document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
         } else {
@@ -682,17 +576,14 @@
 
         if (myIndex === 0 && spectatorCalls.length > 0) {
             const activeStream = (state.turn === 0) ? stream : document.getElementById('peer').srcObject;
-            
             if (activeStream) {
                 const videoTrack = activeStream.getVideoTracks()[0];
                 const audioTrack = activeStream.getAudioTracks()[0];
-                
                 spectatorCalls.forEach(call => {
                     if (call.peerConnection) {
                         const senders = call.peerConnection.getSenders();
                         const vSender = senders.find(s => s.track && s.track.kind === 'video');
                         const aSender = senders.find(s => s.track && s.track.kind === 'audio');
-                        
                         if (vSender && videoTrack && vSender.track !== videoTrack) {
                             vSender.replaceTrack(videoTrack).catch(e => console.warn("Video swap failed", e));
                         }
@@ -708,14 +599,10 @@
         if (state.winner !== undefined) {
             const w = state.p[state.winner];
             document.getElementById('winner-name').innerText = w.name + " WINS!";
-            
             for (let i = 0; i < 2; i++) {
                 let pStats = state.p[i];
-                let f9d = pStats.f9d ?? 0;
-                let f9pts = pStats.f9pts ?? 0;
-                let hc = pStats.hc ?? 0;
-                let n140 = pStats.n140 ?? 0;
-                let n180 = pStats.n180 ?? 0;
+                let f9d = pStats.f9d ?? 0; let f9pts = pStats.f9pts ?? 0; let hc = pStats.hc ?? 0;
+                let n140 = pStats.n140 ?? 0; let n180 = pStats.n180 ?? 0;
 
                 document.getElementById(`ws-n${i}`).innerText = pStats.name;
                 document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
@@ -724,7 +611,6 @@
                 document.getElementById(`ws-140${i}`).innerText = n140;
                 document.getElementById(`ws-180${i}`).innerText = n180;
             }
-
             winnerLayer.classList.remove('hidden');
         } else {
             winnerLayer.classList.add('hidden');
@@ -741,9 +627,7 @@
     function shareSpectator() {
         const id = document.getElementById('display-id').innerText;
         const url = window.location.origin + window.location.pathname + '?spectate=' + id;
-        
-        const p1 = state.p[0];
-        const p2 = state.p[1];
+        const p1 = state.p[0]; const p2 = state.p[1];
         const currentScoreText = `🎯 ${p1.name} (${p1.l} legs) ${p1.s} - ${p2.s} (${p2.l} legs) ${p2.name}`;
         
         const shareData = {
@@ -751,13 +635,8 @@
             text: `Live Score: ${currentScoreText}. Watch the live video stream here: `,
             url: url
         };
-
-        if (navigator.share) {
-            navigator.share(shareData).catch(console.error);
-        } else { 
-            navigator.clipboard.writeText(`${shareData.text} ${url}`); 
-            alert("Spectator link & scores copied to clipboard!"); 
-        }
+        if (navigator.share) { navigator.share(shareData).catch(console.error); } 
+        else { navigator.clipboard.writeText(`${shareData.text} ${url}`); alert("Spectator link & scores copied to clipboard!"); }
     }
 </script>
 </body>
