@@ -248,7 +248,6 @@
     let currentZoom = 1; 
     let isLocalMatch = false; 
     
-    // NEW: added startingPlayer to mathematically track who throws first each leg
     let state = { turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
         { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }
@@ -359,20 +358,19 @@
         }
     });
 
-    // NEW: Function to display the Who Throws First prompt
     function showFirstThrowUI() {
         document.getElementById('first-throw-layer').classList.remove('hidden');
         document.getElementById('ft-step-1').classList.remove('hidden');
         document.getElementById('ft-step-2').classList.add('hidden');
     }
 
-    // NEW: Function to show player selection buttons
     function showFtStep2(mode) {
         document.getElementById('ft-step-1').classList.add('hidden');
         document.getElementById('ft-step-2').classList.remove('hidden');
         
+        // Use exact custom names for both local and online players
         document.getElementById('ft-p1-btn').innerText = state.p[0].name;
-        document.getElementById('ft-p2-btn').innerText = isLocalMatch ? state.p[1].name : "Opponent";
+        document.getElementById('ft-p2-btn').innerText = state.p[1].name;
 
         if (mode === 'bull') {
             document.getElementById('ft-title').innerText = "Who was closest to Bull?";
@@ -381,7 +379,6 @@
         }
     }
 
-    // NEW: Set the starting player and commence the match
     function setFirstPlayer(playerIndex) {
         state.startingPlayer = playerIndex;
         state.turn = playerIndex;
@@ -408,7 +405,7 @@
             document.getElementById('display-id').innerText = "LOCAL MATCH";
             document.body.classList.add('local-mode'); 
             
-            showFirstThrowUI(); // Prompt for first throw
+            showFirstThrowUI(); // Prompt immediately for local
             return; 
         }
 
@@ -456,11 +453,11 @@
                 } else {
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                    showFirstThrowUI(); // Host prompts for first throw
+                    // Host no longer gets prompted immediately!
                 }
                 
-                // Guests & Spectators render immediately. Host waits until they select first player.
                 if (joinId || spectateId) render();
+                else render(); // Render host board so they can copy link and wait
             });
 
             peer.on('call', call => {
@@ -547,6 +544,11 @@
             state.startingPlayer = data.state.startingPlayer || 0;
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
+            
+            // NEW: Fire the prompt ONLY when the guest connects AND match is at 0-0
+            if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) {
+                showFirstThrowUI();
+            }
         } else {
             if (data.p) {
                 data.p.forEach(player => {
@@ -673,29 +675,22 @@
             if (p.ld <= 9) { p.f9pts += val; }
             if (val === 180) p.n180++; else if (val >= 140) p.n140++;
 
-            // LEG END TRIGGER
             if (p.s === 0) { 
                 if (val > p.hc) p.hc = val; 
                 p.l++; 
                 const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
                 
-                // Check if match won
                 if (p.l >= legsRequiredToWin) { 
                     state.winner = state.turn; 
                 } else {
-                    // Reset scores for new leg
                     state.p.forEach(x => { x.s = 501; x.ld = 0; }); 
-                    
-                    // NEW: Swap the starting player mathematically
                     state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
                     state.turn = state.startingPlayer; 
                 }
             } else { 
-                // Leg not over, just switch turns
                 state.turn = (state.turn === 0) ? 1 : 0; 
             }
         } else { 
-            // BUST, switch turns
             state.turn = (state.turn === 0) ? 1 : 0; 
         }
         
@@ -721,9 +716,8 @@
         delete state.winner; history = null;
         
         document.getElementById('winner-layer').classList.add('hidden');
-        if (!isLocalMatch) broadcast(state); // Clears the screen for the guest
+        if (!isLocalMatch) broadcast(state);
 
-        // Ask for the first throw again
         if (isLocalMatch || myIndex === 0) {
             showFirstThrowUI();
         } else {
