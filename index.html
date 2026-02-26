@@ -35,7 +35,7 @@
         #first-throw-layer { background: rgba(2, 4, 8, 0.98); z-index: 10002; }
         #waiting-layer { background: rgba(2, 4, 8, 0.98); z-index: 10003; }
         
-        /* 🎯 NEW: SPLIT SCREEN FOR BULL THROW */
+        /* SPLIT SCREEN FOR BULL THROW */
         body.bull-throw:not(.local-mode) .v-box {
             visibility: visible !important;
             opacity: 1 !important;
@@ -45,7 +45,6 @@
         body.bull-throw:not(.local-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
         body.bull-throw:not(.local-mode) #box-peer { left: 50%; }
         
-        /* Moves the prompt down so it doesn't block the split cameras */
         body.bull-throw:not(.local-mode) #first-throw-layer {
             top: calc(40px + 45dvh);
             background: rgba(2, 4, 8, 0.95);
@@ -53,7 +52,8 @@
         
         .setup-card { 
             background-color: var(--card); 
-            background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg');
+            /* Lowered the dark overlay opacity from 0.85 to 0.65 to make the image more visible */
+            background-image: linear-gradient(rgba(13, 27, 42, 0.65), rgba(13, 27, 42, 0.65)), url('51693.jpg');
             background-position: center; background-repeat: no-repeat; background-size: contain;
             padding: 25px; border-radius: 15px; width: 100%; max-width: 360px; border: 1px solid #1b4965;
             display: flex; flex-direction: column; gap: 10px; text-align: center;
@@ -69,7 +69,22 @@
         
         .input-group { margin-bottom: 10px; text-align: left; }
         .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-        .setup-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
+        
+        /* NEW: Glassmorphism translucent input boxes */
+        .setup-input { 
+            width: 100%; 
+            background: rgba(0, 0, 0, 0.3); /* Translucent black */
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Soft semi-transparent border */
+            color: white; 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            outline: none; 
+            backdrop-filter: blur(8px); /* Frosted glass blur effect */
+            -webkit-backdrop-filter: blur(8px); /* Safari support */
+        }
+        /* Keeps the dropdown menu items solid so they are easy to read */
+        .setup-input option { background: var(--dark); color: white; }
         
         .btn-start { 
             background: var(--blue); color: black; width: 100%; padding: 16px; 
@@ -187,12 +202,12 @@
     <div class="setup-card" id="ft-step-1">
         <h2 style="color: white; margin-bottom: 20px; font-size: 22px;">Who Throws First?</h2>
         <button class="btn-start" onclick="showFtStep2('bull')" style="margin-bottom: 10px;">Closest to Bull</button>
-        <button class="btn-start" onclick="showFtStep2('manual')" style="background: #444; color: white;">Choose Player</button>
+        <button class="btn-start" onclick="showFtStep2('manual')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white;">Choose Player</button>
     </div>
     <div class="setup-card hidden" id="ft-step-2">
         <h2 id="ft-title" style="color: white; margin-bottom: 20px; font-size: 22px;">Who won the Bull?</h2>
         <button class="btn-start" id="ft-p1-btn" onclick="setFirstPlayer(0)" style="margin-bottom: 10px;">P1</button>
-        <button class="btn-start" id="ft-p2-btn" onclick="setFirstPlayer(1)" style="background: #444; color: white;">P2</button>
+        <button class="btn-start" id="ft-p2-btn" onclick="setFirstPlayer(1)" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white;">P2</button>
     </div>
 </div>
 
@@ -383,7 +398,6 @@
         }
     });
 
-    // 🎯 NEW: Functions to control Split Screen Bull Phase
     function toggleBullPhase(isActive) {
         if (isActive) {
             document.body.classList.add('bull-throw');
@@ -574,7 +588,6 @@
     }
 
     function handleData(data) {
-        // 🎯 NEW: Intercept Split-Screen Command from Host
         if (data.type === 'BULL_PHASE') {
             toggleBullPhase(data.active);
             return;
@@ -795,7 +808,7 @@
                 ptsInput.disabled = true; hitBtn.disabled = true; ptsInput.placeholder = "Waiting...";
             }
             
-            if (!isLocalMatch) {
+            if (!isLocalMatch && !document.body.classList.contains('bull-throw')) {
                 document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
                 document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
             }
