@@ -172,7 +172,8 @@
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 
 <script>
-    let stream, peer, conn, currentCall;
+    let stream, peer, currentCall;
+    let conns = []; // Array to support P2 + multiple spectators
     let myIndex = 0;
     let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
@@ -184,10 +185,16 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
-    const spectateId = urlParams.get('spectate'); // NEW: Spectator Check
+    const spectateId = urlParams.get('spectate');
+
+    // Helper function to send data to all connected users
+    function broadcast(data) {
+        conns.forEach(c => {
+            if (c && c.open) c.send(data);
+        });
+    }
 
     window.addEventListener('load', () => {
-        // Adapt UI for Spectators immediately
         if (spectateId) {
             document.body.classList.add('spectator-mode');
             document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
@@ -219,7 +226,6 @@
         startBtn.disabled = true;
 
         try {
-            // ONLY request camera if they are a player, not a spectator
             if (!spectateId) {
                 log.innerText = "Accessing Camera...";
                 let constraints = { video: true, audio: true };
@@ -243,10 +249,8 @@
                 document.getElementById('setup-layer').classList.add('hidden');
                 
                 if (spectateId) {
-                    // Enter Spectator Mode
                     connectToMatch(spectateId, true);
                 } else {
-                    // Enter Player Mode
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
 
@@ -260,18 +264,27 @@
             });
 
             peer.on('call', call => {
-                currentCall = call;
                 call.answer(stream);
                 call.on('stream', s => {
-                    if(s) document.getElementById('peer').srcObject = s;
-                    render();
+                    // Only overwrite the opponent's video if it's NOT a spectator calling
+                    if (!call.metadata || !call.metadata.spectator) {
+                        currentCall = call;
+                        if(s) document.getElementById('peer').srcObject = s;
+                        render();
+                    }
                 });
             });
 
             peer.on('connection', c => {
-                conn = c;
-                conn.on('open', () => conn.send({ type: 'SYNC', state }));
-                conn.on('data', d => handleData(d));
+                conns.push(c);
+                c.on('open', () => c.send({ type: 'SYNC', state }));
+                c.on('data', d => {
+                    handleData(d);
+                    // If Host receives a score update from Player 2, instantly forward it to spectators
+                    if (myIndex === 0 && d.type !== 'JOIN') {
+                        broadcast(state);
+                    }
+                });
             });
 
             peer.on('error', err => {
@@ -286,23 +299,35 @@
     }
 
     function connectToMatch(id, isSpectator = false) {
-        conn = peer.connect(id);
+        const c = peer.connect(id);
+        conns.push(c);
         
-        conn.on('open', () => {
-            // Only overwrite P2's name if we are actually playing
-            if (!isSpectator) {
-                conn.send({ type: 'JOIN', name: state.p[1].name });
-            }
+        c.on('open', () => {
+            if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name });
         });
         
-        conn.on('data', d => handleData(d));
+        c.on('data', d => handleData(d));
         
-        // Connect video (stream is undefined if spectating, which creates a receive-only connection)
-        currentCall = peer.call(id, stream);
-        currentCall.on('stream', s => {
-            document.getElementById('peer').srcObject = s;
-            render();
-        });
+        if (isSpectator) {
+            // Trick WebRTC: Create an empty 1x1 canvas to act as our "camera" stream
+            const canvas = document.createElement('canvas');
+            canvas.width = 1; canvas.height = 1;
+            const dummyStream = canvas.captureStream();
+            
+            // Call the host, flagging ourselves as a spectator
+            const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
+            
+            specCall.on('stream', s => {
+                document.getElementById('peer').srcObject = s;
+                render();
+            });
+        } else {
+            currentCall = peer.call(id, stream);
+            currentCall.on('stream', s => {
+                document.getElementById('peer').srcObject = s;
+                render();
+            });
+        }
     }
 
     function handleData(data) {
@@ -407,7 +432,7 @@
         }
         
         render();
-        if (conn) conn.send(state);
+        broadcast(state);
         input.value = '';
         input.focus(); 
     }
@@ -417,7 +442,7 @@
             state = JSON.parse(JSON.stringify(history)); 
             history = null; 
             render(); 
-            if(conn) conn.send(state); 
+            broadcast(state);
         }
     }
 
@@ -427,7 +452,7 @@
         delete state.winner; 
         history = null;
         render();
-        if (conn) conn.send(state);
+        broadcast(state);
     }
 
     function render() {
@@ -436,13 +461,9 @@
             document.getElementById(`s-${i}`).innerText = p.s;
             document.getElementById(`l-${i}`).innerText = p.l;
             document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-            
-            // Only highlight active turn if we aren't spectating, OR highlight both for spectators 
-            // Here we just keep the standard highlight logic
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
-        // Video box toggling logic is handled by CSS in spectator mode, so this logic only affects players
         if (!spectateId) {
             document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
             document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
