@@ -16,14 +16,17 @@
         }
 
         body.spectator-mode { grid-template-rows: 40px 45dvh 1fr 0px 25px; }
-        
         body.spectator-mode .controls,
         body.spectator-mode .header-controls,
         body.spectator-mode #legs-group { display: none !important; }
-        
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
         
+        /* NEW: Local Mode Layout - Collapses the video container and hides network/camera buttons */
+        body.local-mode { grid-template-rows: 40px 0px 1fr 80px 25px; }
+        body.local-mode .v-container { display: none !important; }
+        body.local-mode .header-controls { display: none !important; }
+
         #setup-layer, #winner-layer { 
             position: fixed; inset: 0 0 25px 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
@@ -230,7 +233,7 @@
     let myIndex = 0;
     let isMuted = false;
     let currentZoom = 1; 
-    let isLocalMatch = false; // Tracks if it's a pass-and-play match
+    let isLocalMatch = false; 
     
     let state = { turn: 0, bestOf: 5, p: [
         { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
@@ -351,9 +354,25 @@
         const modeSelect = document.getElementById('mode-input');
         isLocalMatch = (modeSelect && modeSelect.value === 'local');
 
+        // LOCAL MATCH BYPASS - Moved to the very top so the camera is never requested
+        if (isLocalMatch) {
+            state.p[0].name = document.getElementById('name-input').value || "Player 1";
+            state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
+            state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+            
+            document.getElementById('setup-layer').classList.add('hidden');
+            document.getElementById('display-id').innerText = "LOCAL";
+            
+            // Hides the video area and camera buttons, expanding the scorecards
+            document.body.classList.add('local-mode'); 
+            
+            render();
+            return; 
+        }
+
         try {
+            // ONLY execute camera setup if it's an online match
             if (!spectateId) {
-                // Keep the camera running even in local mode so players can point it at the board
                 log.innerText = "Accessing Camera...";
                 let constraints = { video: true, audio: true };
                 if (isMobile) {
@@ -367,24 +386,6 @@
                     return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 });
                 document.getElementById('me').srcObject = stream;
-            }
-
-            // LOCAL MATCH BYPASS
-            if (isLocalMatch) {
-                state.p[0].name = document.getElementById('name-input').value || "Player 1";
-                state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
-                state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                
-                document.getElementById('setup-layer').classList.add('hidden');
-                document.getElementById('display-id').innerText = "LOCAL";
-                
-                // Hide online-specific buttons
-                document.getElementById('share-btn').style.display = 'none';
-                document.getElementById('spectate-btn').style.display = 'none';
-                document.getElementById('cam-label-me').innerText = "CAMERA / BOARD";
-                
-                render();
-                return; // Exit function immediately, do not connect to PeerJS servers
             }
             
             log.innerText = "Connecting to server...";
@@ -604,8 +605,6 @@
     }
 
     function processHit() {
-        // If it's an online match, block the hit if it's not your turn. 
-        // If it's local, allow it immediately regardless of whose turn it is.
         if (!isLocalMatch && state.turn !== myIndex) return;
 
         const input = document.getElementById('pts-input');
@@ -676,18 +675,14 @@
             const ptsInput = document.getElementById('pts-input');
             const hitBtn = document.getElementById('hit-btn');
             
-            // Unlock inputs if local match OR if it's your turn online
             if (isLocalMatch || state.turn === myIndex) {
                 ptsInput.disabled = false; hitBtn.disabled = false; ptsInput.placeholder = "0";
             } else {
                 ptsInput.disabled = true; hitBtn.disabled = true; ptsInput.placeholder = "Waiting...";
             }
             
-            // Video box logic: Keep "box-me" permanently on if local, otherwise alternate based on turn
-            if (isLocalMatch) {
-                document.getElementById('box-me').className = "v-box visible";
-                document.getElementById('box-peer').className = "v-box";
-            } else {
+            // Only toggle classes if it's NOT a local match (in local match, it's hidden entirely via CSS)
+            if (!isLocalMatch) {
                 document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
                 document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
             }
