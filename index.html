@@ -52,7 +52,6 @@
         
         .setup-card { 
             background-color: var(--card); 
-            /* Lowered the dark overlay opacity from 0.85 to 0.65 to make the image more visible */
             background-image: linear-gradient(rgba(13, 27, 42, 0.65), rgba(13, 27, 42, 0.65)), url('51693.jpg');
             background-position: center; background-repeat: no-repeat; background-size: contain;
             padding: 25px; border-radius: 15px; width: 100%; max-width: 360px; border: 1px solid #1b4965;
@@ -64,26 +63,26 @@
         .stats-table th { color: white; padding-bottom: 10px; font-size: 18px; width: 30%; }
         .stats-table th:nth-child(2) { color: var(--blue); font-size: 12px; width: 40%; }
         .stats-table td { padding: 8px 0; text-align: center; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-weight: bold; }
-        .stats-table td:nth-child(2) { color: #888; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        /* CHANGED: Stats description text to black and bolder */
+        .stats-table td:nth-child(2) { color: black; font-size: 12px; font-weight: 900; text-transform: uppercase; }
         .stats-table tr:last-child td { border-bottom: none; }
         
         .input-group { margin-bottom: 10px; text-align: left; }
-        .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
+        /* CHANGED: Lobby description labels to black and bolder */
+        .input-group label { display: block; font-size: 11px; color: black; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
         
-        /* NEW: Glassmorphism translucent input boxes */
         .setup-input { 
             width: 100%; 
-            background: rgba(0, 0, 0, 0.3); /* Translucent black */
-            border: 1px solid rgba(255, 255, 255, 0.15); /* Soft semi-transparent border */
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             color: white; 
             padding: 12px; 
             border-radius: 8px; 
             font-size: 16px; 
             outline: none; 
-            backdrop-filter: blur(8px); /* Frosted glass blur effect */
-            -webkit-backdrop-filter: blur(8px); /* Safari support */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
-        /* Keeps the dropdown menu items solid so they are easy to read */
         .setup-input option { background: var(--dark); color: white; }
         
         .btn-start { 
