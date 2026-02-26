@@ -174,7 +174,7 @@
 <script>
     let stream, peer, currentCall;
     let conns = []; 
-    let spectatorCalls = []; // Added for dynamic spectator stream swapping
+    let spectatorCalls = []; // Array to route spectator video 
     let myIndex = 0;
     let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
@@ -200,6 +200,10 @@
             document.body.classList.add('spectator-mode');
             document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
             document.getElementById('name-input').placeholder = "Your Name (Optional)";
+        } else if (joinId) {
+            // Hide the 'Best Of' selection if joining via invite
+            document.getElementById('legs-group').style.display = 'none';
+            document.getElementById('start-btn').innerText = "JOIN MATCH";
         }
 
         document.getElementById('start-btn').onclick = initApp;
@@ -251,22 +255,23 @@
                 
                 if (spectateId) {
                     connectToMatch(spectateId, true);
+                } else if (joinId) {
+                    // Invited player just sets their name and connects
+                    myIndex = 1;
+                    state.p[1].name = document.getElementById('name-input').value || "Guest";
+                    connectToMatch(joinId, false);
                 } else {
+                    // Host sets up their name and the rules
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-
-                    if (joinId) {
-                        myIndex = 1;
-                        state.p[1].name = document.getElementById('name-input').value || "Guest";
-                        connectToMatch(joinId, false);
-                    }
                 }
+                
                 render();
             });
 
             peer.on('call', call => {
                 if (call.metadata && call.metadata.spectator) {
-                    // Check if the incoming call is from a spectator and answer with active stream
+                    // Check if incoming call is a spectator, answer with active stream
                     let streamToSend = (state.turn === 0 || !document.getElementById('peer').srcObject) 
                         ? stream 
                         : document.getElementById('peer').srcObject;
@@ -289,7 +294,7 @@
                 c.on('open', () => c.send({ type: 'SYNC', state }));
                 c.on('data', d => {
                     handleData(d);
-                    // If Host receives a score update from Player 2, instantly forward it to spectators
+                    // If Host receives a score update from Player 2, instantly forward it
                     if (myIndex === 0 && d.type !== 'JOIN') {
                         broadcast(state);
                     }
