@@ -16,7 +16,7 @@
             overflow: hidden; 
         }
         
-        /* Setup Layer */
+        /* Setup Layer (Home Page) */
         #setup-layer { 
             position: fixed; inset: 0; 
             background: var(--dark);
@@ -25,6 +25,7 @@
             overflow-y: auto; 
         }
         
+        /* Winner Layer */
         #winner-layer {
             position: fixed; inset: 0; 
             background: var(--dark);
@@ -35,7 +36,9 @@
 
         .setup-card { 
             background-image: linear-gradient(var(--card-tint), var(--card-tint)), url('51693.jpg');
-            background-position: center; background-repeat: no-repeat; background-size: cover; 
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover; 
             padding: 25px; border-radius: 15px; 
             width: 100%; max-width: 360px; 
             border: 1px solid #1b4965;
@@ -45,17 +48,29 @@
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
         
         .input-group { margin-bottom: 10px; text-align: left; }
-        .input-group label { display: block; font-size: 10px; color: #ccc; margin-bottom: 5px; text-transform: uppercase; }
+        .input-group label { display: block; font-size: 10px; color: #ccc; margin-bottom: 5px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
         .setup-input { width: 100%; background: rgba(0,0,0,0.7); border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
         
         .btn-start { 
             background: var(--blue); color: black; width: 100%; padding: 16px; 
             font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; 
-            margin-top: 10px;
+            margin-top: 10px; display: block !important; visibility: visible !important;
+        }
+        .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Splash Screen Footer */
+        .splash-footer {
+            position: absolute;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            pointer-events: none;
         }
 
-        .splash-footer { position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); left: 0; width: 100%; text-align: center; color: rgba(255, 255, 255, 0.5); font-size: 11px; }
-
+        /* Header */
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-size: 11px; background: rgba(0,0,0,0.6); }
         .header-controls { display: flex; gap: 8px; align-items: center; }
         .header-btn { background: rgba(34,34,34,0.8); border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;}
@@ -64,7 +79,7 @@
         .v-container { position: relative; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(27, 73, 101, 0.5); overflow: hidden; }
         .v-box { position: absolute; inset: 0; display: none; }
         .v-box.visible { display: block; }
-        video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        video { width: 100%; height: 100%; object-fit: cover; background: transparent; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; text-transform: uppercase; }
 
         /* Scoring Area */
@@ -75,7 +90,7 @@
         .player-card { 
             flex: 1; background: var(--card-tint); border-radius: 10px; display: flex; flex-direction: column; 
             justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; 
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
@@ -84,48 +99,81 @@
         .score-val { font-size: clamp(35px, 6.5dvh, 55px); font-weight: 900; line-height: 1; }
         .legs-count { font-size: 11px; color: #ccc; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
-        .checkout-hint { font-size: clamp(12px, 2.5dvh, 16px); color: #ffb703; font-weight: 800; text-align: center; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
-        .stats-grid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 12px 10px; margin: 15px 0 20px 0; text-align: center; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 10px; border: 1px solid rgba(27, 73, 101, 0.5); align-items: center; }
-        .stat-label-col { text-align: left; font-size: 11px; color: #bbb; text-transform: uppercase; }
+        /* Checkout Hint Styling */
+        .checkout-hint {
+            font-size: clamp(12px, 2.5dvh, 16px);
+            color: #ffb703; 
+            font-weight: 800;
+            text-align: center;
+            min-height: 16px; 
+            margin-top: 5px;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* Side-by-Side Winner Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: auto 1fr 1fr;
+            gap: 12px 10px;
+            margin: 15px 0 20px 0;
+            text-align: center;
+            background: rgba(0,0,0,0.6);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(27, 73, 101, 0.5);
+            align-items: center;
+        }
+        .stat-label-col { text-align: left; font-size: 11px; color: #bbb; text-transform: uppercase; font-weight: 600; }
         .stat-header { font-size: 12px; color: var(--blue); font-weight: bold; border-bottom: 1px solid rgba(27, 73, 101, 0.5); padding-bottom: 5px; }
         .stat-val { font-size: 18px; font-weight: bold; color: white; }
 
-        .controls-wrapper { background: rgba(0,0,0,0.8); border-top: 1px solid rgba(27, 73, 101, 0.5); display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom); }
-        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; }
+        /* Controls Area */
+        .controls-wrapper {
+            background: rgba(0,0,0,0.8);
+            border-top: 1px solid rgba(27, 73, 101, 0.5);
+            display: flex;
+            flex-direction: column;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .controls { 
+            display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; 
+        }
         .score-input-box { background: rgba(17,17,17,0.8); border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
         .btn-undo { background: rgba(34,34,34,0.9); border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
         .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
         #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
         
-        .main-footer { text-align: center; font-size: 12px; color: #ddd; padding: 2px 0 10px 0; }
-        .hidden { display: none !important; }
+        .main-footer {
+            text-align: center;
+            font-size: 12px;
+            color: #ddd; 
+            font-weight: 500;
+            padding: 2px 0 10px 0;
+        }
 
-        /* Spectator Badge */
-        .spec-badge { background: #ff4d4d; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px; animation: blink 1.5s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div id="setup-layer">
     <div class="setup-card">
-        <h2 id="setup-title">RAF DARTS SCORER</h2>
-        <div id="setup-fields">
-            <div class="input-group">
-                <label>Your Name</label>
-                <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
-            </div>
-            <div class="input-group" id="legs-setup-group">
-                <label>Best Of (Legs)</label>
-                <select id="legs-input" class="setup-input">
-                    <option value="1">1 Leg</option>
-                    <option value="3">Best of 3</option>
-                    <option value="5" selected>Best of 5</option>
-                    <option value="7">Best of 7</option>
-                    <option value="11">Best of 11</option>
-                </select>
-            </div>
+        <h2>RAF DARTS SCORER</h2>
+        <div class="input-group">
+            <label>Your Name</label>
+            <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
+        </div>
+        <div class="input-group" id="legs-setup-group">
+            <label>Best Of (Legs)</label>
+            <select id="legs-input" class="setup-input">
+                <option value="1">1 Leg</option>
+                <option value="3">Best of 3</option>
+                <option value="5" selected>Best of 5</option>
+                <option value="7">Best of 7</option>
+                <option value="11">Best of 11</option>
+            </select>
         </div>
         <button id="start-btn" class="btn-start">START MATCH</button>
         <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center;"></p>
@@ -137,17 +185,20 @@
     <div class="setup-card">
         <h2>MATCH OVER</h2>
         <h1 id="winner-name" style="color: white; margin: 5px 0; font-size: 28px;">P1 Wins!</h1>
-        <div class="stats-grid" id="winner-stats-grid"></div>
+        
+        <div class="stats-grid" id="winner-stats-grid">
+            </div>
+
         <button id="rematch-btn" class="btn-start">REMATCH</button>
     </div>
+    <div class="splash-footer">Created by Ben Townsend of The Leeming Arrows</div>
 </div>
 
 <header>
-    <div><span id="spec-indicator" class="hidden"><span class="spec-badge">LIVE</span></span>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
-    <div class="header-controls" id="header-controls">
+    <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
+    <div class="header-controls">
         <button class="header-btn" id="flip-btn">FLIP</button>
         <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
-        <button class="header-btn" id="spec-link-btn" style="color: #ffb703;">SPEC LINK</button>
     </div>
 </header>
 
@@ -183,7 +234,7 @@
     </div>
 </div>
 
-<div class="controls-wrapper" id="main-controls">
+<div class="controls-wrapper">
     <div class="controls">
         <div class="score-input-box"><input type="number" id="pts-input" placeholder="0" inputmode="numeric"></div>
         <button class="btn-undo" id="undo-btn">⟲</button>
@@ -195,11 +246,10 @@
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 
 <script>
-    let stream, peer, currentCall;
-    let connections = []; // Array to handle multiple spectators
+    let stream, peer, conn, currentCall;
     let myIndex = 0;
-    let isSpectator = false;
     
+    // State tracks: f9pts, f9d, s140, s180, legDarts, and hc (highest checkout)
     let state = { 
         turn: 0, 
         bestOf: 5, 
@@ -210,166 +260,328 @@
     };
     
     let history = null;
+
+    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    let currentFacingMode = "user";
+    let currentCamIndex = 0;
+
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
-    const specId = urlParams.get('spec');
+
+    const checkouts = {
+        170: "T20 T20 BULL", 167: "T20 T19 BULL", 164: "T20 T18 BULL", 161: "T20 T17 BULL",
+        160: "T20 T20 D20", 158: "T20 T20 D19", 157: "T20 T19 D20", 156: "T20 T20 D18",
+        155: "T20 T19 D19", 154: "T20 T18 D20", 153: "T20 T19 D18", 152: "T20 T20 D16",
+        151: "T20 T17 D20", 150: "T20 T18 D18", 149: "T20 T19 D16", 148: "T20 T16 D20",
+        147: "T20 T17 D18", 146: "T20 T18 D16", 145: "T20 T15 D20", 144: "T20 T20 D12",
+        143: "T20 T17 D16", 142: "T20 T14 D20", 141: "T20 T19 D12", 140: "T20 T20 D10",
+        139: "T20 T13 D20", 138: "T20 T18 D12", 137: "T20 T19 D10", 136: "T20 T20 D8",
+        135: "T20 T17 D12", 134: "T20 T14 D16", 133: "T20 T19 D8", 132: "T20 T16 D12",
+        131: "T20 T13 D16", 130: "T20 T20 D5", 129: "T19 T16 D12", 128: "T18 T14 D16",
+        127: "T20 T17 D8", 126: "T19 T19 D6", 125: "Bull T17 D12", 124: "T20 T16 D8",
+        123: "T19 T16 D9", 122: "T18 T18 D7", 121: "T20 T11 D14", 120: "T20 20 D20",
+        119: "T19 T10 D16", 118: "T20 18 D20", 117: "T20 17 D20", 116: "T20 16 D20",
+        115: "T20 15 D20", 114: "T20 14 D20", 113: "T20 13 D20", 112: "T20 12 D20",
+        111: "T20 11 D20", 110: "T20 10 D20", 109: "T19 12 D20", 108: "T20 16 D16",
+        107: "T19 10 D20", 106: "T20 10 D18", 105: "T19 16 D16", 104: "T18 10 D20",
+        103: "T19 10 D18", 102: "T20 10 D16", 101: "T17 10 D20", 100: "T20 D20",
+        99: "T19 10 D16", 98: "T20 D19", 97: "T19 D20", 96: "T20 D18", 95: "T19 D19",
+        94: "T18 D20", 93: "T19 D18", 92: "T20 D16", 91: "T17 D20", 90: "T18 D18",
+        89: "T19 D16", 88: "T16 D20", 87: "T17 D18", 86: "T18 D16", 85: "T15 D20",
+        84: "T20 D12", 83: "T17 D16", 82: "T14 D20", 81: "T19 D12", 80: "T20 D10",
+        79: "T13 D20", 78: "T18 D12", 77: "T19 D10", 76: "T20 D8", 75: "T17 D12",
+        74: "T14 D16", 73: "T19 D8", 72: "T16 D12", 71: "T13 D16", 70: "T18 D8",
+        69: "T15 D12", 68: "T20 D4", 67: "T17 D8", 66: "T10 D18", 65: "T11 D16",
+        64: "T16 D8", 63: "T13 D12", 62: "T10 D16", 61: "T15 D8", 60: "20 D20",
+        59: "19 D20", 58: "18 D20", 57: "17 D20", 56: "16 D20", 55: "15 D20",
+        54: "14 D20", 53: "13 D20", 52: "12 D20", 51: "11 D20", 50: "10 D20",
+        49: "9 D20", 48: "16 D16", 47: "15 D16", 46: "14 D16", 45: "13 D16",
+        44: "12 D16", 43: "11 D16", 42: "10 D16", 41: "9 D16", 40: "D20",
+        39: "7 D16", 38: "D19", 37: "5 D16", 36: "D18", 35: "3 D16",
+        34: "D17", 33: "1 D16", 32: "D16", 31: "15 D8", 30: "D15",
+        29: "13 D8", 28: "D14", 27: "11 D8", 26: "D13", 25: "9 D8",
+        24: "D12", 23: "7 D8", 22: "D11", 21: "5 D8", 20: "D10",
+        19: "3 D8", 18: "D9", 17: "1 D8", 16: "D8", 15: "7 D4",
+        14: "D7", 13: "5 D4", 12: "D6", 11: "3 D4", 10: "D5",
+        9: "1 D4", 8: "D4", 7: "3 D2", 6: "D3", 5: "1 D2",
+        4: "D2", 3: "1 D1", 2: "D1"
+    };
 
     window.addEventListener('load', () => {
-        if (specId) {
-            isSpectator = true;
-            document.getElementById('setup-fields').classList.add('hidden');
-            document.getElementById('setup-title').innerText = "SPECTATOR MODE";
-            document.getElementById('start-btn').innerText = "WATCH LIVE";
-            document.getElementById('main-controls').classList.add('hidden');
-            document.getElementById('header-controls').classList.add('hidden');
-            document.getElementById('spec-indicator').classList.remove('hidden');
-        } else if (joinId) {
+        if (joinId) {
             document.getElementById('legs-setup-group').style.display = 'none';
             document.getElementById('start-btn').innerText = 'JOIN MATCH';
         }
 
         document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
-        document.getElementById('share-btn').onclick = () => shareInvite('join');
-        document.getElementById('spec-link-btn').onclick = () => shareInvite('spec');
+        document.getElementById('share-btn').onclick = shareInvite;
         document.getElementById('undo-btn').onclick = undo;
         document.getElementById('hit-btn').onclick = processHit;
         document.getElementById('rematch-btn').onclick = triggerRematch;
+        
+        const ptsInput = document.getElementById('pts-input');
+        if (ptsInput) {
+            ptsInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    processHit();
+                }
+            });
+        }
     });
 
     async function initApp() {
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
         startBtn.disabled = true;
+        log.innerText = "Accessing Camera...";
 
         try {
-            // Spectators don't need camera/mic
-            if (!isSpectator) {
-                log.innerText = "Accessing Camera...";
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: true });
-                document.getElementById('me').srcObject = stream;
-            }
+            let videoConstraints = { width: { ideal: 1280 }, height: { ideal: 720 } };
             
-            log.innerText = "Connecting...";
+            if (isMobile) {
+                videoConstraints.facingMode = "environment";
+                currentFacingMode = "environment";
+            }
+
+            stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true }).catch(async () => {
+                isMobile = false;
+                return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            });
+            
+            document.getElementById('me').srcObject = stream;
+            
+            log.innerText = "Connecting to server...";
             peer = new Peer();
 
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('setup-layer').classList.add('hidden');
                 
-                if (specId) {
-                    connectToHost(specId, true);
-                } else if (joinId) {
+                if (joinId) {
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
-                    connectToHost(joinId, false);
+                    connectToMatch(joinId);
                 } else {
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                    render();
                 }
+                render();
             });
 
-            // Handle incoming calls (Opponent calling Host, or Host calling Spectator)
             peer.on('call', call => {
-                call.answer(stream); // Answer with stream (stream is null for spectators)
-                call.on('stream', remoteStream => {
-                    const videoId = isSpectator ? (call.metadata?.isHost ? 'me' : 'peer') : 'peer';
-                    document.getElementById(videoId).srcObject = remoteStream;
+                currentCall = call;
+                call.answer(stream);
+                call.on('stream', s => {
+                    document.getElementById('peer').srcObject = s;
                     render();
                 });
             });
 
-            // Handle incoming data connections
             peer.on('connection', c => {
-                connections.push(c);
-                c.on('open', () => c.send({ type: 'SYNC', state }));
-                c.on('data', d => handleData(d, c));
+                conn = c;
+                conn.on('open', () => conn.send({ type: 'SYNC', state }));
+                conn.on('data', d => handleData(d));
+            });
+
+            peer.on('error', err => {
+                log.innerText = "Connection Error: " + err.type;
+                startBtn.disabled = false;
             });
 
         } catch (e) {
-            log.innerText = "Error: " + e.message;
+            log.innerText = "Camera access denied. (" + e.message + ")";
             startBtn.disabled = false;
         }
     }
 
-    function connectToHost(id, asSpectator) {
-        const conn = peer.connect(id);
-        connections.push(conn);
-        conn.on('open', () => {
-            if (!asSpectator) conn.send({ type: 'JOIN', name: state.p[1].name });
-        });
+    function connectToMatch(id) {
+        conn = peer.connect(id);
+        conn.on('open', () => conn.send({ type: 'JOIN', name: state.p[1].name }));
         conn.on('data', d => handleData(d));
         
-        // Call the host to get their video (Spectators send null stream)
-        const call = peer.call(id, stream, { metadata: { isSpectator: asSpectator } });
-        call.on('stream', s => {
-            // In spec mode, the person we called is Player 1 (me)
-            document.getElementById(asSpectator ? 'me' : 'peer').srcObject = s;
+        currentCall = peer.call(id, stream);
+        currentCall.on('stream', s => {
+            document.getElementById('peer').srcObject = s;
             render();
         });
     }
 
-    function handleData(data, senderConn) {
+    function handleData(data) {
         if (data.type === 'SYNC') {
+            const myGuestName = state.p[1].name;
             state = data.state;
+            state.p[1].name = myGuestName;
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
-            broadcast(state);
+            if (myIndex === 0 && conn) conn.send(state);
         } else {
             state = data; 
         }
         render();
     }
 
-    function broadcast(data) {
-        connections.forEach(c => {
-            if (c.open) c.send(data);
-        });
+    async function swapCam() {
+        if (!stream) return;
+        
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoCameras = devices.filter(d => d.kind === 'videoinput');
+            
+            if (videoCameras.length <= 1) {
+                alert("Only one camera found on this device.");
+                return;
+            }
+
+            const oldVideoTrack = stream.getVideoTracks()[0];
+            oldVideoTrack.stop();
+            
+            let newStream;
+            
+            if (isMobile) {
+                currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+                try {
+                    newStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: { exact: currentFacingMode },
+                            width: { ideal: 1280 }, height: { ideal: 720 } 
+                        } 
+                    });
+                } catch (e) {
+                    isMobile = false; 
+                }
+            }
+            
+            if (!isMobile) {
+                currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
+                newStream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        deviceId: { exact: videoCameras[currentCamIndex].deviceId },
+                        width: { ideal: 1280 }, height: { ideal: 720 }
+                    }
+                });
+            }
+
+            const newVideoTrack = newStream.getVideoTracks()[0];
+            stream.removeTrack(oldVideoTrack);
+            stream.addTrack(newVideoTrack);
+            document.getElementById('me').srcObject = stream;
+
+            if (currentCall && currentCall.peerConnection) {
+                const senders = currentCall.peerConnection.getSenders();
+                const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+                if (videoSender) {
+                    await videoSender.replaceTrack(newVideoTrack);
+                }
+            }
+            
+        } catch (e) {
+            alert("Recovering camera connection...");
+            const recoveredStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: { ideal: 1280 }, height: { ideal: 720 } } 
+            });
+            const recoveredTrack = recoveredStream.getVideoTracks()[0];
+            stream.addTrack(recoveredTrack);
+            document.getElementById('me').srcObject = stream;
+            
+            if (currentCall && currentCall.peerConnection) {
+                const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                if (videoSender) await videoSender.replaceTrack(recoveredTrack);
+            }
+        }
     }
 
-    // Existing dart logic updated to broadcast to all
     function processHit() {
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
+        
         if (isNaN(val) || val < 0 || val > 180) return;
         
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
         
+        // Handle valid setup or checkout shot
         if (p.s - val >= 0 && p.s - val !== 1) {
-            if (val === 180) p.s180++; else if (val >= 140) p.s140++;
-            if (p.legDarts < 9) { p.f9pts += val; p.f9d += 3; }
-            p.s -= val; p.pts += val; p.d += 3; p.legDarts += 3;
+            
+            // Tally up 140s and 180s
+            if (val === 180) p.s180++;
+            else if (val >= 140) p.s140++;
 
-            if (p.s === 0) {
+            // Track First 9 Dart Average
+            if (p.legDarts < 9) {
+                p.f9pts += val;
+                p.f9d += 3;
+            }
+
+            p.s -= val;
+            p.pts += val;
+            p.d += 3;
+            p.legDarts += 3;
+
+            // Leg Winner Logic
+            if (p.s === 0) { 
+                // Track highest checkout! If this finish was higher than their current record, save it.
                 if (val > p.hc) p.hc = val;
-                let winningDarts = parseInt(prompt(`Game Shot! Darts thrown?`, "3")) || 3;
+
+                // Quick prompt to fix averages for less than 3 dart checkouts
+                let winningDarts = parseInt(prompt(`Game Shot! How many darts did you throw this turn? (1-3)`, "3"));
+                if (isNaN(winningDarts) || winningDarts < 1 || winningDarts > 3) winningDarts = 3;
+                
+                // Adjust dart counts if they checked out in 1 or 2 darts
                 let diff = 3 - winningDarts;
-                p.d -= diff; p.legDarts -= diff;
+                p.d -= diff;
+                p.legDarts -= diff;
+                
+                // Safely adjust First 9 Darts if the winning turn was inside the first 9
+                if (p.legDarts + diff <= 9) p.f9d -= diff;
+
                 p.l++; 
-                if (p.l >= Math.ceil(state.bestOf / 2)) state.winner = state.turn; 
-                else { state.p.forEach(x => { x.s = 501; x.legDarts = 0; }); state.turn = (state.turn === 0) ? 1 : 0; }
-            } else { state.turn = (state.turn === 0) ? 1 : 0; }
+                const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
+                
+                if (p.l >= legsRequiredToWin) {
+                    state.winner = state.turn; 
+                } else {
+                    state.p.forEach(x => { x.s = 501; x.legDarts = 0; }); 
+                    state.turn = (state.turn === 0) ? 1 : 0; 
+                }
+            } else { 
+                state.turn = (state.turn === 0) ? 1 : 0; 
+            }
         } else { 
-            p.d += 3; p.legDarts += 3; state.turn = (state.turn === 0) ? 1 : 0; 
+            // Bust Logic
+            if (p.legDarts < 9) p.f9d += 3; // Ensure busted darts inside first 9 are counted
+            p.d += 3;
+            p.legDarts += 3;
+            state.turn = (state.turn === 0) ? 1 : 0; 
         }
         
         render();
-        broadcast(state);
-        input.value = ''; input.focus();
+        if (conn) conn.send(state);
+        input.value = '';
+        input.focus(); 
     }
 
     function undo() {
-        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); broadcast(state); }
+        if (history) { 
+            state = JSON.parse(JSON.stringify(history)); 
+            history = null; 
+            render(); 
+            if(conn) conn.send(state); 
+        }
     }
 
     function triggerRematch() {
+        // Reset EVERYTHING for the rematch, including stats
         state.p.forEach(x => { 
-            x.s = 501; x.l = 0; x.pts = 0; x.d = 0; x.f9pts = 0; x.f9d = 0; x.s140 = 0; x.s180 = 0; x.legDarts = 0; x.hc = 0;
+            x.s = 501; x.l = 0; x.pts = 0; x.d = 0; 
+            x.f9pts = 0; x.f9d = 0; x.s140 = 0; x.s180 = 0; x.legDarts = 0; x.hc = 0;
         });
-        state.turn = 0; delete state.winner; history = null;
-        render(); broadcast(state);
+        state.turn = 0;
+        delete state.winner; 
+        history = null;
+        render();
+        if (conn) conn.send(state);
     }
 
     function render() {
@@ -379,64 +591,79 @@
             document.getElementById(`l-${i}`).innerText = p.l;
             document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
-            document.getElementById(`co-${i}`).innerText = getCheckout(p.s);
+            
+            document.getElementById(`co-${i}`).innerText = checkouts[p.s] ? checkouts[p.s] : "";
         });
         
-        // Video switching logic
-        const displayIndex = isSpectator ? 0 : myIndex;
-        document.getElementById('box-me').className = (state.turn === displayIndex) ? "v-box visible" : "v-box";
-        document.getElementById('box-peer').className = (state.turn !== displayIndex) ? "v-box visible" : "v-box";
+        const myName = state.p[myIndex].name;
+        const peerName = state.p[myIndex === 0 ? 1 : 0].name;
+
+        const boxMe = document.getElementById('box-me');
+        const boxPeer = document.getElementById('box-peer');
         
-        if (!isSpectator) {
-            document.getElementById('cam-label-me').innerText = state.p[myIndex].name;
-            document.getElementById('cam-label-peer').innerText = state.p[myIndex === 0 ? 1 : 0].name;
-        } else {
-            document.getElementById('cam-label-me').innerText = state.p[0].name;
-            document.getElementById('cam-label-peer').innerText = state.p[1].name;
+        if (boxMe) {
+            boxMe.className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+            document.getElementById('cam-label-me').innerText = myName;
+        }
+        
+        if (boxPeer) {
+            boxPeer.className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+            document.getElementById('cam-label-peer').innerText = peerName;
         }
 
         const winnerLayer = document.getElementById('winner-layer');
         if (state.winner !== undefined) {
-            document.getElementById('winner-name').innerText = state.p[state.winner].name + " WINS!";
-            renderWinnerStats();
+            const w = state.p[state.winner];
+            document.getElementById('winner-name').innerText = w.name + " WINS!";
+            
+            // Calculate final stats for BOTH players
+            const p1 = state.p[0];
+            const p2 = state.p[1];
+
+            let p1_matchAvg = p1.d > 0 ? ((p1.pts / p1.d) * 3).toFixed(2) : "0.00";
+            let p1_f9Avg = p1.f9d > 0 ? ((p1.f9pts / p1.f9d) * 3).toFixed(2) : "0.00";
+
+            let p2_matchAvg = p2.d > 0 ? ((p2.pts / p2.d) * 3).toFixed(2) : "0.00";
+            let p2_f9Avg = p2.f9d > 0 ? ((p2.f9pts / p2.f9d) * 3).toFixed(2) : "0.00";
+            
+            // Populate the sleek comparison grid
+            document.getElementById('winner-stats-grid').innerHTML = `
+                <div></div>
+                <div class="stat-header">${p1.name}</div>
+                <div class="stat-header">${p2.name}</div>
+
+                <div class="stat-label-col">Match Avg</div>
+                <div class="stat-val" style="color: ${state.winner === 0 ? 'var(--blue)' : 'white'}">${p1_matchAvg}</div>
+                <div class="stat-val" style="color: ${state.winner === 1 ? 'var(--blue)' : 'white'}">${p2_matchAvg}</div>
+
+                <div class="stat-label-col">First 9 Avg</div>
+                <div class="stat-val">${p1_f9Avg}</div>
+                <div class="stat-val">${p2_f9Avg}</div>
+
+                <div class="stat-label-col">High Checkout</div>
+                <div class="stat-val">${p1.hc > 0 ? p1.hc : '-'}</div>
+                <div class="stat-val">${p2.hc > 0 ? p2.hc : '-'}</div>
+
+                <div class="stat-label-col">140s</div>
+                <div class="stat-val">${p1.s140}</div>
+                <div class="stat-val">${p2.s140}</div>
+
+                <div class="stat-label-col">180s</div>
+                <div class="stat-val">${p1.s180}</div>
+                <div class="stat-val">${p2.s180}</div>
+            `;
+            
             winnerLayer.classList.remove('hidden');
         } else {
             winnerLayer.classList.add('hidden');
         }
     }
 
-    function renderWinnerStats() {
-        const p1 = state.p[0], p2 = state.p[1];
-        document.getElementById('winner-stats-grid').innerHTML = `
-            <div></div><div class="stat-header">${p1.name}</div><div class="stat-header">${p2.name}</div>
-            <div class="stat-label-col">Match Avg</div>
-            <div class="stat-val">${(p1.d>0?(p1.pts/p1.d)*3:0).toFixed(2)}</div>
-            <div class="stat-val">${(p2.d>0?(p2.pts/p2.d)*3:0).toFixed(2)}</div>
-            <div class="stat-label-col">180s</div><div class="stat-val">${p1.s180}</div><div class="stat-val">${p2.s180}</div>
-        `;
-    }
-
-    function shareInvite(type) {
+    function shareInvite() {
         const id = document.getElementById('display-id').innerText;
-        const param = type === 'join' ? 'join' : 'spec';
-        const url = window.location.origin + window.location.pathname + '?' + param + '=' + id;
+        const url = window.location.origin + window.location.pathname + '?join=' + id;
         if (navigator.share) navigator.share({ title: 'Darts Match', url });
         else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
-    }
-
-    async function swapCam() {
-        if (!stream) return;
-        const tracks = stream.getVideoTracks();
-        tracks.forEach(t => t.stop());
-        const facing = tracks[0].getSettings().facingMode === 'user' ? 'environment' : 'user';
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
-        document.getElementById('me').srcObject = stream;
-        // Logic to replace track in existing calls would go here
-    }
-
-    function getCheckout(s) {
-        const checkouts = { 170: "T20 T20 BULL", 167: "T20 T19 BULL", 40: "D20", 32: "D16" /* ... rest of your table */ };
-        return checkouts[s] || "";
     }
 </script>
 </body>
