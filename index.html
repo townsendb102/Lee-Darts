@@ -60,17 +60,14 @@
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
         
         .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
-        /* Player names in results table white to match numbers */
-        .stats-table th { color: white; padding-bottom: 10px; font-size: 18px; width: 30%; font-weight: bold; }
-        .stats-table th:nth-child(2) { color: var(--blue); font-size: 12px; width: 40%; }
+        .stats-table th { padding-bottom: 10px; font-size: 18px; width: 30%; font-weight: bold; }
+        .stats-table th:nth-child(2) { font-size: 12px; width: 40%; }
         .stats-table td { padding: 8px 0; text-align: center; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-weight: bold; color: white; }
-        /* Middle stats descriptions white to match numbers */
-        .stats-table td:nth-child(2) { color: white; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .stats-table td:nth-child(2) { font-size: 12px; font-weight: bold; text-transform: uppercase; }
         .stats-table tr:last-child td { border-bottom: none; }
         
         .input-group { margin-bottom: 10px; text-align: left; }
-        /* Input labels white to match numbers */
-        .input-group label { display: block; font-size: 11px; color: white; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .input-group label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
         
         .setup-input { 
             width: 100%; 
@@ -158,7 +155,7 @@
         <h2>RAF DARTS SCORER</h2>
         
         <div class="input-group" id="mode-group">
-            <label>Match Type</label>
+            <label style="color: white;">Match Type</label>
             <select id="mode-input" class="setup-input">
                 <option value="online">Online (Remote Opponent)</option>
                 <option value="local">Local (Same Device)</option>
@@ -166,17 +163,17 @@
         </div>
 
         <div class="input-group">
-            <label id="p1-label">Your Name</label>
+            <label id="p1-label" style="color: white;">Your Name</label>
             <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
         </div>
         
         <div class="input-group" id="p2-name-group" style="display: none;">
-            <label>Player 2 Name</label>
+            <label style="color: white;">Player 2 Name</label>
             <input type="text" id="p2-name-input" class="setup-input" placeholder="Player 2 Name..." maxlength="12">
         </div>
 
         <div class="input-group" id="legs-group">
-            <label>Best Of (Legs)</label>
+            <label style="color: white;">Best Of (Legs)</label>
             <select id="legs-input" class="setup-input">
                 <option value="1">1 Leg</option>
                 <option value="3">Best of 3</option>
@@ -215,12 +212,12 @@
     <div class="setup-card">
         <h1 id="winner-name" style="color: white; font-weight: bold; margin: 10px 0 20px 0; font-size: 24px;">P1 Wins!</h1>
         <table class="stats-table">
-            <tr><th id="ws-n0">P1</th><th>STATS</th><th id="ws-n1">P2</th></tr>
-            <tr><td id="ws-avg0">0.0</td><td>Match Avg</td><td id="ws-avg1">0.0</td></tr>
-            <tr><td id="ws-f90">0.0</td><td>First 9 Avg</td><td id="ws-f91">0.0</td></tr>
-            <tr><td id="ws-hc0">-</td><td>High Out</td><td id="ws-hc1">-</td></tr>
-            <tr><td id="ws-1400">0</td><td>140+</td><td id="ws-1401">0</td></tr>
-            <tr><td id="ws-1800">0</td><td>180s</td><td id="ws-1801">0</td></tr>
+            <tr><th id="ws-n0" style="color: white;">P1</th><th style="color: white;">STATS</th><th id="ws-n1" style="color: white;">P2</th></tr>
+            <tr><td id="ws-avg0" style="color: white;">0.0</td><td style="color: white;">Match Avg</td><td id="ws-avg1" style="color: white;">0.0</td></tr>
+            <tr><td id="ws-f90" style="color: white;">0.0</td><td style="color: white;">First 9 Avg</td><td id="ws-f91" style="color: white;">0.0</td></tr>
+            <tr><td id="ws-hc0" style="color: white;">-</td><td style="color: white;">High Out</td><td id="ws-hc1" style="color: white;">-</td></tr>
+            <tr><td id="ws-1400" style="color: white;">0</td><td style="color: white;">140+</td><td id="ws-1401" style="color: white;">0</td></tr>
+            <tr><td id="ws-1800" style="color: white;">0</td><td style="color: white;">180s</td><td id="ws-1801" style="color: white;">0</td></tr>
         </table>
         <button id="rematch-btn" class="btn-start">REMATCH</button>
     </div>
