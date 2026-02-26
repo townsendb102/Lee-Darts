@@ -114,7 +114,6 @@
         
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
-        /* PAUSE AND RECONNECT OVERLAYS */
         .paused-overlay {
             position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue);
             display: flex; align-items: center; justify-content: center; text-align: center;
@@ -354,23 +353,24 @@
         3:"1 D1",2:"D1"
     };
 
-    // HELPER: Capping video bitrate to prevent lag
+    // APPLE FIX: Removed iOS-breaking code from the limiter and made it fail silently 
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
         try {
             const senders = peerConnection.getSenders();
             const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
-            if (!videoSender) return;
+            if (!videoSender || !videoSender.getParameters) return;
             const parameters = videoSender.getParameters();
-            if (!parameters.encodings) { parameters.encodings = [{}]; }
+            if (!parameters.encodings || parameters.encodings.length === 0) { 
+                parameters.encodings = [{}]; 
+            }
             parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
             await videoSender.setParameters(parameters);
         } catch (e) {
-            console.error("Failed to set video bitrate limit:", e);
+            console.warn("Bitrate limit not supported on this device/browser. Ignoring.");
         }
     }
 
-    // HELPER: Pause camera when app is backgrounded
     document.addEventListener('visibilitychange', () => {
         if (!stream) return;
         const videoTrack = stream.getVideoTracks()[0];
@@ -502,24 +502,21 @@
         try {
             if (!spectateId) {
                 log.innerText = "Accessing Camera...";
-                // Request High-Def Video Constraints
-                let constraints = { 
-                    audio: true,
-                    video: { width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 }, frameRate: { ideal: 30 } } 
-                };
+                
+                // APPLE FIX: Removed the strict 'min: 1280' rule. Replaced with soft 'ideal' rules so iOS Safari doesn't crash.
+                let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
+                
                 if (isMobile) {
-                    constraints.video.facingMode = "environment";
+                    constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
                     currentFacingMode = "environment";
                 }
 
                 stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async (err) => {
-                    console.warn("Primary camera access failed, falling back.", err);
+                    console.warn("Primary camera request failed, falling back to absolute minimum defaults.", err);
                     isMobile = false;
-                    return await navigator.mediaDevices.getUserMedia({ 
-                        video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
-                        audio: true 
-                    });
+                    return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 });
+                
                 document.getElementById('me').srcObject = stream;
             }
             
@@ -567,14 +564,13 @@
                     setTimeout(() => { render(); }, 1000);
                 } else {
                     call.answer(stream);
-                    limitVideoBitrate(call.peerConnection, 1500); // 1.5 Mbps Limiter
+                    limitVideoBitrate(call.peerConnection, 1500);
                     
                     call.on('stream', s => {
                         currentCall = call;
                         if(s) { attachPeerVideo(s); }
                         render();
 
-                        // Listen for P2P connection issues
                         currentCall.peerConnection.addEventListener('iceconnectionstatechange', () => {
                             const state = currentCall.peerConnection.iceConnectionState;
                             const overlay = document.getElementById('reconnect-overlay');
@@ -640,13 +636,12 @@
             specCall.on('stream', s => { attachPeerVideo(s); render(); });
         } else {
             currentCall = peer.call(id, stream);
-            limitVideoBitrate(currentCall.peerConnection, 1500); // 1.5 Mbps Limiter
+            limitVideoBitrate(currentCall.peerConnection, 1500); 
             
             currentCall.on('stream', s => { 
                 attachPeerVideo(s); 
                 render(); 
 
-                // Listen for P2P connection issues
                 currentCall.peerConnection.addEventListener('iceconnectionstatechange', () => {
                     const state = currentCall.peerConnection.iceConnectionState;
                     const overlay = document.getElementById('reconnect-overlay');
@@ -746,18 +741,19 @@
             oldVideoTrack.stop();
             let newStream;
             
+            // APPLE FIX: Removed strict 'min' constraints from camera swap logic as well
             if (isMobile) {
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
                 try {
                     newStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: currentFacingMode, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } } 
+                        video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } } 
                     });
                 } catch (e) { isMobile = false; }
             }
             if (!isMobile) {
                 currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
                 newStream = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId }, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } }
+                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
             }
 
@@ -779,7 +775,7 @@
             }
         } catch (e) {
             alert("Recovering camera connection...");
-            const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });
+            const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: true });
             const recoveredTrack = recoveredStream.getVideoTracks()[0];
             stream.addTrack(recoveredTrack);
             document.getElementById('me').srcObject = stream;
