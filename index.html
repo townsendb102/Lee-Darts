@@ -114,6 +114,15 @@
         
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
+        /* PAUSE AND RECONNECT OVERLAYS */
+        .paused-overlay {
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue);
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5;
+            visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px;
+        }
+        .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
+
         .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
         
         .player-card { 
@@ -241,6 +250,8 @@
     </div>
     <div id="box-peer" class="v-box">
         <div class="cam-label">OPPONENT / STREAM</div>
+        <div id="peer-paused-msg" class="paused-overlay">OPPONENT PAUSED</div>
+        <div id="reconnect-overlay" class="paused-overlay" style="background: rgba(13, 27, 42, 0.9); color: #ffeb3b;">CONNECTION LOST... RECONNECTING</div>
         <video id="peer" autoplay playsinline webkit-playsinline></video>
     </div>
 </div>
@@ -343,6 +354,35 @@
         3:"1 D1",2:"D1"
     };
 
+    // HELPER: Capping video bitrate to prevent lag
+    async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
+        if (!peerConnection) return;
+        try {
+            const senders = peerConnection.getSenders();
+            const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
+            if (!videoSender) return;
+            const parameters = videoSender.getParameters();
+            if (!parameters.encodings) { parameters.encodings = [{}]; }
+            parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
+            await videoSender.setParameters(parameters);
+        } catch (e) {
+            console.error("Failed to set video bitrate limit:", e);
+        }
+    }
+
+    // HELPER: Pause camera when app is backgrounded
+    document.addEventListener('visibilitychange', () => {
+        if (!stream) return;
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+            const isHidden = document.visibilityState === 'hidden';
+            videoTrack.enabled = !isHidden; 
+            if (!isLocalMatch) {
+                broadcast({ type: 'CAM_PAUSED', paused: isHidden });
+            }
+        }
+    });
+
     function broadcast(data) { 
         if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); 
     }
@@ -396,11 +436,8 @@
     });
 
     function toggleBullPhase(isActive) {
-        if (isActive) {
-            document.body.classList.add('bull-throw');
-        } else {
-            document.body.classList.remove('bull-throw');
-        }
+        if (isActive) { document.body.classList.add('bull-throw'); } 
+        else { document.body.classList.remove('bull-throw'); }
     }
 
     function showFirstThrowUI() {
@@ -465,16 +502,23 @@
         try {
             if (!spectateId) {
                 log.innerText = "Accessing Camera...";
-                let constraints = { video: true, audio: true };
+                // Request High-Def Video Constraints
+                let constraints = { 
+                    audio: true,
+                    video: { width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 }, frameRate: { ideal: 30 } } 
+                };
                 if (isMobile) {
-                    constraints.video = { facingMode: "environment" };
+                    constraints.video.facingMode = "environment";
                     currentFacingMode = "environment";
                 }
 
                 stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async (err) => {
                     console.warn("Primary camera access failed, falling back.", err);
                     isMobile = false;
-                    return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    return await navigator.mediaDevices.getUserMedia({ 
+                        video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
+                        audio: true 
+                    });
                 });
                 document.getElementById('me').srcObject = stream;
             }
@@ -498,19 +542,22 @@
                 
                 if (spectateId) { 
                     connectToMatch(spectateId, true); 
-                } 
-                else if (joinId) {
+                } else if (joinId) {
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     connectToMatch(joinId, false);
                 } else {
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                    
                     document.getElementById('waiting-layer').classList.remove('hidden');
                 }
                 
                 if (joinId || spectateId) render();
+            });
+
+            peer.on('disconnected', () => {
+                console.warn("Lost connection to server. Attempting to reconnect...");
+                peer.reconnect(); 
             });
 
             peer.on('call', call => {
@@ -520,10 +567,23 @@
                     setTimeout(() => { render(); }, 1000);
                 } else {
                     call.answer(stream);
+                    limitVideoBitrate(call.peerConnection, 1500); // 1.5 Mbps Limiter
+                    
                     call.on('stream', s => {
                         currentCall = call;
                         if(s) { attachPeerVideo(s); }
                         render();
+
+                        // Listen for P2P connection issues
+                        currentCall.peerConnection.addEventListener('iceconnectionstatechange', () => {
+                            const state = currentCall.peerConnection.iceConnectionState;
+                            const overlay = document.getElementById('reconnect-overlay');
+                            if (state === 'disconnected' || state === 'failed') {
+                                if (overlay) overlay.classList.add('visible');
+                            } else if (state === 'connected' || state === 'completed') {
+                                if (overlay) overlay.classList.remove('visible');
+                            }
+                        });
                     });
                 }
             });
@@ -533,7 +593,7 @@
                 c.on('open', () => c.send({ type: 'SYNC', state }));
                 c.on('data', d => {
                     handleData(d);
-                    if (myIndex === 0 && d.type !== 'JOIN' && d.type !== 'ZOOM' && d.type !== 'BULL_PHASE') { broadcast(state); }
+                    if (myIndex === 0 && d.type !== 'JOIN' && d.type !== 'ZOOM' && d.type !== 'BULL_PHASE' && d.type !== 'CAM_PAUSED') { broadcast(state); }
                 });
             });
 
@@ -580,11 +640,36 @@
             specCall.on('stream', s => { attachPeerVideo(s); render(); });
         } else {
             currentCall = peer.call(id, stream);
-            currentCall.on('stream', s => { attachPeerVideo(s); render(); });
+            limitVideoBitrate(currentCall.peerConnection, 1500); // 1.5 Mbps Limiter
+            
+            currentCall.on('stream', s => { 
+                attachPeerVideo(s); 
+                render(); 
+
+                // Listen for P2P connection issues
+                currentCall.peerConnection.addEventListener('iceconnectionstatechange', () => {
+                    const state = currentCall.peerConnection.iceConnectionState;
+                    const overlay = document.getElementById('reconnect-overlay');
+                    if (state === 'disconnected' || state === 'failed') {
+                        if (overlay) overlay.classList.add('visible');
+                    } else if (state === 'connected' || state === 'completed') {
+                        if (overlay) overlay.classList.remove('visible');
+                    }
+                });
+            });
         }
     }
 
     function handleData(data) {
+        if (data.type === 'CAM_PAUSED') {
+            const overlay = document.getElementById('peer-paused-msg');
+            if (overlay) {
+                if (data.paused) overlay.classList.add('visible');
+                else overlay.classList.remove('visible');
+            }
+            return;
+        }
+
         if (data.type === 'BULL_PHASE') {
             toggleBullPhase(data.active);
             return;
@@ -634,9 +719,7 @@
 
         document.getElementById('me').style.transform = `scale(${currentZoom})`;
 
-        if (!isLocalMatch) {
-            broadcast({ type: 'ZOOM', level: currentZoom });
-        }
+        if (!isLocalMatch) { broadcast({ type: 'ZOOM', level: currentZoom }); }
     }
 
     function toggleMute() {
@@ -667,14 +750,14 @@
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
                 try {
                     newStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: currentFacingMode } 
+                        video: { facingMode: currentFacingMode, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } } 
                     });
                 } catch (e) { isMobile = false; }
             }
             if (!isMobile) {
                 currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
                 newStream = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId } }
+                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId }, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } }
                 });
             }
 
@@ -696,7 +779,7 @@
             }
         } catch (e) {
             alert("Recovering camera connection...");
-            const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });
             const recoveredTrack = recoveredStream.getVideoTracks()[0];
             stream.addTrack(recoveredTrack);
             document.getElementById('me').srcObject = stream;
