@@ -313,9 +313,19 @@
     let currentFacingMode = "user";
     let currentCamIndex = 0;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join');
-    const spectateId = urlParams.get('spectate');
+    // ===== Apple-Safe Hash Param Reader =====
+function getHashParam(name) {
+    const match = window.location.hash.match(new RegExp(name + '=([^&]+)'));
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+const joinId = getHashParam('join');
+const spectateId = getHashParam('spectate');
+
+// Clean hash so refresh doesn’t rejoin
+if (window.location.hash) {
+    history.replaceState(null, null, window.location.pathname);
+}
 
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
@@ -957,7 +967,7 @@
 
     function shareInvite() {
         const id = document.getElementById('display-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?join=' + id;
+        const url = window.location.origin + window.location.pathname + '#join=' + id;
         if (navigator.share) navigator.share({ title: 'Darts Match', url });
         else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
     }
