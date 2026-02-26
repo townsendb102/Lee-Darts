@@ -173,7 +173,8 @@
 
 <script>
     let stream, peer, currentCall;
-    let conns = []; // Array to support P2 + multiple spectators
+    let conns = []; 
+    let spectatorCalls = []; // Added for dynamic spectator stream swapping
     let myIndex = 0;
     let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
@@ -264,15 +265,23 @@
             });
 
             peer.on('call', call => {
-                call.answer(stream);
-                call.on('stream', s => {
-                    // Only overwrite the opponent's video if it's NOT a spectator calling
-                    if (!call.metadata || !call.metadata.spectator) {
+                if (call.metadata && call.metadata.spectator) {
+                    // Check if the incoming call is from a spectator and answer with active stream
+                    let streamToSend = (state.turn === 0 || !document.getElementById('peer').srcObject) 
+                        ? stream 
+                        : document.getElementById('peer').srcObject;
+                    
+                    call.answer(streamToSend);
+                    spectatorCalls.push(call); // Save the spectator connection
+                } else {
+                    // Normal P1 <-> P2 connection
+                    call.answer(stream);
+                    call.on('stream', s => {
                         currentCall = call;
                         if(s) document.getElementById('peer').srcObject = s;
                         render();
-                    }
-                });
+                    });
+                }
             });
 
             peer.on('connection', c => {
@@ -467,6 +476,34 @@
         if (!spectateId) {
             document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
             document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+        } else {
+            // Update the camera label for the spectator so they know who they are watching
+            document.querySelector('#box-peer .cam-label').innerText = state.p[state.turn].name.toUpperCase();
+        }
+
+        // Host acts as a router, swapping tracks for spectators dynamically
+        if (myIndex === 0 && spectatorCalls.length > 0) {
+            const activeStream = (state.turn === 0) ? stream : document.getElementById('peer').srcObject;
+            
+            if (activeStream) {
+                const videoTrack = activeStream.getVideoTracks()[0];
+                const audioTrack = activeStream.getAudioTracks()[0];
+                
+                spectatorCalls.forEach(call => {
+                    if (call.peerConnection) {
+                        const senders = call.peerConnection.getSenders();
+                        const vSender = senders.find(s => s.track && s.track.kind === 'video');
+                        const aSender = senders.find(s => s.track && s.track.kind === 'audio');
+                        
+                        if (vSender && videoTrack && vSender.track !== videoTrack) {
+                            vSender.replaceTrack(videoTrack).catch(e => console.warn("Video swap failed", e));
+                        }
+                        if (aSender && audioTrack && aSender.track !== audioTrack) {
+                            aSender.replaceTrack(audioTrack).catch(e => console.warn("Audio swap failed", e));
+                        }
+                    }
+                });
+            }
         }
 
         const winnerLayer = document.getElementById('winner-layer');
