@@ -3,122 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RAF Darts Scorer</title>
+    <title>DartStream</title>
     <style>
-        :root { --blue: #00d4ff; --dark: #020408; --card-tint: rgba(13, 27, 42, 0.85); --active: rgba(22, 42, 63, 0.95); }
+        :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
         body { 
-            background: var(--dark);
-            color: white; font-family: system-ui, sans-serif; 
+            background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            grid-template-rows: 40px 42dvh 1fr auto; 
+            grid-template-rows: 40px 45dvh 1fr 80px;
             overflow: hidden; 
         }
         
-        #setup-layer { 
-            position: fixed; inset: 0; 
-            background: var(--dark);
-            z-index: 10000; 
+        /* Setup & Winner Layers */
+        #setup-layer, #winner-layer { 
+            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+            overflow-y: auto;
         }
-        
         #winner-layer {
-            position: fixed; inset: 0; 
-            background: var(--dark);
-            z-index: 10001; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+            background: rgba(2, 4, 8, 0.95); z-index: 10001; 
         }
-
         .setup-card { 
-            background-image: linear-gradient(var(--card-tint), var(--card-tint));
-            background-color: #0d1b2a;
-            padding: 25px; border-radius: 15px; 
-            width: 100%; max-width: 360px; 
-            border: 1px solid #1b4965;
+            background: var(--card); padding: 25px; border-radius: 15px; 
+            width: 100%; max-width: 320px; border: 1px solid #1b4965;
             display: flex; flex-direction: column; gap: 10px; text-align: center;
         }
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
         
         .input-group { margin-bottom: 10px; text-align: left; }
-        .input-group label { display: block; font-size: 10px; color: #ccc; margin-bottom: 5px; text-transform: uppercase; }
-        .setup-input { width: 100%; background: rgba(0,0,0,0.7); border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
+        .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
+        .setup-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
         
         .btn-start { 
             background: var(--blue); color: black; width: 100%; padding: 16px; 
             font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; 
+            margin-top: 10px; display: block !important; visibility: visible !important;
         }
+        .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-size: 11px; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; }
+        /* Header */
+        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
+        .header-controls { display: flex; gap: 8px; align-items: center; }
+        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;}
 
-        .v-container { position: relative; background: #000; overflow: hidden; }
+        /* Video System */
+        .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
         .v-box { position: absolute; inset: 0; display: none; }
         .v-box.visible { display: block; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); z-index: 10; border: 1px solid var(--blue); }
+        video { width: 100%; height: 100%; object-fit: cover; background: #111; }
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
-        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; }
-        .player-card { flex: 1; background: var(--card-tint); border-radius: 10px; padding: 10px 15px; border: 2px solid transparent; }
+        /* Scoring Area */
+        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
+        .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
-        .score-row { display: flex; justify-content: space-between; align-items: center; }
-        .score-val { font-size: 45px; font-weight: 900; }
-        .legs-count { font-size: 11px; text-align: right; }
-        .legs-count span { color: var(--blue); font-size: 16px; display: block; }
+        .p-name { font-size: 14px; color: #fff; font-weight: bold; }
+        .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .score-val { font-size: clamp(35px, 7dvh, 55px); font-weight: 900; line-height: 1; }
+        .legs-count { font-size: 11px; color: #888; text-align: right; }
+        .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
 
-        .checkout-hint { color: #ffb703; font-weight: 800; text-align: center; min-height: 1.2em; margin-top: 5px; }
-
-        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; background: #000; }
-        #pts-input { width: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
-        .btn-undo, .btn-hit { border-radius: 8px; cursor: pointer; border: none; font-weight: bold; }
-        .btn-undo { background: #333; color: white; }
-        .btn-hit { background: var(--blue); color: black; }
-
-        .hidden { display: none !important; }
-
-        .stats-grid {
-            display: grid; grid-template-columns: auto 1fr 1fr; gap: 10px;
-            margin: 15px 0; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px;
+        .controls { 
+            display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; 
+            background: #000; border-top: 1px solid #1b4965; padding-bottom: env(safe-area-inset-bottom);
         }
-        .stat-label-col { text-align: left; font-size: 10px; color: #aaa; }
+        .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
+        .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
+        
+        #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div id="setup-layer">
     <div class="setup-card">
-        <h2>RAF DARTS SCORER</h2>
+        <h2>DARTSTREAM</h2>
         <div class="input-group">
             <label>Your Name</label>
             <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
         </div>
-        <div class="input-group" id="legs-setup-group">
+        <div class="input-group">
             <label>Best Of (Legs)</label>
             <select id="legs-input" class="setup-input">
                 <option value="1">1 Leg</option>
                 <option value="3">Best of 3</option>
                 <option value="5" selected>Best of 5</option>
                 <option value="7">Best of 7</option>
+                <option value="11">Best of 11</option>
             </select>
         </div>
         <button id="start-btn" class="btn-start">START MATCH</button>
-        <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px;"></p>
+        <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center;"></p>
     </div>
 </div>
 
 <div id="winner-layer" class="hidden">
     <div class="setup-card">
         <h2>MATCH OVER</h2>
-        <h1 id="winner-name">P1 Wins!</h1>
-        <div class="stats-grid" id="winner-stats-grid"></div>
+        <h1 id="winner-name" style="color: white; margin: 15px 0; font-size: 28px;">P1 Wins!</h1>
+        <p id="winner-stats" style="font-size: 14px; color: #888; margin-bottom: 20px;"></p>
         <button id="rematch-btn" class="btn-start">REMATCH</button>
     </div>
 </div>
 
 <header>
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
-    <div>
+    <div class="header-controls">
         <button class="header-btn" id="flip-btn">FLIP</button>
         <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
     </div>
@@ -126,11 +120,11 @@
 
 <div class="v-container">
     <div id="box-me" class="v-box visible">
-        <div class="cam-label" id="cam-label-me">YOU</div>
+        <div class="cam-label">YOU</div>
         <video id="me" autoplay playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
-        <div class="cam-label" id="cam-label-peer">OPPONENT</div>
+        <div class="cam-label">OPPONENT</div>
         <video id="peer" autoplay playsinline></video>
     </div>
 </div>
@@ -143,7 +137,6 @@
             <div class="score-val" id="s-0">501</div>
             <div class="legs-count"><span id="l-0">0</span>LEGS</div>
         </div>
-        <div class="checkout-hint" id="co-0"></div>
     </div>
     <div id="card-1" class="player-card">
         <div class="p-name" id="n-1">P2</div>
@@ -152,7 +145,6 @@
             <div class="score-val" id="s-1">501</div>
             <div class="legs-count"><span id="l-1">0</span>LEGS</div>
         </div>
-        <div class="checkout-hint" id="co-1"></div>
     </div>
 </div>
 
@@ -163,138 +155,264 @@
 </div>
 
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+
 <script>
     let stream, peer, conn, currentCall;
-    let myIndex = 0; 
-    let state = { 
-        turn: 0, 
-        bestOf: 5, 
-        p: [
-            { name: "P1", s: 501, l: 0, pts: 0, d: 0, s140: 0, s180: 0, legDarts: 0, hc: 0 }, 
-            { name: "P2", s: 501, l: 0, pts: 0, d: 0, s140: 0, s180: 0, legDarts: 0, hc: 0 }
-        ] 
-    };
-    
+    let myIndex = 0;
+    let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
+
+    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    let currentFacingMode = "user";
+    let currentCamIndex = 0;
+
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
-    const checkouts = { 170: "T20 T20 BULL", 167: "T20 T19 BULL", 100: "T20 D20", 80: "T20 D10", 40: "D20", 32: "D16" }; // Shortened for brevity
 
-    window.onload = () => {
-        if (joinId) {
-            document.getElementById('legs-setup-group').style.display = 'none';
-            document.getElementById('start-btn').innerText = 'JOIN MATCH';
-        }
+    window.addEventListener('load', () => {
         document.getElementById('start-btn').onclick = initApp;
-        document.getElementById('hit-btn').onclick = processHit;
-        document.getElementById('undo-btn').onclick = undo;
+        document.getElementById('flip-btn').onclick = swapCam;
         document.getElementById('share-btn').onclick = shareInvite;
-    };
+        document.getElementById('undo-btn').onclick = undo;
+        document.getElementById('hit-btn').onclick = processHit;
+        document.getElementById('rematch-btn').onclick = triggerRematch;
+        
+        const ptsInput = document.getElementById('pts-input');
+        if (ptsInput) {
+            ptsInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    processHit();
+                }
+            });
+        }
+    });
 
     async function initApp() {
+        const log = document.getElementById('error-log');
+        const startBtn = document.getElementById('start-btn');
+        startBtn.disabled = true;
+        log.innerText = "Accessing Camera...";
+
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            let constraints = { video: true, audio: true };
+            if (isMobile) {
+                constraints.video = { facingMode: "environment" };
+                currentFacingMode = "environment";
+            }
+
+            stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async () => {
+                isMobile = false;
+                return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            });
+            
             document.getElementById('me').srcObject = stream;
             
-            peer = new Peer();
-            peer.on('open', id => {
-                document.getElementById('display-id').innerText = id;
-                document.getElementById('setup-layer').classList.add('hidden');
-                
-                if (joinId) {
-                    myIndex = 1;
-                    state.p[1].name = document.getElementById('name-input').value || "Guest";
-                    connectToHost(joinId);
-                } else {
-                    myIndex = 0;
-                    state.p[0].name = document.getElementById('name-input').value || "Host";
-                    state.bestOf = parseInt(document.getElementById('legs-input').value);
-                    render();
+            log.innerText = "Connecting to server...";
+            
+            // Added Google STUN servers for reliable internet-wide connectivity
+            peer = new Peer({
+                config: {
+                    'iceServers': [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
                 }
             });
 
-            // Handle incoming data connection (Host side)
-            peer.on('connection', c => {
-                conn = c;
-                setupDataListeners();
+            peer.on('open', (id) => {
+                document.getElementById('display-id').innerText = id;
+                document.getElementById('setup-layer').classList.add('hidden');
+                
+                state.p[0].name = document.getElementById('name-input').value || "Host";
+                state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+
+                if (joinId) {
+                    myIndex = 1;
+                    state.p[1].name = document.getElementById('name-input').value || "Guest";
+                    connectToMatch(joinId);
+                }
+                render();
             });
 
-            // Handle incoming video call
             peer.on('call', call => {
                 currentCall = call;
                 call.answer(stream);
-                call.on('stream', s => { document.getElementById('peer').srcObject = s; });
+                call.on('stream', s => {
+                    const peerVideo = document.getElementById('peer');
+                    peerVideo.srcObject = s;
+                    peerVideo.play().catch(e => console.warn("Browser delayed autoplay", e));
+                    render();
+                });
             });
 
-        } catch (e) { alert("Cam Error: " + e.message); }
+            peer.on('connection', c => {
+                conn = c;
+                // Prevent race condition by checking if connection is already open
+                const sendSync = () => conn.send({ type: 'SYNC', state });
+                if (conn.open) sendSync(); else conn.on('open', sendSync);
+                
+                conn.on('data', d => handleData(d));
+            });
+
+            peer.on('error', err => {
+                log.innerText = "Connection Error: " + err.type;
+                startBtn.disabled = false;
+            });
+
+        } catch (e) {
+            log.innerText = "Camera access denied. (" + e.message + ")";
+            startBtn.disabled = false;
+        }
     }
 
-    function connectToHost(id) {
+    function connectToMatch(id) {
         conn = peer.connect(id);
-        setupDataListeners();
+        
+        const sendJoin = () => conn.send({ type: 'JOIN', name: state.p[1].name });
+        if (conn.open) sendJoin(); else conn.on('open', sendJoin);
+        
+        conn.on('data', d => handleData(d));
         
         currentCall = peer.call(id, stream);
-        currentCall.on('stream', s => { document.getElementById('peer').srcObject = s; });
-    }
-
-    function setupDataListeners() {
-        conn.on('open', () => {
-            // Guest tells Host their name immediately upon connecting
-            if (myIndex === 1) {
-                conn.send({ type: 'JOIN', name: state.p[1].name });
-            }
-        });
-
-        conn.on('data', data => {
-            if (data.type === 'JOIN') {
-                state.p[1].name = data.name;
-                broadcast(); // Host sends full current state back
-            } else if (data.type === 'SYNC') {
-                const mySavedName = state.p[myIndex].name;
-                state = data.state;
-                state.p[myIndex].name = mySavedName; // Protect own name from being overwritten
-                render();
-            }
+        currentCall.on('stream', s => {
+            const peerVideo = document.getElementById('peer');
+            peerVideo.srcObject = s;
+            peerVideo.play().catch(e => console.warn("Browser delayed autoplay", e));
+            render();
         });
     }
 
-    function broadcast() {
-        if (conn && conn.open) {
-            conn.send({ type: 'SYNC', state: state });
+    function handleData(data) {
+        if (data.type === 'SYNC') {
+            state.bestOf = data.state.bestOf;
+            state.p[0].name = data.state.p[0].name;
+        } else if (data.type === 'JOIN') {
+            state.p[1].name = data.name;
+            // Complete the handshake by sending the updated state back to the guest
+            if (myIndex === 0 && conn && conn.open) {
+                conn.send(state);
+            }
+        } else {
+            state = data; 
         }
         render();
+    }
+
+    async function swapCam() {
+        if (!stream) return;
+        
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoCameras = devices.filter(d => d.kind === 'videoinput');
+            
+            if (videoCameras.length <= 1) {
+                alert("Only one camera found on this device.");
+                return;
+            }
+
+            const oldVideoTrack = stream.getVideoTracks()[0];
+            oldVideoTrack.stop();
+            
+            let newStream;
+            
+            if (isMobile) {
+                currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+                try {
+                    newStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: { exact: currentFacingMode } } 
+                    });
+                } catch (e) {
+                    isMobile = false; 
+                }
+            }
+            
+            if (!isMobile) {
+                currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
+                newStream = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId } }
+                });
+            }
+
+            const newVideoTrack = newStream.getVideoTracks()[0];
+
+            stream.removeTrack(oldVideoTrack);
+            stream.addTrack(newVideoTrack);
+            document.getElementById('me').srcObject = stream;
+
+            if (currentCall && currentCall.peerConnection) {
+                const senders = currentCall.peerConnection.getSenders();
+                const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+                if (videoSender) {
+                    await videoSender.replaceTrack(newVideoTrack);
+                }
+            }
+            
+        } catch (e) {
+            alert("Recovering camera connection...");
+            const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const recoveredTrack = recoveredStream.getVideoTracks()[0];
+            stream.addTrack(recoveredTrack);
+            document.getElementById('me').srcObject = stream;
+            
+            if (currentCall && currentCall.peerConnection) {
+                const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                if (videoSender) await videoSender.replaceTrack(recoveredTrack);
+            }
+        }
     }
 
     function processHit() {
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
+        
         if (isNaN(val) || val < 0 || val > 180) return;
-
+        
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
-
+        
         if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val;
-            p.pts += val;
-            p.d += 3;
-            
-            if (p.s === 0) {
-                p.l++;
-                if (p.l >= Math.ceil(state.bestOf / 2)) {
-                    state.winner = state.turn;
+            p.s -= val; p.pts += val; p.d += 3;
+            if (p.s === 0) { 
+                p.l++; 
+                const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
+                
+                if (p.l >= legsRequiredToWin) {
+                    state.winner = state.turn; 
                 } else {
-                    state.p[0].s = 501; state.p[1].s = 501;
-                    state.turn = state.turn === 0 ? 1 : 0;
+                    state.p.forEach(x => x.s = 501); 
+                    state.turn = (state.turn === 0) ? 1 : 0; 
                 }
-            } else {
-                state.turn = state.turn === 0 ? 1 : 0;
+            } else { 
+                state.turn = (state.turn === 0) ? 1 : 0; 
             }
+        } else { 
+            state.turn = (state.turn === 0) ? 1 : 0; 
         }
+        
+        render();
+        if (conn) conn.send(state);
         input.value = '';
-        broadcast();
+        input.focus(); 
     }
 
-    function undo() { if (history) { state = history; history = null; broadcast(); } }
+    function undo() {
+        if (history) { 
+            state = JSON.parse(JSON.stringify(history)); 
+            history = null; 
+            render(); 
+            if(conn) conn.send(state); 
+        }
+    }
+
+    function triggerRematch() {
+        state.p.forEach(x => { x.s = 501; x.l = 0; x.pts = 0; x.d = 0; });
+        state.turn = 0;
+        delete state.winner; 
+        history = null;
+        render();
+        if (conn) conn.send(state);
+    }
 
     function render() {
         state.p.forEach((p, i) => {
@@ -304,23 +422,25 @@
             document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
-
-        // Toggle Video visibility
+        
         document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
         document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
-        
+
+        const winnerLayer = document.getElementById('winner-layer');
         if (state.winner !== undefined) {
-            document.getElementById('winner-name').innerText = state.p[state.winner].name + " WINS!";
-            document.getElementById('winner-layer').classList.remove('hidden');
+            const w = state.p[state.winner];
+            document.getElementById('winner-name').innerText = w.name + " WINS!";
+            document.getElementById('winner-stats').innerText = "Match Average: " + (w.d > 0 ? ((w.pts / w.d) * 3).toFixed(1) : "0.0");
+            winnerLayer.classList.remove('hidden');
         } else {
-            document.getElementById('winner-layer').classList.add('hidden');
+            winnerLayer.classList.add('hidden');
         }
     }
 
     function shareInvite() {
         const id = document.getElementById('display-id').innerText;
         const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) navigator.share({ title: 'Join Darts', url });
+        if (navigator.share) navigator.share({ title: 'Darts Match', url });
         else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
     }
 </script>
