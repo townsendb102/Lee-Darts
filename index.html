@@ -12,31 +12,25 @@
             background: var(--dark);
             color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            grid-template-rows: 40px 42dvh 1fr auto; 
+            grid-template-rows: 50px 42dvh 1fr auto; 
             overflow: hidden; 
         }
         
-        #setup-layer { 
+        /* Layers */
+        #setup-layer, #winner-layer { 
             position: fixed; inset: 0; 
             background: var(--dark);
             z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
         }
         
-        #winner-layer {
-            position: fixed; inset: 0; 
-            background: var(--dark);
-            z-index: 10001; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-        }
-
         .setup-card { 
-            background-image: linear-gradient(var(--card-tint), var(--card-tint));
-            background-color: #0d1b2a;
+            background: #0d1b2a;
             padding: 25px; border-radius: 15px; 
             width: 100%; max-width: 360px; 
             border: 1px solid #1b4965;
             display: flex; flex-direction: column; gap: 10px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
         
@@ -54,41 +48,54 @@
             color: rgba(255, 255, 255, 0.5); font-size: 11px;
         }
 
-        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-size: 11px; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; }
+        /* Header */
+        header { 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 15px; border-bottom: 1px solid rgba(27, 73, 101, 0.5); 
+            font-size: 13px; background: rgba(0,0,0,0.8);
+        }
+        .header-btn { 
+            background: #222; border: 1px solid #444; color: white; 
+            padding: 6px 12px; border-radius: 6px; font-size: 11px; 
+            font-weight: bold; margin-left: 5px; cursor: pointer;
+        }
 
-        .v-container { position: relative; background: #000; overflow: hidden; }
+        /* Video */
+        .v-container { position: relative; background: #000; overflow: hidden; border-bottom: 1px solid #1b4965; }
         .v-box { position: absolute; inset: 0; display: none; }
         .v-box.visible { display: block; }
         video { width: 100%; height: 100%; object-fit: cover; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); z-index: 10; border: 1px solid var(--blue); }
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); z-index: 10; border: 1px solid var(--blue); font-weight: bold; }
 
-        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; }
-        .player-card { flex: 1; background: var(--card-tint); border-radius: 10px; padding: 10px 15px; border: 2px solid transparent; }
+        /* Scoring */
+        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 8px; }
+        .player-card { flex: 1; background: var(--card-tint); border-radius: 10px; padding: 12px 15px; border: 2px solid transparent; transition: 0.2s; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
-        
+        .p-name { font-size: 14px; font-weight: bold; color: #eee; }
         .score-row { display: flex; justify-content: space-between; align-items: center; }
-        .score-val { font-size: 45px; font-weight: 900; }
+        .score-val { font-size: 50px; font-weight: 900; }
         .legs-count { font-size: 11px; text-align: right; }
-        .legs-count span { color: var(--blue); font-size: 16px; display: block; }
+        .legs-count span { color: var(--blue); font-size: 18px; font-weight: bold; display: block; }
 
-        .checkout-hint { color: #ffb703; font-weight: 800; text-align: center; min-height: 1.2em; margin-top: 5px; }
+        .checkout-hint { color: #ffb703; font-weight: 800; text-align: center; min-height: 1.2em; margin-top: 5px; font-size: 14px; }
 
-        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; background: #000; }
-        .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; }
+        /* Controls */
+        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 10px; gap: 10px; background: #000; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+        .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; }
         #pts-input { width: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
-        .btn-undo, .btn-hit { border-radius: 8px; cursor: pointer; border: none; font-weight: bold; }
+        .btn-undo, .btn-hit { border-radius: 8px; cursor: pointer; border: none; font-weight: bold; font-size: 18px; }
         .btn-undo { background: #333; color: white; }
         .btn-hit { background: var(--blue); color: black; }
 
-        .hidden { display: none !important; }
-
         .stats-grid {
             display: grid; grid-template-columns: auto 1fr 1fr; gap: 10px;
-            margin: 15px 0; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px;
+            margin: 15px 0; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; align-items: center;
         }
-        .stat-label-col { text-align: left; font-size: 10px; color: #aaa; }
-        .stat-val { font-weight: bold; }
+        .stat-label-col { text-align: left; font-size: 10px; color: #aaa; text-transform: uppercase; }
+        .stat-header { color: var(--blue); font-weight: bold; font-size: 12px; }
+        .stat-val { font-weight: bold; font-size: 16px; }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -98,7 +105,7 @@
         <h2>RAF DARTS SCORER</h2>
         <div class="input-group">
             <label>Your Name</label>
-            <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
+            <input type="text" id="name-input" class="setup-input" placeholder="Enter Name..." maxlength="12">
         </div>
         <div class="input-group" id="legs-setup-group">
             <label>Best Of (Legs)</label>
@@ -173,17 +180,16 @@
 <script>
     let stream, peer, conn, currentCall;
     let myIndex = 0; 
-    
     let state = { 
         turn: 0, 
         bestOf: 5, 
         p: [
-            { name: "P1", s: 501, l: 0, pts: 0, d: 0, f9pts: 0, f9d: 0, s140: 0, s180: 0, legDarts: 0, hc: 0 }, 
-            { name: "P2", s: 501, l: 0, pts: 0, d: 0, f9pts: 0, f9d: 0, s140: 0, s180: 0, legDarts: 0, hc: 0 }
+            { name: "P1", s: 501, l: 0, pts: 0, d: 0, s140: 0, s180: 0, hc: 0 }, 
+            { name: "P2", s: 501, l: 0, pts: 0, d: 0, s140: 0, s180: 0, hc: 0 }
         ] 
     };
-    
     let history = null;
+
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
 
@@ -199,12 +205,25 @@
         document.getElementById('undo-btn').onclick = undo;
         document.getElementById('rematch-btn').onclick = triggerRematch;
         document.getElementById('share-btn').onclick = shareInvite;
+        document.getElementById('flip-btn').onclick = swapCam;
+
+        document.getElementById('pts-input').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') processHit();
+        });
     };
 
     async function initApp() {
         const log = document.getElementById('error-log');
+        const startBtn = document.getElementById('start-btn');
+        startBtn.disabled = true;
+        log.innerText = "Starting Camera...";
+
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment" }, 
+                audio: true 
+            }).catch(() => navigator.mediaDevices.getUserMedia({ video: true, audio: true }));
+            
             document.getElementById('me').srcObject = stream;
             
             peer = new Peer();
@@ -224,23 +243,25 @@
                 }
             });
 
-            // Handle incoming data connection (Host side)
             peer.on('connection', c => {
                 conn = c;
                 setupConnListeners();
             });
 
-            // Handle incoming video call
             peer.on('call', call => {
                 currentCall = call;
                 call.answer(stream);
                 call.on('stream', s => {
                     document.getElementById('peer').srcObject = s;
-                    document.getElementById('box-peer').style.display = 'block';
                 });
             });
 
-        } catch (e) { log.innerText = "Camera Error: " + e.message; }
+            peer.on('error', e => alert("Peer Error: " + e.type));
+
+        } catch (e) { 
+            log.innerText = "Camera Access Required.";
+            startBtn.disabled = false;
+        }
     }
 
     function connectToHost(id) {
@@ -250,36 +271,29 @@
         currentCall = peer.call(id, stream);
         currentCall.on('stream', s => {
             document.getElementById('peer').srcObject = s;
-            document.getElementById('box-peer').style.display = 'block';
         });
     }
 
     function setupConnListeners() {
         conn.on('open', () => {
-            // Guest tells Host their name
-            if (myIndex === 1) {
-                conn.send({ type: 'JOIN', name: state.p[1].name });
-            }
+            if (myIndex === 1) conn.send({ type: 'JOIN', name: state.p[1].name });
         });
 
         conn.on('data', data => {
             if (data.type === 'JOIN') {
                 state.p[1].name = data.name;
-                broadcastState(); // Host sends full state back
+                broadcastState();
             } else if (data.type === 'SYNC') {
-                // Important: Don't overwrite our own name when syncing
-                const savedName = state.p[myIndex].name;
+                const mySavedName = state.p[myIndex].name;
                 state = data.state;
-                state.p[myIndex].name = savedName;
+                state.p[myIndex].name = mySavedName;
                 render();
             }
         });
     }
 
     function broadcastState() {
-        if (conn && conn.open) {
-            conn.send({ type: 'SYNC', state: state });
-        }
+        if (conn && conn.open) conn.send({ type: 'SYNC', state: state });
         render();
     }
 
@@ -300,6 +314,7 @@
             p.d += 3;
             
             if (p.s === 0) {
+                if (val > p.hc) p.hc = val;
                 p.l++;
                 if (p.l >= Math.ceil(state.bestOf / 2)) {
                     state.winner = state.turn;
@@ -321,7 +336,7 @@
     }
 
     function triggerRematch() {
-        state.p.forEach(p => { p.s = 501; p.l = 0; p.pts = 0; p.d = 0; p.s140 = 0; p.s180 = 0; });
+        state.p.forEach(p => { p.s = 501; p.l = 0; p.pts = 0; p.d = 0; p.s140 = 0; p.s180 = 0; p.hc = 0; });
         state.turn = 0;
         delete state.winner;
         broadcastState();
@@ -337,24 +352,53 @@
             document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
         });
 
-        // Toggle Video visibility based on turn
+        // Toggle Video display based on turn
         document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
         document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
-        
-        const winLayer = document.getElementById('winner-layer');
+        document.getElementById('cam-label-me').innerText = state.p[myIndex].name;
+        document.getElementById('cam-label-peer').innerText = state.p[myIndex === 0 ? 1 : 0].name;
+
         if (state.winner !== undefined) {
-            document.getElementById('winner-name').innerText = state.p[state.winner].name + " WINS!";
-            winLayer.classList.remove('hidden');
+            const w = state.p[state.winner];
+            document.getElementById('winner-name').innerText = w.name + " WINS!";
+            document.getElementById('winner-stats-grid').innerHTML = `
+                <div></div><div class="stat-header">${state.p[0].name}</div><div class="stat-header">${state.p[1].name}</div>
+                <div class="stat-label-col">Avg</div><div class="stat-val">${(state.p[0].d > 0 ? (state.p[0].pts/state.p[0].d*3) : 0).toFixed(1)}</div><div class="stat-val">${(state.p[1].d > 0 ? (state.p[1].pts/state.p[1].d*3) : 0).toFixed(1)}</div>
+                <div class="stat-label-col">180s</div><div class="stat-val">${state.p[0].s180}</div><div class="stat-val">${state.p[1].s180}</div>
+                <div class="stat-label-col">High CO</div><div class="stat-val">${state.p[0].hc}</div><div class="stat-val">${state.p[1].hc}</div>
+            `;
+            document.getElementById('winner-layer').classList.remove('hidden');
         } else {
-            winLayer.classList.add('hidden');
+            document.getElementById('winner-layer').classList.add('hidden');
         }
+    }
+
+    async function swapCam() {
+        const streamTracks = stream.getVideoTracks();
+        if (streamTracks.length > 0) streamTracks[0].stop();
+        
+        const currentMode = streamTracks[0].getSettings().facingMode;
+        const newMode = currentMode === "user" ? "environment" : "user";
+        
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: newMode }, audio: true 
+        });
+        document.getElementById('me').srcObject = stream;
+        if (currentCall) currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video').replaceTrack(stream.getVideoTracks()[0]);
     }
 
     function shareInvite() {
         const id = document.getElementById('display-id').innerText;
+        if (id === "...") return alert("Wait for ID to load...");
+        
         const url = window.location.origin + window.location.pathname + '?join=' + id;
-        navigator.clipboard.writeText(url);
-        alert("Invite Link Copied!");
+        
+        if (navigator.share) {
+            navigator.share({ title: 'RAF Darts Match', url: url }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(url);
+            alert("Invite Link Copied!");
+        }
     }
 </script>
 </body>
