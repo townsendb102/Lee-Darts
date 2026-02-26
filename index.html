@@ -295,19 +295,21 @@
 
             peer.on('call', call => {
                 if (call.metadata && call.metadata.spectator) {
-                    // Check if incoming call is a spectator, answer with active stream
-                    let streamToSend = (state.turn === 0 || !document.getElementById('peer').srcObject) 
-                        ? stream 
-                        : document.getElementById('peer').srcObject;
+                    // ALWAYS answer with local stream first to safely build the connection
+                    call.answer(stream);
+                    spectatorCalls.push(call);
                     
-                    call.answer(streamToSend);
-                    spectatorCalls.push(call); // Save the spectator connection
+                    // Delay render slightly so PeerJS has time to create WebRTC senders before we try swapping tracks
+                    setTimeout(() => { render(); }, 1000);
                 } else {
                     // Normal P1 <-> P2 connection
                     call.answer(stream);
                     call.on('stream', s => {
                         currentCall = call;
-                        if(s) document.getElementById('peer').srcObject = s;
+                        if(s) {
+                            document.getElementById('peer').srcObject = s;
+                            document.getElementById('peer').play().catch(e => console.warn("Autoplay blocked", e));
+                        }
                         render();
                     });
                 }
@@ -347,22 +349,30 @@
         c.on('data', d => handleData(d));
         
         if (isSpectator) {
-            // Trick WebRTC: Create an empty 1x1 canvas to act as our "camera" stream
+            // Trick WebRTC: Create an empty canvas AND dummy audio so the offer requests both audio/video channels
             const canvas = document.createElement('canvas');
             canvas.width = 1; canvas.height = 1;
-            const dummyStream = canvas.captureStream();
+            const dummyStream = canvas.captureStream(1); 
+            
+            // Create dummy audio track
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
+            dummyStream.addTrack(dummyAudio);
             
             // Call the host, flagging ourselves as a spectator
             const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
             
             specCall.on('stream', s => {
                 document.getElementById('peer').srcObject = s;
+                // Force play command to overcome some browser autoplay strictness
+                document.getElementById('peer').play().catch(e => console.warn("Spectator autoplay blocked", e));
                 render();
             });
         } else {
             currentCall = peer.call(id, stream);
             currentCall.on('stream', s => {
                 document.getElementById('peer').srcObject = s;
+                document.getElementById('peer').play().catch(e => console.warn("Autoplay blocked", e));
                 render();
             });
         }
