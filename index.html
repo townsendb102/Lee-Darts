@@ -39,10 +39,18 @@
             background-color: var(--card); 
             background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg');
             background-position: center; background-repeat: no-repeat; background-size: contain;
-            padding: 25px; border-radius: 15px; width: 100%; max-width: 320px; border: 1px solid #1b4965;
+            padding: 25px; border-radius: 15px; width: 100%; max-width: 360px; border: 1px solid #1b4965;
             display: flex; flex-direction: column; gap: 10px; text-align: center;
         }
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
+        
+        /* Stats Table */
+        .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
+        .stats-table th { color: white; padding-bottom: 10px; font-size: 18px; width: 30%; }
+        .stats-table th:nth-child(2) { color: var(--blue); font-size: 12px; width: 40%; }
+        .stats-table td { padding: 8px 0; text-align: center; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-weight: bold; }
+        .stats-table td:nth-child(2) { color: #888; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .stats-table tr:last-child td { border-bottom: none; }
         
         .input-group { margin-bottom: 10px; text-align: left; }
         .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
@@ -90,7 +98,6 @@
         .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
         .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
         
-        /* Disabled state styling for the controls */
         #pts-input:disabled { color: #555; }
         .btn-hit:disabled { background: #333; color: #666; cursor: not-allowed; }
         
@@ -126,9 +133,41 @@
 
 <div id="winner-layer" class="hidden">
     <div class="setup-card">
-        <h2>MATCH OVER</h2>
-        <h1 id="winner-name" style="color: white; margin: 15px 0; font-size: 28px;">P1 Wins!</h1>
-        <p id="winner-stats" style="font-size: 14px; color: #888; margin-bottom: 20px;"></p>
+        <h1 id="winner-name" style="color: white; margin: 10px 0 20px 0; font-size: 24px;">P1 Wins!</h1>
+        
+        <table class="stats-table">
+            <tr>
+                <th id="ws-n0">P1</th>
+                <th>STATS</th>
+                <th id="ws-n1">P2</th>
+            </tr>
+            <tr>
+                <td id="ws-avg0">0.0</td>
+                <td>Match Avg</td>
+                <td id="ws-avg1">0.0</td>
+            </tr>
+            <tr>
+                <td id="ws-f90">0.0</td>
+                <td>First 9 Avg</td>
+                <td id="ws-f91">0.0</td>
+            </tr>
+            <tr>
+                <td id="ws-hc0">-</td>
+                <td>High Out</td>
+                <td id="ws-hc1">-</td>
+            </tr>
+            <tr>
+                <td id="ws-1400">0</td>
+                <td>140+</td>
+                <td id="ws-1401">0</td>
+            </tr>
+            <tr>
+                <td id="ws-1800">0</td>
+                <td>180s</td>
+                <td id="ws-1801">0</td>
+            </tr>
+        </table>
+
         <button id="rematch-btn" class="btn-start">REMATCH</button>
     </div>
 </div>
@@ -189,7 +228,16 @@
     let conns = []; 
     let spectatorCalls = []; 
     let myIndex = 0;
-    let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
+    
+    // Added extended tracking: ld (leg darts), f9d (first 9 darts), f9pts (first 9 points), hc (high checkout), n140 (140s), n180 (180s)
+    let state = { 
+        turn: 0, 
+        bestOf: 5, 
+        p: [
+            { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
+            { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }
+        ] 
+    };
     let history = null;
 
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -471,7 +519,6 @@
     }
 
     function processHit() {
-        // Prevent action if it's not this device's turn
         if (state.turn !== myIndex) return;
 
         const input = document.getElementById('pts-input');
@@ -482,29 +529,50 @@
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
         
+        // Track stats that occur regardless of bust vs valid hit
+        if (p.ld < 9) { 
+            p.f9d += 3; 
+            // Only add points to First 9 if it's a valid hit (checked below)
+        }
+        p.d += 3;
+        p.ld += 3;
+
+        // Valid score check (avoids busted score or leaving 1)
         if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.pts += val; p.d += 3;
+            p.s -= val; 
+            p.pts += val; 
+            
+            // Add points to First 9 Avg
+            if (p.ld <= 9) { p.f9pts += val; }
+
+            // Track 140s & 180s
+            if (val === 180) p.n180++;
+            else if (val >= 140) p.n140++;
+
+            // Handle leg win
             if (p.s === 0) { 
+                if (val > p.hc) p.hc = val; // Track high checkout
                 p.l++; 
                 const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
                 
                 if (p.l >= legsRequiredToWin) {
                     state.winner = state.turn; 
                 } else {
-                    state.p.forEach(x => x.s = 501); 
+                    state.p.forEach(x => { x.s = 501; x.ld = 0; }); 
                     state.turn = (state.turn === 0) ? 1 : 0; 
                 }
             } else { 
                 state.turn = (state.turn === 0) ? 1 : 0; 
             }
         } else { 
+            // Bust - Turn flips over, score is unmodified, but darts are still added
             state.turn = (state.turn === 0) ? 1 : 0; 
         }
         
         render();
         broadcast(state);
         input.value = '';
-        input.blur(); // Forces the mobile keyboard to close
+        input.blur(); 
     }
 
     function undo() {
@@ -517,7 +585,10 @@
     }
 
     function triggerRematch() {
-        state.p.forEach(x => { x.s = 501; x.l = 0; x.pts = 0; x.d = 0; });
+        state.p.forEach(x => { 
+            x.s = 501; x.l = 0; x.pts = 0; x.d = 0; 
+            x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
+        });
         state.turn = 0;
         delete state.winner; 
         history = null;
@@ -535,7 +606,6 @@
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
-        // Handle input states based on whose turn it is
         if (!spectateId) {
             const ptsInput = document.getElementById('pts-input');
             const hitBtn = document.getElementById('hit-btn');
@@ -584,7 +654,18 @@
         if (state.winner !== undefined) {
             const w = state.p[state.winner];
             document.getElementById('winner-name').innerText = w.name + " WINS!";
-            document.getElementById('winner-stats').innerText = "Match Average: " + (w.d > 0 ? ((w.pts / w.d) * 3).toFixed(1) : "0.0");
+            
+            // Populate Post-Match Table
+            for (let i = 0; i < 2; i++) {
+                let playerStats = state.p[i];
+                document.getElementById(`ws-n${i}`).innerText = playerStats.name;
+                document.getElementById(`ws-avg${i}`).innerText = playerStats.d > 0 ? ((playerStats.pts / playerStats.d) * 3).toFixed(1) : "0.0";
+                document.getElementById(`ws-f9${i}`).innerText = playerStats.f9d > 0 ? ((playerStats.f9pts / playerStats.f9d) * 3).toFixed(1) : "0.0";
+                document.getElementById(`ws-hc${i}`).innerText = playerStats.hc > 0 ? playerStats.hc : "-";
+                document.getElementById(`ws-140${i}`).innerText = playerStats.n140;
+                document.getElementById(`ws-180${i}`).innerText = playerStats.n180;
+            }
+
             winnerLayer.classList.remove('hidden');
         } else {
             winnerLayer.classList.add('hidden');
