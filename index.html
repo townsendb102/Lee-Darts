@@ -20,7 +20,11 @@
         /* Setup Layer (Home Page) with image background */
         #setup-layer { 
             position: fixed; inset: 0; 
-            background: linear-gradient(rgba(2, 4, 8, 0.85), rgba(2, 4, 8, 0.85)), url('51693.jpg') center/cover no-repeat;
+            background-image: linear-gradient(rgba(2, 4, 8, 0.85), rgba(2, 4, 8, 0.85)), url('51693.jpg');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover, 60%; /* Change this 60% to adjust the logo size */
+            background-color: var(--dark);
             z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
             overflow-y: auto; 
@@ -29,7 +33,11 @@
         /* Winner Layer with image background */
         #winner-layer {
             position: fixed; inset: 0; 
-            background: linear-gradient(rgba(2, 4, 8, 0.92), rgba(2, 4, 8, 0.92)), url('51693.jpg') center/cover no-repeat;
+            background-image: linear-gradient(rgba(2, 4, 8, 0.92), rgba(2, 4, 8, 0.92)), url('51693.jpg');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover, 60%; /* Matches the home screen logo size */
+            background-color: var(--dark);
             z-index: 10001; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
             overflow-y: auto;
