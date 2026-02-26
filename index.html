@@ -9,24 +9,32 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
         body { 
-            /* The image background with a dark tint overlay for readability */
-            background: linear-gradient(rgba(2, 4, 8, 0.85), rgba(2, 4, 8, 0.85)), url('51693.jpg') center/cover no-repeat fixed;
-            background-color: var(--dark);
+            /* Main app background is now a solid dark color */
+            background: var(--dark);
             color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            grid-template-rows: 40px 45dvh 1fr auto; /* Adjusted to fit the controls naturally */
+            grid-template-rows: 40px 45dvh 1fr 80px;
             overflow: hidden; 
         }
         
-        /* Setup & Winner Layers */
-        #setup-layer, #winner-layer { 
-            position: fixed; inset: 0; background: rgba(2, 4, 8, 0.92); z-index: 10000; 
+        /* Setup Layer (Home Page) with image background */
+        #setup-layer { 
+            position: fixed; inset: 0; 
+            background: linear-gradient(rgba(2, 4, 8, 0.85), rgba(2, 4, 8, 0.85)), url('51693.jpg') center/cover no-repeat;
+            z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-            overflow-y: auto; backdrop-filter: blur(5px);
+            overflow-y: auto; 
         }
+        
+        /* Winner Layer with image background */
         #winner-layer {
-            background: rgba(2, 4, 8, 0.98); z-index: 10001; 
+            position: fixed; inset: 0; 
+            background: linear-gradient(rgba(2, 4, 8, 0.92), rgba(2, 4, 8, 0.92)), url('51693.jpg') center/cover no-repeat;
+            z-index: 10001; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+            overflow-y: auto;
         }
+
         .setup-card { 
             background: var(--card); padding: 25px; border-radius: 15px; 
             width: 100%; max-width: 320px; border: 1px solid #1b4965;
@@ -45,6 +53,18 @@
         }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* Splash Screen Footer (Home & Winner pages) */
+        .splash-footer {
+            position: absolute;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            pointer-events: none;
+        }
+
         /* Header */
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-size: 11px; background: rgba(0,0,0,0.6); }
         .header-controls { display: flex; gap: 8px; align-items: center; }
@@ -57,8 +77,11 @@
         video { width: 100%; height: 100%; object-fit: cover; background: transparent; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; text-transform: uppercase; }
 
-        /* Scoring Area */
-        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
+        /* Scoring Area (Image applied strictly here during the match) */
+        .score-area { 
+            display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; 
+            background: linear-gradient(rgba(2, 4, 8, 0.7), rgba(2, 4, 8, 0.7)), url('51693.jpg') center/cover no-repeat;
+        }
         .player-card { flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
@@ -68,33 +91,17 @@
         .legs-count { font-size: 11px; color: #bbb; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
 
+        /* Controls Area */
         .controls { 
             display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; 
             background: rgba(0,0,0,0.7); border-top: 1px solid rgba(27, 73, 101, 0.5);
-            /* Added padding to prevent buttons from hiding under the fixed footer */
-            padding-bottom: calc(25px + env(safe-area-inset-bottom)); 
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
         }
         .score-input-box { background: rgba(17,17,17,0.8); border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
         .btn-undo { background: rgba(34,34,34,0.9); border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
         .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
         
         #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
-        
-        /* Footer Credit Area (Fixed to always float above the bottom) */
-        .footer-credit {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            color: #999;
-            font-size: 10px;
-            text-align: center;
-            padding: 5px;
-            padding-bottom: max(5px, env(safe-area-inset-bottom));
-            z-index: 9000;
-        }
-
         .hidden { display: none !important; }
     </style>
 </head>
@@ -120,6 +127,7 @@
         <button id="start-btn" class="btn-start">START MATCH</button>
         <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center;"></p>
     </div>
+    <div class="splash-footer">Created by Ben Townsend of The Leeming Arrows</div>
 </div>
 
 <div id="winner-layer" class="hidden">
@@ -129,6 +137,7 @@
         <p id="winner-stats" style="font-size: 14px; color: #bbb; margin-bottom: 20px;"></p>
         <button id="rematch-btn" class="btn-start">REMATCH</button>
     </div>
+    <div class="splash-footer">Created by Ben Townsend of The Leeming Arrows</div>
 </div>
 
 <header>
@@ -173,10 +182,6 @@
     <div class="score-input-box"><input type="number" id="pts-input" placeholder="0" inputmode="numeric"></div>
     <button class="btn-undo" id="undo-btn">⟲</button>
     <button class="btn-hit" id="hit-btn">HIT</button>
-</div>
-
-<div class="footer-credit">
-    Created by Ben Townsend of The Leeming Arrows
 </div>
 
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
