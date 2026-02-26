@@ -159,6 +159,8 @@
 <script>
     let stream, peer, conn, currentCall;
     let myIndex = 0;
+    let camIndex = 0;
+    let facing = "user"; // Fallback for some browsers
     let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
 
@@ -192,12 +194,11 @@
         log.innerText = "Accessing Camera...";
 
         try {
-            // Start with environment camera on mobile, default on laptop
+            // Ask for environment first, fallback to default (solves laptop initial load)
             stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: "environment" }, 
                 audio: true 
             }).catch(async () => {
-                // Fallback if environment camera fails (like on laptops)
                 return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             });
             
@@ -273,49 +274,47 @@
 
     async function swapCam() {
         if (!stream) return;
+        
         try {
-            // Find all available cameras
+            // 1. Get list of available cameras
             const devices = await navigator.mediaDevices.enumerateDevices();
-            const videoCameras = devices.filter(device => device.kind === 'videoinput');
-
+            const videoCameras = devices.filter(d => d.kind === 'videoinput');
+            
             if (videoCameras.length <= 1) {
-                alert("Only one camera detected on this device.");
+                alert("Only one camera found on this device.");
                 return;
             }
 
-            // Figure out which camera is currently active
-            const currentVideoTrack = stream.getVideoTracks()[0];
-            const currentDeviceId = currentVideoTrack.getSettings().deviceId;
-            
-            // Move to the next camera in the list
-            let nextIndex = videoCameras.findIndex(cam => cam.deviceId === currentDeviceId) + 1;
-            if (nextIndex >= videoCameras.length) nextIndex = 0; // Loop back to the start
-            const nextCamera = videoCameras[nextIndex];
-
-            // Start the new camera
-            const newStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { deviceId: { exact: nextCamera.deviceId } }, 
-                audio: true 
-            });
-
-            // If connected to a peer, silently update their video feed so it doesn't freeze
-            if (currentCall && currentCall.peerConnection) {
-                const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-                if (videoSender) videoSender.replaceTrack(newStream.getVideoTracks()[0]);
-                
-                const audioSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'audio');
-                if (audioSender) audioSender.replaceTrack(newStream.getAudioTracks()[0]);
-            }
-
-            // Stop the old camera
+            // 2. STOP CURRENT TRACKS FIRST (This strictly fixes the mobile issue!)
             stream.getTracks().forEach(t => t.stop());
 
-            // Assign the new video to our local screen
-            stream = newStream;
+            // 3. Figure out which camera to request next
+            let constraints;
+            if (videoCameras[0].deviceId) {
+                // If the device exposes hardware IDs (works on laptops and most phones)
+                camIndex = (camIndex + 1) % videoCameras.length;
+                constraints = { video: { deviceId: { exact: videoCameras[camIndex].deviceId } }, audio: true };
+            } else {
+                // Privacy fallback just in case device IDs are hidden
+                facing = (facing === "user") ? "environment" : "user";
+                constraints = { video: { facingMode: facing }, audio: true };
+            }
+
+            // 4. Start the new camera
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
             document.getElementById('me').srcObject = stream;
 
+            // 5. Seamlessly replace the video feed for your opponent
+            if (currentCall && currentCall.peerConnection) {
+                const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                if (videoSender) videoSender.replaceTrack(stream.getVideoTracks()[0]);
+            }
+            
         } catch (e) {
-            alert("Unable to switch camera: " + e.message);
+            alert("Camera swap failed. Attempting to recover... (" + e.message + ")");
+            // Recovery in case the user cancels or the camera gets stuck
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            document.getElementById('me').srcObject = stream;
         }
     }
 
