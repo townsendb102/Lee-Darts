@@ -78,7 +78,6 @@
             z-index: 1; 
         }
 
-        /* DIGITAL ZOOM UPGRADE: Added smooth transform transitions */
         video { width: 100%; height: 100%; object-fit: cover; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
         
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
@@ -122,10 +121,25 @@
 <div id="setup-layer">
     <div class="setup-card">
         <h2>RAF DARTS SCORER</h2>
+        
+        <div class="input-group" id="mode-group">
+            <label>Match Type</label>
+            <select id="mode-input" class="setup-input">
+                <option value="online">Online (Remote Opponent)</option>
+                <option value="local">Local (Same Device)</option>
+            </select>
+        </div>
+
         <div class="input-group">
-            <label>Your Name</label>
+            <label id="p1-label">Your Name</label>
             <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
         </div>
+        
+        <div class="input-group" id="p2-name-group" style="display: none;">
+            <label>Player 2 Name</label>
+            <input type="text" id="p2-name-input" class="setup-input" placeholder="Player 2 Name..." maxlength="12">
+        </div>
+
         <div class="input-group" id="legs-group">
             <label>Best Of (Legs)</label>
             <select id="legs-input" class="setup-input">
@@ -169,7 +183,7 @@
 
 <div class="v-container">
     <div id="box-me" class="v-box visible">
-        <div class="cam-label">YOU</div>
+        <div class="cam-label" id="cam-label-me">YOU</div>
         <video id="me" autoplay playsinline webkit-playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
@@ -215,7 +229,8 @@
     let spectatorCalls = []; 
     let myIndex = 0;
     let isMuted = false;
-    let currentZoom = 1; // Tracks digital zoom level
+    let currentZoom = 1; 
+    let isLocalMatch = false; // Tracks if it's a pass-and-play match
     
     let state = { turn: 0, bestOf: 5, p: [
         { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
@@ -275,7 +290,9 @@
         3:"1 D1",2:"D1"
     };
 
-    function broadcast(data) { conns.forEach(c => { if (c && c.open) c.send(data); }); }
+    function broadcast(data) { 
+        if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); 
+    }
 
     function unlockAudio() {
         const peerVideo = document.getElementById('peer');
@@ -287,13 +304,25 @@
     document.body.addEventListener('touchstart', unlockAudio);
 
     window.addEventListener('load', () => {
+        // Toggle Local/Online form fields
+        const modeInput = document.getElementById('mode-input');
+        if (modeInput) {
+            modeInput.addEventListener('change', (e) => {
+                const local = e.target.value === 'local';
+                document.getElementById('p2-name-group').style.display = local ? 'block' : 'none';
+                document.getElementById('p1-label').innerText = local ? 'Player 1 Name' : 'Your Name';
+            });
+        }
+
         if (spectateId) {
             document.body.classList.add('spectator-mode');
             document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
             document.getElementById('name-input').placeholder = "Your Name (Optional)";
+            document.getElementById('mode-group').style.display = 'none';
         } else if (joinId) {
             document.getElementById('legs-group').style.display = 'none';
             document.getElementById('start-btn').innerText = "JOIN MATCH";
+            document.getElementById('mode-group').style.display = 'none';
         }
 
         document.getElementById('start-btn').onclick = initApp;
@@ -319,8 +348,12 @@
         const startBtn = document.getElementById('start-btn');
         startBtn.disabled = true;
 
+        const modeSelect = document.getElementById('mode-input');
+        isLocalMatch = (modeSelect && modeSelect.value === 'local');
+
         try {
             if (!spectateId) {
+                // Keep the camera running even in local mode so players can point it at the board
                 log.innerText = "Accessing Camera...";
                 let constraints = { video: true, audio: true };
                 if (isMobile) {
@@ -334,6 +367,24 @@
                     return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 });
                 document.getElementById('me').srcObject = stream;
+            }
+
+            // LOCAL MATCH BYPASS
+            if (isLocalMatch) {
+                state.p[0].name = document.getElementById('name-input').value || "Player 1";
+                state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
+                state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+                
+                document.getElementById('setup-layer').classList.add('hidden');
+                document.getElementById('display-id').innerText = "LOCAL";
+                
+                // Hide online-specific buttons
+                document.getElementById('share-btn').style.display = 'none';
+                document.getElementById('spectate-btn').style.display = 'none';
+                document.getElementById('cam-label-me').innerText = "CAMERA / BOARD";
+                
+                render();
+                return; // Exit function immediately, do not connect to PeerJS servers
             }
             
             log.innerText = "Connecting to server...";
@@ -436,7 +487,6 @@
     }
 
     function handleData(data) {
-        // Handle Digital Zoom from Opponent
         if (data.type === 'ZOOM') {
             const peerVid = document.getElementById('peer');
             if (peerVid) peerVid.style.transform = `scale(${data.level})`;
@@ -461,24 +511,21 @@
         render();
     }
 
-    // DIGITAL ZOOM FUNCTION
     function cycleZoom() {
         if (!stream) return;
         
-        // Cycle 1x -> 1.5x -> 2x -> 1x
         if (currentZoom === 1) currentZoom = 1.5;
         else if (currentZoom === 1.5) currentZoom = 2;
         else currentZoom = 1;
 
-        // Update Button text
         const btn = document.getElementById('zoom-btn');
         if (btn) btn.innerText = currentZoom === 1 ? "ZOOM" : `ZOOM ${currentZoom}x`;
 
-        // Apply scale to your own local video
         document.getElementById('me').style.transform = `scale(${currentZoom})`;
 
-        // Broadcast the zoom level to your opponent
-        broadcast({ type: 'ZOOM', level: currentZoom });
+        if (!isLocalMatch) {
+            broadcast({ type: 'ZOOM', level: currentZoom });
+        }
     }
 
     function toggleMute() {
@@ -525,12 +572,11 @@
             stream.addTrack(newVideoTrack);
             document.getElementById('me').srcObject = stream;
 
-            // Reset zoom when flipping camera
             currentZoom = 1; 
             const zoomBtn = document.getElementById('zoom-btn');
             if (zoomBtn) zoomBtn.innerText = "ZOOM";
             document.getElementById('me').style.transform = "scale(1)";
-            broadcast({ type: 'ZOOM', level: 1 });
+            if (!isLocalMatch) broadcast({ type: 'ZOOM', level: 1 });
 
             if (currentCall && currentCall.peerConnection) {
                 const senders = currentCall.peerConnection.getSenders();
@@ -544,12 +590,11 @@
             stream.addTrack(recoveredTrack);
             document.getElementById('me').srcObject = stream;
             
-            // Reset zoom on fallback
             currentZoom = 1; 
             const zoomBtn = document.getElementById('zoom-btn');
             if (zoomBtn) zoomBtn.innerText = "ZOOM";
             document.getElementById('me').style.transform = "scale(1)";
-            broadcast({ type: 'ZOOM', level: 1 });
+            if (!isLocalMatch) broadcast({ type: 'ZOOM', level: 1 });
 
             if (currentCall && currentCall.peerConnection) {
                 const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
@@ -559,7 +604,9 @@
     }
 
     function processHit() {
-        if (state.turn !== myIndex) return;
+        // If it's an online match, block the hit if it's not your turn. 
+        // If it's local, allow it immediately regardless of whose turn it is.
+        if (!isLocalMatch && state.turn !== myIndex) return;
 
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
@@ -591,14 +638,17 @@
             } else { state.turn = (state.turn === 0) ? 1 : 0; }
         } else { state.turn = (state.turn === 0) ? 1 : 0; }
         
-        render(); broadcast(state);
+        render(); 
+        if (!isLocalMatch) broadcast(state);
+        
         input.value = ''; input.blur(); 
     }
 
     function undo() {
         if (history) { 
             state = JSON.parse(JSON.stringify(history)); history = null; 
-            render(); broadcast(state);
+            render(); 
+            if (!isLocalMatch) broadcast(state);
         }
     }
 
@@ -608,7 +658,8 @@
             x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
         });
         state.turn = 0; delete state.winner; history = null;
-        render(); broadcast(state);
+        render(); 
+        if (!isLocalMatch) broadcast(state);
     }
 
     function render() {
@@ -624,13 +675,22 @@
         if (!spectateId) {
             const ptsInput = document.getElementById('pts-input');
             const hitBtn = document.getElementById('hit-btn');
-            if (state.turn === myIndex) {
+            
+            // Unlock inputs if local match OR if it's your turn online
+            if (isLocalMatch || state.turn === myIndex) {
                 ptsInput.disabled = false; hitBtn.disabled = false; ptsInput.placeholder = "0";
             } else {
                 ptsInput.disabled = true; hitBtn.disabled = true; ptsInput.placeholder = "Waiting...";
             }
-            document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-            document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+            
+            // Video box logic: Keep "box-me" permanently on if local, otherwise alternate based on turn
+            if (isLocalMatch) {
+                document.getElementById('box-me').className = "v-box visible";
+                document.getElementById('box-peer').className = "v-box";
+            } else {
+                document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+                document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+            }
         } else {
             document.querySelector('#box-peer .cam-label').innerText = state.p[state.turn].name.toUpperCase();
         }
