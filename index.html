@@ -14,6 +14,20 @@
             grid-template-rows: 40px 45dvh 1fr 80px;
             overflow: hidden; 
         }
+
+        /* --- SPECTATOR MODE OVERRIDES --- */
+        body.spectator-mode {
+            /* Removes the bottom row height since controls are hidden */
+            grid-template-rows: 40px 45dvh 1fr 0px; 
+        }
+        body.spectator-mode .controls,
+        body.spectator-mode .header-controls,
+        body.spectator-mode #legs-group {
+            display: none !important;
+        }
+        body.spectator-mode #box-me { display: none !important; }
+        body.spectator-mode #box-peer { display: block !important; }
+        /* -------------------------------- */
         
         /* Setup & Winner Layers */
         #setup-layer, #winner-layer { 
@@ -86,7 +100,7 @@
             <label>Your Name</label>
             <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
         </div>
-        <div class="input-group">
+        <div class="input-group" id="legs-group">
             <label>Best Of (Legs)</label>
             <select id="legs-input" class="setup-input">
                 <option value="1">1 Leg</option>
@@ -125,7 +139,7 @@
         <video id="me" autoplay playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
-        <div class="cam-label">OPPONENT</div>
+        <div class="cam-label">OPPONENT / STREAM</div>
         <video id="peer" autoplay playsinline></video>
     </div>
 </div>
@@ -170,8 +184,16 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
+    const spectateId = urlParams.get('spectate'); // NEW: Spectator Check
 
     window.addEventListener('load', () => {
+        // Adapt UI for Spectators immediately
+        if (spectateId) {
+            document.body.classList.add('spectator-mode');
+            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
+            document.getElementById('name-input').placeholder = "Your Name (Optional)";
+        }
+
         document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
         document.getElementById('share-btn').onclick = shareInvite;
@@ -195,23 +217,23 @@
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
         startBtn.disabled = true;
-        log.innerText = "Accessing Camera...";
 
         try {
-            // Intelligent initial setup: environment for phones, default for laptops
-            let constraints = { video: true, audio: true };
-            if (isMobile) {
-                constraints.video = { facingMode: "environment" };
-                currentFacingMode = "environment";
-            }
+            // ONLY request camera if they are a player, not a spectator
+            if (!spectateId) {
+                log.innerText = "Accessing Camera...";
+                let constraints = { video: true, audio: true };
+                if (isMobile) {
+                    constraints.video = { facingMode: "environment" };
+                    currentFacingMode = "environment";
+                }
 
-            stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async () => {
-                // Failsafe backup
-                isMobile = false;
-                return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            });
-            
-            document.getElementById('me').srcObject = stream;
+                stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async () => {
+                    isMobile = false;
+                    return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                });
+                document.getElementById('me').srcObject = stream;
+            }
             
             log.innerText = "Connecting to server...";
             peer = new Peer();
@@ -220,13 +242,19 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('setup-layer').classList.add('hidden');
                 
-                state.p[0].name = document.getElementById('name-input').value || "Host";
-                state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+                if (spectateId) {
+                    // Enter Spectator Mode
+                    connectToMatch(spectateId, true);
+                } else {
+                    // Enter Player Mode
+                    state.p[0].name = document.getElementById('name-input').value || "Host";
+                    state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
 
-                if (joinId) {
-                    myIndex = 1;
-                    state.p[1].name = document.getElementById('name-input').value || "Guest";
-                    connectToMatch(joinId);
+                    if (joinId) {
+                        myIndex = 1;
+                        state.p[1].name = document.getElementById('name-input').value || "Guest";
+                        connectToMatch(joinId, false);
+                    }
                 }
                 render();
             });
@@ -235,7 +263,7 @@
                 currentCall = call;
                 call.answer(stream);
                 call.on('stream', s => {
-                    document.getElementById('peer').srcObject = s;
+                    if(s) document.getElementById('peer').srcObject = s;
                     render();
                 });
             });
@@ -252,16 +280,24 @@
             });
 
         } catch (e) {
-            log.innerText = "Camera access denied. (" + e.message + ")";
+            log.innerText = "Access denied or error. (" + e.message + ")";
             startBtn.disabled = false;
         }
     }
 
-    function connectToMatch(id) {
+    function connectToMatch(id, isSpectator = false) {
         conn = peer.connect(id);
-        conn.on('open', () => conn.send({ type: 'JOIN', name: state.p[1].name }));
+        
+        conn.on('open', () => {
+            // Only overwrite P2's name if we are actually playing
+            if (!isSpectator) {
+                conn.send({ type: 'JOIN', name: state.p[1].name });
+            }
+        });
+        
         conn.on('data', d => handleData(d));
         
+        // Connect video (stream is undefined if spectating, which creates a receive-only connection)
         currentCall = peer.call(id, stream);
         currentCall.on('stream', s => {
             document.getElementById('peer').srcObject = s;
@@ -293,15 +329,11 @@
                 return;
             }
 
-            // 1. Isolate the video track. Leave audio alone!
             const oldVideoTrack = stream.getVideoTracks()[0];
-            
-            // 2. Stop ONLY the video to free up the hardware
             oldVideoTrack.stop();
             
             let newStream;
             
-            // 3. Request specific camera based on device type
             if (isMobile) {
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
                 try {
@@ -309,12 +341,11 @@
                         video: { facingMode: { exact: currentFacingMode } } 
                     });
                 } catch (e) {
-                    isMobile = false; // Fallback if phone rejects exact facing mode
+                    isMobile = false; 
                 }
             }
             
             if (!isMobile) {
-                // Standard laptop method
                 currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
                 newStream = await navigator.mediaDevices.getUserMedia({
                     video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId } }
@@ -322,13 +353,10 @@
             }
 
             const newVideoTrack = newStream.getVideoTracks()[0];
-
-            // 4. Safely update your local stream
             stream.removeTrack(oldVideoTrack);
             stream.addTrack(newVideoTrack);
             document.getElementById('me').srcObject = stream;
 
-            // 5. Instantly push the new track to your opponent without breaking the call
             if (currentCall && currentCall.peerConnection) {
                 const senders = currentCall.peerConnection.getSenders();
                 const videoSender = senders.find(s => s.track && s.track.kind === 'video');
@@ -336,10 +364,8 @@
                     await videoSender.replaceTrack(newVideoTrack);
                 }
             }
-            
         } catch (e) {
             alert("Recovering camera connection...");
-            // Absolute worst-case scenario: pull the default camera back up
             const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: true });
             const recoveredTrack = recoveredStream.getVideoTracks()[0];
             stream.addTrack(recoveredTrack);
@@ -410,11 +436,17 @@
             document.getElementById(`s-${i}`).innerText = p.s;
             document.getElementById(`l-${i}`).innerText = p.l;
             document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
+            
+            // Only highlight active turn if we aren't spectating, OR highlight both for spectators 
+            // Here we just keep the standard highlight logic
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
-        document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-        document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+        // Video box toggling logic is handled by CSS in spectator mode, so this logic only affects players
+        if (!spectateId) {
+            document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+            document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+        }
 
         const winnerLayer = document.getElementById('winner-layer');
         if (state.winner !== undefined) {
