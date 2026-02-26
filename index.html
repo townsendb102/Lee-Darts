@@ -75,6 +75,10 @@
         
         #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
         .hidden { display: none !important; }
+        
+        /* Spectator View Adjustments */
+        body.spectator-mode { grid-template-rows: 40px 45dvh 1fr; }
+        body.spectator-mode .controls { display: none; }
     </style>
 </head>
 <body>
@@ -114,17 +118,18 @@
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
         <button class="header-btn" id="flip-btn">FLIP</button>
-        <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
+        <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE P2</button>
+        <button class="header-btn" id="spectate-btn" style="color: #ffaa00;">SPECTATE</button>
     </div>
 </header>
 
 <div class="v-container">
     <div id="box-me" class="v-box visible">
-        <div class="cam-label">YOU</div>
+        <div class="cam-label" id="label-me">YOU</div>
         <video id="me" autoplay playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
-        <div class="cam-label">OPPONENT</div>
+        <div class="cam-label" id="label-peer">OPPONENT</div>
         <video id="peer" autoplay playsinline></video>
     </div>
 </div>
@@ -168,11 +173,21 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
+    const spectateId = urlParams.get('spectate');
+    
+    let isSpectator = !!spectateId;
+    let spectatorConns = [];
 
     window.addEventListener('load', () => {
-        document.getElementById('start-btn').onclick = initApp;
+        if (isSpectator) {
+            initSpectator();
+        } else {
+            document.getElementById('start-btn').onclick = initApp;
+        }
+        
         document.getElementById('flip-btn').onclick = swapCam;
-        document.getElementById('share-btn').onclick = shareInvite;
+        document.getElementById('share-btn').onclick = () => shareLink('join');
+        document.getElementById('spectate-btn').onclick = () => shareLink('spectate');
         document.getElementById('undo-btn').onclick = undo;
         document.getElementById('hit-btn').onclick = processHit;
         document.getElementById('rematch-btn').onclick = triggerRematch;
@@ -188,6 +203,41 @@
         }
     });
 
+    // --- Spectator Initialization ---
+    function initSpectator() {
+        document.body.classList.add('spectator-mode');
+        document.getElementById('setup-layer').classList.add('hidden');
+        document.getElementById('display-id').innerText = "SPECTATING";
+        document.getElementById('flip-btn').classList.add('hidden');
+        document.getElementById('share-btn').classList.add('hidden');
+        document.getElementById('spectate-btn').classList.add('hidden');
+        
+        document.getElementById('label-me').innerText = "HOST";
+        document.getElementById('label-peer').innerText = "GUEST";
+        document.getElementById('me').muted = false; // Allow spectator to hear the host
+
+        peer = new Peer();
+        peer.on('open', (id) => {
+            conn = peer.connect(spectateId);
+            // Send own ID so Host and P2 know where to send video
+            conn.on('open', () => conn.send({ type: 'SPECTATOR_JOIN', id: id }));
+            conn.on('data', d => handleData(d));
+        });
+
+        // Listen for incoming video calls from players
+        peer.on('call', call => {
+            call.answer(); // Answer passively (no local camera needed)
+            call.on('stream', s => {
+                if (call.metadata && call.metadata.role === 'P2') {
+                    document.getElementById('peer').srcObject = s;
+                } else {
+                    document.getElementById('me').srcObject = s;
+                }
+            });
+        });
+    }
+
+    // --- Normal Player Initialization ---
     async function initApp() {
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
@@ -209,16 +259,7 @@
             document.getElementById('me').srcObject = stream;
             
             log.innerText = "Connecting to server...";
-            
-            // Added Google STUN servers for reliable internet-wide connectivity
-            peer = new Peer({
-                config: {
-                    'iceServers': [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' }
-                    ]
-                }
-            });
+            peer = new Peer();
 
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
@@ -239,20 +280,29 @@
                 currentCall = call;
                 call.answer(stream);
                 call.on('stream', s => {
-                    const peerVideo = document.getElementById('peer');
-                    peerVideo.srcObject = s;
-                    peerVideo.play().catch(e => console.warn("Browser delayed autoplay", e));
+                    document.getElementById('peer').srcObject = s;
                     render();
                 });
             });
 
             peer.on('connection', c => {
-                conn = c;
-                // Prevent race condition by checking if connection is already open
-                const sendSync = () => conn.send({ type: 'SYNC', state });
-                if (conn.open) sendSync(); else conn.on('open', sendSync);
-                
-                conn.on('data', d => handleData(d));
+                c.on('data', d => {
+                    if (d.type === 'SPECTATOR_JOIN') {
+                        spectatorConns.push(c);
+                        c.send({ type: 'SYNC', state });
+                        // Host calls the spectator with their video stream
+                        if (stream) peer.call(d.id, stream, { metadata: { role: 'HOST' } });
+                        // Host tells P2 to also call the spectator
+                        if (conn && conn.open) conn.send({ type: 'SPECTATOR_ADDED', id: d.id });
+                    } else if (d.type === 'JOIN') {
+                        conn = c;
+                        state.p[1].name = d.name;
+                        broadcastState();
+                        render();
+                    } else {
+                        handleData(d);
+                    }
+                });
             });
 
             peer.on('error', err => {
@@ -268,74 +318,65 @@
 
     function connectToMatch(id) {
         conn = peer.connect(id);
-        
-        const sendJoin = () => conn.send({ type: 'JOIN', name: state.p[1].name });
-        if (conn.open) sendJoin(); else conn.on('open', sendJoin);
-        
+        conn.on('open', () => conn.send({ type: 'JOIN', name: state.p[1].name }));
         conn.on('data', d => handleData(d));
         
         currentCall = peer.call(id, stream);
         currentCall.on('stream', s => {
-            const peerVideo = document.getElementById('peer');
-            peerVideo.srcObject = s;
-            peerVideo.play().catch(e => console.warn("Browser delayed autoplay", e));
+            document.getElementById('peer').srcObject = s;
             render();
         });
     }
 
     function handleData(data) {
         if (data.type === 'SYNC') {
-            state.bestOf = data.state.bestOf;
-            state.p[0].name = data.state.p[0].name;
+            state = data.state;
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
-            // Complete the handshake by sending the updated state back to the guest
-            if (myIndex === 0 && conn && conn.open) {
-                conn.send(state);
-            }
+        } else if (data.type === 'SPECTATOR_ADDED') {
+            // P2 receives this from Host, calls the spectator with their video
+            if (stream) peer.call(data.id, stream, { metadata: { role: 'P2' } });
+            return;
         } else {
             state = data; 
+            if (!joinId && !isSpectator) {
+                broadcastState();
+            }
         }
         render();
     }
 
+    function broadcastState() {
+        if (isSpectator) return;
+        if (conn && conn.open) conn.send(state);
+        spectatorConns.forEach(sc => {
+            if (sc.open) sc.send(state);
+        });
+    }
+
     async function swapCam() {
         if (!stream) return;
-        
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const videoCameras = devices.filter(d => d.kind === 'videoinput');
-            
-            if (videoCameras.length <= 1) {
-                alert("Only one camera found on this device.");
-                return;
-            }
+            if (videoCameras.length <= 1) { alert("Only one camera found on this device."); return; }
 
             const oldVideoTrack = stream.getVideoTracks()[0];
             oldVideoTrack.stop();
             
             let newStream;
-            
             if (isMobile) {
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
                 try {
-                    newStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: { exact: currentFacingMode } } 
-                    });
-                } catch (e) {
-                    isMobile = false; 
-                }
+                    newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: currentFacingMode } } });
+                } catch (e) { isMobile = false; }
             }
-            
             if (!isMobile) {
                 currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
-                newStream = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId } }
-                });
+                newStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId } } });
             }
 
             const newVideoTrack = newStream.getVideoTracks()[0];
-
             stream.removeTrack(oldVideoTrack);
             stream.addTrack(newVideoTrack);
             document.getElementById('me').srcObject = stream;
@@ -343,11 +384,8 @@
             if (currentCall && currentCall.peerConnection) {
                 const senders = currentCall.peerConnection.getSenders();
                 const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-                if (videoSender) {
-                    await videoSender.replaceTrack(newVideoTrack);
-                }
+                if (videoSender) await videoSender.replaceTrack(newVideoTrack);
             }
-            
         } catch (e) {
             alert("Recovering camera connection...");
             const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -365,7 +403,6 @@
     function processHit() {
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
-        
         if (isNaN(val) || val < 0 || val > 180) return;
         
         history = JSON.parse(JSON.stringify(state));
@@ -376,22 +413,13 @@
             if (p.s === 0) { 
                 p.l++; 
                 const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
-                
-                if (p.l >= legsRequiredToWin) {
-                    state.winner = state.turn; 
-                } else {
-                    state.p.forEach(x => x.s = 501); 
-                    state.turn = (state.turn === 0) ? 1 : 0; 
-                }
-            } else { 
-                state.turn = (state.turn === 0) ? 1 : 0; 
-            }
-        } else { 
-            state.turn = (state.turn === 0) ? 1 : 0; 
-        }
+                if (p.l >= legsRequiredToWin) state.winner = state.turn; 
+                else { state.p.forEach(x => x.s = 501); state.turn = (state.turn === 0) ? 1 : 0; }
+            } else state.turn = (state.turn === 0) ? 1 : 0; 
+        } else state.turn = (state.turn === 0) ? 1 : 0; 
         
         render();
-        if (conn) conn.send(state);
+        broadcastState();
         input.value = '';
         input.focus(); 
     }
@@ -401,17 +429,18 @@
             state = JSON.parse(JSON.stringify(history)); 
             history = null; 
             render(); 
-            if(conn) conn.send(state); 
+            broadcastState(); 
         }
     }
 
     function triggerRematch() {
+        if (isSpectator) return;
         state.p.forEach(x => { x.s = 501; x.l = 0; x.pts = 0; x.d = 0; });
         state.turn = 0;
         delete state.winner; 
         history = null;
         render();
-        if (conn) conn.send(state);
+        broadcastState();
     }
 
     function render() {
@@ -423,8 +452,15 @@
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
-        document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-        document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+        if (!isSpectator) {
+            // Player view: Show my camera on my turn, their camera on theirs
+            document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+            document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+        } else {
+            // Spectator view: Automatically swap to whoever is throwing
+            document.getElementById('box-me').className = (state.turn === 0) ? "v-box visible" : "v-box";
+            document.getElementById('box-peer').className = (state.turn === 1) ? "v-box visible" : "v-box";
+        }
 
         const winnerLayer = document.getElementById('winner-layer');
         if (state.winner !== undefined) {
@@ -432,16 +468,23 @@
             document.getElementById('winner-name').innerText = w.name + " WINS!";
             document.getElementById('winner-stats').innerText = "Match Average: " + (w.d > 0 ? ((w.pts / w.d) * 3).toFixed(1) : "0.0");
             winnerLayer.classList.remove('hidden');
+            if(isSpectator) document.getElementById('rematch-btn').classList.add('hidden');
         } else {
             winnerLayer.classList.add('hidden');
         }
     }
 
-    function shareInvite() {
+    function shareLink(type) {
         const id = document.getElementById('display-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) navigator.share({ title: 'Darts Match', url });
-        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
+        const url = window.location.origin + window.location.pathname + '?' + type + '=' + id;
+        const title = type === 'join' ? 'Play Darts' : 'Spectate Darts Match';
+        
+        if (navigator.share) {
+            navigator.share({ title, url });
+        } else { 
+            navigator.clipboard.writeText(url); 
+            alert(type === 'join' ? "Invite Link Copied!" : "Spectator Link Copied!"); 
+        }
     }
 </script>
 </body>
