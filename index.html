@@ -52,7 +52,7 @@
         .v-box { position: absolute; inset: 0; display: none; }
         .v-box.visible { display: block; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; text-transform: uppercase; }
 
         /* Scoring Area */
         .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
@@ -86,7 +86,7 @@
             <label>Your Name</label>
             <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
         </div>
-        <div class="input-group">
+        <div class="input-group" id="legs-setup-group">
             <label>Best Of (Legs)</label>
             <select id="legs-input" class="setup-input">
                 <option value="1">1 Leg</option>
@@ -120,11 +120,11 @@
 
 <div class="v-container">
     <div id="box-me" class="v-box visible">
-        <div class="cam-label">YOU</div>
+        <div class="cam-label" id="cam-label-me">YOU</div>
         <video id="me" autoplay playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
-        <div class="cam-label">OPPONENT</div>
+        <div class="cam-label" id="cam-label-peer">OPPONENT</div>
         <video id="peer" autoplay playsinline></video>
     </div>
 </div>
@@ -162,7 +162,6 @@
     let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
 
-    // Camera State Logic
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user";
     let currentCamIndex = 0;
@@ -171,6 +170,12 @@
     const joinId = urlParams.get('join');
 
     window.addEventListener('load', () => {
+        // Guest UI Adjustments
+        if (joinId) {
+            document.getElementById('legs-setup-group').style.display = 'none';
+            document.getElementById('start-btn').innerText = 'JOIN MATCH';
+        }
+
         document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
         document.getElementById('share-btn').onclick = shareInvite;
@@ -196,7 +201,6 @@
         log.innerText = "Accessing Camera...";
 
         try {
-            // Intelligent initial setup: environment for phones, default for laptops
             let constraints = { video: true, audio: true };
             if (isMobile) {
                 constraints.video = { facingMode: "environment" };
@@ -204,7 +208,6 @@
             }
 
             stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async () => {
-                // Failsafe backup
                 isMobile = false;
                 return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             });
@@ -218,13 +221,13 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('setup-layer').classList.add('hidden');
                 
-                state.p[0].name = document.getElementById('name-input').value || "Host";
-                state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-
                 if (joinId) {
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     connectToMatch(joinId);
+                } else {
+                    state.p[0].name = document.getElementById('name-input').value || "Host";
+                    state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
                 }
                 render();
             });
@@ -269,10 +272,15 @@
 
     function handleData(data) {
         if (data.type === 'SYNC') {
-            state.bestOf = data.state.bestOf;
-            state.p[0].name = data.state.p[0].name;
+            // Host sent full state, we accept it but preserve our guest name
+            const myGuestName = state.p[1].name;
+            state = data.state;
+            state.p[1].name = myGuestName;
         } else if (data.type === 'JOIN') {
+            // Guest sent us their name
             state.p[1].name = data.name;
+            // Host broadcasts updated state back to guest so everything perfectly aligns
+            if (myIndex === 0 && conn) conn.send(state);
         } else {
             state = data; 
         }
@@ -291,15 +299,11 @@
                 return;
             }
 
-            // 1. Isolate the video track. Leave audio alone!
             const oldVideoTrack = stream.getVideoTracks()[0];
-            
-            // 2. Stop ONLY the video to free up the hardware
             oldVideoTrack.stop();
             
             let newStream;
             
-            // 3. Request specific camera based on device type
             if (isMobile) {
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
                 try {
@@ -307,12 +311,11 @@
                         video: { facingMode: { exact: currentFacingMode } } 
                     });
                 } catch (e) {
-                    isMobile = false; // Fallback if phone rejects exact facing mode
+                    isMobile = false; 
                 }
             }
             
             if (!isMobile) {
-                // Standard laptop method
                 currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
                 newStream = await navigator.mediaDevices.getUserMedia({
                     video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId } }
@@ -320,13 +323,10 @@
             }
 
             const newVideoTrack = newStream.getVideoTracks()[0];
-
-            // 4. Safely update your local stream
             stream.removeTrack(oldVideoTrack);
             stream.addTrack(newVideoTrack);
             document.getElementById('me').srcObject = stream;
 
-            // 5. Instantly push the new track to your opponent without breaking the call
             if (currentCall && currentCall.peerConnection) {
                 const senders = currentCall.peerConnection.getSenders();
                 const videoSender = senders.find(s => s.track && s.track.kind === 'video');
@@ -337,7 +337,6 @@
             
         } catch (e) {
             alert("Recovering camera connection...");
-            // Absolute worst-case scenario: pull the default camera back up
             const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: true });
             const recoveredTrack = recoveredStream.getVideoTracks()[0];
             stream.addTrack(recoveredTrack);
@@ -403,6 +402,7 @@
     }
 
     function render() {
+        // Player Score Cards
         state.p.forEach((p, i) => {
             document.getElementById(`n-${i}`).innerText = p.name;
             document.getElementById(`s-${i}`).innerText = p.s;
@@ -411,9 +411,24 @@
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
-        document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-        document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+        // Videos and Camera Labels
+        const myName = state.p[myIndex].name;
+        const peerName = state.p[myIndex === 0 ? 1 : 0].name;
 
+        const boxMe = document.getElementById('box-me');
+        const boxPeer = document.getElementById('box-peer');
+        
+        if (boxMe) {
+            boxMe.className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+            document.getElementById('cam-label-me').innerText = myName;
+        }
+        
+        if (boxPeer) {
+            boxPeer.className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+            document.getElementById('cam-label-peer').innerText = peerName;
+        }
+
+        // Winner Overlay
         const winnerLayer = document.getElementById('winner-layer');
         if (state.winner !== undefined) {
             const w = state.p[state.winner];
