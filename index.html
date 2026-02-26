@@ -16,11 +16,15 @@
         }
 
         body.spectator-mode { grid-template-rows: 40px 45dvh 1fr 0px 25px; }
+        
+        /* UI elements can safely use display: none */
         body.spectator-mode .controls,
         body.spectator-mode .header-controls,
         body.spectator-mode #legs-group { display: none !important; }
-        body.spectator-mode #box-me { display: none !important; }
-        body.spectator-mode #box-peer { display: block !important; }
+        
+        /* WebRTC Fix: Use visibility/opacity/z-index for video feeds instead of display: none */
+        body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
+        body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
         
         #setup-layer, #winner-layer { 
             position: fixed; inset: 0 0 25px 0; background: var(--dark); z-index: 10000; 
@@ -61,8 +65,22 @@
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
-        .v-box { position: absolute; inset: 0; display: none; }
-        .v-box.visible { display: block; }
+        
+        /* WebRTC Fix: Safe hiding mechanics for mobile browsers */
+        .v-box { 
+            position: absolute; 
+            inset: 0; 
+            visibility: hidden; 
+            opacity: 0; 
+            z-index: -1; 
+            transition: opacity 0.2s; 
+        }
+        .v-box.visible { 
+            visibility: visible; 
+            opacity: 1; 
+            z-index: 1; 
+        }
+
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
@@ -262,7 +280,7 @@
     function unlockAudio() {
         const peerVideo = document.getElementById('peer');
         if (peerVideo && peerVideo.paused && peerVideo.srcObject) {
-            peerVideo.play().catch(e => console.log("Unlock failed", e));
+            peerVideo.play().catch(e => console.log("Unlock failed or already playing", e));
         }
     }
     document.body.addEventListener('click', unlockAudio);
@@ -303,7 +321,6 @@
         try {
             if (!spectateId) {
                 log.innerText = "Accessing Camera...";
-                // APPLE HACK 2: Removed "exact" requirement for facing mode to prevent OverconstrainedError
                 let constraints = { video: true, audio: true };
                 if (isMobile) {
                     constraints.video = { facingMode: "environment" };
@@ -325,7 +342,13 @@
                     'iceServers': [
                         { urls: 'stun:stun.l.google.com:19302' },
                         { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun.cloudflare.com:3478' }
+                        { urls: 'stun:stun.cloudflare.com:3478' },
+                        // WebRTC Fix: Add a TURN server here to fix Cellular Data / Strict NAT failures
+                        // {
+                        //     urls: 'turn:your-turn-server.com:3478',
+                        //     username: 'your_username',
+                        //     credential: 'your_password'
+                        // }
                     ]
                 }
             });
@@ -384,9 +407,12 @@
     function attachPeerVideo(s) {
         const peerVideo = document.getElementById('peer');
         peerVideo.srcObject = s;
-        // Wait until iOS says the metadata is actually loaded before forcing play
+        // Wait until browser confirms metadata is loaded
         peerVideo.onloadedmetadata = () => {
-            peerVideo.play().catch(e => console.warn("Waiting for user tap to play video", e));
+            peerVideo.play().catch(e => {
+                console.warn("Autoplay blocked by mobile browser. User must tap screen to start video.", e);
+                // The global 'unlockAudio' event listener will catch their next tap and force it to play.
+            });
         };
     }
 
