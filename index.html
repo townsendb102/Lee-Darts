@@ -620,72 +620,72 @@
 
     
 
+
 function startPlayerCall(id) {
-        if (!stream) return;
+    if (!stream) return;
 
-        currentCall = peer.call(id, stream);
+    currentCall = peer.call(id, stream);
 
-        currentCall.on('stream', s => {
-            attachPeerVideo(s);
-            render();
-        });
+    currentCall.on('stream', s => {
+        attachPeerVideo(s);
+        if (typeof render === "function") render();
+    });
 
-        currentCall.on('error', err => {
-            console.warn("Call failed:", err);
-        });
+    currentCall.on('error', err => {
+        console.warn("Call failed:", err);
+    });
 }
 
 function startSpectatorCall(id) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1;
-        canvas.height = 1;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
 
-        const dummyStream = canvas.captureStream(1);
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
-        dummyStream.addTrack(dummyAudio);
+    const dummyStream = canvas.captureStream(1);
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
+    dummyStream.addTrack(dummyAudio);
 
-        const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
+    const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
 
-        specCall.on('stream', s => {
-            attachPeerVideo(s);
-            render();
-        });
+    specCall.on('stream', s => {
+        attachPeerVideo(s);
+        if (typeof render === "function") render();
+    });
 }
 
 function connectToMatch(id, isSpectator = false) {
 
-        if (!peer || peer.disconnected) {
-            console.warn("Peer not ready, retrying...");
-            setTimeout(() => connectToMatch(id, isSpectator), 500);
-            return;
+    if (!peer || peer.disconnected) {
+        console.warn("Peer not ready, retrying...");
+        setTimeout(() => connectToMatch(id, isSpectator), 500);
+        return;
+    }
+
+    const c = peer.connect(id, { reliable: true });
+    conns.push(c);
+
+    c.on('open', () => {
+
+        if (!isSpectator) {
+            c.send({ type: 'JOIN', name: state?.p?.[1]?.name || "Guest" });
         }
 
-        const c = peer.connect(id, { reliable: true });
-        conns.push(c);
-
-        c.on('open', () => {
-
-            if (!isSpectator) {
-                c.send({ type: 'JOIN', name: state.p[1].name });
+        setTimeout(() => {
+            if (isSpectator) {
+                startSpectatorCall(id);
+            } else {
+                startPlayerCall(id);
             }
+        }, 600);
+    });
 
-            // Safari stability delay before starting call
-            setTimeout(() => {
-                if (isSpectator) {
-                    startSpectatorCall(id);
-                } else {
-                    startPlayerCall(id);
-                }
-            }, 600);
-        });
+    c.on('error', err => {
+        console.warn("Connection failed, retrying...", err);
+        setTimeout(() => connectToMatch(id, isSpectator), 1000);
+    });
 
-        c.on('error', err => {
-            console.warn("Connection failed, retrying...", err);
-            setTimeout(() => connectToMatch(id, isSpectator), 1000);
-        });
-
-        c.on('data', d => handleData(d));
+    c.on('data', d => handleData(d));
 }
 
 
