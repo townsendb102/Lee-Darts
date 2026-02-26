@@ -26,13 +26,14 @@
         body.local-mode .v-container { display: none !important; }
         body.local-mode .header-controls { display: none !important; }
 
-        #setup-layer, #winner-layer, #first-throw-layer { 
+        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer { 
             position: fixed; inset: 0 0 25px 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
             overflow-y: auto;
         }
         #winner-layer { background: rgba(2, 4, 8, 0.95); z-index: 10001; }
         #first-throw-layer { background: rgba(2, 4, 8, 0.98); z-index: 10002; }
+        #waiting-layer { background: rgba(2, 4, 8, 0.98); z-index: 10003; }
         
         .setup-card { 
             background-color: var(--card); 
@@ -155,6 +156,14 @@
         </div>
         <button id="start-btn" class="btn-start">START MATCH</button>
         <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center;"></p>
+    </div>
+</div>
+
+<div id="waiting-layer" class="hidden">
+    <div class="setup-card">
+        <h2 style="color: white; margin-bottom: 20px; font-size: 22px;">Waiting for Opponent...</h2>
+        <h1 style="color: var(--blue); margin-bottom: 20px; font-size: 32px;" id="wait-id">...</h1>
+        <button class="btn-start" onclick="shareInvite()">SHARE INVITE LINK</button>
     </div>
 </div>
 
@@ -368,7 +377,6 @@
         document.getElementById('ft-step-1').classList.add('hidden');
         document.getElementById('ft-step-2').classList.remove('hidden');
         
-        // Use exact custom names for both local and online players
         document.getElementById('ft-p1-btn').innerText = state.p[0].name;
         document.getElementById('ft-p2-btn').innerText = state.p[1].name;
 
@@ -395,21 +403,18 @@
         const modeSelect = document.getElementById('mode-input');
         isLocalMatch = (modeSelect && modeSelect.value === 'local');
 
-        // LOCAL MATCH START
         if (isLocalMatch) {
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
             
             document.getElementById('setup-layer').classList.add('hidden');
-            document.getElementById('display-id').innerText = "LOCAL MATCH";
             document.body.classList.add('local-mode'); 
             
             showFirstThrowUI(); // Prompt immediately for local
             return; 
         }
 
-        // ONLINE MATCH START
         try {
             if (!spectateId) {
                 log.innerText = "Accessing Camera...";
@@ -441,6 +446,7 @@
 
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
+                document.getElementById('wait-id').innerText = id;
                 document.getElementById('setup-layer').classList.add('hidden');
                 
                 if (spectateId) { 
@@ -453,11 +459,12 @@
                 } else {
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                    // Host no longer gets prompted immediately!
+                    
+                    // Host goes straight into the Waiting Room
+                    document.getElementById('waiting-layer').classList.remove('hidden');
                 }
                 
                 if (joinId || spectateId) render();
-                else render(); // Render host board so they can copy link and wait
             });
 
             peer.on('call', call => {
@@ -545,7 +552,11 @@
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
             
-            // NEW: Fire the prompt ONLY when the guest connects AND match is at 0-0
+            // Guest has joined! Remove the waiting layer for the Host.
+            const waitingLayer = document.getElementById('waiting-layer');
+            if (waitingLayer) waitingLayer.classList.add('hidden');
+            
+            // Only show the prompt if it's the start of a brand new match
             if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) {
                 showFirstThrowUI();
             }
