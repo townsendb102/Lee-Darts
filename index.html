@@ -35,6 +35,22 @@
         #first-throw-layer { background: rgba(2, 4, 8, 0.98); z-index: 10002; }
         #waiting-layer { background: rgba(2, 4, 8, 0.98); z-index: 10003; }
         
+        /* 🎯 NEW: SPLIT SCREEN FOR BULL THROW */
+        body.bull-throw:not(.local-mode) .v-box {
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 1 !important;
+            width: 50% !important;
+        }
+        body.bull-throw:not(.local-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
+        body.bull-throw:not(.local-mode) #box-peer { left: 50%; }
+        
+        /* Moves the prompt down so it doesn't block the split cameras */
+        body.bull-throw:not(.local-mode) #first-throw-layer {
+            top: calc(40px + 45dvh);
+            background: rgba(2, 4, 8, 0.95);
+        }
+        
         .setup-card { 
             background-color: var(--card); 
             background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg');
@@ -367,10 +383,24 @@
         }
     });
 
+    // 🎯 NEW: Functions to control Split Screen Bull Phase
+    function toggleBullPhase(isActive) {
+        if (isActive) {
+            document.body.classList.add('bull-throw');
+        } else {
+            document.body.classList.remove('bull-throw');
+        }
+    }
+
     function showFirstThrowUI() {
         document.getElementById('first-throw-layer').classList.remove('hidden');
         document.getElementById('ft-step-1').classList.remove('hidden');
         document.getElementById('ft-step-2').classList.add('hidden');
+        
+        if (!isLocalMatch) {
+            toggleBullPhase(true);
+            broadcast({ type: 'BULL_PHASE', active: true });
+        }
     }
 
     function showFtStep2(mode) {
@@ -391,6 +421,12 @@
         state.startingPlayer = playerIndex;
         state.turn = playerIndex;
         document.getElementById('first-throw-layer').classList.add('hidden');
+        
+        if (!isLocalMatch) {
+            toggleBullPhase(false);
+            broadcast({ type: 'BULL_PHASE', active: false });
+        }
+        
         render();
         if (!isLocalMatch) broadcast(state);
     }
@@ -411,7 +447,7 @@
             document.getElementById('setup-layer').classList.add('hidden');
             document.body.classList.add('local-mode'); 
             
-            showFirstThrowUI(); // Prompt immediately for local
+            showFirstThrowUI(); 
             return; 
         }
 
@@ -460,7 +496,6 @@
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
                     
-                    // Host goes straight into the Waiting Room
                     document.getElementById('waiting-layer').classList.remove('hidden');
                 }
                 
@@ -487,7 +522,7 @@
                 c.on('open', () => c.send({ type: 'SYNC', state }));
                 c.on('data', d => {
                     handleData(d);
-                    if (myIndex === 0 && d.type !== 'JOIN' && d.type !== 'ZOOM') { broadcast(state); }
+                    if (myIndex === 0 && d.type !== 'JOIN' && d.type !== 'ZOOM' && d.type !== 'BULL_PHASE') { broadcast(state); }
                 });
             });
 
@@ -539,6 +574,12 @@
     }
 
     function handleData(data) {
+        // 🎯 NEW: Intercept Split-Screen Command from Host
+        if (data.type === 'BULL_PHASE') {
+            toggleBullPhase(data.active);
+            return;
+        }
+
         if (data.type === 'ZOOM') {
             const peerVid = document.getElementById('peer');
             if (peerVid) peerVid.style.transform = `scale(${data.level})`;
@@ -552,11 +593,9 @@
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
             
-            // Guest has joined! Remove the waiting layer for the Host.
             const waitingLayer = document.getElementById('waiting-layer');
             if (waitingLayer) waitingLayer.classList.add('hidden');
             
-            // Only show the prompt if it's the start of a brand new match
             if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) {
                 showFirstThrowUI();
             }
