@@ -541,11 +541,11 @@
                 document.getElementById('setup-layer').classList.add('hidden');
                 
                 if (spectateId) { 
-                    connectToMatch(spectateId, true); 
+                    setTimeout(() => { connectToMatch(spectateId, true); }, 600); 
                 } else if (joinId) {
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
-                    connectToMatch(joinId, false);
+                    setTimeout(() => { connectToMatch(joinId, false); }, 600);
                 } else {
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
@@ -618,13 +618,45 @@
         };
     }
 
-    function connectToMatch(id, isSpectator = false) {
-        const c = peer.connect(id);
+    
+function connectToMatch(id, isSpectator = false) {
+
+        if (!peer || peer.disconnected) {
+            console.warn("Peer not ready, retrying...");
+            setTimeout(() => connectToMatch(id, isSpectator), 500);
+            return;
+        }
+
+        console.log("Connecting to host:", id);
+
+        const c = peer.connect(id, { reliable: true });
         conns.push(c);
-        
+
         c.on('open', () => {
-            if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name });
+            console.log("Data channel open");
+
+            if (!isSpectator) {
+                c.send({ type: 'JOIN', name: state.p[1].name });
+            }
+
+            // Safari stability delay before starting call
+            setTimeout(() => {
+                if (isSpectator) {
+                    startSpectatorCall(id);
+                } else {
+                    startPlayerCall(id);
+                }
+            }, 600);
         });
+
+        c.on('error', err => {
+            console.warn("Connection failed, retrying...", err);
+            setTimeout(() => connectToMatch(id, isSpectator), 1000);
+        });
+
+        c.on('data', d => handleData(d));
+}
+);
         
         c.on('data', d => handleData(d));
         
@@ -868,7 +900,39 @@
         }
     }
 
-    function render() {
+    
+function startPlayerCall(id) {
+        if (!stream) return;
+
+        currentCall = peer.call(id, stream);
+        currentCall.on('stream', s => {
+            attachPeerVideo(s);
+            render();
+        });
+
+        currentCall.on('error', err => {
+            console.warn("Call failed:", err);
+        });
+}
+
+function startSpectatorCall(id) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+
+        const dummyStream = canvas.captureStream(1);
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
+        dummyStream.addTrack(dummyAudio);
+
+        const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
+        specCall.on('stream', s => {
+            attachPeerVideo(s);
+            render();
+        });
+}
+
+function render() {
         state.p.forEach((p, i) => {
             document.getElementById(`n-${i}`).innerText = p.name;
             document.getElementById(`s-${i}`).innerText = p.s;
