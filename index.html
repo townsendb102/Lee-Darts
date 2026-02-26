@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RAF Darts Scorer - Live</title>
+    <title>RAF Darts Scorer</title>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card-tint: rgba(13, 27, 42, 0.85); --active: rgba(22, 42, 63, 0.95); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -16,63 +16,94 @@
             overflow: hidden; 
         }
         
-        #setup-layer, #winner-layer { 
-            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
+        /* Setup Layer */
+        #setup-layer { 
+            position: fixed; inset: 0; 
+            background: var(--dark);
+            z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+            overflow-y: auto; 
+        }
+        
+        #winner-layer {
+            position: fixed; inset: 0; 
+            background: var(--dark);
+            z-index: 10001; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+            overflow-y: auto;
         }
 
         .setup-card { 
             background-image: linear-gradient(var(--card-tint), var(--card-tint)), url('51693.jpg');
             background-position: center; background-repeat: no-repeat; background-size: cover; 
-            padding: 25px; border-radius: 15px; width: 100%; max-width: 360px; 
-            border: 1px solid #1b4965; display: flex; flex-direction: column; gap: 10px; text-align: center;
+            padding: 25px; border-radius: 15px; 
+            width: 100%; max-width: 360px; 
+            border: 1px solid #1b4965;
+            display: flex; flex-direction: column; gap: 10px; text-align: center;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         }
-        .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
+        .setup-card h2 { color: var(--blue); margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
         
         .input-group { margin-bottom: 10px; text-align: left; }
         .input-group label { display: block; font-size: 10px; color: #ccc; margin-bottom: 5px; text-transform: uppercase; }
         .setup-input { width: 100%; background: rgba(0,0,0,0.7); border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
         
-        .btn-start { background: var(--blue); color: black; width: 100%; padding: 16px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
-        .btn-start:disabled { opacity: 0.5; }
+        .btn-start { 
+            background: var(--blue); color: black; width: 100%; padding: 16px; 
+            font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; 
+            margin-top: 10px;
+        }
 
-        .splash-footer { position: absolute; bottom: 20px; width: 100%; text-align: center; color: rgba(255, 255, 255, 0.5); font-size: 11px; }
+        .splash-footer { position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); left: 0; width: 100%; text-align: center; color: rgba(255, 255, 255, 0.5); font-size: 11px; }
 
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-size: 11px; background: rgba(0,0,0,0.6); }
         .header-controls { display: flex; gap: 8px; align-items: center; }
-        .header-btn { background: rgba(34,34,34,0.8); border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; }
+        .header-btn { background: rgba(34,34,34,0.8); border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;}
 
+        /* Video System */
         .v-container { position: relative; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(27, 73, 101, 0.5); overflow: hidden; }
         .v-box { position: absolute; inset: 0; display: none; }
         .v-box.visible { display: block; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); z-index: 10; }
+        video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; text-transform: uppercase; }
 
-        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; background: linear-gradient(rgba(2, 4, 8, 0.7), rgba(2, 4, 8, 0.7)), url('51693.jpg') center/cover no-repeat; }
-        .player-card { flex: 1; background: var(--card-tint); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; backdrop-filter: blur(8px); }
+        /* Scoring Area */
+        .score-area { 
+            display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; 
+            background: linear-gradient(rgba(2, 4, 8, 0.7), rgba(2, 4, 8, 0.7)), url('51693.jpg') center/cover no-repeat;
+        }
+        .player-card { 
+            flex: 1; background: var(--card-tint); border-radius: 10px; display: flex; flex-direction: column; 
+            justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; 
+            backdrop-filter: blur(8px);
+        }
         .player-card.active { border-color: var(--blue); background: var(--active); }
         
+        .p-name { font-size: 14px; color: #fff; font-weight: bold; }
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .score-val { font-size: clamp(35px, 6.5dvh, 55px); font-weight: 900; }
-        .legs-count { font-size: 11px; text-align: right; }
+        .score-val { font-size: clamp(35px, 6.5dvh, 55px); font-weight: 900; line-height: 1; }
+        .legs-count { font-size: 11px; color: #ccc; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
+        .checkout-hint { font-size: clamp(12px, 2.5dvh, 16px); color: #ffb703; font-weight: 800; text-align: center; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
-        .checkout-hint { font-size: 14px; color: #ffb703; font-weight: 800; text-align: center; margin-top: 5px; min-height: 1.2em; }
+        .stats-grid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 12px 10px; margin: 15px 0 20px 0; text-align: center; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 10px; border: 1px solid rgba(27, 73, 101, 0.5); align-items: center; }
+        .stat-label-col { text-align: left; font-size: 11px; color: #bbb; text-transform: uppercase; }
+        .stat-header { font-size: 12px; color: var(--blue); font-weight: bold; border-bottom: 1px solid rgba(27, 73, 101, 0.5); padding-bottom: 5px; }
+        .stat-val { font-size: 18px; font-weight: bold; color: white; }
 
-        .controls-wrapper { background: rgba(0,0,0,0.8); border-top: 1px solid rgba(27, 73, 101, 0.5); padding-bottom: env(safe-area-inset-bottom); }
+        .controls-wrapper { background: rgba(0,0,0,0.8); border-top: 1px solid rgba(27, 73, 101, 0.5); display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom); }
         .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; }
-        .score-input-box { background: rgba(17,17,17,0.8); border: 1px solid #333; border-radius: 8px; }
+        .score-input-box { background: rgba(17,17,17,0.8); border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .btn-undo { background: rgba(34,34,34,0.9); border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
+        .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
         #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
-        .btn-undo, .btn-hit { border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-undo { background: #333; color: white; font-size: 20px; }
-        .btn-hit { background: var(--blue); color: black; font-size: 20px; }
-
-        .stats-grid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 10px; margin: 15px 0; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; }
-        .stat-val { font-weight: bold; font-size: 16px; }
-
+        
+        .main-footer { text-align: center; font-size: 12px; color: #ddd; padding: 2px 0 10px 0; }
         .hidden { display: none !important; }
-        .spectator-banner { background: #ffb703; color: black; text-align: center; font-size: 10px; font-weight: bold; padding: 2px; }
+
+        /* Spectator Badge */
+        .spec-badge { background: #ff4d4d; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px; animation: blink 1.5s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
@@ -80,37 +111,43 @@
 <div id="setup-layer">
     <div class="setup-card">
         <h2 id="setup-title">RAF DARTS SCORER</h2>
-        <div class="input-group" id="name-group">
-            <label>Your Name</label>
-            <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
-        </div>
-        <div class="input-group" id="legs-setup-group">
-            <label>Best Of (Legs)</label>
-            <select id="legs-input" class="setup-input">
-                <option value="1">1 Leg</option><option value="3">Best of 3</option><option value="5" selected>Best of 5</option>
-            </select>
+        <div id="setup-fields">
+            <div class="input-group">
+                <label>Your Name</label>
+                <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
+            </div>
+            <div class="input-group" id="legs-setup-group">
+                <label>Best Of (Legs)</label>
+                <select id="legs-input" class="setup-input">
+                    <option value="1">1 Leg</option>
+                    <option value="3">Best of 3</option>
+                    <option value="5" selected>Best of 5</option>
+                    <option value="7">Best of 7</option>
+                    <option value="11">Best of 11</option>
+                </select>
+            </div>
         </div>
         <button id="start-btn" class="btn-start">START MATCH</button>
-        <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px;"></p>
+        <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center;"></p>
     </div>
+    <div class="splash-footer">Created by Ben Townsend of The Leeming Arrows</div>
 </div>
 
 <div id="winner-layer" class="hidden">
     <div class="setup-card">
         <h2>MATCH OVER</h2>
-        <h1 id="winner-name">P1 Wins!</h1>
+        <h1 id="winner-name" style="color: white; margin: 5px 0; font-size: 28px;">P1 Wins!</h1>
         <div class="stats-grid" id="winner-stats-grid"></div>
         <button id="rematch-btn" class="btn-start">REMATCH</button>
     </div>
 </div>
 
-<div id="spec-ui" class="spectator-banner hidden">SPECTATOR MODE - VIEW ONLY</div>
-
 <header>
-    <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
-    <div class="header-controls">
+    <div><span id="spec-indicator" class="hidden"><span class="spec-badge">LIVE</span></span>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
+    <div class="header-controls" id="header-controls">
         <button class="header-btn" id="flip-btn">FLIP</button>
         <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
+        <button class="header-btn" id="spec-link-btn" style="color: #ffb703;">SPEC LINK</button>
     </div>
 </header>
 
@@ -146,141 +183,193 @@
     </div>
 </div>
 
-<div class="controls-wrapper" id="scoring-controls">
+<div class="controls-wrapper" id="main-controls">
     <div class="controls">
         <div class="score-input-box"><input type="number" id="pts-input" placeholder="0" inputmode="numeric"></div>
         <button class="btn-undo" id="undo-btn">⟲</button>
         <button class="btn-hit" id="hit-btn">HIT</button>
     </div>
+    <div class="main-footer">Created by Ben Townsend of The Leeming Arrows</div>
 </div>
 
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+
 <script>
-    let stream, peer, conn, currentCall;
-    let spectators = []; 
+    let stream, peer, currentCall;
+    let connections = []; // Array to handle multiple spectators
     let myIndex = 0;
     let isSpectator = false;
     
     let state = { 
-        turn: 0, bestOf: 5, 
+        turn: 0, 
+        bestOf: 5, 
         p: [
             { name: "P1", s: 501, l: 0, pts: 0, d: 0, f9pts: 0, f9d: 0, s140: 0, s180: 0, legDarts: 0, hc: 0 }, 
             { name: "P2", s: 501, l: 0, pts: 0, d: 0, f9pts: 0, f9d: 0, s140: 0, s180: 0, legDarts: 0, hc: 0 }
         ] 
     };
-
+    
+    let history = null;
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
-    const specId = urlParams.get('spectate');
+    const specId = urlParams.get('spec');
 
-    window.onload = () => {
+    window.addEventListener('load', () => {
         if (specId) {
             isSpectator = true;
-            document.getElementById('setup-title').innerText = "SPECTATE MATCH";
-            document.getElementById('name-group').style.display = 'none';
-            document.getElementById('legs-setup-group').style.display = 'none';
-            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
-            document.getElementById('scoring-controls').classList.add('hidden');
-            document.getElementById('spec-ui').classList.remove('hidden');
+            document.getElementById('setup-fields').classList.add('hidden');
+            document.getElementById('setup-title').innerText = "SPECTATOR MODE";
+            document.getElementById('start-btn').innerText = "WATCH LIVE";
+            document.getElementById('main-controls').classList.add('hidden');
+            document.getElementById('header-controls').classList.add('hidden');
+            document.getElementById('spec-indicator').classList.remove('hidden');
         } else if (joinId) {
             document.getElementById('legs-setup-group').style.display = 'none';
             document.getElementById('start-btn').innerText = 'JOIN MATCH';
         }
-        
+
         document.getElementById('start-btn').onclick = initApp;
+        document.getElementById('flip-btn').onclick = swapCam;
+        document.getElementById('share-btn').onclick = () => shareInvite('join');
+        document.getElementById('spec-link-btn').onclick = () => shareInvite('spec');
+        document.getElementById('undo-btn').onclick = undo;
         document.getElementById('hit-btn').onclick = processHit;
-        document.getElementById('share-btn').onclick = showInviteOptions;
         document.getElementById('rematch-btn').onclick = triggerRematch;
-        document.getElementById('undo-btn').onclick = () => { /* Undo Logic */ };
-    };
+    });
 
     async function initApp() {
+        const log = document.getElementById('error-log');
+        const startBtn = document.getElementById('start-btn');
+        startBtn.disabled = true;
+
         try {
+            // Spectators don't need camera/mic
             if (!isSpectator) {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                log.innerText = "Accessing Camera...";
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: true });
                 document.getElementById('me').srcObject = stream;
             }
             
+            log.innerText = "Connecting...";
             peer = new Peer();
-            peer.on('open', id => {
+
+            peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('setup-layer').classList.add('hidden');
                 
                 if (specId) {
-                    connectToMatch(specId, true);
+                    connectToHost(specId, true);
                 } else if (joinId) {
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
-                    connectToMatch(joinId, false);
+                    connectToHost(joinId, false);
                 } else {
                     state.p[0].name = document.getElementById('name-input').value || "Host";
+                    state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+                    render();
                 }
-                render();
             });
 
-            peer.on('connection', c => {
-                c.on('data', d => {
-                    if (d.type === 'SPEC_JOIN') {
-                        spectators.push(c);
-                        c.send({ type: 'SYNC', state });
-                    } else {
-                        handleData(d);
-                    }
+            // Handle incoming calls (Opponent calling Host, or Host calling Spectator)
+            peer.on('call', call => {
+                call.answer(stream); // Answer with stream (stream is null for spectators)
+                call.on('stream', remoteStream => {
+                    const videoId = isSpectator ? (call.metadata?.isHost ? 'me' : 'peer') : 'peer';
+                    document.getElementById(videoId).srcObject = remoteStream;
+                    render();
                 });
             });
 
-            peer.on('call', call => {
-                call.answer(stream);
-                call.on('stream', s => { document.getElementById('peer').srcObject = s; render(); });
+            // Handle incoming data connections
+            peer.on('connection', c => {
+                connections.push(c);
+                c.on('open', () => c.send({ type: 'SYNC', state }));
+                c.on('data', d => handleData(d, c));
             });
 
-        } catch (e) { alert("Camera Error: " + e.message); }
-    }
-
-    function connectToMatch(id, asSpectator) {
-        conn = peer.connect(id);
-        conn.on('open', () => {
-            conn.send({ type: asSpectator ? 'SPEC_JOIN' : 'JOIN', name: state.p[1].name });
-        });
-        conn.on('data', d => handleData(d));
-        
-        if (!asSpectator) {
-            currentCall = peer.call(id, stream);
-            currentCall.on('stream', s => { document.getElementById('peer').srcObject = s; render(); });
+        } catch (e) {
+            log.innerText = "Error: " + e.message;
+            startBtn.disabled = false;
         }
     }
 
-    function handleData(data) {
-        if (data.type === 'SYNC') state = data.state;
-        else if (data.type === 'JOIN') state.p[1].name = data.name;
-        else state = data;
-        render();
-    }
-
-    function broadcast() {
-        if (conn) conn.send(state);
-        spectators.forEach(s => s.send({ type: 'SYNC', state }));
-    }
-
-    function processHit() {
-        const val = parseInt(document.getElementById('pts-input').value);
-        if (isNaN(val)) return;
-        // ... (Existing scoring logic) ...
-        state.p[state.turn].s -= val; 
-        state.turn = state.turn === 0 ? 1 : 0;
-        document.getElementById('pts-input').value = '';
-        render();
-        broadcast();
-    }
-
-    function showInviteOptions() {
-        const id = document.getElementById('display-id').innerText;
-        const baseUrl = window.location.origin + window.location.pathname;
-        const opt = confirm("Press OK for OPPONENT link\nPress CANCEL for SPECTATOR link");
-        const finalUrl = opt ? `${baseUrl}?join=${id}` : `${baseUrl}?spectate=${id}`;
+    function connectToHost(id, asSpectator) {
+        const conn = peer.connect(id);
+        connections.push(conn);
+        conn.on('open', () => {
+            if (!asSpectator) conn.send({ type: 'JOIN', name: state.p[1].name });
+        });
+        conn.on('data', d => handleData(d));
         
-        navigator.clipboard.writeText(finalUrl);
-        alert("Link Copied to Clipboard!");
+        // Call the host to get their video (Spectators send null stream)
+        const call = peer.call(id, stream, { metadata: { isSpectator: asSpectator } });
+        call.on('stream', s => {
+            // In spec mode, the person we called is Player 1 (me)
+            document.getElementById(asSpectator ? 'me' : 'peer').srcObject = s;
+            render();
+        });
+    }
+
+    function handleData(data, senderConn) {
+        if (data.type === 'SYNC') {
+            state = data.state;
+        } else if (data.type === 'JOIN') {
+            state.p[1].name = data.name;
+            broadcast(state);
+        } else {
+            state = data; 
+        }
+        render();
+    }
+
+    function broadcast(data) {
+        connections.forEach(c => {
+            if (c.open) c.send(data);
+        });
+    }
+
+    // Existing dart logic updated to broadcast to all
+    function processHit() {
+        const input = document.getElementById('pts-input');
+        const val = parseInt(input.value);
+        if (isNaN(val) || val < 0 || val > 180) return;
+        
+        history = JSON.parse(JSON.stringify(state));
+        let p = state.p[state.turn];
+        
+        if (p.s - val >= 0 && p.s - val !== 1) {
+            if (val === 180) p.s180++; else if (val >= 140) p.s140++;
+            if (p.legDarts < 9) { p.f9pts += val; p.f9d += 3; }
+            p.s -= val; p.pts += val; p.d += 3; p.legDarts += 3;
+
+            if (p.s === 0) {
+                if (val > p.hc) p.hc = val;
+                let winningDarts = parseInt(prompt(`Game Shot! Darts thrown?`, "3")) || 3;
+                let diff = 3 - winningDarts;
+                p.d -= diff; p.legDarts -= diff;
+                p.l++; 
+                if (p.l >= Math.ceil(state.bestOf / 2)) state.winner = state.turn; 
+                else { state.p.forEach(x => { x.s = 501; x.legDarts = 0; }); state.turn = (state.turn === 0) ? 1 : 0; }
+            } else { state.turn = (state.turn === 0) ? 1 : 0; }
+        } else { 
+            p.d += 3; p.legDarts += 3; state.turn = (state.turn === 0) ? 1 : 0; 
+        }
+        
+        render();
+        broadcast(state);
+        input.value = ''; input.focus();
+    }
+
+    function undo() {
+        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); broadcast(state); }
+    }
+
+    function triggerRematch() {
+        state.p.forEach(x => { 
+            x.s = 501; x.l = 0; x.pts = 0; x.d = 0; x.f9pts = 0; x.f9d = 0; x.s140 = 0; x.s180 = 0; x.legDarts = 0; x.hc = 0;
+        });
+        state.turn = 0; delete state.winner; history = null;
+        render(); broadcast(state);
     }
 
     function render() {
@@ -288,15 +377,66 @@
             document.getElementById(`n-${i}`).innerText = p.name;
             document.getElementById(`s-${i}`).innerText = p.s;
             document.getElementById(`l-${i}`).innerText = p.l;
+            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
+            document.getElementById(`co-${i}`).innerText = getCheckout(p.s);
         });
+        
+        // Video switching logic
+        const displayIndex = isSpectator ? 0 : myIndex;
+        document.getElementById('box-me').className = (state.turn === displayIndex) ? "v-box visible" : "v-box";
+        document.getElementById('box-peer').className = (state.turn !== displayIndex) ? "v-box visible" : "v-box";
+        
+        if (!isSpectator) {
+            document.getElementById('cam-label-me').innerText = state.p[myIndex].name;
+            document.getElementById('cam-label-peer').innerText = state.p[myIndex === 0 ? 1 : 0].name;
+        } else {
+            document.getElementById('cam-label-me').innerText = state.p[0].name;
+            document.getElementById('cam-label-peer').innerText = state.p[1].name;
+        }
+
+        const winnerLayer = document.getElementById('winner-layer');
+        if (state.winner !== undefined) {
+            document.getElementById('winner-name').innerText = state.p[state.winner].name + " WINS!";
+            renderWinnerStats();
+            winnerLayer.classList.remove('hidden');
+        } else {
+            winnerLayer.classList.add('hidden');
+        }
     }
 
-    function triggerRematch() {
-        state.p.forEach(p => { p.s = 501; p.l = 0; });
-        state.winner = undefined;
-        render();
-        broadcast();
+    function renderWinnerStats() {
+        const p1 = state.p[0], p2 = state.p[1];
+        document.getElementById('winner-stats-grid').innerHTML = `
+            <div></div><div class="stat-header">${p1.name}</div><div class="stat-header">${p2.name}</div>
+            <div class="stat-label-col">Match Avg</div>
+            <div class="stat-val">${(p1.d>0?(p1.pts/p1.d)*3:0).toFixed(2)}</div>
+            <div class="stat-val">${(p2.d>0?(p2.pts/p2.d)*3:0).toFixed(2)}</div>
+            <div class="stat-label-col">180s</div><div class="stat-val">${p1.s180}</div><div class="stat-val">${p2.s180}</div>
+        `;
+    }
+
+    function shareInvite(type) {
+        const id = document.getElementById('display-id').innerText;
+        const param = type === 'join' ? 'join' : 'spec';
+        const url = window.location.origin + window.location.pathname + '?' + param + '=' + id;
+        if (navigator.share) navigator.share({ title: 'Darts Match', url });
+        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
+    }
+
+    async function swapCam() {
+        if (!stream) return;
+        const tracks = stream.getVideoTracks();
+        tracks.forEach(t => t.stop());
+        const facing = tracks[0].getSettings().facingMode === 'user' ? 'environment' : 'user';
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
+        document.getElementById('me').srcObject = stream;
+        // Logic to replace track in existing calls would go here
+    }
+
+    function getCheckout(s) {
+        const checkouts = { 170: "T20 T20 BULL", 167: "T20 T19 BULL", 40: "D20", 32: "D16" /* ... rest of your table */ };
+        return checkouts[s] || "";
     }
 </script>
 </body>
