@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DartStream</title>
+    <title>RAF Dart Scorer</title>
     <style>
-        :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
+        :root { --blue: #00d4ff; --dark: #020408; --card: rgba(13, 27, 42, 0.85); --active: rgba(22, 42, 63, 0.95); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
         body { 
-            background: var(--dark); color: white; font-family: system-ui, sans-serif; 
+            /* The image background with a dark tint overlay for readability */
+            background: linear-gradient(rgba(2, 4, 8, 0.85), rgba(2, 4, 8, 0.85)), url('51693.jpg') center/cover no-repeat fixed;
+            background-color: var(--dark);
+            color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            grid-template-rows: 40px 45dvh 1fr 80px;
+            grid-template-rows: 40px 45dvh 1fr 80px auto;
             overflow: hidden; 
         }
         
         /* Setup & Winner Layers */
         #setup-layer, #winner-layer { 
-            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
+            position: fixed; inset: 0; background: rgba(2, 4, 8, 0.92); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-            overflow-y: auto;
+            overflow-y: auto; backdrop-filter: blur(5px);
         }
         #winner-layer {
-            background: rgba(2, 4, 8, 0.95); z-index: 10001; 
+            background: rgba(2, 4, 8, 0.98); z-index: 10001; 
         }
         .setup-card { 
             background: var(--card); padding: 25px; border-radius: 15px; 
@@ -32,8 +35,8 @@
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
         
         .input-group { margin-bottom: 10px; text-align: left; }
-        .input-group label { display: block; font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-        .setup-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
+        .input-group label { display: block; font-size: 10px; color: #bbb; margin-bottom: 5px; text-transform: uppercase; }
+        .setup-input { width: 100%; background: rgba(0,0,0,0.8); border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
         
         .btn-start { 
             background: var(--blue); color: black; width: 100%; padding: 16px; 
@@ -43,15 +46,15 @@
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* Header */
-        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
+        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-size: 11px; background: rgba(0,0,0,0.6); }
         .header-controls { display: flex; gap: 8px; align-items: center; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;}
+        .header-btn { background: rgba(34,34,34,0.8); border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;}
 
         /* Video System */
-        .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
+        .v-container { position: relative; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(27, 73, 101, 0.5); overflow: hidden; }
         .v-box { position: absolute; inset: 0; display: none; }
         .v-box.visible { display: block; }
-        video { width: 100%; height: 100%; object-fit: cover; background: #111; }
+        video { width: 100%; height: 100%; object-fit: cover; background: transparent; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; text-transform: uppercase; }
 
         /* Scoring Area */
@@ -62,18 +65,29 @@
         .p-name { font-size: 14px; color: #fff; font-weight: bold; }
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .score-val { font-size: clamp(35px, 7dvh, 55px); font-weight: 900; line-height: 1; }
-        .legs-count { font-size: 11px; color: #888; text-align: right; }
+        .legs-count { font-size: 11px; color: #bbb; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
 
         .controls { 
             display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; 
-            background: #000; border-top: 1px solid #1b4965; padding-bottom: env(safe-area-inset-bottom);
+            background: rgba(0,0,0,0.7); border-top: 1px solid rgba(27, 73, 101, 0.5);
         }
-        .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-        .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
+        .score-input-box { background: rgba(17,17,17,0.8); border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .btn-undo { background: rgba(34,34,34,0.9); border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
         .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
         
         #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
+        
+        /* Footer Credit Area */
+        .footer-credit {
+            background: rgba(0, 0, 0, 0.85);
+            color: #777;
+            font-size: 10px;
+            text-align: center;
+            padding: 5px;
+            padding-bottom: max(5px, env(safe-area-inset-bottom));
+        }
+
         .hidden { display: none !important; }
     </style>
 </head>
@@ -81,7 +95,7 @@
 
 <div id="setup-layer">
     <div class="setup-card">
-        <h2>DARTSTREAM</h2>
+        <h2>RAF DART SCORER</h2>
         <div class="input-group">
             <label>Your Name</label>
             <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
@@ -105,7 +119,7 @@
     <div class="setup-card">
         <h2>MATCH OVER</h2>
         <h1 id="winner-name" style="color: white; margin: 15px 0; font-size: 28px;">P1 Wins!</h1>
-        <p id="winner-stats" style="font-size: 14px; color: #888; margin-bottom: 20px;"></p>
+        <p id="winner-stats" style="font-size: 14px; color: #bbb; margin-bottom: 20px;"></p>
         <button id="rematch-btn" class="btn-start">REMATCH</button>
     </div>
 </div>
@@ -154,6 +168,10 @@
     <button class="btn-hit" id="hit-btn">HIT</button>
 </div>
 
+<div class="footer-credit">
+    Created by Ben Townsend of the RAF Leeming Arrows
+</div>
+
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 
 <script>
@@ -170,7 +188,6 @@
     const joinId = urlParams.get('join');
 
     window.addEventListener('load', () => {
-        // Guest UI Adjustments
         if (joinId) {
             document.getElementById('legs-setup-group').style.display = 'none';
             document.getElementById('start-btn').innerText = 'JOIN MATCH';
@@ -272,14 +289,11 @@
 
     function handleData(data) {
         if (data.type === 'SYNC') {
-            // Host sent full state, we accept it but preserve our guest name
             const myGuestName = state.p[1].name;
             state = data.state;
             state.p[1].name = myGuestName;
         } else if (data.type === 'JOIN') {
-            // Guest sent us their name
             state.p[1].name = data.name;
-            // Host broadcasts updated state back to guest so everything perfectly aligns
             if (myIndex === 0 && conn) conn.send(state);
         } else {
             state = data; 
@@ -402,7 +416,6 @@
     }
 
     function render() {
-        // Player Score Cards
         state.p.forEach((p, i) => {
             document.getElementById(`n-${i}`).innerText = p.name;
             document.getElementById(`s-${i}`).innerText = p.s;
@@ -411,7 +424,6 @@
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
-        // Videos and Camera Labels
         const myName = state.p[myIndex].name;
         const peerName = state.p[myIndex === 0 ? 1 : 0].name;
 
@@ -428,7 +440,6 @@
             document.getElementById('cam-label-peer').innerText = peerName;
         }
 
-        // Winner Overlay
         const winnerLayer = document.getElementById('winner-layer');
         if (state.winner !== undefined) {
             const w = state.p[state.winner];
