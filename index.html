@@ -17,12 +17,10 @@
 
         body.spectator-mode { grid-template-rows: 40px 45dvh 1fr 0px 25px; }
         
-        /* UI elements can safely use display: none */
         body.spectator-mode .controls,
         body.spectator-mode .header-controls,
         body.spectator-mode #legs-group { display: none !important; }
         
-        /* WebRTC Fix: Use visibility/opacity/z-index for video feeds instead of display: none */
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
         
@@ -66,7 +64,6 @@
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
         
-        /* WebRTC Fix: Safe hiding mechanics for mobile browsers */
         .v-box { 
             position: absolute; 
             inset: 0; 
@@ -81,7 +78,9 @@
             z-index: 1; 
         }
 
-        video { width: 100%; height: 100%; object-fit: cover; background: #111; }
+        /* DIGITAL ZOOM UPGRADE: Added smooth transform transitions */
+        video { width: 100%; height: 100%; object-fit: cover; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
+        
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
         .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
@@ -216,7 +215,7 @@
     let spectatorCalls = []; 
     let myIndex = 0;
     let isMuted = false;
-    let currentZoom = 1;
+    let currentZoom = 1; // Tracks digital zoom level
     
     let state = { turn: 0, bestOf: 5, p: [
         { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
@@ -278,7 +277,6 @@
 
     function broadcast(data) { conns.forEach(c => { if (c && c.open) c.send(data); }); }
 
-    // APPLE HACK: Global invisible listener. The moment an iOS user taps anywhere, unlock the opponent's video.
     function unlockAudio() {
         const peerVideo = document.getElementById('peer');
         if (peerVideo && peerVideo.paused && peerVideo.srcObject) {
@@ -345,13 +343,7 @@
                     'iceServers': [
                         { urls: 'stun:stun.l.google.com:19302' },
                         { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun.cloudflare.com:3478' },
-                        // WebRTC Fix: Add a TURN server here to fix Cellular Data / Strict NAT failures
-                        // {
-                        //     urls: 'turn:your-turn-server.com:3478',
-                        //     username: 'your_username',
-                        //     credential: 'your_password'
-                        // }
+                        { urls: 'stun:stun.cloudflare.com:3478' }
                     ]
                 }
             });
@@ -392,7 +384,7 @@
                 c.on('open', () => c.send({ type: 'SYNC', state }));
                 c.on('data', d => {
                     handleData(d);
-                    if (myIndex === 0 && d.type !== 'JOIN') { broadcast(state); }
+                    if (myIndex === 0 && d.type !== 'JOIN' && d.type !== 'ZOOM') { broadcast(state); }
                 });
             });
 
@@ -410,11 +402,9 @@
     function attachPeerVideo(s) {
         const peerVideo = document.getElementById('peer');
         peerVideo.srcObject = s;
-        // Wait until browser confirms metadata is loaded
         peerVideo.onloadedmetadata = () => {
             peerVideo.play().catch(e => {
-                console.warn("Autoplay blocked by mobile browser. User must tap screen to start video.", e);
-                // The global 'unlockAudio' event listener will catch their next tap and force it to play.
+                console.warn("Autoplay blocked. User must tap screen to start video.", e);
             });
         };
     }
@@ -446,6 +436,13 @@
     }
 
     function handleData(data) {
+        // Handle Digital Zoom from Opponent
+        if (data.type === 'ZOOM') {
+            const peerVid = document.getElementById('peer');
+            if (peerVid) peerVid.style.transform = `scale(${data.level})`;
+            return; 
+        }
+
         if (data.type === 'SYNC') {
             state.bestOf = data.state.bestOf;
             state.p[0].name = data.state.p[0].name;
@@ -464,41 +461,24 @@
         render();
     }
 
-    async function cycleZoom() {
+    // DIGITAL ZOOM FUNCTION
+    function cycleZoom() {
         if (!stream) return;
         
-        const track = stream.getVideoTracks()[0];
+        // Cycle 1x -> 1.5x -> 2x -> 1x
+        if (currentZoom === 1) currentZoom = 1.5;
+        else if (currentZoom === 1.5) currentZoom = 2;
+        else currentZoom = 1;
+
+        // Update Button text
         const btn = document.getElementById('zoom-btn');
-        
-        if (!track.getCapabilities) {
-            alert("Camera capabilities API not supported by this browser.");
-            return;
-        }
+        if (btn) btn.innerText = currentZoom === 1 ? "ZOOM" : `ZOOM ${currentZoom}x`;
 
-        const capabilities = track.getCapabilities();
+        // Apply scale to your own local video
+        document.getElementById('me').style.transform = `scale(${currentZoom})`;
 
-        if ('zoom' in capabilities) {
-            const min = capabilities.zoom.min || 1;
-            const max = capabilities.zoom.max || 3;
-            
-            if (currentZoom === min) {
-                currentZoom = min + (max - min) / 2; // Go to 50%
-            } else if (currentZoom < max) {
-                currentZoom = max; // Go to 100%
-            } else {
-                currentZoom = min; // Reset
-            }
-
-            try {
-                await track.applyConstraints({ advanced: [{ zoom: currentZoom }] });
-                btn.innerText = `ZOOM ${currentZoom.toFixed(1)}x`; 
-            } catch (err) {
-                console.error("Zoom failed:", err);
-                alert("Unable to apply zoom on this device.");
-            }
-        } else {
-            alert("Hardware zoom is not supported on this specific camera.");
-        }
+        // Broadcast the zoom level to your opponent
+        broadcast({ type: 'ZOOM', level: currentZoom });
     }
 
     function toggleMute() {
@@ -545,10 +525,12 @@
             stream.addTrack(newVideoTrack);
             document.getElementById('me').srcObject = stream;
 
-            // Reset zoom state when camera changes
+            // Reset zoom when flipping camera
             currentZoom = 1; 
             const zoomBtn = document.getElementById('zoom-btn');
             if (zoomBtn) zoomBtn.innerText = "ZOOM";
+            document.getElementById('me').style.transform = "scale(1)";
+            broadcast({ type: 'ZOOM', level: 1 });
 
             if (currentCall && currentCall.peerConnection) {
                 const senders = currentCall.peerConnection.getSenders();
@@ -562,9 +544,12 @@
             stream.addTrack(recoveredTrack);
             document.getElementById('me').srcObject = stream;
             
+            // Reset zoom on fallback
             currentZoom = 1; 
             const zoomBtn = document.getElementById('zoom-btn');
             if (zoomBtn) zoomBtn.innerText = "ZOOM";
+            document.getElementById('me').style.transform = "scale(1)";
+            broadcast({ type: 'ZOOM', level: 1 });
 
             if (currentCall && currentCall.peerConnection) {
                 const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
