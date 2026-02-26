@@ -34,7 +34,6 @@
             overflow-y: auto;
         }
 
-        /* The Card holds the sharp background image */
         .setup-card { 
             background-image: linear-gradient(var(--card-tint), var(--card-tint)), url('51693.jpg');
             background-position: center;
@@ -103,10 +102,10 @@
         /* Checkout Hint Styling */
         .checkout-hint {
             font-size: clamp(12px, 2.5dvh, 16px);
-            color: #ffb703; /* Amber color to stand out from the blue */
+            color: #ffb703; 
             font-weight: 800;
             text-align: center;
-            min-height: 16px; /* Prevents card from jumping when text appears */
+            min-height: 16px; 
             margin-top: 5px;
             letter-spacing: 1px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
@@ -238,7 +237,6 @@
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
 
-    // Comprehensive standard professional checkout table
     const checkouts = {
         170: "T20 T20 BULL", 167: "T20 T19 BULL", 164: "T20 T18 BULL", 161: "T20 T17 BULL",
         160: "T20 T20 D20", 158: "T20 T20 D19", 157: "T20 T19 D20", 156: "T20 T20 D18",
@@ -302,6 +300,31 @@
         }
     });
 
+    // Voice announcer function
+    function announceScore(score) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel(); // Interrupt any ongoing speech
+        
+        let msg = new SpeechSynthesisUtterance();
+        
+        if (score === 180) {
+            msg.text = "One Hundred and Eighty!";
+            msg.pitch = 0.6; // Lower pitch for that classic referee shout
+            msg.rate = 0.85; // Slowed down for dramatic effect
+            msg.volume = 1.0;
+        } else if (score === 0) {
+            msg.text = "No Score";
+            msg.pitch = 1.0;
+            msg.rate = 1.0;
+        } else {
+            msg.text = score.toString();
+            msg.pitch = 1.0;
+            msg.rate = 1.0;
+        }
+        
+        window.speechSynthesis.speak(msg);
+    }
+
     async function initApp() {
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
@@ -309,13 +332,14 @@
         log.innerText = "Accessing Camera...";
 
         try {
-            let constraints = { video: true, audio: true };
+            let videoConstraints = { width: { ideal: 1280 }, height: { ideal: 720 } };
+            
             if (isMobile) {
-                constraints.video = { facingMode: "environment" };
+                videoConstraints.facingMode = "environment";
                 currentFacingMode = "environment";
             }
 
-            stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async () => {
+            stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true }).catch(async () => {
                 isMobile = false;
                 return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             });
@@ -387,6 +411,12 @@
             state.p[1].name = data.name;
             if (myIndex === 0 && conn) conn.send(state);
         } else {
+            // Check if the opponent just scored to announce it on your end too
+            if (data.turn !== state.turn && data.p) {
+                const prevTurn = data.turn === 0 ? 1 : 0;
+                // We calculate the score hit by checking points added 
+                // However, the easiest way is just to announce it locally when hitting
+            }
             state = data; 
         }
         render();
@@ -413,7 +443,10 @@
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
                 try {
                     newStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: { exact: currentFacingMode } } 
+                        video: { 
+                            facingMode: { exact: currentFacingMode },
+                            width: { ideal: 1280 }, height: { ideal: 720 } 
+                        } 
                     });
                 } catch (e) {
                     isMobile = false; 
@@ -423,7 +456,10 @@
             if (!isMobile) {
                 currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
                 newStream = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId } }
+                    video: { 
+                        deviceId: { exact: videoCameras[currentCamIndex].deviceId },
+                        width: { ideal: 1280 }, height: { ideal: 720 }
+                    }
                 });
             }
 
@@ -442,7 +478,9 @@
             
         } catch (e) {
             alert("Recovering camera connection...");
-            const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const recoveredStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: { ideal: 1280 }, height: { ideal: 720 } } 
+            });
             const recoveredTrack = recoveredStream.getVideoTracks()[0];
             stream.addTrack(recoveredTrack);
             document.getElementById('me').srcObject = stream;
@@ -459,6 +497,9 @@
         const val = parseInt(input.value);
         
         if (isNaN(val) || val < 0 || val > 180) return;
+        
+        // Announce the score
+        announceScore(val);
         
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
@@ -514,7 +555,6 @@
             document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
             
-            // Render Checkout Hint
             document.getElementById(`co-${i}`).innerText = checkouts[p.s] ? checkouts[p.s] : "";
         });
         
