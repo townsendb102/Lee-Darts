@@ -11,7 +11,6 @@
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            /* Default 5-row layout for Online Mode */
             grid-template-rows: 40px 45dvh 1fr 80px 25px;
             overflow: hidden; 
         }
@@ -23,19 +22,17 @@
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
         
-        /* 🎯 NEW LOCAL MODE FIX: Changes layout from 5 rows to 4 rows, completely eradicating the camera row */
-        body.local-mode { 
-            grid-template-rows: 40px 1fr 80px 25px !important; 
-        }
+        body.local-mode { grid-template-rows: 40px 1fr 80px 25px !important; }
         body.local-mode .v-container { display: none !important; }
         body.local-mode .header-controls { display: none !important; }
 
-        #setup-layer, #winner-layer { 
+        #setup-layer, #winner-layer, #first-throw-layer { 
             position: fixed; inset: 0 0 25px 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
             overflow-y: auto;
         }
         #winner-layer { background: rgba(2, 4, 8, 0.95); z-index: 10001; }
+        #first-throw-layer { background: rgba(2, 4, 8, 0.98); z-index: 10002; }
         
         .setup-card { 
             background-color: var(--card); 
@@ -161,6 +158,19 @@
     </div>
 </div>
 
+<div id="first-throw-layer" class="hidden">
+    <div class="setup-card" id="ft-step-1">
+        <h2 style="color: white; margin-bottom: 20px; font-size: 22px;">Who Throws First?</h2>
+        <button class="btn-start" onclick="showFtStep2('bull')" style="margin-bottom: 10px;">Closest to Bull</button>
+        <button class="btn-start" onclick="showFtStep2('manual')" style="background: #444; color: white;">Choose Player</button>
+    </div>
+    <div class="setup-card hidden" id="ft-step-2">
+        <h2 id="ft-title" style="color: white; margin-bottom: 20px; font-size: 22px;">Who won the Bull?</h2>
+        <button class="btn-start" id="ft-p1-btn" onclick="setFirstPlayer(0)" style="margin-bottom: 10px;">P1</button>
+        <button class="btn-start" id="ft-p2-btn" onclick="setFirstPlayer(1)" style="background: #444; color: white;">P2</button>
+    </div>
+</div>
+
 <div id="winner-layer" class="hidden">
     <div class="setup-card">
         <h1 id="winner-name" style="color: white; margin: 10px 0 20px 0; font-size: 24px;">P1 Wins!</h1>
@@ -238,7 +248,8 @@
     let currentZoom = 1; 
     let isLocalMatch = false; 
     
-    let state = { turn: 0, bestOf: 5, p: [
+    // NEW: added startingPlayer to mathematically track who throws first each leg
+    let state = { turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
         { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }
     ]};
@@ -310,7 +321,6 @@
     document.body.addEventListener('touchstart', unlockAudio);
 
     window.addEventListener('load', () => {
-        // Toggle Local/Online form fields
         const modeInput = document.getElementById('mode-input');
         if (modeInput) {
             modeInput.addEventListener('change', (e) => {
@@ -349,6 +359,37 @@
         }
     });
 
+    // NEW: Function to display the Who Throws First prompt
+    function showFirstThrowUI() {
+        document.getElementById('first-throw-layer').classList.remove('hidden');
+        document.getElementById('ft-step-1').classList.remove('hidden');
+        document.getElementById('ft-step-2').classList.add('hidden');
+    }
+
+    // NEW: Function to show player selection buttons
+    function showFtStep2(mode) {
+        document.getElementById('ft-step-1').classList.add('hidden');
+        document.getElementById('ft-step-2').classList.remove('hidden');
+        
+        document.getElementById('ft-p1-btn').innerText = state.p[0].name;
+        document.getElementById('ft-p2-btn').innerText = isLocalMatch ? state.p[1].name : "Opponent";
+
+        if (mode === 'bull') {
+            document.getElementById('ft-title').innerText = "Who was closest to Bull?";
+        } else {
+            document.getElementById('ft-title').innerText = "Who throws first?";
+        }
+    }
+
+    // NEW: Set the starting player and commence the match
+    function setFirstPlayer(playerIndex) {
+        state.startingPlayer = playerIndex;
+        state.turn = playerIndex;
+        document.getElementById('first-throw-layer').classList.add('hidden');
+        render();
+        if (!isLocalMatch) broadcast(state);
+    }
+
     async function initApp() {
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
@@ -357,7 +398,7 @@
         const modeSelect = document.getElementById('mode-input');
         isLocalMatch = (modeSelect && modeSelect.value === 'local');
 
-        // 🎯 LOCAL MATCH BYPASS - Completely short-circuits execution before camera is requested
+        // LOCAL MATCH START
         if (isLocalMatch) {
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
@@ -365,15 +406,13 @@
             
             document.getElementById('setup-layer').classList.add('hidden');
             document.getElementById('display-id').innerText = "LOCAL MATCH";
-            
-            // Re-draws the CSS Grid to completely fill the screen with the scorecards
             document.body.classList.add('local-mode'); 
             
-            render();
-            return; // EXIT FUNCTION IMMEDIATELY
+            showFirstThrowUI(); // Prompt for first throw
+            return; 
         }
 
-        // --- ONLINE MATCH CAMERA & WEBRTC LOGIC STARTS HERE ---
+        // ONLINE MATCH START
         try {
             if (!spectateId) {
                 log.innerText = "Accessing Camera...";
@@ -407,7 +446,9 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('setup-layer').classList.add('hidden');
                 
-                if (spectateId) { connectToMatch(spectateId, true); } 
+                if (spectateId) { 
+                    connectToMatch(spectateId, true); 
+                } 
                 else if (joinId) {
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
@@ -415,8 +456,11 @@
                 } else {
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+                    showFirstThrowUI(); // Host prompts for first throw
                 }
-                render();
+                
+                // Guests & Spectators render immediately. Host waits until they select first player.
+                if (joinId || spectateId) render();
             });
 
             peer.on('call', call => {
@@ -500,6 +544,7 @@
         if (data.type === 'SYNC') {
             state.bestOf = data.state.bestOf;
             state.p[0].name = data.state.p[0].name;
+            state.startingPlayer = data.state.startingPlayer || 0;
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
         } else {
@@ -628,17 +673,31 @@
             if (p.ld <= 9) { p.f9pts += val; }
             if (val === 180) p.n180++; else if (val >= 140) p.n140++;
 
+            // LEG END TRIGGER
             if (p.s === 0) { 
                 if (val > p.hc) p.hc = val; 
                 p.l++; 
                 const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
-                if (p.l >= legsRequiredToWin) { state.winner = state.turn; } 
-                else {
+                
+                // Check if match won
+                if (p.l >= legsRequiredToWin) { 
+                    state.winner = state.turn; 
+                } else {
+                    // Reset scores for new leg
                     state.p.forEach(x => { x.s = 501; x.ld = 0; }); 
-                    state.turn = (state.turn === 0) ? 1 : 0; 
+                    
+                    // NEW: Swap the starting player mathematically
+                    state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
+                    state.turn = state.startingPlayer; 
                 }
-            } else { state.turn = (state.turn === 0) ? 1 : 0; }
-        } else { state.turn = (state.turn === 0) ? 1 : 0; }
+            } else { 
+                // Leg not over, just switch turns
+                state.turn = (state.turn === 0) ? 1 : 0; 
+            }
+        } else { 
+            // BUST, switch turns
+            state.turn = (state.turn === 0) ? 1 : 0; 
+        }
         
         render(); 
         if (!isLocalMatch) broadcast(state);
@@ -659,9 +718,17 @@
             x.s = 501; x.l = 0; x.pts = 0; x.d = 0; 
             x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
         });
-        state.turn = 0; delete state.winner; history = null;
-        render(); 
-        if (!isLocalMatch) broadcast(state);
+        delete state.winner; history = null;
+        
+        document.getElementById('winner-layer').classList.add('hidden');
+        if (!isLocalMatch) broadcast(state); // Clears the screen for the guest
+
+        // Ask for the first throw again
+        if (isLocalMatch || myIndex === 0) {
+            showFirstThrowUI();
+        } else {
+            render();
+        }
     }
 
     function render() {
