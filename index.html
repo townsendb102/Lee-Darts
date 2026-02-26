@@ -11,6 +11,7 @@
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
+            /* Default 5-row layout for Online Mode */
             grid-template-rows: 40px 45dvh 1fr 80px 25px;
             overflow: hidden; 
         }
@@ -22,8 +23,10 @@
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
         
-        /* NEW: Local Mode Layout - Collapses the video container and hides network/camera buttons */
-        body.local-mode { grid-template-rows: 40px 0px 1fr 80px 25px; }
+        /* 🎯 NEW LOCAL MODE FIX: Changes layout from 5 rows to 4 rows, completely eradicating the camera row */
+        body.local-mode { 
+            grid-template-rows: 40px 1fr 80px 25px !important; 
+        }
         body.local-mode .v-container { display: none !important; }
         body.local-mode .header-controls { display: none !important; }
 
@@ -354,24 +357,24 @@
         const modeSelect = document.getElementById('mode-input');
         isLocalMatch = (modeSelect && modeSelect.value === 'local');
 
-        // LOCAL MATCH BYPASS - Moved to the very top so the camera is never requested
+        // 🎯 LOCAL MATCH BYPASS - Completely short-circuits execution before camera is requested
         if (isLocalMatch) {
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
             
             document.getElementById('setup-layer').classList.add('hidden');
-            document.getElementById('display-id').innerText = "LOCAL";
+            document.getElementById('display-id').innerText = "LOCAL MATCH";
             
-            // Hides the video area and camera buttons, expanding the scorecards
+            // Re-draws the CSS Grid to completely fill the screen with the scorecards
             document.body.classList.add('local-mode'); 
             
             render();
-            return; 
+            return; // EXIT FUNCTION IMMEDIATELY
         }
 
+        // --- ONLINE MATCH CAMERA & WEBRTC LOGIC STARTS HERE ---
         try {
-            // ONLY execute camera setup if it's an online match
             if (!spectateId) {
                 log.innerText = "Accessing Camera...";
                 let constraints = { video: true, audio: true };
@@ -681,7 +684,6 @@
                 ptsInput.disabled = true; hitBtn.disabled = true; ptsInput.placeholder = "Waiting...";
             }
             
-            // Only toggle classes if it's NOT a local match (in local match, it's hidden entirely via CSS)
             if (!isLocalMatch) {
                 document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
                 document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
