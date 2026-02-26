@@ -175,6 +175,7 @@
 <header>
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
+        <button class="header-btn" id="mute-btn" style="color: #ff4d4d;">MUTE</button>
         <button class="header-btn" id="flip-btn">FLIP</button>
         <button class="header-btn" id="spectate-btn" style="color: #ffeb3b;">SPECTATE</button>
         <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
@@ -228,6 +229,7 @@
     let conns = []; 
     let spectatorCalls = []; 
     let myIndex = 0;
+    let isMuted = false;
     
     let state = { 
         turn: 0, 
@@ -309,6 +311,7 @@
 
         document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
+        document.getElementById('mute-btn').onclick = toggleMute;
         document.getElementById('share-btn').onclick = shareInvite;
         document.getElementById('spectate-btn').onclick = shareSpectator;
         document.getElementById('undo-btn').onclick = undo;
@@ -451,7 +454,6 @@
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
         } else {
-            // SAFEGUARD: If opponent sends an old state object, default the new missing variables to zero.
             if (data.p) {
                 data.p.forEach(player => {
                     player.ld = player.ld ?? 0;
@@ -465,6 +467,25 @@
             state = data; 
         }
         render();
+    }
+
+    // New Mute Toggle Function
+    function toggleMute() {
+        if (stream && stream.getAudioTracks().length > 0) {
+            isMuted = !isMuted;
+            stream.getAudioTracks()[0].enabled = !isMuted;
+            
+            const btn = document.getElementById('mute-btn');
+            if (isMuted) {
+                btn.innerText = "UNMUTE";
+                btn.style.color = "#aaa";
+                btn.style.borderColor = "#666";
+            } else {
+                btn.innerText = "MUTE";
+                btn.style.color = "#ff4d4d";
+                btn.style.borderColor = "#444";
+            }
+        }
     }
 
     async function swapCam() {
@@ -539,7 +560,6 @@
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
 
-        // SAFEGUARD: Guarantee properties exist locally before calculating
         p.ld = p.ld ?? 0;
         p.f9pts = p.f9pts ?? 0;
         p.f9d = p.f9d ?? 0;
@@ -666,7 +686,6 @@
             const w = state.p[state.winner];
             document.getElementById('winner-name').innerText = w.name + " WINS!";
             
-            // SAFEGUARD: Ensure numbers process correctly even if caching glitches occurred mid-game.
             for (let i = 0; i < 2; i++) {
                 let pStats = state.p[i];
                 let f9d = pStats.f9d ?? 0;
