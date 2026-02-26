@@ -11,14 +11,12 @@
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            /* Added a 25px row at the bottom for the footer */
             grid-template-rows: 40px 45dvh 1fr 80px 25px;
             overflow: hidden; 
         }
 
         /* --- SPECTATOR MODE OVERRIDES --- */
         body.spectator-mode {
-            /* Removes the bottom control row height but keeps the footer */
             grid-template-rows: 40px 45dvh 1fr 0px 25px; 
         }
         body.spectator-mode .controls,
@@ -30,28 +28,18 @@
         body.spectator-mode #box-peer { display: block !important; }
         /* -------------------------------- */
         
-        /* Setup & Winner Layers */
         #setup-layer, #winner-layer { 
-            position: fixed; 
-            /* Leaves 25px at the bottom so the footer is always visible */
-            inset: 0 0 25px 0; 
-            background: var(--dark); z-index: 10000; 
+            position: fixed; inset: 0 0 25px 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
             overflow-y: auto;
         }
-        #winner-layer {
-            background: rgba(2, 4, 8, 0.95); z-index: 10001; 
-        }
+        #winner-layer { background: rgba(2, 4, 8, 0.95); z-index: 10001; }
         
         .setup-card { 
             background-color: var(--card); 
             background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg');
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: contain;
-            
-            padding: 25px; border-radius: 15px; 
-            width: 100%; max-width: 320px; border: 1px solid #1b4965;
+            background-position: center; background-repeat: no-repeat; background-size: contain;
+            padding: 25px; border-radius: 15px; width: 100%; max-width: 320px; border: 1px solid #1b4965;
             display: flex; flex-direction: column; gap: 10px; text-align: center;
         }
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
@@ -67,34 +55,26 @@
         }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Header */
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
         .header-controls { display: flex; gap: 8px; align-items: center; }
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;}
 
-        /* Video System */
         .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
         .v-box { position: absolute; inset: 0; display: none; }
         .v-box.visible { display: block; }
         video { width: 100%; height: 100%; object-fit: cover; background: #111; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
-        /* Scoring Area */
         .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
         
         .player-card { 
-            flex: 1; 
-            background-color: var(--card); 
+            flex: 1; background-color: var(--card); 
             background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg');
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: contain;
-            
+            background-position: center; background-repeat: no-repeat; background-size: contain;
             border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; 
         }
         .player-card.active { 
-            border-color: var(--blue); 
-            background-color: var(--active); 
+            border-color: var(--blue); background-color: var(--active); 
             background-image: linear-gradient(rgba(22, 42, 63, 0.85), rgba(22, 42, 63, 0.85)), url('51693.jpg');
         }
         
@@ -103,27 +83,20 @@
         .score-val { font-size: clamp(30px, 6dvh, 50px); font-weight: 900; line-height: 1; }
         .legs-count { font-size: 11px; color: #888; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
-        
-        /* Checkout styling */
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
 
-        .controls { 
-            display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; 
-            background: #000; border-top: 1px solid #1b4965; 
-        }
+        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; background: #000; border-top: 1px solid #1b4965; }
         .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
         .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
         .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
         
+        /* Disabled state styling for the controls */
+        #pts-input:disabled { color: #555; }
+        .btn-hit:disabled { background: #333; color: #666; cursor: not-allowed; }
+        
         #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
         
-        /* Global Footer */
-        .site-footer {
-            display: flex; align-items: center; justify-content: center;
-            background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase;
-            border-top: 1px solid #1b4965; z-index: 10002;
-        }
-
+        .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid #1b4965; z-index: 10002; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -227,7 +200,6 @@
     const joinId = urlParams.get('join');
     const spectateId = urlParams.get('spectate');
 
-    // Standard Darts Checkouts Dictionary
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
         160:"T20 T20 D20",158:"T20 T20 D19",157:"T20 T19 D20",156:"T20 T20 D18",
@@ -499,6 +471,9 @@
     }
 
     function processHit() {
+        // Prevent action if it's not this device's turn
+        if (state.turn !== myIndex) return;
+
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
         
@@ -529,7 +504,7 @@
         render();
         broadcast(state);
         input.value = '';
-        input.focus(); 
+        input.blur(); // Forces the mobile keyboard to close
     }
 
     function undo() {
@@ -560,7 +535,21 @@
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
+        // Handle input states based on whose turn it is
         if (!spectateId) {
+            const ptsInput = document.getElementById('pts-input');
+            const hitBtn = document.getElementById('hit-btn');
+            
+            if (state.turn === myIndex) {
+                ptsInput.disabled = false;
+                hitBtn.disabled = false;
+                ptsInput.placeholder = "0";
+            } else {
+                ptsInput.disabled = true;
+                hitBtn.disabled = true;
+                ptsInput.placeholder = "Waiting...";
+            }
+
             document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
             document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
         } else {
