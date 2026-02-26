@@ -541,11 +541,11 @@
                 document.getElementById('setup-layer').classList.add('hidden');
                 
                 if (spectateId) { 
-                    setTimeout(() => { connectToMatch(spectateId, true); }, 600); 
+                    connectToMatch(spectateId, true); 
                 } else if (joinId) {
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
-                    setTimeout(() => { connectToMatch(joinId, false); }, 600);
+                    connectToMatch(joinId, false);
                 } else {
                     state.p[0].name = document.getElementById('name-input').value || "Host";
                     state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
@@ -618,76 +618,47 @@
         };
     }
 
-    
+    function connectToMatch(id, isSpectator = false) {
+        const c = peer.connect(id);
+        conns.push(c);
+        
+        c.on('open', () => {
+            if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name });
+        });
+        
+        c.on('data', d => handleData(d));
+        
+        if (isSpectator) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1; canvas.height = 1;
+            const dummyStream = canvas.captureStream(1); 
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
+            dummyStream.addTrack(dummyAudio);
+            
+            const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
+            specCall.on('stream', s => { attachPeerVideo(s); render(); });
+        } else {
+            currentCall = peer.call(id, stream);
+            limitVideoBitrate(currentCall.peerConnection, 1500); // 1.5 Mbps Limiter
+            
+            currentCall.on('stream', s => { 
+                attachPeerVideo(s); 
+                render(); 
 
-
-function startPlayerCall(id) {
-    if (!stream) return;
-
-    currentCall = peer.call(id, stream);
-
-    currentCall.on('stream', s => {
-        attachPeerVideo(s);
-        if (typeof render === "function") render();
-    });
-
-    currentCall.on('error', err => {
-        console.warn("Call failed:", err);
-    });
-}
-
-function startSpectatorCall(id) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1;
-    canvas.height = 1;
-
-    const dummyStream = canvas.captureStream(1);
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
-    dummyStream.addTrack(dummyAudio);
-
-    const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
-
-    specCall.on('stream', s => {
-        attachPeerVideo(s);
-        if (typeof render === "function") render();
-    });
-}
-
-function connectToMatch(id, isSpectator = false) {
-
-    if (!peer || peer.disconnected) {
-        console.warn("Peer not ready, retrying...");
-        setTimeout(() => connectToMatch(id, isSpectator), 500);
-        return;
-    }
-
-    const c = peer.connect(id, { reliable: true });
-    conns.push(c);
-
-    c.on('open', () => {
-
-        if (!isSpectator) {
-            c.send({ type: 'JOIN', name: state?.p?.[1]?.name || "Guest" });
+                // Listen for P2P connection issues
+                currentCall.peerConnection.addEventListener('iceconnectionstatechange', () => {
+                    const state = currentCall.peerConnection.iceConnectionState;
+                    const overlay = document.getElementById('reconnect-overlay');
+                    if (state === 'disconnected' || state === 'failed') {
+                        if (overlay) overlay.classList.add('visible');
+                    } else if (state === 'connected' || state === 'completed') {
+                        if (overlay) overlay.classList.remove('visible');
+                    }
+                });
+            });
         }
-
-        setTimeout(() => {
-            if (isSpectator) {
-                startSpectatorCall(id);
-            } else {
-                startPlayerCall(id);
-            }
-        }, 600);
-    });
-
-    c.on('error', err => {
-        console.warn("Connection failed, retrying...", err);
-        setTimeout(() => connectToMatch(id, isSpectator), 1000);
-    });
-
-    c.on('data', d => handleData(d));
-}
-
+    }
 
     function handleData(data) {
         if (data.type === 'CAM_PAUSED') {
