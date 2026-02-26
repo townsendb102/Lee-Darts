@@ -45,7 +45,7 @@
         /* Header */
         header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
         .header-controls { display: flex; gap: 8px; align-items: center; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; }
+        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;}
 
         /* Video System */
         .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
@@ -157,7 +157,7 @@
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 
 <script>
-    let stream, peer, conn, facing = "user";
+    let stream, peer, conn, currentCall;
     let myIndex = 0;
     let state = { turn: 0, bestOf: 5, p: [{ name: "P1", s: 501, l: 0, pts: 0, d: 0 }, { name: "P2", s: 501, l: 0, pts: 0, d: 0 }] };
     let history = null;
@@ -165,7 +165,6 @@
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
 
-    // Using your original, highly-compatible window.onload method
     window.addEventListener('load', () => {
         document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
@@ -174,7 +173,6 @@
         document.getElementById('hit-btn').onclick = processHit;
         document.getElementById('rematch-btn').onclick = triggerRematch;
         
-        // Enter key to submit score
         const ptsInput = document.getElementById('pts-input');
         if (ptsInput) {
             ptsInput.addEventListener('keypress', function(e) {
@@ -194,10 +192,15 @@
         log.innerText = "Accessing Camera...";
 
         try {
+            // Start with environment camera on mobile, default on laptop
             stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: facing }, 
+                video: { facingMode: "environment" }, 
                 audio: true 
+            }).catch(async () => {
+                // Fallback if environment camera fails (like on laptops)
+                return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             });
+            
             document.getElementById('me').srcObject = stream;
             
             log.innerText = "Connecting to server...";
@@ -219,6 +222,7 @@
             });
 
             peer.on('call', call => {
+                currentCall = call;
                 call.answer(stream);
                 call.on('stream', s => {
                     document.getElementById('peer').srcObject = s;
@@ -238,7 +242,7 @@
             });
 
         } catch (e) {
-            log.innerText = "Camera access denied or unavailable. (" + e.message + ")";
+            log.innerText = "Camera access denied. (" + e.message + ")";
             startBtn.disabled = false;
         }
     }
@@ -247,7 +251,9 @@
         conn = peer.connect(id);
         conn.on('open', () => conn.send({ type: 'JOIN', name: state.p[1].name }));
         conn.on('data', d => handleData(d));
-        peer.call(id, stream).on('stream', s => {
+        
+        currentCall = peer.call(id, stream);
+        currentCall.on('stream', s => {
             document.getElementById('peer').srcObject = s;
             render();
         });
@@ -267,17 +273,56 @@
 
     async function swapCam() {
         if (!stream) return;
-        facing = (facing === "user") ? "environment" : "user";
-        stream.getTracks().forEach(t => t.stop());
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
-        document.getElementById('me').srcObject = stream;
+        try {
+            // Find all available cameras
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoCameras = devices.filter(device => device.kind === 'videoinput');
+
+            if (videoCameras.length <= 1) {
+                alert("Only one camera detected on this device.");
+                return;
+            }
+
+            // Figure out which camera is currently active
+            const currentVideoTrack = stream.getVideoTracks()[0];
+            const currentDeviceId = currentVideoTrack.getSettings().deviceId;
+            
+            // Move to the next camera in the list
+            let nextIndex = videoCameras.findIndex(cam => cam.deviceId === currentDeviceId) + 1;
+            if (nextIndex >= videoCameras.length) nextIndex = 0; // Loop back to the start
+            const nextCamera = videoCameras[nextIndex];
+
+            // Start the new camera
+            const newStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { deviceId: { exact: nextCamera.deviceId } }, 
+                audio: true 
+            });
+
+            // If connected to a peer, silently update their video feed so it doesn't freeze
+            if (currentCall && currentCall.peerConnection) {
+                const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                if (videoSender) videoSender.replaceTrack(newStream.getVideoTracks()[0]);
+                
+                const audioSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'audio');
+                if (audioSender) audioSender.replaceTrack(newStream.getAudioTracks()[0]);
+            }
+
+            // Stop the old camera
+            stream.getTracks().forEach(t => t.stop());
+
+            // Assign the new video to our local screen
+            stream = newStream;
+            document.getElementById('me').srcObject = stream;
+
+        } catch (e) {
+            alert("Unable to switch camera: " + e.message);
+        }
     }
 
     function processHit() {
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
         
-        // Prevent empty input or inputs over 180
         if (isNaN(val) || val < 0 || val > 180) return;
         
         history = JSON.parse(JSON.stringify(state));
@@ -305,7 +350,7 @@
         render();
         if (conn) conn.send(state);
         input.value = '';
-        input.focus(); // Brings keyboard back up automatically on mobile
+        input.focus(); 
     }
 
     function undo() {
