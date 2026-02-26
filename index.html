@@ -276,6 +276,48 @@
         4: "D2", 3: "1 D1", 2: "D1"
     };
 
+    // Load voices early to ensure they are ready
+    if ('speechSynthesis' in window && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+
+    // Dynamic Voice announcer function
+    function announceScore(score) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel(); 
+        
+        let msg = new SpeechSynthesisUtterance();
+        
+        // Try to find a British Male voice (like Daniel on iOS, or UK English Male on Chrome)
+        const voices = window.speechSynthesis.getVoices();
+        let announcerVoice = voices.find(v => v.name.includes('UK English Male') || v.name.includes('Daniel') || (v.lang === 'en-GB' && v.name.includes('Male')));
+        if (!announcerVoice) announcerVoice = voices.find(v => v.lang === 'en-GB'); // Fallback to any UK voice
+        if (announcerVoice) msg.voice = announcerVoice;
+        
+        // Add dynamic excitement based on the score!
+        if (score === 180) {
+            msg.text = "ONE HUNDRED AND EIGHTY!!!";
+            msg.pitch = 0.4; // Deep, throaty pitch
+            msg.rate = 0.75; // Slowed down for drama
+            msg.volume = 1.0;
+        } else if (score >= 100) {
+            msg.text = score.toString() + "!";
+            msg.pitch = 0.8; // Strong and excited
+            msg.rate = 0.95;
+            msg.volume = 1.0;
+        } else if (score === 0) {
+            msg.text = "No Score.";
+            msg.pitch = 1.0;
+            msg.rate = 1.0;
+        } else {
+            msg.text = score.toString();
+            msg.pitch = 1.0;
+            msg.rate = 1.0;
+        }
+        
+        window.speechSynthesis.speak(msg);
+    }
+
     window.addEventListener('load', () => {
         if (joinId) {
             document.getElementById('legs-setup-group').style.display = 'none';
@@ -299,31 +341,6 @@
             });
         }
     });
-
-    // Voice announcer function
-    function announceScore(score) {
-        if (!('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel(); // Interrupt any ongoing speech
-        
-        let msg = new SpeechSynthesisUtterance();
-        
-        if (score === 180) {
-            msg.text = "One Hundred and Eighty!";
-            msg.pitch = 0.6; // Lower pitch for that classic referee shout
-            msg.rate = 0.85; // Slowed down for dramatic effect
-            msg.volume = 1.0;
-        } else if (score === 0) {
-            msg.text = "No Score";
-            msg.pitch = 1.0;
-            msg.rate = 1.0;
-        } else {
-            msg.text = score.toString();
-            msg.pitch = 1.0;
-            msg.rate = 1.0;
-        }
-        
-        window.speechSynthesis.speak(msg);
-    }
 
     async function initApp() {
         const log = document.getElementById('error-log');
@@ -411,12 +428,6 @@
             state.p[1].name = data.name;
             if (myIndex === 0 && conn) conn.send(state);
         } else {
-            // Check if the opponent just scored to announce it on your end too
-            if (data.turn !== state.turn && data.p) {
-                const prevTurn = data.turn === 0 ? 1 : 0;
-                // We calculate the score hit by checking points added 
-                // However, the easiest way is just to announce it locally when hitting
-            }
             state = data; 
         }
         render();
