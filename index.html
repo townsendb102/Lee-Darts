@@ -114,6 +114,7 @@
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
         <button class="header-btn" id="flip-btn">FLIP</button>
+        <button class="header-btn" id="spectate-btn" style="color: #ffeb3b;">SPECTATE</button>
         <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
     </div>
 </header>
@@ -174,6 +175,7 @@
         document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
         document.getElementById('share-btn').onclick = shareInvite;
+        document.getElementById('spectate-btn').onclick = shareSpectator;
         document.getElementById('undo-btn').onclick = undo;
         document.getElementById('hit-btn').onclick = processHit;
         document.getElementById('rematch-btn').onclick = triggerRematch;
@@ -430,6 +432,28 @@
         const url = window.location.origin + window.location.pathname + '?join=' + id;
         if (navigator.share) navigator.share({ title: 'Darts Match', url });
         else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
+    }
+
+    function shareSpectator() {
+        const id = document.getElementById('display-id').innerText;
+        const url = window.location.origin + window.location.pathname + '?spectate=' + id;
+        
+        const p1 = state.p[0];
+        const p2 = state.p[1];
+        const currentScoreText = `🎯 ${p1.name} (${p1.l} legs) ${p1.s} - ${p2.s} (${p2.l} legs) ${p2.name}`;
+        
+        const shareData = {
+            title: 'Watch our Darts Match!',
+            text: `Live Score: ${currentScoreText}. Watch the live video stream here: `,
+            url: url
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData).catch(console.error);
+        } else { 
+            navigator.clipboard.writeText(`${shareData.text} ${url}`); 
+            alert("Spectator link & scores copied to clipboard!"); 
+        }
     }
 </script>
 </body>
