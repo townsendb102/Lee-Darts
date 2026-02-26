@@ -229,7 +229,6 @@
     let spectatorCalls = []; 
     let myIndex = 0;
     
-    // Added extended tracking: ld (leg darts), f9d (first 9 darts), f9pts (first 9 points), hc (high checkout), n140 (140s), n180 (180s)
     let state = { 
         turn: 0, 
         bestOf: 5, 
@@ -452,6 +451,17 @@
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
         } else {
+            // SAFEGUARD: If opponent sends an old state object, default the new missing variables to zero.
+            if (data.p) {
+                data.p.forEach(player => {
+                    player.ld = player.ld ?? 0;
+                    player.f9pts = player.f9pts ?? 0;
+                    player.f9d = player.f9d ?? 0;
+                    player.hc = player.hc ?? 0;
+                    player.n140 = player.n140 ?? 0;
+                    player.n180 = player.n180 ?? 0;
+                });
+            }
             state = data; 
         }
         render();
@@ -528,30 +538,32 @@
         
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
+
+        // SAFEGUARD: Guarantee properties exist locally before calculating
+        p.ld = p.ld ?? 0;
+        p.f9pts = p.f9pts ?? 0;
+        p.f9d = p.f9d ?? 0;
+        p.hc = p.hc ?? 0;
+        p.n140 = p.n140 ?? 0;
+        p.n180 = p.n180 ?? 0;
         
-        // Track stats that occur regardless of bust vs valid hit
         if (p.ld < 9) { 
             p.f9d += 3; 
-            // Only add points to First 9 if it's a valid hit (checked below)
         }
         p.d += 3;
         p.ld += 3;
 
-        // Valid score check (avoids busted score or leaving 1)
         if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val; 
             p.pts += val; 
             
-            // Add points to First 9 Avg
             if (p.ld <= 9) { p.f9pts += val; }
 
-            // Track 140s & 180s
             if (val === 180) p.n180++;
             else if (val >= 140) p.n140++;
 
-            // Handle leg win
             if (p.s === 0) { 
-                if (val > p.hc) p.hc = val; // Track high checkout
+                if (val > p.hc) p.hc = val; 
                 p.l++; 
                 const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
                 
@@ -565,7 +577,6 @@
                 state.turn = (state.turn === 0) ? 1 : 0; 
             }
         } else { 
-            // Bust - Turn flips over, score is unmodified, but darts are still added
             state.turn = (state.turn === 0) ? 1 : 0; 
         }
         
@@ -655,15 +666,21 @@
             const w = state.p[state.winner];
             document.getElementById('winner-name').innerText = w.name + " WINS!";
             
-            // Populate Post-Match Table
+            // SAFEGUARD: Ensure numbers process correctly even if caching glitches occurred mid-game.
             for (let i = 0; i < 2; i++) {
-                let playerStats = state.p[i];
-                document.getElementById(`ws-n${i}`).innerText = playerStats.name;
-                document.getElementById(`ws-avg${i}`).innerText = playerStats.d > 0 ? ((playerStats.pts / playerStats.d) * 3).toFixed(1) : "0.0";
-                document.getElementById(`ws-f9${i}`).innerText = playerStats.f9d > 0 ? ((playerStats.f9pts / playerStats.f9d) * 3).toFixed(1) : "0.0";
-                document.getElementById(`ws-hc${i}`).innerText = playerStats.hc > 0 ? playerStats.hc : "-";
-                document.getElementById(`ws-140${i}`).innerText = playerStats.n140;
-                document.getElementById(`ws-180${i}`).innerText = playerStats.n180;
+                let pStats = state.p[i];
+                let f9d = pStats.f9d ?? 0;
+                let f9pts = pStats.f9pts ?? 0;
+                let hc = pStats.hc ?? 0;
+                let n140 = pStats.n140 ?? 0;
+                let n180 = pStats.n180 ?? 0;
+
+                document.getElementById(`ws-n${i}`).innerText = pStats.name;
+                document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
+                document.getElementById(`ws-f9${i}`).innerText = f9d > 0 ? ((f9pts / f9d) * 3).toFixed(1) : "0.0";
+                document.getElementById(`ws-hc${i}`).innerText = hc > 0 ? hc : "-";
+                document.getElementById(`ws-140${i}`).innerText = n140;
+                document.getElementById(`ws-180${i}`).innerText = n180;
             }
 
             winnerLayer.classList.remove('hidden');
