@@ -351,7 +351,19 @@
             }
             
             log.innerText = "Connecting to server...";
-            peer = new Peer();
+            
+            // APPLE / SAFARI FIX: Inject robust public STUN servers for ICE negotiation
+            peer = new Peer({
+                config: {
+                    'iceServers': [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' },
+                        { urls: 'stun:stun3.l.google.com:19302' },
+                        { urls: 'stun:stun4.l.google.com:19302' }
+                    ]
+                }
+            });
 
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
@@ -381,8 +393,12 @@
                     call.on('stream', s => {
                         currentCall = call;
                         if(s) {
-                            document.getElementById('peer').srcObject = s;
-                            document.getElementById('peer').play().catch(e => console.warn("Autoplay blocked", e));
+                            const peerVideo = document.getElementById('peer');
+                            peerVideo.srcObject = s;
+                            // Added delay to ensure Safari handles the Promise properly
+                            setTimeout(() => {
+                                peerVideo.play().catch(e => console.warn("Autoplay blocked by browser", e));
+                            }, 500);
                         }
                         render();
                     });
@@ -433,15 +449,21 @@
             const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
             
             specCall.on('stream', s => {
-                document.getElementById('peer').srcObject = s;
-                document.getElementById('peer').play().catch(e => console.warn("Spectator autoplay blocked", e));
+                const peerVideo = document.getElementById('peer');
+                peerVideo.srcObject = s;
+                setTimeout(() => {
+                    peerVideo.play().catch(e => console.warn("Spectator autoplay blocked", e));
+                }, 500);
                 render();
             });
         } else {
             currentCall = peer.call(id, stream);
             currentCall.on('stream', s => {
-                document.getElementById('peer').srcObject = s;
-                document.getElementById('peer').play().catch(e => console.warn("Autoplay blocked", e));
+                const peerVideo = document.getElementById('peer');
+                peerVideo.srcObject = s;
+                setTimeout(() => {
+                    peerVideo.play().catch(e => console.warn("Autoplay blocked by browser", e));
+                }, 500);
                 render();
             });
         }
@@ -469,7 +491,6 @@
         render();
     }
 
-    // New Mute Toggle Function
     function toggleMute() {
         if (stream && stream.getAudioTracks().length > 0) {
             isMuted = !isMuted;
