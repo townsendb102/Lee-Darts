@@ -161,6 +161,7 @@
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
         <button class="header-btn" id="mute-btn" style="color: #ff4d4d;">MUTE</button>
+        <button class="header-btn" id="zoom-btn" style="color: #4caf50;">ZOOM</button>
         <button class="header-btn" id="flip-btn">FLIP</button>
         <button class="header-btn" id="spectate-btn" style="color: #ffeb3b;">SPECTATE</button>
         <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
@@ -215,6 +216,7 @@
     let spectatorCalls = []; 
     let myIndex = 0;
     let isMuted = false;
+    let currentZoom = 1;
     
     let state = { turn: 0, bestOf: 5, p: [
         { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
@@ -298,6 +300,7 @@
 
         document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
+        document.getElementById('zoom-btn').onclick = cycleZoom;
         document.getElementById('mute-btn').onclick = toggleMute;
         document.getElementById('share-btn').onclick = shareInvite;
         document.getElementById('spectate-btn').onclick = shareSpectator;
@@ -461,6 +464,43 @@
         render();
     }
 
+    async function cycleZoom() {
+        if (!stream) return;
+        
+        const track = stream.getVideoTracks()[0];
+        const btn = document.getElementById('zoom-btn');
+        
+        if (!track.getCapabilities) {
+            alert("Camera capabilities API not supported by this browser.");
+            return;
+        }
+
+        const capabilities = track.getCapabilities();
+
+        if ('zoom' in capabilities) {
+            const min = capabilities.zoom.min || 1;
+            const max = capabilities.zoom.max || 3;
+            
+            if (currentZoom === min) {
+                currentZoom = min + (max - min) / 2; // Go to 50%
+            } else if (currentZoom < max) {
+                currentZoom = max; // Go to 100%
+            } else {
+                currentZoom = min; // Reset
+            }
+
+            try {
+                await track.applyConstraints({ advanced: [{ zoom: currentZoom }] });
+                btn.innerText = `ZOOM ${currentZoom.toFixed(1)}x`; 
+            } catch (err) {
+                console.error("Zoom failed:", err);
+                alert("Unable to apply zoom on this device.");
+            }
+        } else {
+            alert("Hardware zoom is not supported on this specific camera.");
+        }
+    }
+
     function toggleMute() {
         if (stream && stream.getAudioTracks().length > 0) {
             isMuted = !isMuted;
@@ -505,6 +545,11 @@
             stream.addTrack(newVideoTrack);
             document.getElementById('me').srcObject = stream;
 
+            // Reset zoom state when camera changes
+            currentZoom = 1; 
+            const zoomBtn = document.getElementById('zoom-btn');
+            if (zoomBtn) zoomBtn.innerText = "ZOOM";
+
             if (currentCall && currentCall.peerConnection) {
                 const senders = currentCall.peerConnection.getSenders();
                 const videoSender = senders.find(s => s.track && s.track.kind === 'video');
@@ -516,6 +561,11 @@
             const recoveredTrack = recoveredStream.getVideoTracks()[0];
             stream.addTrack(recoveredTrack);
             document.getElementById('me').srcObject = stream;
+            
+            currentZoom = 1; 
+            const zoomBtn = document.getElementById('zoom-btn');
+            if (zoomBtn) zoomBtn.innerText = "ZOOM";
+
             if (currentCall && currentCall.peerConnection) {
                 const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
                 if (videoSender) await videoSender.replaceTrack(recoveredTrack);
