@@ -288,6 +288,14 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
+    // 1. IN-APP BROWSER DETECTION
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isInAppBrowser = /FBAN|FBAV|Instagram|WhatsApp|Line|Snapchat/i.test(navigator.userAgent);
+
+    if (isIOS && isInAppBrowser) {
+        alert("Please tap the menu icon (usually top right or bottom right) and select 'Open in Safari' or 'Open in Browser' to join the game. Apple blocks camera and live scoring inside this app's browser.");
+    }
+
     let stream, peer, currentCall;
     let conns = []; 
     let spectatorCalls = []; 
@@ -502,10 +510,11 @@
         try {
             if (!spectateId) {
                 log.innerText = "Accessing Camera...";
-                // Request High-Def Video Constraints
+                
+                // 2. RELAXED CAMERA CONSTRAINTS (Removed 'min' requirement to satisfy Safari)
                 let constraints = { 
                     audio: true,
-                    video: { width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 }, frameRate: { ideal: 30 } } 
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } } 
                 };
                 if (isMobile) {
                     constraints.video.facingMode = "environment";
@@ -608,13 +617,17 @@
         }
     }
 
+    // 3. SAFARI AUTOPLAY PROMISE CATCH
     function attachPeerVideo(s) {
         const peerVideo = document.getElementById('peer');
         peerVideo.srcObject = s;
         peerVideo.onloadedmetadata = () => {
-            peerVideo.play().catch(e => {
-                console.warn("Autoplay blocked. User must tap screen to start video.", e);
-            });
+            let playPromise = peerVideo.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => {
+                    console.warn("Safari blocked autoplay. User must tap the screen.", e);
+                });
+            }
         };
     }
 
@@ -622,8 +635,11 @@
         const c = peer.connect(id);
         conns.push(c);
         
+        // 4. DELAYED JOIN DATA MESSAGE FOR SAFARI
         c.on('open', () => {
-            if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name });
+            setTimeout(() => {
+                if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name });
+            }, 500);
         });
         
         c.on('data', d => handleData(d));
@@ -749,15 +765,16 @@
             if (isMobile) {
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
                 try {
+                    // 5. RELAXED CONSTRAINTS FOR SWAP CAM TOO
                     newStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: currentFacingMode, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } } 
+                        video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } } 
                     });
                 } catch (e) { isMobile = false; }
             }
             if (!isMobile) {
                 currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
                 newStream = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId }, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } }
+                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
             }
 
