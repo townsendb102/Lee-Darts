@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>RAF Darts Scorer</title>
     <style>
-        :root { --blue: #00d4ff; --dark: #020408; --card: rgba(13, 27, 42, 0.5); --active: rgba(22, 42, 63, 0.85); }
+        /* Updated color vars for better card contrast without blur */
+        :root { --blue: #00d4ff; --dark: #020408; --card-tint: rgba(13, 27, 42, 0.85); --active: rgba(22, 42, 63, 0.95); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
         body { 
@@ -16,40 +17,36 @@
             overflow: hidden; 
         }
         
-        /* Setup Layer (Home Page) with brighter image background */
+        /* Setup Layer (Home Page) - Background is just dark now */
         #setup-layer { 
             position: fixed; inset: 0; 
-            /* Lighter dark tint (0.3) so the image is highly visible */
-            background-image: linear-gradient(rgba(2, 4, 8, 0.3), rgba(2, 4, 8, 0.3)), url('51693.jpg');
-            background-position: center, center top 40%;
-            background-repeat: no-repeat, no-repeat;
-            background-size: cover, 75%; 
-            background-color: var(--dark);
+            background: var(--dark);
             z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
             overflow-y: auto; 
         }
         
-        /* Winner Layer with image background */
+        /* Winner Layer - Background is just dark now */
         #winner-layer {
             position: fixed; inset: 0; 
-            background-image: linear-gradient(rgba(2, 4, 8, 0.85), rgba(2, 4, 8, 0.85)), url('51693.jpg');
-            background-position: center, center;
-            background-repeat: no-repeat, no-repeat;
-            background-size: cover, 60%; 
-            background-color: var(--dark);
+            background: var(--dark);
             z-index: 10001; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
             overflow-y: auto;
         }
 
-        /* Frosted Glass effect applied so the logo shows THROUGH the card */
+        /* The Card itself now holds the sharp background image */
         .setup-card { 
-            background: var(--card); padding: 25px; border-radius: 15px; 
+            /* Layered background: Dark tint on top, sharp logo underneath */
+            background-image: linear-gradient(var(--card-tint), var(--card-tint)), url('51693.jpg');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover; /* Ensures logo fills the card nicely */
+            
+            padding: 25px; border-radius: 15px; 
             width: 100%; max-width: 320px; border: 1px solid #1b4965;
             display: flex; flex-direction: column; gap: 10px; text-align: center;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            /* Blur removed for sharpness */
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         }
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
@@ -72,10 +69,9 @@
             left: 0;
             width: 100%;
             text-align: center;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 11px;
             pointer-events: none;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.9);
         }
 
         /* Header */
@@ -96,7 +92,7 @@
             background: linear-gradient(rgba(2, 4, 8, 0.7), rgba(2, 4, 8, 0.7)), url('51693.jpg') center/cover no-repeat;
         }
         .player-card { 
-            flex: 1; background: var(--card); border-radius: 10px; display: flex; flex-direction: column; 
+            flex: 1; background: var(--card-tint); border-radius: 10px; display: flex; flex-direction: column; 
             justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; 
             backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         }
