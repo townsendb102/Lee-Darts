@@ -90,7 +90,7 @@
             <label>Your Name</label>
             <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
         </div>
-        <div class="input-group">
+        <div class="input-group" id="legs-setup-group">
             <label>Best Of (Legs)</label>
             <select id="legs-input" class="setup-input">
                 <option value="1">1 Leg</option>
@@ -179,6 +179,12 @@
     let spectatorConns = [];
 
     window.addEventListener('load', () => {
+        // Hide the "Best Of" selection and change button text if the user is a guest (joining via a link)
+        if (joinId) {
+            document.getElementById('legs-setup-group').classList.add('hidden');
+            document.getElementById('start-btn').innerText = 'JOIN MATCH';
+        }
+
         if (isSpectator) {
             initSpectator();
         } else {
@@ -219,14 +225,13 @@
         peer = new Peer();
         peer.on('open', (id) => {
             conn = peer.connect(spectateId);
-            // Send own ID so Host and P2 know where to send video
             conn.on('open', () => conn.send({ type: 'SPECTATOR_JOIN', id: id }));
             conn.on('data', d => handleData(d));
         });
 
         // Listen for incoming video calls from players
         peer.on('call', call => {
-            call.answer(); // Answer passively (no local camera needed)
+            call.answer(); 
             call.on('stream', s => {
                 if (call.metadata && call.metadata.role === 'P2') {
                     document.getElementById('peer').srcObject = s;
@@ -265,10 +270,11 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('setup-layer').classList.add('hidden');
                 
-                state.p[0].name = document.getElementById('name-input').value || "Host";
-                state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-
-                if (joinId) {
+                // Only the Host determines the length of the match
+                if (!joinId) {
+                    state.p[0].name = document.getElementById('name-input').value || "Host";
+                    state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+                } else {
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     connectToMatch(joinId);
@@ -290,9 +296,7 @@
                     if (d.type === 'SPECTATOR_JOIN') {
                         spectatorConns.push(c);
                         c.send({ type: 'SYNC', state });
-                        // Host calls the spectator with their video stream
                         if (stream) peer.call(d.id, stream, { metadata: { role: 'HOST' } });
-                        // Host tells P2 to also call the spectator
                         if (conn && conn.open) conn.send({ type: 'SPECTATOR_ADDED', id: d.id });
                     } else if (d.type === 'JOIN') {
                         conn = c;
@@ -329,12 +333,12 @@
     }
 
     function handleData(data) {
+        // When Guest receives the SYNC from Host, their local state (including BestOf) gets overwritten
         if (data.type === 'SYNC') {
             state = data.state;
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
         } else if (data.type === 'SPECTATOR_ADDED') {
-            // P2 receives this from Host, calls the spectator with their video
             if (stream) peer.call(data.id, stream, { metadata: { role: 'P2' } });
             return;
         } else {
@@ -453,11 +457,9 @@
         });
         
         if (!isSpectator) {
-            // Player view: Show my camera on my turn, their camera on theirs
             document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
             document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
         } else {
-            // Spectator view: Automatically swap to whoever is throwing
             document.getElementById('box-me').className = (state.turn === 0) ? "v-box visible" : "v-box";
             document.getElementById('box-peer').className = (state.turn === 1) ? "v-box visible" : "v-box";
         }
