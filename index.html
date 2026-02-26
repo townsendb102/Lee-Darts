@@ -60,15 +60,16 @@
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
         
         .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
-        .stats-table th { color: white; padding-bottom: 10px; font-size: 18px; width: 30%; }
+        /* Player names in results table now black */
+        .stats-table th { color: black; padding-bottom: 10px; font-size: 18px; width: 30%; font-weight: 900; }
         .stats-table th:nth-child(2) { color: var(--blue); font-size: 12px; width: 40%; }
-        .stats-table td { padding: 8px 0; text-align: center; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-weight: bold; }
-        /* CHANGED: Stats description text to black and bolder */
+        .stats-table td { padding: 8px 0; text-align: center; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-weight: bold; color: white; }
+        /* Middle stats descriptions black */
         .stats-table td:nth-child(2) { color: black; font-size: 12px; font-weight: 900; text-transform: uppercase; }
         .stats-table tr:last-child td { border-bottom: none; }
         
         .input-group { margin-bottom: 10px; text-align: left; }
-        /* CHANGED: Lobby description labels to black and bolder */
+        /* Input labels black */
         .input-group label { display: block; font-size: 11px; color: black; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
         
         .setup-input { 
@@ -191,7 +192,7 @@
 
 <div id="waiting-layer" class="hidden">
     <div class="setup-card">
-        <h2 style="color: white; margin-bottom: 20px; font-size: 22px;">Waiting for Opponent...</h2>
+        <h2 style="color: black; font-weight: 900; margin-bottom: 20px; font-size: 22px;">Waiting for Opponent...</h2>
         <h1 style="color: var(--blue); margin-bottom: 20px; font-size: 32px;" id="wait-id">...</h1>
         <button class="btn-start" onclick="shareInvite()">SHARE INVITE LINK</button>
     </div>
@@ -199,12 +200,12 @@
 
 <div id="first-throw-layer" class="hidden">
     <div class="setup-card" id="ft-step-1">
-        <h2 style="color: white; margin-bottom: 20px; font-size: 22px;">Who Throws First?</h2>
+        <h2 style="color: black; font-weight: 900; margin-bottom: 20px; font-size: 22px;">Who Throws First?</h2>
         <button class="btn-start" onclick="showFtStep2('bull')" style="margin-bottom: 10px;">Closest to Bull</button>
         <button class="btn-start" onclick="showFtStep2('manual')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white;">Choose Player</button>
     </div>
     <div class="setup-card hidden" id="ft-step-2">
-        <h2 id="ft-title" style="color: white; margin-bottom: 20px; font-size: 22px;">Who won the Bull?</h2>
+        <h2 id="ft-title" style="color: black; font-weight: 900; margin-bottom: 20px; font-size: 22px;">Who won the Bull?</h2>
         <button class="btn-start" id="ft-p1-btn" onclick="setFirstPlayer(0)" style="margin-bottom: 10px;">P1</button>
         <button class="btn-start" id="ft-p2-btn" onclick="setFirstPlayer(1)" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white;">P2</button>
     </div>
@@ -212,7 +213,7 @@
 
 <div id="winner-layer" class="hidden">
     <div class="setup-card">
-        <h1 id="winner-name" style="color: white; margin: 10px 0 20px 0; font-size: 24px;">P1 Wins!</h1>
+        <h1 id="winner-name" style="color: black; font-weight: 900; margin: 10px 0 20px 0; font-size: 24px;">P1 Wins!</h1>
         <table class="stats-table">
             <tr><th id="ws-n0">P1</th><th>STATS</th><th id="ws-n1">P2</th></tr>
             <tr><td id="ws-avg0">0.0</td><td>Match Avg</td><td id="ws-avg1">0.0</td></tr>
