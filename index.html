@@ -201,17 +201,16 @@
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
 
-        /* --- CONTROL WRAPPER FIX --- */
         .controls-wrapper { width: 100%; height: 100%; background: #000; border-top: 1px solid #1b4965; }
         .controls { display: grid; height: 100%; padding: 8px; gap: 8px; }
         
         #standard-controls { grid-template-columns: 1.5fr 0.5fr 1fr; }
-        #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } /* 5 evenly spaced buttons */
+        #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
         .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
         .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
         .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
-        #atc-controls .btn-hit { font-size: 16px; } /* Slightly smaller for ATC buttons to fit */
+        #atc-controls .btn-hit { font-size: 16px; } 
         
         #pts-input:disabled { color: #555; }
         .btn-hit:disabled { background: #333; color: #666; cursor: not-allowed; }
@@ -240,6 +239,7 @@
         <div class="input-group" id="game-type-group" style="display: none;">
             <label style="color: white;">Game Type</label>
             <select id="game-type-input" class="setup-input">
+                <option value="121">121 Checkout</option>
                 <option value="301">301</option>
                 <option value="501" selected>501</option>
                 <option value="701">701</option>
@@ -484,21 +484,33 @@
 
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
-        if (modeInput) {
-            modeInput.addEventListener('change', (e) => {
-                const val = e.target.value;
-                const isLocal = val === 'local';
-                const isSingle = val === 'single';
+        const gameTypeInput = document.getElementById('game-type-input');
 
-                document.getElementById('p2-name-group').style.display = isLocal ? 'block' : 'none';
-                document.getElementById('game-type-group').style.display = isSingle ? 'block' : 'none';
-                document.getElementById('legs-group').style.display = isSingle ? 'none' : 'block';
-                
+        // Dynamic Menu Updates
+        function updateSetupUI() {
+            if (!modeInput) return;
+            const mode = modeInput.value;
+            const isLocal = mode === 'local';
+            const isSingle = mode === 'single';
+            const isOnline = mode === 'online';
+            const gameType = gameTypeInput ? gameTypeInput.value : '501';
+
+            if (document.getElementById('p2-name-group')) document.getElementById('p2-name-group').style.display = isLocal ? 'block' : 'none';
+            // Show Game Type for Single AND Local
+            if (document.getElementById('game-type-group')) document.getElementById('game-type-group').style.display = (isSingle || isLocal) ? 'block' : 'none';
+            // Hide legs if it's Single Player OR Around The Clock
+            if (document.getElementById('legs-group')) document.getElementById('legs-group').style.display = (isSingle || gameType === 'atc') ? 'none' : 'block';
+            
+            if (document.getElementById('p1-label')) {
                 if (isSingle) document.getElementById('p1-label').innerText = 'Your Name';
                 else if (isLocal) document.getElementById('p1-label').innerText = 'Player 1 Name';
                 else document.getElementById('p1-label').innerText = 'Your Name';
-            });
+            }
         }
+
+        if (modeInput) modeInput.addEventListener('change', updateSetupUI);
+        if (gameTypeInput) gameTypeInput.addEventListener('change', updateSetupUI);
+        updateSetupUI(); // run once on load
 
         if (spectateId) {
             document.body.classList.add('spectator-mode');
@@ -596,17 +608,21 @@
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
+        if (state.gameType === '121') startScore = 121;
         if (state.gameType === 'atc') startScore = 1;
 
         if (isLocalMatch) {
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
+            state.p[0].s = startScore;
+            state.p[1].s = startScore;
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
             
             document.getElementById('setup-layer').classList.add('hidden');
             document.body.classList.add('local-mode'); 
             
-            showFirstThrowUI(); 
+            if (state.gameType === 'atc') { render(); } 
+            else { showFirstThrowUI(); }
             return; 
         }
 
@@ -623,18 +639,13 @@
         try {
             if (!spectateId) {
                 if (state.mode === 'single') {
-                    // Create silent dummy background canvas so camera popup is skipped entirely
+                    // Generate a silent, invisible dummy stream to completely bypass camera requirements
                     const canvas = document.createElement('canvas');
-                    canvas.width = 640; canvas.height = 480;
-                    const ctx = canvas.getContext('2d');
-                    ctx.fillStyle = '#020408';
-                    ctx.fillRect(0, 0, 640, 480);
+                    canvas.width = 1; canvas.height = 1;
                     stream = canvas.captureStream(1); 
-                    
                     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
                     stream.addTrack(dummyAudio);
-                    
                     document.getElementById('me').srcObject = stream;
                 } else {
                     log.innerText = "Accessing Camera...";
@@ -927,8 +938,7 @@
             }
         }
     }
-
-    // Specially handles Individual Darts for ATC
+    
     function processAtcDart(multiplier) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         
@@ -940,7 +950,7 @@
         
         if (p.s > 21) {
             state.winner = state.turn;
-        } else if (state.mode !== 'single' && p.d % 3 === 0) {
+        } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
             state.turn = (state.turn === 0) ? 1 : 0;
         }
         
@@ -948,7 +958,6 @@
         if (!isLocalMatch) broadcast(state);
     }
 
-    // Handles standard X01 throw inputs
     function processHit() {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
 
@@ -973,21 +982,30 @@
             let startScore = 501;
             if (state.gameType === '301') startScore = 301;
             if (state.gameType === '701') startScore = 701;
+            if (state.gameType === '121') startScore = 121;
 
             if (p.s === 0) { 
                 if (val > p.hc) p.hc = val; 
                 p.l++; 
                 
                 if (state.mode === 'single') {
-                    state.p[0].s = startScore;
+                    // In single player 121, target goes up by 1 each checkout!
+                    state.p[0].s = state.gameType === '121' ? 121 + p.l : startScore;
                     state.p[0].ld = 0;
                     state.turn = 0;
                 } else {
                     const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
-                    if (p.l >= legsRequiredToWin) { 
+                    
+                    if (p.l >= legsRequiredToWin && state.gameType !== '121') { 
                         state.winner = state.turn; 
+                    } else if (state.gameType === '121' && p.l >= legsRequiredToWin) {
+                        state.winner = state.turn;
                     } else {
-                        state.p.forEach(x => { x.s = startScore; x.ld = 0; }); 
+                        // In local 121, if Player 1 checks out, THEIR target goes up by 1!
+                        state.p.forEach(x => { 
+                            x.s = state.gameType === '121' ? 121 + x.l : startScore; 
+                            x.ld = 0; 
+                        }); 
                         state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
                         state.turn = state.startingPlayer; 
                     }
@@ -1016,6 +1034,7 @@
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
+        if (state.gameType === '121') startScore = 121;
         if (state.gameType === 'atc') startScore = 1;
 
         state.p.forEach(x => { 
@@ -1029,7 +1048,7 @@
         if (!isLocalMatch) broadcast(state);
 
         if (state.mode === 'single' || isLocalMatch || myIndex === 0) {
-            if (state.mode === 'single') { render(); } 
+            if (state.mode === 'single' || state.gameType === 'atc') { render(); } 
             else { showFirstThrowUI(); }
         } else {
             render();
@@ -1097,9 +1116,9 @@
                 }
             }
 
-            if (!isLocalMatch && !document.body.classList.contains('bull-throw')) {
-                document.getElementById('box-me').className = (state.turn === myIndex || state.mode === 'single') ? "v-box visible" : "v-box";
-                document.getElementById('box-peer').className = (state.turn !== myIndex && state.mode !== 'single') ? "v-box visible" : "v-box";
+            if (!isLocalMatch && !document.body.classList.contains('bull-throw') && state.mode !== 'single') {
+                document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+                document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
             }
         } else {
             document.querySelector('#box-peer .cam-label').innerText = state.p[state.turn].name.toUpperCase();
