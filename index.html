@@ -15,14 +15,39 @@
             overflow: hidden; 
         }
 
-        /* --- SPECTATOR MODE GRID --- */
-        body.spectator-mode { grid-template-rows: 40px 1fr 160px 0px 25px; } 
+        /* --- FULL SCREEN TRANSPARENT OVERLAY FOR SPECTATOR --- */
+        body.spectator-mode { display: block; } /* Remove grid layout so we can float UI over video */
+        
         body.spectator-mode .controls,
         body.spectator-mode .header-controls,
         body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
         
+        /* Make the video container fill the entire background */
+        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; }
+        body.spectator-mode video { object-fit: contain !important; } /* Ensures 100% of the board is visible */
+        
+        /* Float the header at the top and make it transparent */
+        body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
+        
+        /* Float the score area at the bottom and make it see-through glass */
+        body.spectator-mode .score-area { position: fixed; bottom: 25px; width: 100%; z-index: 10; background: transparent; }
+        body.spectator-mode .player-card { 
+            background: rgba(13, 27, 42, 0.45) !important; /* See-through dark blue */
+            background-image: none !important; /* Override the background texture */
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); /* Frosted glass effect */
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        body.spectator-mode .player-card.active { 
+            background: rgba(0, 212, 255, 0.15) !important; /* See-through neon blue */
+            border-color: var(--blue);
+        }
+        
+        /* Float the footer at the bottom */
+        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
+        /* --------------------------------------------------- */
+
         body.local-mode { grid-template-rows: 40px 1fr 80px 25px !important; }
         body.local-mode .v-container { display: none !important; }
         body.local-mode .header-controls { display: none !important; }
@@ -111,11 +136,9 @@
             z-index: 1; 
         }
 
-        /* --- VIDEO TOGGLE STYLES --- */
-        video { width: 100%; height: 100%; object-fit: cover; background: #111; transition: transform 0.3s ease; transform-origin: center center; cursor: pointer; }
-        video.fit-whole { object-fit: contain !important; }
+        video { width: 100%; height: 100%; object-fit: cover; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
         
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; pointer-events: none; }
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
         .paused-overlay {
             position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue);
@@ -436,13 +459,6 @@
                 if (e.key === 'Enter') { e.preventDefault(); processHit(); }
             });
         }
-
-        // --- TAP TO TOGGLE VIDEO ZOOM ---
-        document.querySelectorAll('video').forEach(vid => {
-            vid.addEventListener('click', function() {
-                this.classList.toggle('fit-whole');
-            });
-        });
     });
 
     function toggleBullPhase(isActive) {
