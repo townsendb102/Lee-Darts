@@ -28,7 +28,6 @@
         
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         
-        /* Float the score area left and right, stretching top to bottom */
         body.spectator-mode .score-area { 
             position: fixed; 
             top: 40px; 
@@ -46,7 +45,6 @@
             flex: 0 0 auto; 
             width: 115px; 
             background-color: rgba(13, 27, 42, 0.45) !important; 
-            /* Fix Logo: Size gradient to 100%, but contain the logo image so it's fully visible */
             background-image: linear-gradient(rgba(13, 27, 42, 0.8), rgba(13, 27, 42, 0.8)), url('51693.jpg') !important; 
             background-size: 100% 100%, contain !important; 
             background-position: center, center !important;
@@ -66,7 +64,6 @@
             border-right: 2px solid var(--blue);
         }
         
-        /* Stack the stats vertically inside the new tall columns */
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
         body.spectator-mode .score-val { font-size: 40px; }
@@ -74,6 +71,11 @@
         body.spectator-mode .checkout-hint { font-size: 12px; }
         
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
+        
+        /* --- SINGLE PLAYER MODE FIXES --- */
+        body.single-mode #card-1 { display: none !important; }
+        body.single-mode .score-area { justify-content: center; gap: 20px; }
+        body.single-mode.spectator-mode .player-card { width: 140px; border-left: 2px solid var(--blue); border-right: 2px solid var(--blue); }
         /* --------------------------------------------------- */
 
         body.local-mode { grid-template-rows: 40px 1fr 80px 25px !important; }
@@ -89,7 +91,6 @@
         #first-throw-layer { background: rgba(2, 4, 8, 0.98); z-index: 10002; }
         #waiting-layer { background: rgba(2, 4, 8, 0.98); z-index: 10003; }
         
-        /* SPLIT SCREEN FOR BULL THROW (Disabled for spectators) */
         body.bull-throw:not(.local-mode):not(.spectator-mode) .v-box {
             visibility: visible !important;
             opacity: 1 !important;
@@ -164,7 +165,6 @@
             z-index: 1; 
         }
 
-        /* CHANGED COVER TO CONTAIN FOR EVERYONE */
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
         
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
@@ -222,6 +222,15 @@
             <select id="mode-input" class="setup-input">
                 <option value="online">Online (Remote Opponent)</option>
                 <option value="local">Local (Same Device)</option>
+                <option value="single">Single Player (Practice)</option>
+            </select>
+        </div>
+
+        <div class="input-group" id="game-type-group" style="display: none;">
+            <label style="color: white;">Game Type</label>
+            <select id="game-type-input" class="setup-input">
+                <option value="501">501</option>
+                <option value="atc">Around the Clock</option>
             </select>
         </div>
 
@@ -276,7 +285,7 @@
         <h1 id="winner-name" style="color: white; font-weight: bold; margin: 10px 0 20px 0; font-size: 24px;">P1 Wins!</h1>
         <table class="stats-table">
             <tr><th id="ws-n0" style="color: white;">P1</th><th style="color: white;">STATS</th><th id="ws-n1" style="color: white;">P2</th></tr>
-            <tr><td id="ws-avg0" style="color: white;">0.0</td><td style="color: white;">Match Avg</td><td id="ws-avg1" style="color: white;">0.0</td></tr>
+            <tr><td id="ws-avg0" style="color: white;">0.0</td><td id="ws-label-avg" style="color: white;">Match Avg</td><td id="ws-avg1" style="color: white;">0.0</td></tr>
             <tr><td id="ws-f90" style="color: white;">0.0</td><td style="color: white;">First 9 Avg</td><td id="ws-f91" style="color: white;">0.0</td></tr>
             <tr><td id="ws-hc0" style="color: white;">-</td><td style="color: white;">High Out</td><td id="ws-hc1" style="color: white;">-</td></tr>
             <tr><td id="ws-1400" style="color: white;">0</td><td style="color: white;">140+</td><td id="ws-1401" style="color: white;">0</td></tr>
@@ -314,18 +323,18 @@
     <div id="card-0" class="player-card active">
         <div class="p-name" id="n-0">P1</div>
         <div class="score-row">
-            <div style="font-size:10px; color:var(--blue)">AVG: <span id="avg-0">0.0</span></div>
+            <div style="font-size:10px; color:var(--blue)"><span id="avg-label-0">AVG: </span><span id="avg-0">0.0</span></div>
             <div class="score-val" id="s-0">501</div>
-            <div class="legs-count"><span id="l-0">0</span>LEGS</div>
+            <div class="legs-count" id="l-area-0"><span id="l-0">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-0"></div>
     </div>
     <div id="card-1" class="player-card">
         <div class="p-name" id="n-1">P2</div>
         <div class="score-row">
-            <div style="font-size:10px; color:var(--blue)">AVG: <span id="avg-1">0.0</span></div>
+            <div style="font-size:10px; color:var(--blue)"><span id="avg-label-1">AVG: </span><span id="avg-1">0.0</span></div>
             <div class="score-val" id="s-1">501</div>
-            <div class="legs-count"><span id="l-1">0</span>LEGS</div>
+            <div class="legs-count" id="l-area-1"><span id="l-1">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-1"></div>
     </div>
@@ -350,7 +359,7 @@
     let currentZoom = 1; 
     let isLocalMatch = false; 
     
-    let state = { turn: 0, startingPlayer: 0, bestOf: 5, p: [
+    let state = { mode: 'online', gameType: '501', turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
         { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }
     ]};
@@ -408,7 +417,6 @@
         3:"1 D1",2:"D1"
     };
 
-    // APPLE FIX: Removed iOS-breaking code from the limiter and made it fail silently 
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
         try {
@@ -432,7 +440,7 @@
         if (videoTrack) {
             const isHidden = document.visibilityState === 'hidden';
             videoTrack.enabled = !isHidden; 
-            if (!isLocalMatch) {
+            if (!isLocalMatch && state.mode !== 'single') {
                 broadcast({ type: 'CAM_PAUSED', paused: isHidden });
             }
         }
@@ -455,9 +463,18 @@
         const modeInput = document.getElementById('mode-input');
         if (modeInput) {
             modeInput.addEventListener('change', (e) => {
-                const local = e.target.value === 'local';
-                document.getElementById('p2-name-group').style.display = local ? 'block' : 'none';
-                document.getElementById('p1-label').innerText = local ? 'Player 1 Name' : 'Your Name';
+                const val = e.target.value;
+                const isLocal = val === 'local';
+                const isSingle = val === 'single';
+                const isOnline = val === 'online';
+
+                document.getElementById('p2-name-group').style.display = isLocal ? 'block' : 'none';
+                document.getElementById('game-type-group').style.display = isSingle ? 'block' : 'none';
+                document.getElementById('legs-group').style.display = isSingle ? 'none' : 'block';
+                
+                if (isOnline) document.getElementById('p1-label').innerText = 'Your Name';
+                else if (isLocal) document.getElementById('p1-label').innerText = 'Player 1 Name';
+                else document.getElementById('p1-label').innerText = 'Your Name';
             });
         }
 
@@ -500,7 +517,7 @@
         document.getElementById('ft-step-1').classList.remove('hidden');
         document.getElementById('ft-step-2').classList.add('hidden');
         
-        if (!isLocalMatch) {
+        if (!isLocalMatch && state.mode !== 'single') {
             toggleBullPhase(true);
             broadcast({ type: 'BULL_PHASE', active: true });
         }
@@ -525,7 +542,7 @@
         state.turn = playerIndex;
         document.getElementById('first-throw-layer').classList.add('hidden');
         
-        if (!isLocalMatch) {
+        if (!isLocalMatch && state.mode !== 'single') {
             toggleBullPhase(false);
             broadcast({ type: 'BULL_PHASE', active: false });
         }
@@ -540,7 +557,9 @@
         startBtn.disabled = true;
 
         const modeSelect = document.getElementById('mode-input');
-        isLocalMatch = (modeSelect && modeSelect.value === 'local');
+        state.mode = modeSelect ? modeSelect.value : 'online';
+        state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
+        isLocalMatch = (state.mode === 'local');
 
         if (isLocalMatch) {
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
@@ -554,61 +573,42 @@
             return; 
         }
 
+        if (state.mode === 'single') {
+            document.body.classList.add('single-mode');
+            state.p[0].name = document.getElementById('name-input').value || "Player 1";
+            if (state.gameType === 'atc') { state.p[0].s = 1; }
+            document.getElementById('setup-layer').classList.add('hidden');
+        }
+
         try {
             if (!spectateId) {
                 log.innerText = "Accessing Camera...";
-                
-                // APPLE FIX: Removed the strict 'min: 1280' rule. Replaced with soft 'ideal' rules so iOS Safari doesn't crash.
                 let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
-                
                 if (isMobile) {
                     constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
                     currentFacingMode = "environment";
                 }
-
                 stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async (err) => {
                     console.warn("Primary camera request failed, falling back to absolute minimum defaults.", err);
                     isMobile = false;
                     return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 });
-                
                 document.getElementById('me').srcObject = stream;
             }
             
             log.innerText = "Connecting to server...";
-            
-                        peer = new Peer({
+            peer = new Peer({
                 config: {
                     'iceServers': [
-                        // A reliable backup STUN server
                         { urls: "stun:stun.l.google.com:19302" }, 
-                        
-                        // Your Metered.ca servers
                         { urls: "stun:stun.relay.metered.ca:80" },
-                        { 
-                            urls: "turn:global.relay.metered.ca:80", 
-                            username: "1136ad95a0cf288adfb106c2", 
-                            credential: "RrgPO5u0xNDWk1ll" 
-                        },
-                        { 
-                            urls: "turn:global.relay.metered.ca:80?transport=tcp", 
-                            username: "1136ad95a0cf288adfb106c2", 
-                            credential: "RrgPO5u0xNDWk1ll" 
-                        },
-                        { 
-                            urls: "turn:global.relay.metered.ca:443", 
-                            username: "1136ad95a0cf288adfb106c2", 
-                            credential: "RrgPO5u0xNDWk1ll" 
-                        },
-                        { 
-                            urls: "turns:global.relay.metered.ca:443?transport=tcp", 
-                            username: "1136ad95a0cf288adfb106c2", 
-                            credential: "RrgPO5u0xNDWk1ll" 
-                        }
+                        { urls: "turn:global.relay.metered.ca:80", username: "1136ad95a0cf288adfb106c2", credential: "RrgPO5u0xNDWk1ll" },
+                        { urls: "turn:global.relay.metered.ca:80?transport=tcp", username: "1136ad95a0cf288adfb106c2", credential: "RrgPO5u0xNDWk1ll" },
+                        { urls: "turn:global.relay.metered.ca:443", username: "1136ad95a0cf288adfb106c2", credential: "RrgPO5u0xNDWk1ll" },
+                        { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: "1136ad95a0cf288adfb106c2", credential: "RrgPO5u0xNDWk1ll" }
                     ]
                 }
             });
-
 
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
@@ -623,8 +623,14 @@
                     connectToMatch(joinId, false);
                 } else {
                     state.p[0].name = document.getElementById('name-input').value || "Host";
-                    state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                    document.getElementById('waiting-layer').classList.remove('hidden');
+                    
+                    if (state.mode === 'single') {
+                        document.getElementById('waiting-layer').classList.add('hidden');
+                        render();
+                    } else {
+                        state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+                        document.getElementById('waiting-layer').classList.remove('hidden');
+                    }
                 }
                 
                 if (joinId || spectateId) render();
@@ -643,7 +649,6 @@
                 } else {
                     call.answer(stream);
                     limitVideoBitrate(call.peerConnection, 1500);
-                    
                     call.on('stream', s => {
                         currentCall = call;
                         if(s) { attachPeerVideo(s); }
@@ -756,8 +761,12 @@
 
         if (data.type === 'SYNC') {
             state.bestOf = data.state.bestOf;
+            state.mode = data.state.mode;
+            state.gameType = data.state.gameType;
             state.p[0].name = data.state.p[0].name;
             state.startingPlayer = data.state.startingPlayer || 0;
+            
+            if (state.mode === 'single') { document.body.classList.add('single-mode'); }
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
             
@@ -782,16 +791,12 @@
 
     function cycleZoom() {
         if (!stream) return;
-        
         if (currentZoom === 1) currentZoom = 1.5;
         else if (currentZoom === 1.5) currentZoom = 2;
         else currentZoom = 1;
-
         const btn = document.getElementById('zoom-btn');
         if (btn) btn.innerText = currentZoom === 1 ? "ZOOM" : `ZOOM ${currentZoom}x`;
-
         document.getElementById('me').style.transform = `scale(${currentZoom})`;
-
         if (!isLocalMatch) { broadcast({ type: 'ZOOM', level: currentZoom }); }
     }
 
@@ -819,7 +824,6 @@
             oldVideoTrack.stop();
             let newStream;
             
-            // APPLE FIX: Removed strict 'min' constraints from camera swap logic as well
             if (isMobile) {
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
                 try {
@@ -872,47 +876,76 @@
     }
 
     function processHit() {
-        if (!isLocalMatch && state.turn !== myIndex) return;
+        if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
 
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
-        if (isNaN(val) || val < 0 || val > 180) return;
-        
-        history = JSON.parse(JSON.stringify(state));
-        let p = state.p[state.turn];
 
-        p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0; p.f9d = p.f9d ?? 0;
-        p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
-        
-        if (p.ld < 9) { p.f9d += 3; }
-        p.d += 3; p.ld += 3;
+        if (state.gameType === 'atc') {
+            // Allows up to 9 targets cleared in a single turn (e.g. 3 Trebles = 3x3 = 9 advances)
+            if (isNaN(val) || val < 0 || val > 9) return;
+            
+            history = JSON.parse(JSON.stringify(state));
+            let p = state.p[state.turn];
 
-        if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.pts += val; 
-            if (p.ld <= 9) { p.f9pts += val; }
-            if (val === 180) p.n180++; else if (val >= 140) p.n140++;
+            p.d += 3;
+            p.pts += val; 
+            p.s += val; 
+            
+            if (p.s > 21) {
+                state.winner = state.turn;
+            } else if (state.mode !== 'single') {
+                state.turn = (state.turn === 0) ? 1 : 0;
+            }
+            
+            render(); 
+            if (!isLocalMatch) broadcast(state);
+            
+        } else {
+            if (isNaN(val) || val < 0 || val > 180) return;
+            
+            history = JSON.parse(JSON.stringify(state));
+            let p = state.p[state.turn];
 
-            if (p.s === 0) { 
-                if (val > p.hc) p.hc = val; 
-                p.l++; 
-                const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
-                
-                if (p.l >= legsRequiredToWin) { 
-                    state.winner = state.turn; 
-                } else {
-                    state.p.forEach(x => { x.s = 501; x.ld = 0; }); 
-                    state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
-                    state.turn = state.startingPlayer; 
+            p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0; p.f9d = p.f9d ?? 0;
+            p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
+            
+            if (p.ld < 9) { p.f9d += 3; }
+            p.d += 3; p.ld += 3;
+
+            if (p.s - val >= 0 && p.s - val !== 1) {
+                p.s -= val; p.pts += val; 
+                if (p.ld <= 9) { p.f9pts += val; }
+                if (val === 180) p.n180++; else if (val >= 140) p.n140++;
+
+                if (p.s === 0) { 
+                    if (val > p.hc) p.hc = val; 
+                    p.l++; 
+                    
+                    if (state.mode === 'single') {
+                        state.p[0].s = 501;
+                        state.p[0].ld = 0;
+                        state.turn = 0;
+                    } else {
+                        const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
+                        if (p.l >= legsRequiredToWin) { 
+                            state.winner = state.turn; 
+                        } else {
+                            state.p.forEach(x => { x.s = 501; x.ld = 0; }); 
+                            state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
+                            state.turn = state.startingPlayer; 
+                        }
+                    }
+                } else if (state.mode !== 'single') { 
+                    state.turn = (state.turn === 0) ? 1 : 0; 
                 }
-            } else { 
+            } else if (state.mode !== 'single') { 
                 state.turn = (state.turn === 0) ? 1 : 0; 
             }
-        } else { 
-            state.turn = (state.turn === 0) ? 1 : 0; 
+            
+            render(); 
+            if (!isLocalMatch) broadcast(state);
         }
-        
-        render(); 
-        if (!isLocalMatch) broadcast(state);
         
         input.value = ''; input.blur(); 
     }
@@ -927,7 +960,8 @@
 
     function triggerRematch() {
         state.p.forEach(x => { 
-            x.s = 501; x.l = 0; x.pts = 0; x.d = 0; 
+            x.s = state.gameType === 'atc' ? 1 : 501; 
+            x.l = 0; x.pts = 0; x.d = 0; 
             x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
         });
         delete state.winner; history = null;
@@ -935,8 +969,9 @@
         document.getElementById('winner-layer').classList.add('hidden');
         if (!isLocalMatch) broadcast(state);
 
-        if (isLocalMatch || myIndex === 0) {
-            showFirstThrowUI();
+        if (state.mode === 'single' || isLocalMatch || myIndex === 0) {
+            if (state.mode === 'single') { render(); } 
+            else { showFirstThrowUI(); }
         } else {
             render();
         }
@@ -945,10 +980,22 @@
     function render() {
         state.p.forEach((p, i) => {
             document.getElementById(`n-${i}`).innerText = p.name;
-            document.getElementById(`s-${i}`).innerText = p.s;
-            document.getElementById(`l-${i}`).innerText = p.l;
-            document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-            document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
+            
+            if (state.gameType === 'atc') {
+                document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
+                document.getElementById(`avg-${i}`).innerText = p.d;
+                document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
+                document.getElementById(`co-${i}`).innerText = "TARGET";
+                document.getElementById(`l-area-${i}`).style.display = 'none';
+            } else {
+                document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
+                document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
+                document.getElementById(`s-${i}`).innerText = p.s;
+                document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
+                document.getElementById(`l-area-${i}`).style.display = 'block';
+                document.getElementById(`l-${i}`).innerText = p.l;
+            }
+            
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
@@ -956,22 +1003,24 @@
             const ptsInput = document.getElementById('pts-input');
             const hitBtn = document.getElementById('hit-btn');
             
-            if (isLocalMatch || state.turn === myIndex) {
-                ptsInput.disabled = false; hitBtn.disabled = false; ptsInput.placeholder = "0";
+            if (isLocalMatch || state.mode === 'single' || state.turn === myIndex) {
+                ptsInput.disabled = false; hitBtn.disabled = false; 
+                // Changed placeholder to remind user they can input higher numbers
+                ptsInput.placeholder = state.gameType === 'atc' ? "Cleared (0-9)" : "0";
             } else {
                 ptsInput.disabled = true; hitBtn.disabled = true; ptsInput.placeholder = "Waiting...";
             }
             
             if (!isLocalMatch && !document.body.classList.contains('bull-throw')) {
-                document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-                document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+                document.getElementById('box-me').className = (state.turn === myIndex || state.mode === 'single') ? "v-box visible" : "v-box";
+                document.getElementById('box-peer').className = (state.turn !== myIndex && state.mode !== 'single') ? "v-box visible" : "v-box";
             }
         } else {
             document.querySelector('#box-peer .cam-label').innerText = state.p[state.turn].name.toUpperCase();
         }
 
         if (myIndex === 0 && spectatorCalls.length > 0) {
-            const activeStream = (state.turn === 0) ? stream : document.getElementById('peer').srcObject;
+            const activeStream = (state.turn === 0 || state.mode === 'single') ? stream : document.getElementById('peer').srcObject;
             if (activeStream) {
                 const videoTrack = activeStream.getVideoTracks()[0];
                 const audioTrack = activeStream.getAudioTracks()[0];
@@ -997,15 +1046,20 @@
             document.getElementById('winner-name').innerText = w.name + " WINS!";
             for (let i = 0; i < 2; i++) {
                 let pStats = state.p[i];
-                let f9d = pStats.f9d ?? 0; let f9pts = pStats.f9pts ?? 0; let hc = pStats.hc ?? 0;
-                let n140 = pStats.n140 ?? 0; let n180 = pStats.n180 ?? 0;
-
                 document.getElementById(`ws-n${i}`).innerText = pStats.name;
-                document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
-                document.getElementById(`ws-f9${i}`).innerText = f9d > 0 ? ((f9pts / f9d) * 3).toFixed(1) : "0.0";
-                document.getElementById(`ws-hc${i}`).innerText = hc > 0 ? hc : "-";
-                document.getElementById(`ws-140${i}`).innerText = n140;
-                document.getElementById(`ws-180${i}`).innerText = n180;
+                
+                if (state.gameType === 'atc') {
+                    document.getElementById('ws-label-avg').innerText = "Total Darts";
+                    document.getElementById(`ws-avg${i}`).innerText = pStats.d;
+                } else {
+                    document.getElementById('ws-label-avg').innerText = "Match Avg";
+                    document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
+                }
+                
+                document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
+                document.getElementById(`ws-hc${i}`).innerText = pStats.hc > 0 ? pStats.hc : "-";
+                document.getElementById(`ws-140${i}`).innerText = pStats.n140 ?? 0;
+                document.getElementById(`ws-180${i}`).innerText = pStats.n180 ?? 0;
             }
             winnerLayer.classList.remove('hidden');
         } else {
@@ -1024,7 +1078,13 @@
         const id = document.getElementById('display-id').innerText;
         const url = window.location.origin + window.location.pathname + '?spectate=' + id;
         const p1 = state.p[0]; const p2 = state.p[1];
-        const currentScoreText = `🎯 ${p1.name} (${p1.l} legs) ${p1.s} - ${p2.s} (${p2.l} legs) ${p2.name}`;
+        
+        let currentScoreText = "";
+        if (state.gameType === 'atc') {
+            currentScoreText = `🎯 ${p1.name} - Target: ${p1.s <= 20 ? p1.s : "BULL"}`;
+        } else {
+            currentScoreText = `🎯 ${p1.name} (${p1.l} legs) ${p1.s} - ${p2.s} (${p2.l} legs) ${p2.name}`;
+        }
         
         const shareData = {
             title: 'Watch our Darts Match!',
