@@ -16,7 +16,7 @@
         }
 
         /* --- FULL SCREEN TRANSPARENT OVERLAY FOR SPECTATOR --- */
-        body.spectator-mode { display: block; } /* Remove grid layout so we can float UI over video */
+        body.spectator-mode { display: block; } 
         
         body.spectator-mode .controls,
         body.spectator-mode .header-controls,
@@ -24,45 +24,39 @@
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
         
-        /* Make the video container fill the entire background */
         body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; }
-        body.spectator-mode video { object-fit: contain !important; } /* Ensures 100% of the board is visible */
         
-        /* Float the header at the top and make it transparent */
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         
-        /* Float the score area to the bottom left and right */
         body.spectator-mode .score-area { 
             position: fixed; 
-            bottom: 30px; /* Keep it just above the footer */
+            bottom: 30px; 
             width: 100%; 
             z-index: 10; 
             background: transparent; 
-            flex-direction: row; /* Align side-by-side instead of stacked */
-            justify-content: space-between; /* Push one left, one right */
+            flex-direction: row; 
+            justify-content: space-between; 
             align-items: flex-end;
             padding: 10px;
         }
         
         body.spectator-mode .player-card { 
-            flex: 0 0 auto; /* Prevent stretching into the middle */
-            width: 135px; /* Compact width to hug the corners */
-            background: rgba(13, 27, 42, 0.45) !important; /* See-through dark blue */
-            background-image: none !important; /* Override the background texture */
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); /* Frosted glass effect */
+            flex: 0 0 auto; 
+            width: 135px; 
+            background: rgba(13, 27, 42, 0.45) !important; 
+            background-image: none !important; 
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); 
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
         
         body.spectator-mode .player-card.active { 
-            background: rgba(0, 212, 255, 0.15) !important; /* See-through neon blue */
+            background: rgba(0, 212, 255, 0.15) !important; 
             border-color: var(--blue);
         }
         
-        /* Shrink the fonts slightly to fit the compact corner boxes perfectly */
         body.spectator-mode .score-val { font-size: 35px; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
         
-        /* Float the footer at the bottom */
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         /* --------------------------------------------------- */
 
@@ -154,7 +148,8 @@
             z-index: 1; 
         }
 
-        video { width: 100%; height: 100%; object-fit: cover; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
+        /* CHANGED COVER TO CONTAIN FOR EVERYONE */
+        video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
         
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
