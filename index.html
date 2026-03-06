@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#020408">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
     <title>RAF Darts Scorer</title>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
@@ -14,6 +19,12 @@
             grid-template-rows: 40px 45dvh 1fr 80px 25px;
             overflow: hidden; 
         }
+
+        /* --- INSTALL PROMPTS --- */
+        .install-btn { background: #4caf50 !important; color: white !important; display: none; margin-bottom: 15px; border: 2px solid #81c784 !important; }
+        .ios-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 15px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; font-weight: bold; z-index: 20000; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); display: none; }
+        .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
+        .ios-close { position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 16px; color: #888; padding: 5px; }
 
         /* --- FULL SCREEN TRANSPARENT OVERLAY FOR SPECTATOR --- */
         body.spectator-mode { display: block; } 
@@ -220,6 +231,12 @@
         .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid #1b4965; z-index: 10002; }
         .hidden { display: none !important; }
     </style>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW setup failed', err));
+        }
+    </script>
 </head>
 <body>
 
@@ -227,6 +244,8 @@
     <div class="setup-card">
         <h2>RAF DARTS SCORER</h2>
         
+        <button id="install-btn" class="btn-start install-btn">📲 INSTALL APP</button>
+
         <div class="input-group" id="mode-group">
             <label style="color: white;">Match Type</label>
             <select id="mode-input" class="setup-input">
@@ -369,11 +388,32 @@
     </div>
 </div>
 
+<div id="ios-prompt" class="ios-prompt">
+    <span class="ios-close" onclick="document.getElementById('ios-prompt').style.display='none'">✖</span>
+    To install this app, tap the <b>Share</b> icon below and select <b>"Add to Home Screen"</b>
+</div>
+
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
+    // --- PWA INSTALL LOGIC ---
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const installBtn = document.getElementById('install-btn');
+        if (installBtn) installBtn.style.display = 'block';
+    });
+
+    const isIos = () => {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        return /iphone|ipad|ipod/.test(userAgent);
+    };
+    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+    // --- APP LOGIC ---
     let stream, peer, currentCall;
     let conns = []; 
     let spectatorCalls = []; 
@@ -470,13 +510,36 @@
     function unlockAudio() {
         const peerVideo = document.getElementById('peer');
         if (peerVideo && peerVideo.paused && peerVideo.srcObject) {
-            peerVideo.play().catch(e => console.log("Unlock failed or already playing", e));
+            peerVideo.play().catch(e => {});
         }
     }
     document.body.addEventListener('click', unlockAudio);
     document.body.addEventListener('touchstart', unlockAudio);
 
     window.addEventListener('load', () => {
+        
+        // Android Install Button Listener
+        const installBtn = document.getElementById('install-btn');
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') { installBtn.style.display = 'none'; }
+                    deferredPrompt = null;
+                }
+            });
+        }
+
+        // iOS Install Prompt Trigger
+        if (isIos() && !isInStandaloneMode()) {
+            const prompt = document.getElementById('ios-prompt');
+            if (prompt) {
+                prompt.style.display = 'block';
+                setTimeout(() => { prompt.style.display = 'none'; }, 10000);
+            }
+        }
+
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
 
@@ -485,11 +548,8 @@
             const mode = modeInput.value;
             const gameType = gameTypeInput ? gameTypeInput.value : '501';
 
-            // Show Player 2 for Local only
             document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
-            // Show Game Type options for Single or Local Practice
             document.getElementById('game-type-group').style.display = (mode === 'single' || mode === 'local') ? 'block' : 'none';
-            // Hide "Best Of" legs for ATC, 121 checkout, and single player
             document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121') ? 'none' : 'block';
             
             const p1Label = document.getElementById('p1-label');
@@ -614,7 +674,6 @@
             document.body.classList.add('single-mode');
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[0].s = startScore;
-            // IMMEDIATELY render game board and let user play without waiting for camera or network!
             document.getElementById('setup-layer').classList.add('hidden');
             render();
         } else {
@@ -624,7 +683,15 @@
 
         try {
             if (!spectateId) {
-                if (state.mode !== 'single') {
+                if (state.mode === 'single') {
+                    // Create silent dummy stream to completely bypass camera requirements
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1; canvas.height = 1;
+                    stream = canvas.captureStream(1); 
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
+                    stream.addTrack(dummyAudio);
+                } else {
                     log.innerText = "Accessing Camera...";
                     let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
                     if (isMobile) {
@@ -636,13 +703,10 @@
                         return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     });
                     document.getElementById('me').srcObject = stream;
-                } else {
-                    // Critical Fix: Hard bypass for single player stream so older iPhones don't crash
-                    stream = null; 
                 }
             }
             
-            if (state.mode !== 'single') { log.innerText = "Connecting to server..."; }
+            if (state.mode !== 'single') log.innerText = "Connecting to server...";
             
             peer = new Peer({
                 config: {
@@ -862,7 +926,7 @@
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
-        if (state.gameType === '121') startScore = 121 + p.l; // 121 checkout increments by 1 per leg
+        if (state.gameType === '121') startScore = 121 + p.l;
 
         if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val; p.pts += val; 
@@ -887,25 +951,22 @@
                             state.turn = state.startingPlayer; 
                         }
                     } else {
-                        // 121 Checkout local: winner's target goes up 1, loser's stays the same.
                         state.p.forEach((x, i) => { x.s = 121 + x.l; x.ld = 0; });
                         state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
                         state.turn = state.startingPlayer; 
                     }
                 }
             } else { 
-                // Not checked out yet. Apply 9-Dart limit for 121 Checkout!
                 if (state.gameType === '121' && p.ld >= 9) {
-                    p.s = 121 + p.l; p.ld = 0; // Failed 121 checkout in 9 darts, resetting target
+                    p.s = 121 + p.l; p.ld = 0;
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
                 } else if (state.mode !== 'single') {
                     state.turn = (state.turn === 0) ? 1 : 0; 
                 }
             }
         } else { 
-            // Busted
             if (state.gameType === '121' && p.ld >= 9) {
-                p.s = 121 + p.l; p.ld = 0; // Failed 121 checkout in 9 darts on bust, resetting target
+                p.s = 121 + p.l; p.ld = 0; 
             }
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
         }
@@ -950,11 +1011,11 @@
                 document.getElementById(`l-area-${i}`).style.display = 'none';
             } else if (state.gameType === '121') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
-                document.getElementById(`avg-${i}`).innerText = p.ld; // Show darts thrown in current checkout attempt
+                document.getElementById(`avg-${i}`).innerText = p.ld; 
                 document.getElementById(`s-${i}`).innerText = p.s;
                 document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 document.getElementById(`l-area-${i}`).style.display = 'block';
-                document.getElementById(`l-${i}`).innerText = p.l; // Show checkouts completed
+                document.getElementById(`l-${i}`).innerText = p.l; 
             } else {
                 document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                 document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
