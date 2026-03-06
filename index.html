@@ -15,14 +15,13 @@
             overflow: hidden; 
         }
 
-        /* --- SPECTATOR MODE FIXES --- */
-        body.spectator-mode { grid-template-rows: 40px 1fr 160px 0px 25px; } /* Gives video max space, locks scores to 160px */
+        /* --- SPECTATOR MODE GRID --- */
+        body.spectator-mode { grid-template-rows: 40px 1fr 160px 0px 25px; } 
         body.spectator-mode .controls,
         body.spectator-mode .header-controls,
         body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
-        body.spectator-mode video { object-fit: contain !important; } /* Forces full frame visibility */
         
         body.local-mode { grid-template-rows: 40px 1fr 80px 25px !important; }
         body.local-mode .v-container { display: none !important; }
@@ -112,9 +111,11 @@
             z-index: 1; 
         }
 
-        video { width: 100%; height: 100%; object-fit: cover; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
+        /* --- VIDEO TOGGLE STYLES --- */
+        video { width: 100%; height: 100%; object-fit: cover; background: #111; transition: transform 0.3s ease; transform-origin: center center; cursor: pointer; }
+        video.fit-whole { object-fit: contain !important; }
         
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; pointer-events: none; }
 
         .paused-overlay {
             position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue);
@@ -435,6 +436,13 @@
                 if (e.key === 'Enter') { e.preventDefault(); processHit(); }
             });
         }
+
+        // --- TAP TO TOGGLE VIDEO ZOOM ---
+        document.querySelectorAll('video').forEach(vid => {
+            vid.addEventListener('click', function() {
+                this.classList.toggle('fit-whole');
+            });
+        });
     });
 
     function toggleBullPhase(isActive) {
