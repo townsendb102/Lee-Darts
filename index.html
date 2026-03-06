@@ -18,7 +18,7 @@
         /* --- FULL SCREEN TRANSPARENT OVERLAY FOR SPECTATOR --- */
         body.spectator-mode { display: block; } 
         
-        body.spectator-mode .controls,
+        body.spectator-mode .controls-wrapper,
         body.spectator-mode .header-controls,
         body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
@@ -73,6 +73,8 @@
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         
         /* --- SINGLE PLAYER MODE FIXES --- */
+        body.single-mode .v-container { display: none !important; }
+        body.single-mode { grid-template-rows: 40px 1fr 80px 25px !important; }
         body.single-mode #card-1 { display: none !important; }
         body.single-mode .score-area { justify-content: center; gap: 20px; }
         body.single-mode.spectator-mode .player-card { width: 140px; border-left: 2px solid var(--blue); border-right: 2px solid var(--blue); }
@@ -91,16 +93,16 @@
         #first-throw-layer { background: rgba(2, 4, 8, 0.98); z-index: 10002; }
         #waiting-layer { background: rgba(2, 4, 8, 0.98); z-index: 10003; }
         
-        body.bull-throw:not(.local-mode):not(.spectator-mode) .v-box {
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box {
             visibility: visible !important;
             opacity: 1 !important;
             z-index: 1 !important;
             width: 50% !important;
         }
-        body.bull-throw:not(.local-mode):not(.spectator-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
-        body.bull-throw:not(.local-mode):not(.spectator-mode) #box-peer { left: 50%; }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
         
-        body.bull-throw:not(.local-mode):not(.spectator-mode) #first-throw-layer {
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer {
             top: calc(40px + 45dvh);
             background: rgba(2, 4, 8, 0.95);
         }
@@ -197,10 +199,17 @@
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
 
-        .controls { display: grid; grid-template-columns: 1.5fr 0.5fr 1fr; padding: 8px; gap: 8px; background: #000; border-top: 1px solid #1b4965; }
+        /* --- CONTROL WRAPPER FIX --- */
+        .controls-wrapper { width: 100%; height: 100%; background: #000; border-top: 1px solid #1b4965; }
+        .controls { display: grid; height: 100%; padding: 8px; gap: 8px; }
+        
+        #standard-controls { grid-template-columns: 1.5fr 0.5fr 1fr; }
+        #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; }
+        
         .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
         .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
         .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
+        #atc-controls .btn-hit { font-size: 16px; } /* Slightly smaller for ATC buttons to fit */
         
         #pts-input:disabled { color: #555; }
         .btn-hit:disabled { background: #333; color: #666; cursor: not-allowed; }
@@ -340,10 +349,20 @@
     </div>
 </div>
 
-<div class="controls">
-    <div class="score-input-box"><input type="number" id="pts-input" placeholder="0" inputmode="numeric"></div>
-    <button class="btn-undo" id="undo-btn">⟲</button>
-    <button class="btn-hit" id="hit-btn">HIT</button>
+<div class="controls-wrapper">
+    <div class="controls" id="standard-controls">
+        <div class="score-input-box"><input type="number" id="pts-input" placeholder="0" inputmode="numeric"></div>
+        <button class="btn-undo" id="undo-btn">⟲</button>
+        <button class="btn-hit" id="hit-btn">HIT</button>
+    </div>
+    
+    <div class="controls" id="atc-controls" style="display: none;">
+        <button class="btn-undo" id="atc-undo-btn">⟲</button>
+        <button class="btn-hit" id="atc-miss-btn" style="background: #444; color: white;">MISS</button>
+        <button class="btn-hit" id="atc-s-btn">S1</button>
+        <button class="btn-hit" id="atc-d-btn">D1</button>
+        <button class="btn-hit" id="atc-t-btn">T1</button>
+    </div>
 </div>
 
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
@@ -495,8 +514,18 @@
         document.getElementById('mute-btn').onclick = toggleMute;
         document.getElementById('share-btn').onclick = shareInvite;
         document.getElementById('spectate-btn').onclick = shareSpectator;
+        
+        // standard 501 controls
         document.getElementById('undo-btn').onclick = undo;
         document.getElementById('hit-btn').onclick = processHit;
+        
+        // ATC controls
+        document.getElementById('atc-undo-btn').onclick = undo;
+        document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
+        document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
+        document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
+        document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
+
         document.getElementById('rematch-btn').onclick = triggerRematch;
         
         const ptsInput = document.getElementById('pts-input');
@@ -582,18 +611,25 @@
 
         try {
             if (!spectateId) {
-                log.innerText = "Accessing Camera...";
-                let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
-                if (isMobile) {
-                    constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
-                    currentFacingMode = "environment";
+                if (state.mode !== 'single') {
+                    log.innerText = "Accessing Camera...";
+                    let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
+                    if (isMobile) {
+                        constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
+                        currentFacingMode = "environment";
+                    }
+                    stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async (err) => {
+                        console.warn("Primary camera request failed, falling back to absolute minimum defaults.", err);
+                        isMobile = false;
+                        return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    });
+                    document.getElementById('me').srcObject = stream;
+                } else {
+                    // Create a silent 1px dummy stream so PeerJS can still broadcast to spectators without using the camera
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1; canvas.height = 1;
+                    stream = canvas.captureStream(1);
                 }
-                stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async (err) => {
-                    console.warn("Primary camera request failed, falling back to absolute minimum defaults.", err);
-                    isMobile = false;
-                    return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                });
-                document.getElementById('me').srcObject = stream;
             }
             
             log.innerText = "Connecting to server...";
@@ -874,79 +910,76 @@
             }
         }
     }
+    
+    // Specifically for processing individual ATC Darts
+    function processAtcDart(multiplier) {
+        if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
+        
+        history = JSON.parse(JSON.stringify(state));
+        let p = state.p[state.turn];
 
+        p.d++; // Log 1 individual dart
+        if (multiplier > 0) { p.s += multiplier; }
+        
+        if (p.s > 21) {
+            state.winner = state.turn;
+        } else if (state.mode !== 'single' && p.d % 3 === 0) {
+            state.turn = (state.turn === 0) ? 1 : 0;
+        }
+        
+        render(); 
+        if (!isLocalMatch) broadcast(state);
+    }
+
+    // For standard 501 throwing
     function processHit() {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
 
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
+        if (isNaN(val) || val < 0 || val > 180) return;
+        
+        history = JSON.parse(JSON.stringify(state));
+        let p = state.p[state.turn];
 
-        if (state.gameType === 'atc') {
-            // Allows up to 9 targets cleared in a single turn (e.g. 3 Trebles = 3x3 = 9 advances)
-            if (isNaN(val) || val < 0 || val > 9) return;
-            
-            history = JSON.parse(JSON.stringify(state));
-            let p = state.p[state.turn];
+        p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0; p.f9d = p.f9d ?? 0;
+        p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
+        
+        if (p.ld < 9) { p.f9d += 3; }
+        p.d += 3; p.ld += 3;
 
-            p.d += 3;
-            p.pts += val; 
-            p.s += val; 
-            
-            if (p.s > 21) {
-                state.winner = state.turn;
-            } else if (state.mode !== 'single') {
-                state.turn = (state.turn === 0) ? 1 : 0;
-            }
-            
-            render(); 
-            if (!isLocalMatch) broadcast(state);
-            
-        } else {
-            if (isNaN(val) || val < 0 || val > 180) return;
-            
-            history = JSON.parse(JSON.stringify(state));
-            let p = state.p[state.turn];
+        if (p.s - val >= 0 && p.s - val !== 1) {
+            p.s -= val; p.pts += val; 
+            if (p.ld <= 9) { p.f9pts += val; }
+            if (val === 180) p.n180++; else if (val >= 140) p.n140++;
 
-            p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0; p.f9d = p.f9d ?? 0;
-            p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
-            
-            if (p.ld < 9) { p.f9d += 3; }
-            p.d += 3; p.ld += 3;
-
-            if (p.s - val >= 0 && p.s - val !== 1) {
-                p.s -= val; p.pts += val; 
-                if (p.ld <= 9) { p.f9pts += val; }
-                if (val === 180) p.n180++; else if (val >= 140) p.n140++;
-
-                if (p.s === 0) { 
-                    if (val > p.hc) p.hc = val; 
-                    p.l++; 
-                    
-                    if (state.mode === 'single') {
-                        state.p[0].s = 501;
-                        state.p[0].ld = 0;
-                        state.turn = 0;
+            if (p.s === 0) { 
+                if (val > p.hc) p.hc = val; 
+                p.l++; 
+                
+                if (state.mode === 'single') {
+                    state.p[0].s = 501;
+                    state.p[0].ld = 0;
+                    state.turn = 0;
+                } else {
+                    const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
+                    if (p.l >= legsRequiredToWin) { 
+                        state.winner = state.turn; 
                     } else {
-                        const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
-                        if (p.l >= legsRequiredToWin) { 
-                            state.winner = state.turn; 
-                        } else {
-                            state.p.forEach(x => { x.s = 501; x.ld = 0; }); 
-                            state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
-                            state.turn = state.startingPlayer; 
-                        }
+                        state.p.forEach(x => { x.s = 501; x.ld = 0; }); 
+                        state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
+                        state.turn = state.startingPlayer; 
                     }
-                } else if (state.mode !== 'single') { 
-                    state.turn = (state.turn === 0) ? 1 : 0; 
                 }
             } else if (state.mode !== 'single') { 
                 state.turn = (state.turn === 0) ? 1 : 0; 
             }
-            
-            render(); 
-            if (!isLocalMatch) broadcast(state);
+        } else if (state.mode !== 'single') { 
+            state.turn = (state.turn === 0) ? 1 : 0; 
         }
         
+        render(); 
+        if (!isLocalMatch) broadcast(state);
         input.value = ''; input.blur(); 
     }
 
@@ -1000,17 +1033,47 @@
         });
         
         if (!spectateId) {
-            const ptsInput = document.getElementById('pts-input');
-            const hitBtn = document.getElementById('hit-btn');
             
-            if (isLocalMatch || state.mode === 'single' || state.turn === myIndex) {
-                ptsInput.disabled = false; hitBtn.disabled = false; 
-                // Changed placeholder to remind user they can input higher numbers
-                ptsInput.placeholder = state.gameType === 'atc' ? "Cleared (0-9)" : "0";
+            // Swap out Controls based on game mode
+            if (state.gameType === 'atc') {
+                document.getElementById('standard-controls').style.display = 'none';
+                document.getElementById('atc-controls').style.display = 'grid';
+                
+                let target = state.p[state.turn].s;
+                if (target <= 20) {
+                    document.getElementById('atc-s-btn').innerText = "S" + target;
+                    document.getElementById('atc-d-btn').innerText = "D" + target;
+                    document.getElementById('atc-t-btn').innerText = "T" + target;
+                    document.getElementById('atc-d-btn').style.display = 'block';
+                    document.getElementById('atc-t-btn').style.visibility = 'visible';
+                } else if (target === 21) {
+                    document.getElementById('atc-s-btn').innerText = "25";
+                    document.getElementById('atc-d-btn').innerText = "BULL";
+                    document.getElementById('atc-t-btn').style.visibility = 'hidden'; // Hide treble on Bull
+                }
+                
+                // Disable states
+                let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
+                ['atc-miss-btn', 'atc-s-btn', 'atc-d-btn', 'atc-t-btn'].forEach(id => {
+                    document.getElementById(id).disabled = !isMyTurn;
+                    document.getElementById(id).style.opacity = isMyTurn ? 1 : 0.5;
+                });
+                
             } else {
-                ptsInput.disabled = true; hitBtn.disabled = true; ptsInput.placeholder = "Waiting...";
+                document.getElementById('standard-controls').style.display = 'grid';
+                document.getElementById('atc-controls').style.display = 'none';
+                
+                const ptsInput = document.getElementById('pts-input');
+                const hitBtn = document.getElementById('hit-btn');
+                
+                if (isLocalMatch || state.mode === 'single' || state.turn === myIndex) {
+                    ptsInput.disabled = false; hitBtn.disabled = false; ptsInput.placeholder = "0";
+                } else {
+                    ptsInput.disabled = true; hitBtn.disabled = true; ptsInput.placeholder = "Waiting...";
+                }
             }
-            
+
+            // Only show peer video UI if it's NOT single player mode
             if (!isLocalMatch && !document.body.classList.contains('bull-throw')) {
                 document.getElementById('box-me').className = (state.turn === myIndex || state.mode === 'single') ? "v-box visible" : "v-box";
                 document.getElementById('box-peer').className = (state.turn !== myIndex && state.mode !== 'single') ? "v-box visible" : "v-box";
