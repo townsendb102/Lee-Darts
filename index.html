@@ -73,11 +73,13 @@
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         
         /* --- SINGLE PLAYER MODE FIXES --- */
-        body.single-mode .v-container { display: none !important; }
         body.single-mode { grid-template-rows: 40px 1fr 80px 25px !important; }
+        body.single-mode .v-container { display: none !important; }
         body.single-mode #card-1 { display: none !important; }
-        body.single-mode .score-area { justify-content: center; gap: 20px; }
-        body.single-mode.spectator-mode .player-card { width: 140px; border-left: 2px solid var(--blue); border-right: 2px solid var(--blue); }
+        body.single-mode .score-area { flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        body.single-mode #card-0 { max-width: 320px; width: 100%; border: 2px solid var(--blue); }
+        body.single-mode.spectator-mode .score-area { flex-direction: row; justify-content: center; }
+        body.single-mode.spectator-mode #card-0 { width: 150px; }
         /* --------------------------------------------------- */
 
         body.local-mode { grid-template-rows: 40px 1fr 80px 25px !important; }
@@ -204,7 +206,7 @@
         .controls { display: grid; height: 100%; padding: 8px; gap: 8px; }
         
         #standard-controls { grid-template-columns: 1.5fr 0.5fr 1fr; }
-        #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; }
+        #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } /* 5 evenly spaced buttons */
         
         .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
         .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
@@ -238,7 +240,9 @@
         <div class="input-group" id="game-type-group" style="display: none;">
             <label style="color: white;">Game Type</label>
             <select id="game-type-input" class="setup-input">
-                <option value="501">501</option>
+                <option value="301">301</option>
+                <option value="501" selected>501</option>
+                <option value="701">701</option>
                 <option value="atc">Around the Clock</option>
             </select>
         </div>
@@ -485,13 +489,12 @@
                 const val = e.target.value;
                 const isLocal = val === 'local';
                 const isSingle = val === 'single';
-                const isOnline = val === 'online';
 
                 document.getElementById('p2-name-group').style.display = isLocal ? 'block' : 'none';
                 document.getElementById('game-type-group').style.display = isSingle ? 'block' : 'none';
                 document.getElementById('legs-group').style.display = isSingle ? 'none' : 'block';
                 
-                if (isOnline) document.getElementById('p1-label').innerText = 'Your Name';
+                if (isSingle) document.getElementById('p1-label').innerText = 'Your Name';
                 else if (isLocal) document.getElementById('p1-label').innerText = 'Player 1 Name';
                 else document.getElementById('p1-label').innerText = 'Your Name';
             });
@@ -515,7 +518,7 @@
         document.getElementById('share-btn').onclick = shareInvite;
         document.getElementById('spectate-btn').onclick = shareSpectator;
         
-        // standard 501 controls
+        // standard X01 controls
         document.getElementById('undo-btn').onclick = undo;
         document.getElementById('hit-btn').onclick = processHit;
         
@@ -590,6 +593,11 @@
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
         isLocalMatch = (state.mode === 'local');
 
+        let startScore = 501;
+        if (state.gameType === '301') startScore = 301;
+        if (state.gameType === '701') startScore = 701;
+        if (state.gameType === 'atc') startScore = 1;
+
         if (isLocalMatch) {
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
@@ -605,13 +613,30 @@
         if (state.mode === 'single') {
             document.body.classList.add('single-mode');
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
-            if (state.gameType === 'atc') { state.p[0].s = 1; }
+            state.p[0].s = startScore;
             document.getElementById('setup-layer').classList.add('hidden');
+        } else {
+            state.p[0].name = document.getElementById('name-input').value || "Host";
+            state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
         }
 
         try {
             if (!spectateId) {
-                if (state.mode !== 'single') {
+                if (state.mode === 'single') {
+                    // Create silent dummy background canvas so camera popup is skipped entirely
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 640; canvas.height = 480;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#020408';
+                    ctx.fillRect(0, 0, 640, 480);
+                    stream = canvas.captureStream(1); 
+                    
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
+                    stream.addTrack(dummyAudio);
+                    
+                    document.getElementById('me').srcObject = stream;
+                } else {
                     log.innerText = "Accessing Camera...";
                     let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
                     if (isMobile) {
@@ -624,11 +649,6 @@
                         return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     });
                     document.getElementById('me').srcObject = stream;
-                } else {
-                    // Create a silent 1px dummy stream so PeerJS can still broadcast to spectators without using the camera
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 1; canvas.height = 1;
-                    stream = canvas.captureStream(1);
                 }
             }
             
@@ -658,13 +678,10 @@
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     connectToMatch(joinId, false);
                 } else {
-                    state.p[0].name = document.getElementById('name-input').value || "Host";
-                    
                     if (state.mode === 'single') {
                         document.getElementById('waiting-layer').classList.add('hidden');
                         render();
                     } else {
-                        state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
                         document.getElementById('waiting-layer').classList.remove('hidden');
                     }
                 }
@@ -850,7 +867,7 @@
     }
 
     async function swapCam() {
-        if (!stream) return;
+        if (!stream || state.mode === 'single') return;
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const videoCameras = devices.filter(d => d.kind === 'videoinput');
@@ -910,16 +927,16 @@
             }
         }
     }
-    
-    // Specifically for processing individual ATC Darts
+
+    // Specially handles Individual Darts for ATC
     function processAtcDart(multiplier) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
 
-        p.d++; // Log 1 individual dart
-        if (multiplier > 0) { p.s += multiplier; }
+        p.d++; 
+        if (multiplier > 0) { p.s += multiplier; } 
         
         if (p.s > 21) {
             state.winner = state.turn;
@@ -931,7 +948,7 @@
         if (!isLocalMatch) broadcast(state);
     }
 
-    // For standard 501 throwing
+    // Handles standard X01 throw inputs
     function processHit() {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
 
@@ -953,12 +970,16 @@
             if (p.ld <= 9) { p.f9pts += val; }
             if (val === 180) p.n180++; else if (val >= 140) p.n140++;
 
+            let startScore = 501;
+            if (state.gameType === '301') startScore = 301;
+            if (state.gameType === '701') startScore = 701;
+
             if (p.s === 0) { 
                 if (val > p.hc) p.hc = val; 
                 p.l++; 
                 
                 if (state.mode === 'single') {
-                    state.p[0].s = 501;
+                    state.p[0].s = startScore;
                     state.p[0].ld = 0;
                     state.turn = 0;
                 } else {
@@ -966,7 +987,7 @@
                     if (p.l >= legsRequiredToWin) { 
                         state.winner = state.turn; 
                     } else {
-                        state.p.forEach(x => { x.s = 501; x.ld = 0; }); 
+                        state.p.forEach(x => { x.s = startScore; x.ld = 0; }); 
                         state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
                         state.turn = state.startingPlayer; 
                     }
@@ -992,8 +1013,13 @@
     }
 
     function triggerRematch() {
+        let startScore = 501;
+        if (state.gameType === '301') startScore = 301;
+        if (state.gameType === '701') startScore = 701;
+        if (state.gameType === 'atc') startScore = 1;
+
         state.p.forEach(x => { 
-            x.s = state.gameType === 'atc' ? 1 : 501; 
+            x.s = startScore; 
             x.l = 0; x.pts = 0; x.d = 0; 
             x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
         });
@@ -1034,7 +1060,6 @@
         
         if (!spectateId) {
             
-            // Swap out Controls based on game mode
             if (state.gameType === 'atc') {
                 document.getElementById('standard-controls').style.display = 'none';
                 document.getElementById('atc-controls').style.display = 'grid';
@@ -1044,15 +1069,14 @@
                     document.getElementById('atc-s-btn').innerText = "S" + target;
                     document.getElementById('atc-d-btn').innerText = "D" + target;
                     document.getElementById('atc-t-btn').innerText = "T" + target;
-                    document.getElementById('atc-d-btn').style.display = 'block';
+                    document.getElementById('atc-d-btn').style.visibility = 'visible';
                     document.getElementById('atc-t-btn').style.visibility = 'visible';
                 } else if (target === 21) {
                     document.getElementById('atc-s-btn').innerText = "25";
                     document.getElementById('atc-d-btn').innerText = "BULL";
-                    document.getElementById('atc-t-btn').style.visibility = 'hidden'; // Hide treble on Bull
+                    document.getElementById('atc-t-btn').style.visibility = 'hidden'; 
                 }
                 
-                // Disable states
                 let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
                 ['atc-miss-btn', 'atc-s-btn', 'atc-d-btn', 'atc-t-btn'].forEach(id => {
                     document.getElementById(id).disabled = !isMyTurn;
@@ -1073,7 +1097,6 @@
                 }
             }
 
-            // Only show peer video UI if it's NOT single player mode
             if (!isLocalMatch && !document.body.classList.contains('bull-throw')) {
                 document.getElementById('box-me').className = (state.turn === myIndex || state.mode === 'single') ? "v-box visible" : "v-box";
                 document.getElementById('box-peer').className = (state.turn !== myIndex && state.mode !== 'single') ? "v-box visible" : "v-box";
