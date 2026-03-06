@@ -447,25 +447,19 @@
             const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
             if (!videoSender || !videoSender.getParameters) return;
             const parameters = videoSender.getParameters();
-            if (!parameters.encodings || parameters.encodings.length === 0) { 
-                parameters.encodings = [{}]; 
-            }
+            if (!parameters.encodings || parameters.encodings.length === 0) { parameters.encodings = [{}]; }
             parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
             await videoSender.setParameters(parameters);
-        } catch (e) {
-            console.warn("Bitrate limit not supported on this device/browser. Ignoring.");
-        }
+        } catch (e) {}
     }
 
     document.addEventListener('visibilitychange', () => {
-        if (!stream) return;
+        if (!stream || state.mode === 'single') return;
         const videoTrack = stream.getVideoTracks()[0];
         if (videoTrack) {
             const isHidden = document.visibilityState === 'hidden';
             videoTrack.enabled = !isHidden; 
-            if (!isLocalMatch && state.mode !== 'single') {
-                broadcast({ type: 'CAM_PAUSED', paused: isHidden });
-            }
+            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
 
@@ -486,31 +480,29 @@
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
 
-        // Dynamic Menu Updates
-        function updateSetupUI() {
+        function updateMenuUI() {
             if (!modeInput) return;
             const mode = modeInput.value;
-            const isLocal = mode === 'local';
-            const isSingle = mode === 'single';
-            const isOnline = mode === 'online';
             const gameType = gameTypeInput ? gameTypeInput.value : '501';
 
-            if (document.getElementById('p2-name-group')) document.getElementById('p2-name-group').style.display = isLocal ? 'block' : 'none';
-            // Show Game Type for Single AND Local
-            if (document.getElementById('game-type-group')) document.getElementById('game-type-group').style.display = (isSingle || isLocal) ? 'block' : 'none';
-            // Hide legs if it's Single Player OR Around The Clock
-            if (document.getElementById('legs-group')) document.getElementById('legs-group').style.display = (isSingle || gameType === 'atc') ? 'none' : 'block';
+            // Show Player 2 for Local only
+            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+            // Show Game Type options for Single or Local Practice
+            document.getElementById('game-type-group').style.display = (mode === 'single' || mode === 'local') ? 'block' : 'none';
+            // Hide "Best Of" legs for ATC, 121 checkout, and single player
+            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121') ? 'none' : 'block';
             
-            if (document.getElementById('p1-label')) {
-                if (isSingle) document.getElementById('p1-label').innerText = 'Your Name';
-                else if (isLocal) document.getElementById('p1-label').innerText = 'Player 1 Name';
-                else document.getElementById('p1-label').innerText = 'Your Name';
+            const p1Label = document.getElementById('p1-label');
+            if (p1Label) {
+                if (mode === 'single') p1Label.innerText = 'Your Name';
+                else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
+                else p1Label.innerText = 'Your Name';
             }
         }
 
-        if (modeInput) modeInput.addEventListener('change', updateSetupUI);
-        if (gameTypeInput) gameTypeInput.addEventListener('change', updateSetupUI);
-        updateSetupUI(); // run once on load
+        if (modeInput) modeInput.addEventListener('change', updateMenuUI);
+        if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
+        updateMenuUI();
 
         if (spectateId) {
             document.body.classList.add('spectator-mode');
@@ -530,11 +522,9 @@
         document.getElementById('share-btn').onclick = shareInvite;
         document.getElementById('spectate-btn').onclick = shareSpectator;
         
-        // standard X01 controls
         document.getElementById('undo-btn').onclick = undo;
         document.getElementById('hit-btn').onclick = processHit;
         
-        // ATC controls
         document.getElementById('atc-undo-btn').onclick = undo;
         document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
         document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
@@ -570,15 +560,10 @@
     function showFtStep2(mode) {
         document.getElementById('ft-step-1').classList.add('hidden');
         document.getElementById('ft-step-2').classList.remove('hidden');
-        
         document.getElementById('ft-p1-btn').innerText = state.p[0].name;
         document.getElementById('ft-p2-btn').innerText = state.p[1].name;
-
-        if (mode === 'bull') {
-            document.getElementById('ft-title').innerText = "Who was closest to Bull?";
-        } else {
-            document.getElementById('ft-title').innerText = "Who throws first?";
-        }
+        if (mode === 'bull') { document.getElementById('ft-title').innerText = "Who was closest to Bull?"; } 
+        else { document.getElementById('ft-title').innerText = "Who throws first?"; }
     }
 
     function setFirstPlayer(playerIndex) {
@@ -590,7 +575,6 @@
             toggleBullPhase(false);
             broadcast({ type: 'BULL_PHASE', active: false });
         }
-        
         render();
         if (!isLocalMatch) broadcast(state);
     }
@@ -621,7 +605,7 @@
             document.getElementById('setup-layer').classList.add('hidden');
             document.body.classList.add('local-mode'); 
             
-            if (state.gameType === 'atc') { render(); } 
+            if (state.gameType === 'atc' || state.gameType === '121') { render(); } 
             else { showFirstThrowUI(); }
             return; 
         }
@@ -630,7 +614,9 @@
             document.body.classList.add('single-mode');
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[0].s = startScore;
+            // IMMEDIATELY render game board and let user play without waiting for camera or network!
             document.getElementById('setup-layer').classList.add('hidden');
+            render();
         } else {
             state.p[0].name = document.getElementById('name-input').value || "Host";
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
@@ -638,16 +624,7 @@
 
         try {
             if (!spectateId) {
-                if (state.mode === 'single') {
-                    // Generate a silent, invisible dummy stream to completely bypass camera requirements
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 1; canvas.height = 1;
-                    stream = canvas.captureStream(1); 
-                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
-                    stream.addTrack(dummyAudio);
-                    document.getElementById('me').srcObject = stream;
-                } else {
+                if (state.mode !== 'single') {
                     log.innerText = "Accessing Camera...";
                     let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
                     if (isMobile) {
@@ -655,15 +632,18 @@
                         currentFacingMode = "environment";
                     }
                     stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async (err) => {
-                        console.warn("Primary camera request failed, falling back to absolute minimum defaults.", err);
                         isMobile = false;
                         return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     });
                     document.getElementById('me').srcObject = stream;
+                } else {
+                    // Critical Fix: Hard bypass for single player stream so older iPhones don't crash
+                    stream = null; 
                 }
             }
             
-            log.innerText = "Connecting to server...";
+            if (state.mode !== 'single') { log.innerText = "Connecting to server..."; }
+            
             peer = new Peer({
                 config: {
                     'iceServers': [
@@ -680,53 +660,35 @@
             peer.on('open', (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
-                document.getElementById('setup-layer').classList.add('hidden');
                 
                 if (spectateId) { 
+                    document.getElementById('setup-layer').classList.add('hidden');
                     connectToMatch(spectateId, true); 
                 } else if (joinId) {
+                    document.getElementById('setup-layer').classList.add('hidden');
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     connectToMatch(joinId, false);
-                } else {
-                    if (state.mode === 'single') {
-                        document.getElementById('waiting-layer').classList.add('hidden');
-                        render();
-                    } else {
-                        document.getElementById('waiting-layer').classList.remove('hidden');
-                    }
+                } else if (state.mode !== 'single') {
+                    document.getElementById('setup-layer').classList.add('hidden');
+                    document.getElementById('waiting-layer').classList.remove('hidden');
                 }
                 
                 if (joinId || spectateId) render();
             });
 
-            peer.on('disconnected', () => {
-                console.warn("Lost connection to server. Attempting to reconnect...");
-                peer.reconnect(); 
-            });
-
             peer.on('call', call => {
                 if (call.metadata && call.metadata.spectator) {
-                    call.answer(stream);
+                    if (stream) { call.answer(stream); } else { call.answer(); }
                     spectatorCalls.push(call);
                     setTimeout(() => { render(); }, 1000);
                 } else {
-                    call.answer(stream);
+                    if (stream) { call.answer(stream); } else { call.answer(); }
                     limitVideoBitrate(call.peerConnection, 1500);
                     call.on('stream', s => {
                         currentCall = call;
                         if(s) { attachPeerVideo(s); }
                         render();
-
-                        currentCall.peerConnection.addEventListener('iceconnectionstatechange', () => {
-                            const state = currentCall.peerConnection.iceConnectionState;
-                            const overlay = document.getElementById('reconnect-overlay');
-                            if (state === 'disconnected' || state === 'failed') {
-                                if (overlay) overlay.classList.add('visible');
-                            } else if (state === 'connected' || state === 'completed') {
-                                if (overlay) overlay.classList.remove('visible');
-                            }
-                        });
                     });
                 }
             });
@@ -741,12 +703,14 @@
             });
 
             peer.on('error', err => {
-                log.innerText = "Connection Error: " + err.type;
-                startBtn.disabled = false;
+                if (state.mode !== 'single') {
+                    log.innerText = "Connection Error: " + err.type;
+                    startBtn.disabled = false;
+                }
             });
 
         } catch (e) {
-            log.innerText = "Camera/Mic access denied. (" + e.message + ")";
+            log.innerText = "Camera/Mic error. (" + e.message + ")";
             startBtn.disabled = false;
         }
     }
@@ -754,69 +718,33 @@
     function attachPeerVideo(s) {
         const peerVideo = document.getElementById('peer');
         peerVideo.srcObject = s;
-        peerVideo.onloadedmetadata = () => {
-            peerVideo.play().catch(e => {
-                console.warn("Autoplay blocked. User must tap screen to start video.", e);
-            });
-        };
+        peerVideo.onloadedmetadata = () => { peerVideo.play().catch(e => {}); };
     }
 
     function connectToMatch(id, isSpectator = false) {
         const c = peer.connect(id);
         conns.push(c);
-        
-        c.on('open', () => {
-            if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name });
-        });
-        
+        c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name }); });
         c.on('data', d => handleData(d));
         
         if (isSpectator) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1; canvas.height = 1;
-            const dummyStream = canvas.captureStream(1); 
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
-            dummyStream.addTrack(dummyAudio);
-            
-            const specCall = peer.call(id, dummyStream, { metadata: { spectator: true } });
+            const specCall = peer.call(id, null, { metadata: { spectator: true } });
             specCall.on('stream', s => { attachPeerVideo(s); render(); });
         } else {
             currentCall = peer.call(id, stream);
             limitVideoBitrate(currentCall.peerConnection, 1500); 
-            
-            currentCall.on('stream', s => { 
-                attachPeerVideo(s); 
-                render(); 
-
-                currentCall.peerConnection.addEventListener('iceconnectionstatechange', () => {
-                    const state = currentCall.peerConnection.iceConnectionState;
-                    const overlay = document.getElementById('reconnect-overlay');
-                    if (state === 'disconnected' || state === 'failed') {
-                        if (overlay) overlay.classList.add('visible');
-                    } else if (state === 'connected' || state === 'completed') {
-                        if (overlay) overlay.classList.remove('visible');
-                    }
-                });
-            });
+            currentCall.on('stream', s => { attachPeerVideo(s); render(); });
         }
     }
 
     function handleData(data) {
         if (data.type === 'CAM_PAUSED') {
             const overlay = document.getElementById('peer-paused-msg');
-            if (overlay) {
-                if (data.paused) overlay.classList.add('visible');
-                else overlay.classList.remove('visible');
-            }
+            if (overlay) { data.paused ? overlay.classList.add('visible') : overlay.classList.remove('visible'); }
             return;
         }
 
-        if (data.type === 'BULL_PHASE') {
-            toggleBullPhase(data.active);
-            return;
-        }
-
+        if (data.type === 'BULL_PHASE') { toggleBullPhase(data.active); return; }
         if (data.type === 'ZOOM') {
             const peerVid = document.getElementById('peer');
             if (peerVid) peerVid.style.transform = `scale(${data.level})`;
@@ -829,14 +757,10 @@
             state.gameType = data.state.gameType;
             state.p[0].name = data.state.p[0].name;
             state.startingPlayer = data.state.startingPlayer || 0;
-            
             if (state.mode === 'single') { document.body.classList.add('single-mode'); }
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
-            
-            const waitingLayer = document.getElementById('waiting-layer');
-            if (waitingLayer) waitingLayer.classList.add('hidden');
-            
+            document.getElementById('waiting-layer').classList.add('hidden');
             if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) {
                 showFirstThrowUI();
             }
@@ -855,9 +779,7 @@
 
     function cycleZoom() {
         if (!stream) return;
-        if (currentZoom === 1) currentZoom = 1.5;
-        else if (currentZoom === 1.5) currentZoom = 2;
-        else currentZoom = 1;
+        currentZoom = currentZoom === 1 ? 1.5 : (currentZoom === 1.5 ? 2 : 1);
         const btn = document.getElementById('zoom-btn');
         if (btn) btn.innerText = currentZoom === 1 ? "ZOOM" : `ZOOM ${currentZoom}x`;
         document.getElementById('me').style.transform = `scale(${currentZoom})`;
@@ -869,11 +791,8 @@
             isMuted = !isMuted;
             stream.getAudioTracks()[0].enabled = !isMuted;
             const btn = document.getElementById('mute-btn');
-            if (isMuted) {
-                btn.innerText = "UNMUTE"; btn.style.color = "#aaa"; btn.style.borderColor = "#666";
-            } else {
-                btn.innerText = "MUTE"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444";
-            }
+            if (isMuted) { btn.innerText = "UNMUTE"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
+            else { btn.innerText = "MUTE"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
         }
     }
 
@@ -890,77 +809,44 @@
             
             if (isMobile) {
                 currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-                try {
-                    newStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } } 
-                    });
-                } catch (e) { isMobile = false; }
+                try { newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch (e) { isMobile = false; }
             }
             if (!isMobile) {
                 currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
-                newStream = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
-                });
+                newStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } });
             }
 
             const newVideoTrack = newStream.getVideoTracks()[0];
             stream.removeTrack(oldVideoTrack);
             stream.addTrack(newVideoTrack);
             document.getElementById('me').srcObject = stream;
-
-            currentZoom = 1; 
-            const zoomBtn = document.getElementById('zoom-btn');
-            if (zoomBtn) zoomBtn.innerText = "ZOOM";
-            document.getElementById('me').style.transform = "scale(1)";
-            if (!isLocalMatch) broadcast({ type: 'ZOOM', level: 1 });
-
-            if (currentCall && currentCall.peerConnection) {
-                const senders = currentCall.peerConnection.getSenders();
-                const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-                if (videoSender) { await videoSender.replaceTrack(newVideoTrack); }
-            }
-        } catch (e) {
-            alert("Recovering camera connection...");
-            const recoveredStream = await navigator.mediaDevices.getUserMedia({ video: true });
-            const recoveredTrack = recoveredStream.getVideoTracks()[0];
-            stream.addTrack(recoveredTrack);
-            document.getElementById('me').srcObject = stream;
             
-            currentZoom = 1; 
-            const zoomBtn = document.getElementById('zoom-btn');
-            if (zoomBtn) zoomBtn.innerText = "ZOOM";
-            document.getElementById('me').style.transform = "scale(1)";
-            if (!isLocalMatch) broadcast({ type: 'ZOOM', level: 1 });
-
             if (currentCall && currentCall.peerConnection) {
                 const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-                if (videoSender) await videoSender.replaceTrack(recoveredTrack);
+                if (videoSender) { await videoSender.replaceTrack(newVideoTrack); }
             }
-        }
+        } catch (e) {}
     }
     
     function processAtcDart(multiplier) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
-        
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
 
-        p.d++; 
-        if (multiplier > 0) { p.s += multiplier; } 
+        p.d++; // Log 1 dart
+        if (multiplier > 0) { p.s += multiplier; } // Target advances
         
         if (p.s > 21) {
             state.winner = state.turn;
         } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
             state.turn = (state.turn === 0) ? 1 : 0;
         }
-        
         render(); 
         if (!isLocalMatch) broadcast(state);
     }
 
     function processHit() {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
-
         const input = document.getElementById('pts-input');
         const val = parseInt(input.value);
         if (isNaN(val) || val < 0 || val > 180) return;
@@ -968,53 +854,60 @@
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
 
-        p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0; p.f9d = p.f9d ?? 0;
-        p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
+        p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0; p.f9d = p.f9d ?? 0; p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
         
         if (p.ld < 9) { p.f9d += 3; }
         p.d += 3; p.ld += 3;
+
+        let startScore = 501;
+        if (state.gameType === '301') startScore = 301;
+        if (state.gameType === '701') startScore = 701;
+        if (state.gameType === '121') startScore = 121 + p.l; // 121 checkout increments by 1 per leg
 
         if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val; p.pts += val; 
             if (p.ld <= 9) { p.f9pts += val; }
             if (val === 180) p.n180++; else if (val >= 140) p.n140++;
 
-            let startScore = 501;
-            if (state.gameType === '301') startScore = 301;
-            if (state.gameType === '701') startScore = 701;
-            if (state.gameType === '121') startScore = 121;
-
             if (p.s === 0) { 
                 if (val > p.hc) p.hc = val; 
                 p.l++; 
                 
                 if (state.mode === 'single') {
-                    // In single player 121, target goes up by 1 each checkout!
                     state.p[0].s = state.gameType === '121' ? 121 + p.l : startScore;
                     state.p[0].ld = 0;
                     state.turn = 0;
                 } else {
-                    const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
-                    
-                    if (p.l >= legsRequiredToWin && state.gameType !== '121') { 
-                        state.winner = state.turn; 
-                    } else if (state.gameType === '121' && p.l >= legsRequiredToWin) {
-                        state.winner = state.turn;
+                    if (state.gameType !== '121') {
+                        const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
+                        if (p.l >= legsRequiredToWin) { state.winner = state.turn; } 
+                        else {
+                            state.p.forEach(x => { x.s = startScore; x.ld = 0; }); 
+                            state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
+                            state.turn = state.startingPlayer; 
+                        }
                     } else {
-                        // In local 121, if Player 1 checks out, THEIR target goes up by 1!
-                        state.p.forEach(x => { 
-                            x.s = state.gameType === '121' ? 121 + x.l : startScore; 
-                            x.ld = 0; 
-                        }); 
+                        // 121 Checkout local: winner's target goes up 1, loser's stays the same.
+                        state.p.forEach((x, i) => { x.s = 121 + x.l; x.ld = 0; });
                         state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
                         state.turn = state.startingPlayer; 
                     }
                 }
-            } else if (state.mode !== 'single') { 
-                state.turn = (state.turn === 0) ? 1 : 0; 
+            } else { 
+                // Not checked out yet. Apply 9-Dart limit for 121 Checkout!
+                if (state.gameType === '121' && p.ld >= 9) {
+                    p.s = 121 + p.l; p.ld = 0; // Failed 121 checkout in 9 darts, resetting target
+                    if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
+                } else if (state.mode !== 'single') {
+                    state.turn = (state.turn === 0) ? 1 : 0; 
+                }
             }
-        } else if (state.mode !== 'single') { 
-            state.turn = (state.turn === 0) ? 1 : 0; 
+        } else { 
+            // Busted
+            if (state.gameType === '121' && p.ld >= 9) {
+                p.s = 121 + p.l; p.ld = 0; // Failed 121 checkout in 9 darts on bust, resetting target
+            }
+            if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
         }
         
         render(); 
@@ -1023,11 +916,7 @@
     }
 
     function undo() {
-        if (history) { 
-            state = JSON.parse(JSON.stringify(history)); history = null; 
-            render(); 
-            if (!isLocalMatch) broadcast(state);
-        }
+        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state); }
     }
 
     function triggerRematch() {
@@ -1038,21 +927,15 @@
         if (state.gameType === 'atc') startScore = 1;
 
         state.p.forEach(x => { 
-            x.s = startScore; 
-            x.l = 0; x.pts = 0; x.d = 0; 
-            x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
+            x.s = startScore; x.l = 0; x.pts = 0; x.d = 0; x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
         });
         delete state.winner; history = null;
-        
         document.getElementById('winner-layer').classList.add('hidden');
         if (!isLocalMatch) broadcast(state);
 
-        if (state.mode === 'single' || isLocalMatch || myIndex === 0) {
-            if (state.mode === 'single' || state.gameType === 'atc') { render(); } 
-            else { showFirstThrowUI(); }
-        } else {
-            render();
-        }
+        if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121') { render(); } 
+        else if (isLocalMatch || myIndex === 0) { showFirstThrowUI(); } 
+        else { render(); }
     }
 
     function render() {
@@ -1065,6 +948,13 @@
                 document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
                 document.getElementById(`co-${i}`).innerText = "TARGET";
                 document.getElementById(`l-area-${i}`).style.display = 'none';
+            } else if (state.gameType === '121') {
+                document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
+                document.getElementById(`avg-${i}`).innerText = p.ld; // Show darts thrown in current checkout attempt
+                document.getElementById(`s-${i}`).innerText = p.s;
+                document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
+                document.getElementById(`l-area-${i}`).style.display = 'block';
+                document.getElementById(`l-${i}`).innerText = p.l; // Show checkouts completed
             } else {
                 document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                 document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
@@ -1101,7 +991,6 @@
                     document.getElementById(id).disabled = !isMyTurn;
                     document.getElementById(id).style.opacity = isMyTurn ? 1 : 0.5;
                 });
-                
             } else {
                 document.getElementById('standard-controls').style.display = 'grid';
                 document.getElementById('atc-controls').style.display = 'none';
@@ -1134,12 +1023,8 @@
                         const senders = call.peerConnection.getSenders();
                         const vSender = senders.find(s => s.track && s.track.kind === 'video');
                         const aSender = senders.find(s => s.track && s.track.kind === 'audio');
-                        if (vSender && videoTrack && vSender.track !== videoTrack) {
-                            vSender.replaceTrack(videoTrack).catch(e => console.warn("Video swap failed", e));
-                        }
-                        if (aSender && audioTrack && aSender.track !== audioTrack) {
-                            aSender.replaceTrack(audioTrack).catch(e => console.warn("Audio swap failed", e));
-                        }
+                        if (vSender && videoTrack && vSender.track !== videoTrack) { vSender.replaceTrack(videoTrack).catch(e => {}); }
+                        if (aSender && audioTrack && aSender.track !== audioTrack) { aSender.replaceTrack(audioTrack).catch(e => {}); }
                     }
                 });
             }
@@ -1153,7 +1038,7 @@
                 let pStats = state.p[i];
                 document.getElementById(`ws-n${i}`).innerText = pStats.name;
                 
-                if (state.gameType === 'atc') {
+                if (state.gameType === 'atc' || state.gameType === '121') {
                     document.getElementById('ws-label-avg').innerText = "Total Darts";
                     document.getElementById(`ws-avg${i}`).innerText = pStats.d;
                 } else {
@@ -1193,7 +1078,7 @@
         
         const shareData = {
             title: 'Watch our Darts Match!',
-            text: `Live Score: ${currentScoreText}. Watch the live video stream here: `,
+            text: `Live Score: ${currentScoreText}. Watch the live stream here: `,
             url: url
         };
         if (navigator.share) { navigator.share(shareData).catch(console.error); } 
