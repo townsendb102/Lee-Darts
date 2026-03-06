@@ -31,30 +31,32 @@
         /* Float the score area left and right, stretching top to bottom */
         body.spectator-mode .score-area { 
             position: fixed; 
-            top: 40px; /* Start below header */
-            bottom: 25px; /* End above footer */
+            top: 40px; 
+            bottom: 25px; 
             width: 100%; 
             z-index: 10; 
             background: transparent; 
             flex-direction: row; 
             justify-content: space-between; 
-            align-items: stretch; /* Stretch columns vertically */
-            padding: 0; /* Flush against the screen edges */
+            align-items: stretch; 
+            padding: 0; 
         }
         
         body.spectator-mode .player-card { 
             flex: 0 0 auto; 
-            width: 115px; /* Keep it narrow so the video is visible */
+            width: 115px; 
             background-color: rgba(13, 27, 42, 0.45) !important; 
-            /* Re-add the logo with a darkening overlay for readability */
+            /* Fix Logo: Size gradient to 100%, but contain the logo image so it's fully visible */
             background-image: linear-gradient(rgba(13, 27, 42, 0.8), rgba(13, 27, 42, 0.8)), url('51693.jpg') !important; 
-            background-size: cover !important; /* Stretch image to fill column */
+            background-size: 100% 100%, contain !important; 
+            background-position: center, center !important;
+            background-repeat: no-repeat, no-repeat !important;
             backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); 
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-top: none;
             border-bottom: none;
-            border-radius: 0; /* Remove rounded corners for full height */
-            justify-content: space-evenly; /* Space items out vertically */
+            border-radius: 0; 
+            justify-content: space-evenly; 
         }
         
         body.spectator-mode .player-card.active { 
@@ -87,17 +89,17 @@
         #first-throw-layer { background: rgba(2, 4, 8, 0.98); z-index: 10002; }
         #waiting-layer { background: rgba(2, 4, 8, 0.98); z-index: 10003; }
         
-        /* SPLIT SCREEN FOR BULL THROW */
-        body.bull-throw:not(.local-mode) .v-box {
+        /* SPLIT SCREEN FOR BULL THROW (Disabled for spectators) */
+        body.bull-throw:not(.local-mode):not(.spectator-mode) .v-box {
             visibility: visible !important;
             opacity: 1 !important;
             z-index: 1 !important;
             width: 50% !important;
         }
-        body.bull-throw:not(.local-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
-        body.bull-throw:not(.local-mode) #box-peer { left: 50%; }
+        body.bull-throw:not(.local-mode):not(.spectator-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
+        body.bull-throw:not(.local-mode):not(.spectator-mode) #box-peer { left: 50%; }
         
-        body.bull-throw:not(.local-mode) #first-throw-layer {
+        body.bull-throw:not(.local-mode):not(.spectator-mode) #first-throw-layer {
             top: calc(40px + 45dvh);
             background: rgba(2, 4, 8, 0.95);
         }
