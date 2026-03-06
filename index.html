@@ -15,12 +15,14 @@
             overflow: hidden; 
         }
 
-        body.spectator-mode { grid-template-rows: 40px 45dvh 1fr 0px 25px; }
+        /* --- SPECTATOR MODE FIXES --- */
+        body.spectator-mode { grid-template-rows: 40px 1fr 160px 0px 25px; } /* Gives video max space, locks scores to 160px */
         body.spectator-mode .controls,
         body.spectator-mode .header-controls,
         body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
+        body.spectator-mode video { object-fit: contain !important; } /* Forces full frame visibility */
         
         body.local-mode { grid-template-rows: 40px 1fr 80px 25px !important; }
         body.local-mode .v-container { display: none !important; }
