@@ -31,18 +31,36 @@
         /* Float the header at the top and make it transparent */
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         
-        /* Float the score area at the bottom and make it see-through glass */
-        body.spectator-mode .score-area { position: fixed; bottom: 25px; width: 100%; z-index: 10; background: transparent; }
+        /* Float the score area to the bottom left and right */
+        body.spectator-mode .score-area { 
+            position: fixed; 
+            bottom: 30px; /* Keep it just above the footer */
+            width: 100%; 
+            z-index: 10; 
+            background: transparent; 
+            flex-direction: row; /* Align side-by-side instead of stacked */
+            justify-content: space-between; /* Push one left, one right */
+            align-items: flex-end;
+            padding: 10px;
+        }
+        
         body.spectator-mode .player-card { 
+            flex: 0 0 auto; /* Prevent stretching into the middle */
+            width: 135px; /* Compact width to hug the corners */
             background: rgba(13, 27, 42, 0.45) !important; /* See-through dark blue */
             background-image: none !important; /* Override the background texture */
             backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); /* Frosted glass effect */
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
+        
         body.spectator-mode .player-card.active { 
             background: rgba(0, 212, 255, 0.15) !important; /* See-through neon blue */
             border-color: var(--blue);
         }
+        
+        /* Shrink the fonts slightly to fit the compact corner boxes perfectly */
+        body.spectator-mode .score-val { font-size: 35px; }
+        body.spectator-mode .checkout-hint { font-size: 12px; }
         
         /* Float the footer at the bottom */
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
