@@ -28,33 +28,47 @@
         
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         
+        /* Float the score area left and right, stretching top to bottom */
         body.spectator-mode .score-area { 
             position: fixed; 
-            bottom: 30px; 
+            top: 40px; /* Start below header */
+            bottom: 25px; /* End above footer */
             width: 100%; 
             z-index: 10; 
             background: transparent; 
             flex-direction: row; 
             justify-content: space-between; 
-            align-items: flex-end;
-            padding: 10px;
+            align-items: stretch; /* Stretch columns vertically */
+            padding: 0; /* Flush against the screen edges */
         }
         
         body.spectator-mode .player-card { 
             flex: 0 0 auto; 
-            width: 135px; 
-            background: rgba(13, 27, 42, 0.45) !important; 
-            background-image: none !important; 
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); 
+            width: 115px; /* Keep it narrow so the video is visible */
+            background-color: rgba(13, 27, 42, 0.45) !important; 
+            /* Re-add the logo with a darkening overlay for readability */
+            background-image: linear-gradient(rgba(13, 27, 42, 0.8), rgba(13, 27, 42, 0.8)), url('51693.jpg') !important; 
+            background-size: cover !important; /* Stretch image to fill column */
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); 
             border: 1px solid rgba(255, 255, 255, 0.15);
+            border-top: none;
+            border-bottom: none;
+            border-radius: 0; /* Remove rounded corners for full height */
+            justify-content: space-evenly; /* Space items out vertically */
         }
         
         body.spectator-mode .player-card.active { 
-            background: rgba(0, 212, 255, 0.15) !important; 
-            border-color: var(--blue);
+            background-color: rgba(0, 212, 255, 0.1) !important; 
+            background-image: linear-gradient(rgba(0, 212, 255, 0.25), rgba(13, 27, 42, 0.85)), url('51693.jpg') !important;
+            border-left: 2px solid var(--blue);
+            border-right: 2px solid var(--blue);
         }
         
-        body.spectator-mode .score-val { font-size: 35px; }
+        /* Stack the stats vertically inside the new tall columns */
+        body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
+        body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
+        body.spectator-mode .score-val { font-size: 40px; }
+        body.spectator-mode .legs-count { text-align: center; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
         
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
