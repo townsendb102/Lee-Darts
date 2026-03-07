@@ -160,9 +160,9 @@
         }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        header { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
-        .header-controls { display: flex; gap: 8px; align-items: center; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;}
+        header { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
+        .header-controls { display: flex; gap: 5px; align-items: center; }
+        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
         
@@ -330,11 +330,12 @@
 <header>
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
-        <button class="header-btn" id="mute-btn" style="color: #ff4d4d;">MUTE</button>
-        <button class="header-btn" id="zoom-btn" style="color: #4caf50;">ZOOM</button>
+        <button class="header-btn" id="mic-btn" style="color: #ff4d4d;">MIC ON</button>
+        <button class="header-btn" id="caller-btn" style="color: #4caf50;">VOICE ON</button>
+        <button class="header-btn" id="zoom-btn" style="color: #ffeb3b;">ZOOM</button>
         <button class="header-btn" id="flip-btn">FLIP</button>
-        <button class="header-btn" id="spectate-btn" style="color: #ffeb3b;">SPECTATE</button>
-        <button class="header-btn" id="share-btn" style="color: var(--blue);">INVITE</button>
+        <button class="header-btn" id="spectate-btn" style="color: var(--blue);">SPECTATE</button>
+        <button class="header-btn" id="share-btn">INVITE</button>
     </div>
 </header>
 
@@ -397,9 +398,13 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
+    // --- SPLIT AUDIO STATES ---
+    let isMicMuted = false;
+    let isCallerMuted = false;
+
     // --- AUDIO PLAYER LOGIC ---
     function playDartSound(type) {
-        if (isMuted) return;
+        if (isCallerMuted) return;
 
         let audioSrc = "";
 
@@ -407,6 +412,8 @@
             audioSrc = "sounds/bust.wav";
         } else if (type === 'gameshot') {
             audioSrc = "sounds/gameshot.wav";
+        } else if (type === 'gameon') {
+            audioSrc = "sounds/gameon.wav";
         } else if (typeof type === 'number' && type >= 0 && type <= 180) {
             audioSrc = `sounds/${type}.wav`;
         }
@@ -437,7 +444,6 @@
     let conns = []; 
     let spectatorCalls = []; 
     let myIndex = 0;
-    let isMuted = false;
     let currentZoom = 1; 
     let isLocalMatch = false; 
     
@@ -537,7 +543,6 @@
 
     window.addEventListener('load', () => {
         
-        // Android Install Button Listener
         const installBtn = document.getElementById('install-btn');
         if (installBtn) {
             installBtn.addEventListener('click', async () => {
@@ -550,7 +555,6 @@
             });
         }
 
-        // iOS Install Prompt Trigger
         if (isIos() && !isInStandaloneMode()) {
             const prompt = document.getElementById('ios-prompt');
             if (prompt) {
@@ -597,7 +601,11 @@
         document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
         document.getElementById('zoom-btn').onclick = cycleZoom;
-        document.getElementById('mute-btn').onclick = toggleMute;
+        
+        // Split audio controls
+        document.getElementById('mic-btn').onclick = toggleMic;
+        document.getElementById('caller-btn').onclick = toggleCaller;
+
         document.getElementById('share-btn').onclick = shareInvite;
         document.getElementById('spectate-btn').onclick = shareSpectator;
         
@@ -654,6 +662,11 @@
             toggleBullPhase(false);
             broadcast({ type: 'BULL_PHASE', active: false });
         }
+        
+        // Match started via First Throw UI
+        playDartSound('gameon');
+        if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
+
         render();
         if (!isLocalMatch) broadcast(state);
     }
@@ -684,8 +697,12 @@
             document.getElementById('setup-layer').classList.add('hidden');
             document.body.classList.add('local-mode'); 
             
-            if (state.gameType === 'atc' || state.gameType === '121') { render(); } 
-            else { showFirstThrowUI(); }
+            if (state.gameType === 'atc' || state.gameType === '121') { 
+                playDartSound('gameon');
+                render(); 
+            } else { 
+                showFirstThrowUI(); 
+            }
             return; 
         }
 
@@ -694,6 +711,7 @@
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[0].s = startScore;
             document.getElementById('setup-layer').classList.add('hidden');
+            playDartSound('gameon');
             render();
         } else {
             state.p[0].name = document.getElementById('name-input').value || "Host";
@@ -815,7 +833,6 @@
     }
 
     function handleData(data) {
-        // --- SOUND SYNC ---
         if (data.type === 'SOUND') {
             playDartSound(data.sound);
             return;
@@ -869,18 +886,27 @@
         if (!isLocalMatch) { broadcast({ type: 'ZOOM', level: currentZoom }); }
     }
 
-    function toggleMute() {
-        isMuted = !isMuted;
+    // Controls Local Microphone & Incoming Peer Video Volume
+    function toggleMic() {
+        isMicMuted = !isMicMuted;
         if (stream && stream.getAudioTracks().length > 0) {
-            stream.getAudioTracks()[0].enabled = !isMuted;
+            stream.getAudioTracks()[0].enabled = !isMicMuted;
         }
         
         const peerVideo = document.getElementById('peer');
-        if (peerVideo) peerVideo.muted = isMuted;
+        if (peerVideo) peerVideo.muted = isMicMuted;
 
-        const btn = document.getElementById('mute-btn');
-        if (isMuted) { btn.innerText = "UNMUTE"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
-        else { btn.innerText = "MUTE"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
+        const btn = document.getElementById('mic-btn');
+        if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
+        else { btn.innerText = "MIC ON"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
+    }
+
+    // Controls .wav file sound playback
+    function toggleCaller() {
+        isCallerMuted = !isCallerMuted;
+        const btn = document.getElementById('caller-btn');
+        if (isCallerMuted) { btn.innerText = "VOICE OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
+        else { btn.innerText = "VOICE ON"; btn.style.color = "#4caf50"; btn.style.borderColor = "#444"; }
     }
 
     async function swapCam() {
@@ -920,11 +946,8 @@
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
 
-        let soundToPlay = 0; 
-
         p.d++; 
         if (multiplier > 0) { 
-            soundToPlay = p.s; 
             p.s += multiplier; 
         } 
         
@@ -934,19 +957,20 @@
             state.turn = (state.turn === 0) ? 1 : 0;
         }
         
-        playDartSound(soundToPlay);
-
         render(); 
         if (!isLocalMatch) {
             broadcast(state);
-            broadcast({ type: 'SOUND', sound: soundToPlay });
         }
     }
 
     function processHit() {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         const input = document.getElementById('pts-input');
-        const val = parseInt(input.value);
+        
+        // EMPTY INPUT DEFAULT FIX
+        const valStr = input.value.trim();
+        const val = valStr === '' ? 0 : parseInt(valStr);
+
         if (isNaN(val) || val < 0 || val > 180) return;
         
         history = JSON.parse(JSON.stringify(state));
@@ -964,7 +988,15 @@
 
         let soundToPlay = val; 
 
-        if (p.s - val >= 0 && p.s - val !== 1) {
+        // 121 CHECKOUT PENALTY FIX (Inputting 0 drops target by 1)
+        if (state.gameType === '121' && val === 0) {
+            p.l = Math.max(0, p.l - 1);
+            p.s = 121 + p.l;
+            p.ld = 0;
+            soundToPlay = 0;
+            if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
+        }
+        else if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val; p.pts += val; 
             if (p.ld <= 9) { p.f9pts += val; }
             if (val === 180) p.n180++; else if (val >= 140) p.n140++;
@@ -1038,9 +1070,17 @@
         document.getElementById('winner-layer').classList.add('hidden');
         if (!isLocalMatch) broadcast(state);
 
-        if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121') { render(); } 
-        else if (isLocalMatch || myIndex === 0) { showFirstThrowUI(); } 
-        else { render(); }
+        if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121') { 
+            playDartSound('gameon');
+            if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
+            render(); 
+        } 
+        else if (isLocalMatch || myIndex === 0) { 
+            showFirstThrowUI(); 
+        } 
+        else { 
+            render(); 
+        }
     }
 
     function render() {
