@@ -91,11 +91,22 @@
         body.single-mode #card-0 { max-width: 320px; width: 100%; border: 2px solid var(--blue); }
         body.single-mode.spectator-mode .score-area { flex-direction: row; justify-content: center; }
         body.single-mode.spectator-mode #card-0 { width: 150px; }
+
+        /* Hide specific Header Buttons for Single Player (Keep Voice and Spectate) */
+        body.single-mode #mic-btn,
+        body.single-mode #zoom-btn,
+        body.single-mode #flip-btn { display: none !important; }
         /* --------------------------------------------------- */
 
         body.local-mode { grid-template-rows: 40px 1fr 80px 25px !important; }
         body.local-mode .v-container { display: none !important; }
-        body.local-mode .header-controls { display: none !important; }
+
+        /* Hide specific Header Buttons for Local Mode (Keep Voice only) */
+        body.local-mode #mic-btn,
+        body.local-mode #zoom-btn,
+        body.local-mode #flip-btn,
+        body.local-mode #spectate-btn,
+        body.local-mode #share-btn { display: none !important; }
 
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer { 
             position: fixed; inset: 0 0 25px 0; background: var(--dark); z-index: 10000; 
@@ -405,6 +416,7 @@
     // --- AUDIO PLAYER LOGIC ---
     function playDartSound(type) {
         if (isCallerMuted) return;
+        if (state.gameType === 'atc') return; // Hard override: No sounds for Around The Clock
 
         let audioSrc = "";
 
@@ -412,8 +424,6 @@
             audioSrc = "sounds/bust.wav";
         } else if (type === 'gameshot') {
             audioSrc = "sounds/gameshot.wav";
-        } else if (type === 'gameon') {
-            audioSrc = "sounds/gameon.wav";
         } else if (typeof type === 'number' && type >= 0 && type <= 180) {
             audioSrc = `sounds/${type}.wav`;
         }
@@ -663,10 +673,6 @@
             broadcast({ type: 'BULL_PHASE', active: false });
         }
         
-        // Match started via First Throw UI
-        playDartSound('gameon');
-        if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
-
         render();
         if (!isLocalMatch) broadcast(state);
     }
@@ -698,7 +704,6 @@
             document.body.classList.add('local-mode'); 
             
             if (state.gameType === 'atc' || state.gameType === '121') { 
-                playDartSound('gameon');
                 render(); 
             } else { 
                 showFirstThrowUI(); 
@@ -711,7 +716,6 @@
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[0].s = startScore;
             document.getElementById('setup-layer').classList.add('hidden');
-            playDartSound('gameon');
             render();
         } else {
             state.p[0].name = document.getElementById('name-input').value || "Host";
@@ -957,6 +961,8 @@
             state.turn = (state.turn === 0) ? 1 : 0;
         }
         
+        // Removed audio trigger completely for Around the Clock
+
         render(); 
         if (!isLocalMatch) {
             broadcast(state);
@@ -1071,8 +1077,6 @@
         if (!isLocalMatch) broadcast(state);
 
         if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121') { 
-            playDartSound('gameon');
-            if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
             render(); 
         } 
         else if (isLocalMatch || myIndex === 0) { 
