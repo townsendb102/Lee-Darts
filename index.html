@@ -7,6 +7,8 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#020408">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>RAF Darts Scorer</title>
     <style>
@@ -92,16 +94,18 @@
         body.single-mode.spectator-mode .score-area { flex-direction: row; justify-content: center; }
         body.single-mode.spectator-mode #card-0 { width: 150px; }
 
-        /* Hide specific Header Buttons for Single Player (Keep Voice and Spectate) */
+        /* Hide specific Header Buttons for Single Player */
         body.single-mode #mic-btn,
         body.single-mode #zoom-btn,
         body.single-mode #flip-btn { display: none !important; }
-        /* --------------------------------------------------- */
 
+        /* --- LOCAL MODE FIXES --- */
         body.local-mode { grid-template-rows: 40px 1fr 80px 25px !important; }
         body.local-mode .v-container { display: none !important; }
+        
+        body.local-mode header > div:first-child { display: none; }
+        body.local-mode header { justify-content: flex-end; }
 
-        /* Hide specific Header Buttons for Local Mode (Keep Voice only) */
         body.local-mode #mic-btn,
         body.local-mode #zoom-btn,
         body.local-mode #flip-btn,
@@ -242,14 +246,10 @@
         .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid #1b4965; z-index: 10002; }
         .hidden { display: none !important; }
     </style>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW setup failed', err));
-        }
-    </script>
 </head>
 <body>
+
+<audio id="dart-audio" playsinline webkit-playsinline></audio>
 
 <div id="setup-layer">
     <div class="setup-card">
@@ -413,7 +413,7 @@
     let isMicMuted = false;
     let isCallerMuted = false;
 
-    // --- AUDIO PLAYER LOGIC ---
+    // --- NATIVE AUDIO PLAYER LOGIC (FIX FOR HOME SCREEN APPS) ---
     function playDartSound(type) {
         if (isCallerMuted) return;
         if (state.gameType === 'atc') return; // Hard override: No sounds for Around The Clock
@@ -424,13 +424,18 @@
             audioSrc = "sounds/bust.wav";
         } else if (type === 'gameshot') {
             audioSrc = "sounds/gameshot.wav";
+        } else if (type === 'gameon') {
+            audioSrc = "sounds/gameon.wav";
         } else if (typeof type === 'number' && type >= 0 && type <= 180) {
             audioSrc = `sounds/${type}.wav`;
         }
 
         if (audioSrc !== "") {
-            const audio = new Audio(audioSrc);
-            audio.play().catch(e => console.log("Audio blocked by browser. User must tap screen first.", e));
+            const dartAudio = document.getElementById('dart-audio');
+            if (dartAudio) {
+                dartAudio.src = audioSrc;
+                dartAudio.play().catch(e => console.log("Audio blocked by phone. User must tap screen first.", e));
+            }
         }
     }
 
@@ -542,14 +547,22 @@
         if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); 
     }
 
+    // Force unlock audio objects for iOS Home Screen App
     function unlockAudio() {
         const peerVideo = document.getElementById('peer');
         if (peerVideo && peerVideo.paused && peerVideo.srcObject) {
             peerVideo.play().catch(e => {});
         }
+        
+        const dartAudio = document.getElementById('dart-audio');
+        if (dartAudio && dartAudio.src === "") {
+            // Load a tiny silent sound into the player on first tap to unlock the Apple restrictions
+            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            dartAudio.play().catch(e => {});
+        }
     }
-    document.body.addEventListener('click', unlockAudio);
-    document.body.addEventListener('touchstart', unlockAudio);
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
     window.addEventListener('load', () => {
         
@@ -612,7 +625,6 @@
         document.getElementById('flip-btn').onclick = swapCam;
         document.getElementById('zoom-btn').onclick = cycleZoom;
         
-        // Split audio controls
         document.getElementById('mic-btn').onclick = toggleMic;
         document.getElementById('caller-btn').onclick = toggleCaller;
 
@@ -673,6 +685,9 @@
             broadcast({ type: 'BULL_PHASE', active: false });
         }
         
+        playDartSound('gameon');
+        if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
+
         render();
         if (!isLocalMatch) broadcast(state);
     }
@@ -704,6 +719,7 @@
             document.body.classList.add('local-mode'); 
             
             if (state.gameType === 'atc' || state.gameType === '121') { 
+                playDartSound('gameon');
                 render(); 
             } else { 
                 showFirstThrowUI(); 
@@ -716,6 +732,7 @@
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[0].s = startScore;
             document.getElementById('setup-layer').classList.add('hidden');
+            playDartSound('gameon');
             render();
         } else {
             state.p[0].name = document.getElementById('name-input').value || "Host";
@@ -890,7 +907,6 @@
         if (!isLocalMatch) { broadcast({ type: 'ZOOM', level: currentZoom }); }
     }
 
-    // Controls Local Microphone & Incoming Peer Video Volume
     function toggleMic() {
         isMicMuted = !isMicMuted;
         if (stream && stream.getAudioTracks().length > 0) {
@@ -905,7 +921,6 @@
         else { btn.innerText = "MIC ON"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
     }
 
-    // Controls .wav file sound playback
     function toggleCaller() {
         isCallerMuted = !isCallerMuted;
         const btn = document.getElementById('caller-btn');
@@ -961,8 +976,6 @@
             state.turn = (state.turn === 0) ? 1 : 0;
         }
         
-        // Removed audio trigger completely for Around the Clock
-
         render(); 
         if (!isLocalMatch) {
             broadcast(state);
@@ -973,7 +986,6 @@
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         const input = document.getElementById('pts-input');
         
-        // EMPTY INPUT DEFAULT FIX
         const valStr = input.value.trim();
         const val = valStr === '' ? 0 : parseInt(valStr);
 
@@ -994,7 +1006,6 @@
 
         let soundToPlay = val; 
 
-        // 121 CHECKOUT PENALTY FIX (Inputting 0 drops target by 1)
         if (state.gameType === '121' && val === 0) {
             p.l = Math.max(0, p.l - 1);
             p.s = 121 + p.l;
@@ -1077,6 +1088,8 @@
         if (!isLocalMatch) broadcast(state);
 
         if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121') { 
+            playDartSound('gameon');
+            if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
             render(); 
         } 
         else if (isLocalMatch || myIndex === 0) { 
