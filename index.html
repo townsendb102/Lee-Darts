@@ -378,7 +378,6 @@
         <button class="btn-undo" id="undo-btn">⟲</button>
         <button class="btn-hit" id="hit-btn">HIT</button>
     </div>
-    
     <div class="controls" id="atc-controls" style="display: none;">
         <button class="btn-undo" id="atc-undo-btn">⟲</button>
         <button class="btn-hit" id="atc-miss-btn" style="background: #444; color: white;">MISS</button>
@@ -398,6 +397,26 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
+    // --- AUDIO PLAYER LOGIC ---
+    function playDartSound(type) {
+        if (isMuted) return;
+
+        let audioSrc = "";
+
+        if (type === 'bust') {
+            audioSrc = "sounds/bust.wav";
+        } else if (type === 'gameshot') {
+            audioSrc = "sounds/gameshot.wav";
+        } else if (typeof type === 'number' && type >= 0 && type <= 180) {
+            audioSrc = `sounds/${type}.wav`;
+        }
+
+        if (audioSrc !== "") {
+            const audio = new Audio(audioSrc);
+            audio.play().catch(e => console.log("Audio blocked by browser. User must tap screen first.", e));
+        }
+    }
+
     // --- PWA INSTALL LOGIC ---
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -684,13 +703,7 @@
         try {
             if (!spectateId) {
                 if (state.mode === 'single') {
-                    // Create silent dummy stream to completely bypass camera requirements
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 1; canvas.height = 1;
-                    stream = canvas.captureStream(1); 
-                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    const dummyAudio = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
-                    stream.addTrack(dummyAudio);
+                    stream = null; 
                 } else {
                     log.innerText = "Accessing Camera...";
                     let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
@@ -802,6 +815,12 @@
     }
 
     function handleData(data) {
+        // --- SOUND SYNC ---
+        if (data.type === 'SOUND') {
+            playDartSound(data.sound);
+            return;
+        }
+
         if (data.type === 'CAM_PAUSED') {
             const overlay = document.getElementById('peer-paused-msg');
             if (overlay) { data.paused ? overlay.classList.add('visible') : overlay.classList.remove('visible'); }
@@ -851,13 +870,17 @@
     }
 
     function toggleMute() {
+        isMuted = !isMuted;
         if (stream && stream.getAudioTracks().length > 0) {
-            isMuted = !isMuted;
             stream.getAudioTracks()[0].enabled = !isMuted;
-            const btn = document.getElementById('mute-btn');
-            if (isMuted) { btn.innerText = "UNMUTE"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
-            else { btn.innerText = "MUTE"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
         }
+        
+        const peerVideo = document.getElementById('peer');
+        if (peerVideo) peerVideo.muted = isMuted;
+
+        const btn = document.getElementById('mute-btn');
+        if (isMuted) { btn.innerText = "UNMUTE"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
+        else { btn.innerText = "MUTE"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
     }
 
     async function swapCam() {
@@ -897,16 +920,27 @@
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
 
-        p.d++; // Log 1 dart
-        if (multiplier > 0) { p.s += multiplier; } // Target advances
+        let soundToPlay = 0; 
+
+        p.d++; 
+        if (multiplier > 0) { 
+            soundToPlay = p.s; 
+            p.s += multiplier; 
+        } 
         
         if (p.s > 21) {
             state.winner = state.turn;
         } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
             state.turn = (state.turn === 0) ? 1 : 0;
         }
+        
+        playDartSound(soundToPlay);
+
         render(); 
-        if (!isLocalMatch) broadcast(state);
+        if (!isLocalMatch) {
+            broadcast(state);
+            broadcast({ type: 'SOUND', sound: soundToPlay });
+        }
     }
 
     function processHit() {
@@ -928,12 +962,15 @@
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '121') startScore = 121 + p.l;
 
+        let soundToPlay = val; 
+
         if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val; p.pts += val; 
             if (p.ld <= 9) { p.f9pts += val; }
             if (val === 180) p.n180++; else if (val >= 140) p.n140++;
 
             if (p.s === 0) { 
+                soundToPlay = 'gameshot';
                 if (val > p.hc) p.hc = val; 
                 p.l++; 
                 
@@ -959,20 +996,27 @@
             } else { 
                 if (state.gameType === '121' && p.ld >= 9) {
                     p.s = 121 + p.l; p.ld = 0;
+                    soundToPlay = 'bust'; 
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
                 } else if (state.mode !== 'single') {
                     state.turn = (state.turn === 0) ? 1 : 0; 
                 }
             }
         } else { 
+            soundToPlay = 'bust';
             if (state.gameType === '121' && p.ld >= 9) {
                 p.s = 121 + p.l; p.ld = 0; 
             }
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
         }
         
+        playDartSound(soundToPlay);
         render(); 
-        if (!isLocalMatch) broadcast(state);
+
+        if (!isLocalMatch) {
+            broadcast(state);
+            broadcast({ type: 'SOUND', sound: soundToPlay });
+        }
         input.value = ''; input.blur(); 
     }
 
