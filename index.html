@@ -180,7 +180,7 @@
         }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* The new Manual Check for Updates Button */
+        /* The Manual Check for Updates Button */
         .btn-update {
             background: transparent; border: none; color: #888; 
             font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline;
@@ -269,16 +269,7 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=' + new Date().getTime()).then(registration => {
-                registration.onupdatefound = () => {
-                    const installingWorker = registration.installing;
-                    installingWorker.onstatechange = () => {
-                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            window.location.reload();
-                        }
-                    };
-                };
-            }).catch(err => console.log('SW setup failed', err));
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW setup failed', err));
         }
     </script>
 </head>
@@ -623,7 +614,6 @@
         
         const dartAudio = document.getElementById('dart-audio');
         if (dartAudio && dartAudio.src === "") {
-            // Load a tiny silent sound into the player on first tap to unlock the Apple restrictions
             dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
             dartAudio.play().catch(e => {});
         }
