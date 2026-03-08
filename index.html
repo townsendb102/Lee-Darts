@@ -143,22 +143,23 @@
         #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
-        /* CUSTOM NUMPAD */
-        #numpad-display { font-size: 32px; font-weight: bold; text-align: center; height: 45px; line-height: 45px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
-        .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
-        .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 12px 0;}
-        .np-btn:active { background: var(--blue); color: black; }
-        .np-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .np-btn.enter { background: var(--blue); color: black; grid-column: span 2; }
-        .np-btn.enter:disabled { background: #333; color: #666; }
+        /* GLASSMORPHIC SCORE INPUT BOX */
+        .score-input-box { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 50px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow: hidden; }
+        .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; min-height: 50px;}
+        .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; min-height: 50px;}
+        #atc-controls .btn-hit { font-size: 16px; } 
         
-        /* NEW DART-BY-DART CUSTOM GRID */
-        .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-        .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 16px; font-weight: bold; border-radius: 6px; padding: 10px 0; cursor: pointer; text-align: center;}
-        .dbd-btn:active { background: var(--blue); color: black; }
-        .dbd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 40px; font-size: 20px; font-weight: bold; border-radius: 6px; height: 40px; }
+        .btn-hit:disabled { background: #333; color: #666; cursor: not-allowed; }
+        
+        /* STRIPPING NATIVE MOBILE WHITE BACKGROUNDS */
+        #pts-input { width: 100%; height: 100%; background: transparent !important; border: none; color: white; text-align: center; font-size: 32px; outline: none; -webkit-appearance: none; appearance: none; border-radius: 0; padding: 0; margin: 0; box-shadow: none; }
+        #pts-input:disabled { color: #555; -webkit-text-fill-color: #555; opacity: 1; }
+        
+        .dart-box { flex: 1; height: 100%; text-align: center; font-size: 20px; font-weight: bold; text-transform: uppercase; background: transparent !important; border: none; color: white; border-right: 1px solid rgba(255, 255, 255, 0.15); outline: none; -webkit-appearance: none; appearance: none; border-radius: 0; padding: 0; margin: 0; box-shadow: none; }
+        .dart-box:last-child { border-right: none; }
+        .dart-box:focus { background: rgba(0, 212, 255, 0.1) !important; }
 
+        /* CRICKET CUSTOM KEYPAD STYLES */
         .cric-mult { flex: 1; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer;}
         .cric-mult.active { background: var(--blue); color: black; border-color: var(--blue); }
         .cric-mult:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -172,13 +173,18 @@
         .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 2px solid var(--blue); cursor: pointer; margin: 0 auto 10px auto; display: block; background: #111; }
         .stat-box { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; flex: 1; border: 1px solid rgba(255,255,255,0.1); }
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
+        
         .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
         .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
+        
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: #ffeb3b; color: black; padding: 15px; border-radius: 10px; z-index: 30000; display: none; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; border: 2px solid #fbc02d; }
     </style>
+
     <script>
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(err => console.log('SW setup failed', err)); }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW setup failed', err));
+        }
     </script>
 </head>
 <body class="theme-classic">
@@ -197,11 +203,19 @@
     <div class="setup-card">
         <h2>🎯 RAF DARTS SCORER 🎯</h2>
         <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Log in to save stats and play friends</p>
-        <div class="input-group"><input type="email" id="email-input" class="setup-input" placeholder="Email Address"></div>
-        <div class="input-group"><input type="password" id="password-input" class="setup-input" placeholder="Password"></div>
+        
+        <div class="input-group">
+            <input type="email" id="email-input" class="setup-input" placeholder="Email Address">
+        </div>
+        <div class="input-group">
+            <input type="password" id="password-input" class="setup-input" placeholder="Password">
+        </div>
+
         <button id="login-btn" class="btn-start">LOG IN</button>
         <button id="signup-btn" class="btn-start" style="background: #444; color: white; margin-top: 10px;">SIGN UP</button>
+        
         <p id="auth-error" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
+
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 20px 0; width: 100%;">
         <button id="guest-btn" class="btn-start" style="background: transparent; border: 1px solid var(--blue); color: var(--blue);">PLAY AS GUEST</button>
         <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
@@ -210,15 +224,19 @@
 
 <div id="profile-layer" class="hidden">
     <div class="setup-card" style="max-height: 85vh; overflow-y: auto;">
+        
         <h2 style="margin-bottom: 5px;">MY PROFILE</h2>
         <p id="prof-email" style="color: #888; font-size: 12px; margin-bottom: 15px;">loading...</p>
+
         <img id="prof-pic" class="profile-avatar" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=" alt="Tap to upload picture">
         <input type="file" id="pic-upload" hidden accept="image/*">
         <p style="font-size: 10px; color: #888; margin-top: -5px; margin-bottom: 15px;">Tap image to change</p>
+
         <div style="display: flex; gap: 5px; margin-bottom: 20px;">
             <input type="text" id="edit-name-input" class="setup-input" placeholder="Display Name..." style="flex: 1; padding: 8px; font-size: 14px;">
             <button id="save-name-btn" class="btn-start" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">SAVE</button>
         </div>
+
         <div class="input-group" style="margin-bottom: 20px;">
             <label style="color: white;">App Theme</label>
             <select id="theme-select" class="setup-input" style="padding: 8px; font-size: 14px;">
@@ -227,6 +245,7 @@
                 <option value="pub">Pub Green & Gold</option>
             </select>
         </div>
+
         <div style="display: flex; gap: 10px; margin-bottom: 5px;">
             <div class="stat-box">
                 <div style="font-size: 11px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; line-height: 1.2;">Lifetime Avg</div>
@@ -237,12 +256,16 @@
                 <div class="stat-box-val" id="prof-co">0%</div>
             </div>
         </div>
+        
         <div style="text-align: right; margin-bottom: 20px;">
             <button id="reset-stats-btn" style="background:transparent; border:none; color:#ff4d4d; font-size:11px; text-decoration:underline; cursor:pointer;">Reset Stats & History</button>
         </div>
+
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 0 0 15px 0; width: 100%;">
+
         <button id="open-history-btn" class="btn-start" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; margin-top: 0;">📜 MATCH HISTORY</button>
         <button id="open-friends-btn" class="btn-start" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; margin-top: 10px;">👥 FRIENDS LIST</button>
+
         <button id="close-profile-btn" class="btn-start" style="background: #444; color: white; margin-top: 20px;">BACK TO MENU</button>
     </div>
 </div>
@@ -897,6 +920,19 @@
                 }
             });
         }
+        
+        // --- ADDED THE MISSING INSTALL BUTTON LOGIC BACK ---
+        const installBtn = document.getElementById('install-btn');
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') { installBtn.style.display = 'none'; }
+                    deferredPrompt = null;
+                }
+            });
+        }
     });
 
     document.querySelectorAll('.cache-clear-btn').forEach(btn => {
@@ -1081,6 +1117,18 @@
 
     function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
 
+    function unlockAudio() {
+        const peerVideo = document.getElementById('peer');
+        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
+        const dartAudio = document.getElementById('dart-audio');
+        if (dartAudio && dartAudio.src === "") {
+            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            dartAudio.play().catch(e => {});
+        }
+    }
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
@@ -1167,6 +1215,7 @@
         if(display) display.innerText = numpadVal || "0";
     }
 
+    // --- NEW DART-BY-DART LOGIC ---
     window.setDbdMult = function(m) {
         dbdMult = m;
         document.getElementById('dbd-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
