@@ -137,7 +137,7 @@
         #standard-controls { grid-template-columns: 1.5fr 0.5fr 1fr; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
-        /* UPDATED GLASSMORPHIC SCORE INPUT BOX */
+        /* GLASSMORPHIC SCORE INPUT BOX */
         .score-input-box { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 50px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow: hidden; }
         .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; min-height: 50px;}
         .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; min-height: 50px;}
@@ -145,7 +145,7 @@
         
         .btn-hit:disabled { background: #333; color: #666; cursor: not-allowed; }
         
-        /* STRIPPING NATIVE MOBILE WHITE BACKGROUNDS FROM INPUTS */
+        /* STRIPPING NATIVE MOBILE WHITE BACKGROUNDS */
         #pts-input { width: 100%; height: 100%; background: transparent !important; border: none; color: white; text-align: center; font-size: 32px; outline: none; -webkit-appearance: none; appearance: none; border-radius: 0; padding: 0; margin: 0; box-shadow: none; }
         #pts-input:disabled { color: #555; -webkit-text-fill-color: #555; opacity: 1; }
         
@@ -228,7 +228,7 @@
             <button id="save-name-btn" class="btn-start" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">SAVE</button>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 5px;">
             <div class="stat-box">
                 <div style="font-size: 10px; color: #aaa; text-transform: uppercase;">Lifetime Avg</div>
                 <div class="stat-box-val" id="prof-avg">0.0</div>
@@ -237,6 +237,10 @@
                 <div style="font-size: 10px; color: #aaa; text-transform: uppercase;">High Out</div>
                 <div class="stat-box-val" id="prof-hc">0</div>
             </div>
+        </div>
+        
+        <div style="text-align: right; margin-bottom: 20px;">
+            <button id="reset-stats-btn" style="background:transparent; border:none; color:#ff4d4d; font-size:11px; text-decoration:underline; cursor:pointer;">Reset Stats & History</button>
         </div>
 
         <h3 style="color: white; margin-bottom: 10px; font-size: 14px; text-align: left;">MATCH HISTORY</h3>
@@ -605,7 +609,21 @@
         document.getElementById('start-btn').click();
     };
 
-    // --- DELETE MATCH HISTORY LOGIC ---
+    // --- FULL STAT RESET LOGIC (Fixes the Ghost Match Bug) ---
+    document.getElementById('reset-stats-btn').addEventListener('click', async () => {
+        if(confirm("Are you sure you want to completely reset your Lifetime Stats? This clears your Average, High Out, and Match History.")) {
+            try {
+                await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), {
+                    totalPts: 0,
+                    totalDarts: 0,
+                    highCheckout: 0,
+                    matchHistory: []
+                });
+                alert("Stats successfully reset!");
+            } catch(e) { alert("Error resetting stats."); }
+        }
+    });
+
     window.deleteHistoryItem = async function(matchId, matchDate, matchDesc, pts, darts) {
         if(!confirm("Delete this match? This will remove its points and darts from your Lifetime Average.")) return;
         if(!window.auth.currentUser || !window.currentUserDoc) return;
@@ -616,7 +634,7 @@
             let targetItem = null;
             
             if (matchId) { targetItem = historyArray.find(h => h.id === matchId); } 
-            else { targetItem = historyArray.find(h => h.date === matchDate && h.desc === matchDesc); } // Fallback
+            else { targetItem = historyArray.find(h => h.date === matchDate && h.desc === matchDesc); }
             
             if (!targetItem) return;
 
