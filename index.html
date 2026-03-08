@@ -215,7 +215,7 @@
         </div>
     </div>
     
-    <div id="login-layer" style="display: flex;">
+    <div id="login-layer">
         <div class="setup-card">
             <h2>🎯 RAF DARTS SCORER 🎯</h2>
             <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Log in to save stats and play friends</p>
@@ -234,7 +234,7 @@
         </div>
     </div>
 
-    <div id="profile-layer" style="display: none;">
+    <div id="profile-layer" class="hidden">
         <div class="setup-card" style="max-height: 85vh; overflow-y: auto;">
             <h2 style="margin-bottom: 5px;">MY PROFILE</h2>
             <p id="prof-email" style="color: #888; font-size: 12px; margin-bottom: 15px;">loading...</p>
@@ -282,7 +282,7 @@
         </div>
     </div>
 
-    <div id="history-layer" style="display: none;">
+    <div id="history-layer" class="hidden">
         <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 360px;">
             <h2 style="margin-bottom: 15px;">MATCH HISTORY</h2>
             <div id="history-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
@@ -290,7 +290,7 @@
         </div>
     </div>
 
-    <div id="friends-layer" style="display: none;">
+    <div id="friends-layer" class="hidden">
         <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 360px;">
             <h2 style="margin-bottom: 15px;">FRIENDS LIST</h2>
             <div id="friends-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
@@ -303,7 +303,7 @@
         </div>
     </div>
 
-    <div id="setup-layer" style="display: none;">
+    <div id="setup-layer" class="hidden">
         <div class="setup-card">
             <h2>🎯 RAF DARTS SCORER 🎯</h2>
             <button id="install-btn" class="btn-start install-btn">📲 INSTALL APP</button>
@@ -380,7 +380,7 @@
         </div>
     </div>
 
-    <div id="waiting-layer" style="display: none;">
+    <div id="waiting-layer" class="hidden">
         <div class="setup-card">
             <h2 style="color: white; font-weight: bold; margin-bottom: 20px; font-size: 22px;">Waiting for Opponent...</h2>
             <h1 style="color: var(--blue); margin-bottom: 20px; font-size: 32px;" id="wait-id">...</h1>
@@ -388,20 +388,20 @@
         </div>
     </div>
 
-    <div id="first-throw-layer" style="display: none;">
-        <div class="setup-card" id="ft-step-1" style="display: flex; flex-direction: column;">
+    <div id="first-throw-layer" class="hidden">
+        <div class="setup-card" id="ft-step-1">
             <h2 style="color: white; font-weight: bold; margin-bottom: 20px; font-size: 22px;">Who Throws First?</h2>
             <button class="btn-start" onclick="showFtStep2('bull')" style="margin-bottom: 10px;">Closest to Bull</button>
             <button class="btn-start" onclick="showFtStep2('manual')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white;">Choose Player</button>
         </div>
-        <div class="setup-card" id="ft-step-2" style="display: none; flex-direction: column;">
+        <div class="setup-card hidden" id="ft-step-2">
             <h2 id="ft-title" style="color: white; font-weight: bold; margin-bottom: 20px; font-size: 22px;">Who won the Bull?</h2>
             <button class="btn-start" id="ft-p1-btn" onclick="setFirstPlayer(0)" style="margin-bottom: 10px;">P1</button>
             <button class="btn-start" id="ft-p2-btn" onclick="setFirstPlayer(1)" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white;">P2</button>
         </div>
     </div>
 
-    <div id="winner-layer" style="display: none;">
+    <div id="winner-layer" class="hidden">
         <div class="setup-card">
             <h1 id="winner-name" style="color: white; font-weight: bold; margin: 10px 0 20px 0; font-size: 24px;">P1 Wins!</h1>
             <table class="stats-table">
@@ -455,10 +455,10 @@
                 <div class="legs-count" id="l-area-0"><span id="l-0">0</span>LEGS</div>
             </div>
             <div class="checkout-hint" id="co-0"></div>
-            <button class="missed-db-btn" id="miss-btn-0" style="display:none;" onclick="logMissedDouble(0)">+ Missed Double</button>
+            <button class="missed-db-btn hidden" id="miss-btn-0" onclick="logMissedDouble(0)">+ Missed Double</button>
         </div>
 
-        <div id="cricket-center" style="display:none;">
+        <div id="cricket-center" class="hidden">
             <div style="text-align: center; font-size: 10px; color: #888; margin-bottom: 2px; font-weight: bold; letter-spacing: 1px;">CRICKET</div>
             <div id="cric-board-rows" style="display: flex; flex-direction: column; gap: 2px;"></div>
         </div>
@@ -474,7 +474,7 @@
                 <div class="legs-count" id="l-area-1"><span id="l-1">0</span>LEGS</div>
             </div>
             <div class="checkout-hint" id="co-1"></div>
-            <button class="missed-db-btn" id="miss-btn-1" style="display:none;" onclick="logMissedDouble(1)">+ Missed Double</button>
+            <button class="missed-db-btn hidden" id="miss-btn-1" onclick="logMissedDouble(1)">+ Missed Double</button>
         </div>
     </div>
 
@@ -630,18 +630,18 @@
         });
 
         onAuthStateChanged(window.auth, async (user) => {
-            // EXTREME CACHE BUSTER: Force hide all overlays via classList immediately
             const layers = ['login-layer', 'profile-layer', 'history-layer', 'friends-layer', 'waiting-layer', 'first-throw-layer', 'winner-layer', 'setup-layer'];
             layers.forEach(id => {
                 const el = document.getElementById(id);
                 if(el) el.classList.add('hidden');
             });
 
+            const urlParams = new URLSearchParams(window.location.search);
+            const isJoiningOrSpectating = urlParams.get('spectate') || urlParams.get('join');
+
             if (user) {
                 document.getElementById('logout-btn').style.display = 'block';
                 document.getElementById('open-profile-btn').style.display = 'block';
-                
-                // If they loaded from a spectate/join link, let them see the setup layer so they can join
                 document.getElementById('setup-layer').classList.remove('hidden');
 
                 const userRef = doc(window.db, "users", user.uid);
@@ -678,9 +678,7 @@
                 document.getElementById('open-profile-btn').style.display = 'none';
                 window.currentUserDoc = null;
                 
-                const urlParams = new URLSearchParams(window.location.search);
-                // If they have a link, let them see setup without logging in
-                if (urlParams.get('spectate') || urlParams.get('join')) {
+                if (isJoiningOrSpectating) {
                     document.getElementById('setup-layer').classList.remove('hidden');
                 } else {
                     document.getElementById('login-layer').classList.remove('hidden');
@@ -1290,16 +1288,16 @@
             document.getElementById('setup-layer').classList.add('hidden');
             document.getElementById('waiting-layer').classList.add('hidden');
             document.getElementById('first-throw-layer').classList.remove('hidden');
-            document.getElementById('ft-step-1').style.display = 'flex';
-            document.getElementById('ft-step-2').style.display = 'none';
+            document.getElementById('ft-step-1').classList.remove('hidden');
+            document.getElementById('ft-step-2').classList.add('hidden');
             if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
                 toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true });
             }
         }
 
         function showFtStep2(mode) {
-            document.getElementById('ft-step-1').style.display = 'none';
-            document.getElementById('ft-step-2').style.display = 'flex';
+            document.getElementById('ft-step-1').classList.add('hidden');
+            document.getElementById('ft-step-2').classList.remove('hidden');
             document.getElementById('ft-p1-btn').innerText = state.p[0].name;
             document.getElementById('ft-p2-btn').innerText = state.p[1].name;
             if (mode === 'bull') { document.getElementById('ft-title').innerText = "Who was closest to Bull?"; } 
@@ -1953,44 +1951,4 @@
                 document.getElementById('winner-name').innerText = w.name + " WINS!";
                 for (let i = 0; i < 2; i++) {
                     let pStats = state.p[i];
-                    document.getElementById(`ws-n${i}`).innerText = pStats.name;
-                    if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
-                        document.getElementById('ws-label-avg').innerText = "Total Darts"; document.getElementById(`ws-avg${i}`).innerText = pStats.d;
-                    } else {
-                        document.getElementById('ws-label-avg').innerText = "Match Avg"; document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
-                    }
-                    document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
-                    document.getElementById(`ws-hc${i}`).innerText = pStats.hc > 0 ? pStats.hc : "-";
-                    document.getElementById(`ws-140${i}`).innerText = pStats.n140 ?? 0;
-                    document.getElementById(`ws-180${i}`).innerText = pStats.n180 ?? 0;
-                }
-                winnerLayer.classList.remove('hidden');
-            } else {
-                winnerLayer.classList.add('hidden');
-                if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined) { playBotTurn(); }
-            }
-        }
-
-        function shareInvite() {
-            const id = document.getElementById('display-id').innerText;
-            const url = window.location.origin + window.location.pathname + '?join=' + id;
-            if (navigator.share) navigator.share({ title: 'Darts Match', url });
-            else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
-        }
-
-        function shareSpectator() {
-            const id = document.getElementById('display-id').innerText;
-            const url = window.location.origin + window.location.pathname + '?spectate=' + id;
-            const p1 = state.p[0]; const p2 = state.p[1];
-            let currentScoreText = "";
-            if (state.gameType === 'atc') { currentScoreText = `🎯 ${p1.name} - Target: ${p1.s <= 20 ? p1.s : "BULL"}`; }
-            else if (state.gameType === 'cricket') { currentScoreText = `🎯 ${p1.name} [Cricket] ${p2.name}`; }
-            else { currentScoreText = `🎯 ${p1.name} (${p1.l} legs) ${p1.s} - ${p2.s} (${p2.l} legs) ${p2.name}`; }
-            
-            const shareData = { title: 'Watch our Darts Match!', text: `Live Score: ${currentScoreText}. Watch the live stream here: `, url: url };
-            if (navigator.share) { navigator.share(shareData).catch(console.error); }
-            else { navigator.clipboard.writeText(`${shareData.text} ${url}`); alert("Spectator link & scores copied to clipboard!"); }
-        }
-    </script>
-</body>
-</html>
+                    document.getElementById(`ws-n${i}`).innerText =
