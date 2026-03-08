@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <title>RAF Darts Scorer</title>
+    <title>🎯 RAF Darts Scorer 🎯</title>
     <style>
         :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -279,7 +279,7 @@
 
 <div id="setup-layer">
     <div class="setup-card">
-        <h2>RAF DARTS SCORER</h2>
+        <h2>🎯 RAF DARTS SCORER 🎯</h2>
         
         <button id="install-btn" class="btn-start install-btn">📲 INSTALL APP</button>
 
@@ -614,6 +614,7 @@
         
         const dartAudio = document.getElementById('dart-audio');
         if (dartAudio && dartAudio.src === "") {
+            // Load a tiny silent sound into the player on first tap to unlock the Apple restrictions
             dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
             dartAudio.play().catch(e => {});
         }
