@@ -16,14 +16,18 @@
     
     <title>🎯 RAF Darts Scorer 🎯</title>
     <style>
-        :root { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
+        /* --- THEME VARIABLES --- */
+        body.theme-classic { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
+        body.theme-neon { --blue: #ff00ff; --dark: #0a001a; --card: #20003b; --active: #3d0066; }
+        body.theme-pub { --blue: #ffcc00; --dark: #121f12; --card: #1c301c; --active: #2d4d2d; }
+        
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
             grid-template-rows: calc(40px + env(safe-area-inset-top)) 45dvh 1fr auto calc(25px + env(safe-area-inset-bottom));
-            overflow: hidden; 
+            overflow: hidden; transition: background 0.3s ease;
         }
 
         .install-btn { background: #4caf50 !important; color: white !important; display: none; margin-bottom: 15px; border: 2px solid #81c784 !important; }
@@ -36,16 +40,16 @@
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
         body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; }
-        body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
+        body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); border: none; }
         body.spectator-mode .score-area { position: fixed; top: calc(40px + env(safe-area-inset-top)); bottom: 25px; width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: stretch; padding: 0; }
-        body.spectator-mode .player-card { flex: 0 0 auto; width: 115px; background-color: rgba(13, 27, 42, 0.45) !important; background-image: linear-gradient(rgba(13, 27, 42, 0.8), rgba(13, 27, 42, 0.8)), url('51693.jpg') !important; background-size: 100% 100%, contain !important; background-position: center, center !important; background-repeat: no-repeat, no-repeat !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, 0.15); border-top: none; border-bottom: none; border-radius: 0; justify-content: space-evenly; }
-        body.spectator-mode .player-card.active { background-color: rgba(0, 212, 255, 0.1) !important; background-image: linear-gradient(rgba(0, 212, 255, 0.25), rgba(13, 27, 42, 0.85)), url('51693.jpg') !important; border-left: 2px solid var(--blue); border-right: 2px solid var(--blue); }
+        body.spectator-mode .player-card { flex: 0 0 auto; width: 115px; background-color: var(--card) !important; background-image: none !important; border: 1px solid rgba(255, 255, 255, 0.15); justify-content: space-evenly; opacity: 0.85;}
+        body.spectator-mode .player-card.active { opacity: 1; border-left: 2px solid var(--blue); border-right: 2px solid var(--blue); }
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
         body.spectator-mode .score-val { font-size: 40px; }
         body.spectator-mode .legs-count { text-align: center; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
-        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
+        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         
         body.single-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
         body.single-mode .v-container { display: none !important; }
@@ -72,8 +76,6 @@
         #waiting-layer { background: rgba(2, 4, 8, 0.98); z-index: 10003; }
         #login-layer { z-index: 20000; } 
         #profile-layer { z-index: 15000; background: rgba(2, 4, 8, 0.98); }
-        
-        /* NEW LAYERS FOR HISTORY AND FRIENDS */
         #history-layer, #friends-layer { z-index: 16000; background: rgba(2, 4, 8, 0.98); }
         
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
@@ -81,20 +83,20 @@
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(40px + 45dvh + env(safe-area-inset-top)); background: rgba(2, 4, 8, 0.95); }
         
-        .setup-card { background-color: var(--card); background-image: linear-gradient(rgba(13, 27, 42, 0.65), rgba(13, 27, 42, 0.65)), url('51693.jpg'); background-position: center; background-repeat: no-repeat; background-size: contain; padding: 25px; border-radius: 15px; width: 100%; max-width: 360px; border: 1px solid #1b4965; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+        .setup-card { background-color: var(--card); padding: 25px; border-radius: 15px; width: 100%; max-width: 360px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 10px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
         
         .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
         .stats-table th { padding-bottom: 10px; font-size: 18px; width: 30%; font-weight: bold; }
         .stats-table th:nth-child(2) { font-size: 12px; width: 40%; }
-        .stats-table td { padding: 8px 0; text-align: center; border-bottom: 1px solid rgba(27, 73, 101, 0.5); font-weight: bold; color: white; }
+        .stats-table td { padding: 8px 0; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: white; }
         .stats-table td:nth-child(2) { font-size: 12px; font-weight: bold; text-transform: uppercase; }
         .stats-table tr:last-child td { border-bottom: none; }
         
         .input-group { margin-bottom: 10px; text-align: left; }
         .input-group label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
         
-        .setup-input { width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.15); color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .setup-input { width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.15); color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; }
         .setup-input option { background: var(--dark); color: white; }
         
         .btn-start { background: var(--blue); color: black; width: 100%; padding: 16px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: block !important; visibility: visible !important; }
@@ -102,11 +104,11 @@
 
         .btn-update { background: transparent; border: none; color: #888; font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
 
-        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 0 10px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
+        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 10px 10px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; background: #000; }
         .header-controls { display: flex; gap: 5px; align-items: center; }
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;}
 
-        .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
+        .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
         .v-box { position: absolute; inset: 0; visibility: hidden; opacity: 0; z-index: -1; transition: opacity 0.2s; }
         .v-box.visible { visibility: visible; opacity: 1; z-index: 1; }
 
@@ -117,8 +119,8 @@
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
 
         .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
-        .player-card { flex: 1; background-color: var(--card); background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg'); background-position: center; background-repeat: no-repeat; background-size: contain; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
-        .player-card.active { border-color: var(--blue); background-color: var(--active); background-image: linear-gradient(rgba(22, 42, 63, 0.85), rgba(22, 42, 63, 0.85)), url('51693.jpg'); }
+        .player-card { flex: 1; background-color: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; transition: background 0.3s; }
+        .player-card.active { border-color: var(--blue); background-color: var(--active); }
         
         .p-name { font-size: 14px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;}
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
@@ -126,42 +128,42 @@
         .legs-count { font-size: 11px; color: #888; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
+        
+        /* MISSED DOUBLE BUTTON */
+        .missed-db-btn { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; cursor: pointer; }
 
         /* CRICKET CENTER BOARD STYLES */
-        #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--card); border-radius: 8px; padding: 4px; border: 1px solid #1b4965; justify-content: space-evenly; margin: 0 5px; }
+        #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--card); border-radius: 8px; padding: 4px; border: 1px solid rgba(255,255,255,0.1); justify-content: space-evenly; margin: 0 5px; }
         .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
         .cric-mark { flex: 1; text-align: center; font-size: 14px; font-weight: bold; color: var(--blue); }
-        .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: #222; border-radius: 4px; padding: 1px 0; border: 1px solid #444;}
-        .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: #111; border-color: #222;}
+        .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 0; border: 1px solid rgba(255,255,255,0.1);}
+        .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; border-color: transparent;}
 
-        .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid #1b4965; padding: 8px; }
+        .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px; }
         .controls { display: grid; gap: 8px; }
         
-        #standard-controls { grid-template-columns: 1.5fr 0.5fr 1fr; }
+        #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
-        /* GLASSMORPHIC SCORE INPUT BOX */
-        .score-input-box { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 50px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow: hidden; }
-        .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; min-height: 50px;}
-        .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; min-height: 50px;}
-        #atc-controls .btn-hit { font-size: 16px; } 
+        /* CUSTOM NUMPAD STYLES */
+        #numpad-display { font-size: 32px; font-weight: bold; text-align: center; height: 45px; line-height: 45px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
+        .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
+        .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 12px 0;}
+        .np-btn:active { background: var(--blue); color: black; }
+        .np-btn.enter { background: var(--blue); color: black; grid-column: span 2; }
+        .np-btn.enter:disabled { background: #333; color: #666; }
         
-        .btn-hit:disabled { background: #333; color: #666; cursor: not-allowed; }
-        
-        /* STRIPPING NATIVE MOBILE WHITE BACKGROUNDS */
-        #pts-input { width: 100%; height: 100%; background: transparent !important; border: none; color: white; text-align: center; font-size: 32px; outline: none; -webkit-appearance: none; appearance: none; border-radius: 0; padding: 0; margin: 0; box-shadow: none; }
-        #pts-input:disabled { color: #555; -webkit-text-fill-color: #555; opacity: 1; }
-        
-        .dart-box { flex: 1; height: 100%; text-align: center; font-size: 20px; font-weight: bold; text-transform: uppercase; background: transparent !important; border: none; color: white; border-right: 1px solid rgba(255, 255, 255, 0.15); outline: none; -webkit-appearance: none; appearance: none; border-radius: 0; padding: 0; margin: 0; box-shadow: none; }
-        .dart-box:last-child { border-right: none; }
-        .dart-box:focus { background: rgba(0, 212, 255, 0.1) !important; }
+        /* DART-BY-DART INPUT STYLES */
+        .darts-input-row { display: flex; gap: 5px; height: 45px;}
+        .dart-box { flex: 1; text-align: center; font-size: 20px; font-weight: bold; text-transform: uppercase; background: rgba(0,0,0,0.5) !important; border: 1px solid rgba(255, 255, 255, 0.15); color: white; outline: none; -webkit-appearance: none; appearance: none; border-radius: 8px; box-shadow: none; }
+        .dart-box:focus { background: rgba(0, 212, 255, 0.1) !important; border-color: var(--blue); }
 
         /* CRICKET CUSTOM KEYPAD STYLES */
         .cric-mult { flex: 1; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 14px;}
         .cric-mult.active { background: var(--blue); color: black; border-color: var(--blue); }
         .cric-num-btn { background: #111; border: 1px solid #333; border-radius: 6px; color: white; font-size: 18px; font-weight: bold; padding: 12px; cursor: pointer; }
 
-        .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid #1b4965; z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
+        .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
 
         /* PROFILE STYLES */
@@ -182,7 +184,7 @@
         }
     </script>
 </head>
-<body>
+<body class="theme-classic">
 
 <audio id="dart-audio" playsinline webkit-playsinline></audio>
 
@@ -227,9 +229,18 @@
         <input type="file" id="pic-upload" hidden accept="image/*">
         <p style="font-size: 10px; color: #888; margin-top: -5px; margin-bottom: 15px;">Tap image to change</p>
 
-        <div style="display: flex; gap: 5px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
             <input type="text" id="edit-name-input" class="setup-input" placeholder="Display Name..." style="flex: 1; padding: 8px; font-size: 14px;">
             <button id="save-name-btn" class="btn-start" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">SAVE</button>
+        </div>
+
+        <div class="input-group" style="margin-bottom: 20px;">
+            <label style="color: white;">App Theme</label>
+            <select id="theme-select" class="setup-input" style="padding: 8px; font-size: 14px;">
+                <option value="classic">Classic Blue</option>
+                <option value="neon">Neon Cyberpunk</option>
+                <option value="pub">Pub Green & Gold</option>
+            </select>
         </div>
 
         <div style="display: flex; gap: 10px; margin-bottom: 5px;">
@@ -238,8 +249,8 @@
                 <div class="stat-box-val" id="prof-avg">0.0</div>
             </div>
             <div class="stat-box">
-                <div style="font-size: 11px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; line-height: 1.2;">High Out</div>
-                <div class="stat-box-val" id="prof-hc">0</div>
+                <div style="font-size: 11px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; line-height: 1.2;">Checkout %</div>
+                <div class="stat-box-val" id="prof-co">0%</div>
             </div>
         </div>
         
@@ -259,9 +270,7 @@
 <div id="history-layer" class="hidden">
     <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 360px;">
         <h2 style="margin-bottom: 15px;">MATCH HISTORY</h2>
-        
         <div id="history-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
-        
         <button id="close-history-btn" class="btn-start" style="background: #444; color: white; margin-top: auto;">BACK</button>
     </div>
 </div>
@@ -269,19 +278,15 @@
 <div id="friends-layer" class="hidden">
     <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 360px;">
         <h2 style="margin-bottom: 15px;">FRIENDS LIST</h2>
-        
         <div id="friends-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
-        
         <div style="display: flex; gap: 5px; margin-bottom: 5px;">
             <input type="email" id="friend-email" class="setup-input" placeholder="Friend's Email..." style="flex: 1; padding: 8px; font-size: 14px;">
             <button id="add-friend-btn" class="btn-start" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">ADD</button>
         </div>
         <p id="friend-error" style="color: #ffeb3b; font-size: 11px; line-height: 1.4; margin-bottom: 15px;"></p>
-
         <button id="close-friends-btn" class="btn-start" style="background: #444; color: white; margin-top: auto;">BACK</button>
     </div>
 </div>
-
 
 <div id="setup-layer" class="hidden">
     <div class="setup-card">
@@ -300,6 +305,7 @@
                 <option value="online">Online (Remote Opponent)</option>
                 <option value="local">Local (Same Device)</option>
                 <option value="single">Single Player (Practice)</option>
+                <option value="bot">Play vs DartBot (AI)</option>
             </select>
         </div>
 
@@ -318,6 +324,22 @@
             </select>
         </div>
 
+        <div class="input-group" id="bot-level-group" style="display: none;">
+            <label style="color: white;">Bot Difficulty</label>
+            <select id="bot-level-input" class="setup-input">
+                <option value="1">Level 1 (~35 Avg)</option>
+                <option value="2">Level 2 (~45 Avg)</option>
+                <option value="3">Level 3 (~55 Avg)</option>
+                <option value="4">Level 4 (~65 Avg)</option>
+                <option value="5" selected>Level 5 (~75 Avg)</option>
+                <option value="6">Level 6 (~85 Avg)</option>
+                <option value="7">Level 7 (~95 Avg)</option>
+                <option value="8">Level 8 (~105 Avg)</option>
+                <option value="9">Level 9 (~115 Avg)</option>
+                <option value="10">Level 10 (~125 Avg)</option>
+            </select>
+        </div>
+
         <div class="input-group" id="dart-limit-group" style="display: none;">
             <label style="color: white;">Dart Limit</label>
             <select id="dart-limit-input" class="setup-input">
@@ -326,7 +348,7 @@
             </select>
         </div>
 
-        <div class="input-group">
+        <div class="input-group" id="p1-name-group">
             <label id="p1-label" style="color: white;">Your Name</label>
             <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
         </div>
@@ -386,6 +408,7 @@
             <tr><td id="ws-1800" style="color: white;">0</td><td style="color: white;">180s</td><td id="ws-1801" style="color: white;">0</td></tr>
         </table>
         <button id="rematch-btn" class="btn-start">REMATCH</button>
+        <button class="btn-update" onclick="window.location.href = window.location.pathname;">QUIT TO MENU</button>
     </div>
 </div>
 
@@ -419,11 +442,15 @@
     <div id="card-0" class="player-card active">
         <div class="p-name"><img id="avatar-0" class="in-game-avatar" src=""><span id="n-0">P1</span></div>
         <div class="score-row" id="srow-0">
-            <div style="font-size:10px; color:var(--blue)"><span id="avg-label-0">AVG: </span><span id="avg-0">0.0</span></div>
+            <div style="font-size:10px; color:var(--blue); display:flex; flex-direction:column; gap:2px;">
+                <span><span id="avg-label-0">AVG: </span><span id="avg-0">0.0</span></span>
+                <span id="co-stat-0" style="display:none; color:#888;">CO: <span id="co-perc-0">0%</span></span>
+            </div>
             <div class="score-val" id="s-0">501</div>
             <div class="legs-count" id="l-area-0"><span id="l-0">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-0"></div>
+        <button class="missed-db-btn hidden" id="miss-btn-0" onclick="logMissedDouble(0)">+ Missed Double</button>
     </div>
     
     <div id="cricket-center" class="hidden">
@@ -434,34 +461,54 @@
     <div id="card-1" class="player-card">
         <div class="p-name"><img id="avatar-1" class="in-game-avatar" src=""><span id="n-1">P2</span></div>
         <div class="score-row" id="srow-1">
-            <div style="font-size:10px; color:var(--blue)"><span id="avg-label-1">AVG: </span><span id="avg-1">0.0</span></div>
+            <div style="font-size:10px; color:var(--blue); display:flex; flex-direction:column; gap:2px;">
+                <span><span id="avg-label-1">AVG: </span><span id="avg-1">0.0</span></span>
+                <span id="co-stat-1" style="display:none; color:#888;">CO: <span id="co-perc-1">0%</span></span>
+            </div>
             <div class="score-val" id="s-1">501</div>
             <div class="legs-count" id="l-area-1"><span id="l-1">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-1"></div>
+        <button class="missed-db-btn hidden" id="miss-btn-1" onclick="logMissedDouble(1)">+ Missed Double</button>
     </div>
 </div>
 
 <div class="controls-wrapper">
     <div class="controls" id="standard-controls">
-        <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-bottom: -5px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -5px;">
+            <button class="header-btn" id="undo-btn" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
             <button id="mode-toggle-btn" class="header-btn" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
         </div>
 
-        <div class="score-input-box" id="total-input-box">
-            <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="score-input-box hidden" id="darts-input-box" style="display: none; gap: 5px;">
-            <input type="text" id="d1-input" class="dart-box" placeholder="1" maxlength="3">
-            <input type="text" id="d2-input" class="dart-box" placeholder="2" maxlength="3">
-            <input type="text" id="d3-input" class="dart-box" placeholder="3" maxlength="3">
+        <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
+            <div id="numpad-display"></div>
+            <div class="np-grid">
+                <button class="np-btn" onclick="np(1)">1</button>
+                <button class="np-btn" onclick="np(2)">2</button>
+                <button class="np-btn" onclick="np(3)">3</button>
+                <button class="np-btn" onclick="np(4)">4</button>
+                <button class="np-btn" onclick="np(5)">5</button>
+                <button class="np-btn" onclick="np(6)">6</button>
+                <button class="np-btn" onclick="np(7)">7</button>
+                <button class="np-btn" onclick="np(8)">8</button>
+                <button class="np-btn" onclick="np(9)">9</button>
+                <button class="np-btn" onclick="np('C')" style="color:#ff4d4d; font-size:16px;">DEL</button>
+                <button class="np-btn" onclick="np(0)">0</button>
+                <button class="np-btn enter" id="np-enter-btn" onclick="np('E')">ENTER</button>
+            </div>
         </div>
 
-        <button class="btn-undo" id="undo-btn">⟲</button>
-        <button class="btn-hit" id="hit-btn">HIT</button>
+        <div id="darts-mode-ui" class="hidden" style="display: none; flex-direction: column; gap: 8px; height: 100%;">
+            <div class="darts-input-row">
+                <input type="text" id="d1-input" class="dart-box" placeholder="1" maxlength="3">
+                <input type="text" id="d2-input" class="dart-box" placeholder="2" maxlength="3">
+                <input type="text" id="d3-input" class="dart-box" placeholder="3" maxlength="3">
+            </div>
+            <button class="btn-hit" id="hit-btn" style="height: 100%; min-height: 60px;">HIT</button>
+        </div>
     </div>
 
-    <div class="controls" id="atc-controls" style="display: none;">
+    <div class="controls" id="atc-controls" style="display: none; grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr;">
         <button class="btn-undo" id="atc-undo-btn">⟲</button>
         <button class="btn-hit" id="atc-miss-btn" style="background: #444; color: white;">MISS</button>
         <button class="btn-hit" id="atc-s-btn">S1</button>
@@ -470,12 +517,12 @@
     </div>
 
     <div class="controls" id="cricket-controls" style="display: none;">
-        <div style="display: flex; gap: 5px; grid-column: 1 / -1; margin-bottom: 5px;">
+        <div style="display: flex; gap: 5px; margin-bottom: 5px;">
             <button class="cric-mult active" id="cric-m-1" onclick="setCricMult(1)">SINGLE</button>
             <button class="cric-mult" id="cric-m-2" onclick="setCricMult(2)">DOUBLE</button>
             <button class="cric-mult" id="cric-m-3" onclick="setCricMult(3)">TREBLE</button>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; grid-column: 1 / -1;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
             <button class="cric-num-btn" onclick="hitCricket(20)">20</button>
             <button class="cric-num-btn" onclick="hitCricket(19)">19</button>
             <button class="cric-num-btn" onclick="hitCricket(18)">18</button>
@@ -489,16 +536,11 @@
             <button class="cric-num-btn" onclick="hitCricket(10)">10</button>
             <button class="cric-num-btn" onclick="hitCricket(25)">BULL</button>
         </div>
-        <div style="display: flex; gap: 5px; grid-column: 1 / -1; margin-top: 5px;">
-            <button class="btn-undo" onclick="undo()" style="flex: 1;">⟲ UNDO</button>
+        <div style="display: flex; gap: 5px; margin-top: 5px;">
+            <button class="btn-undo" onclick="undo()" style="flex: 1; min-height: 40px; font-size: 14px;">⟲ UNDO</button>
             <button class="cric-num-btn" onclick="hitCricket(0)" style="flex: 2; background: #444; color: white;">MISS</button>
         </div>
     </div>
-</div>
-
-<div id="ios-prompt" class="ios-prompt">
-    <span class="ios-close" onclick="document.getElementById('ios-prompt').style.display='none'">✖</span>
-    To install this app, tap the <b>Share</b> icon below and select <b>"Add to Home Screen"</b>
 </div>
 
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
@@ -574,10 +616,13 @@
                     photoURL: "",
                     totalPts: 0,
                     totalDarts: 0,
+                    coAtt: 0,
+                    coHit: 0,
                     highCheckout: 0,
                     friends: [],
                     matchHistory: [],
-                    activeChallenge: null
+                    activeChallenge: null,
+                    theme: 'classic'
                 });
             }
 
@@ -588,7 +633,12 @@
                     document.getElementById('name-input').value = window.currentUserDoc.displayName;
                     document.getElementById('edit-name-input').value = window.currentUserDoc.displayName;
                     
-                    // Render if any of the sub-menus are open
+                    // APPLY THEME
+                    if(window.currentUserDoc.theme) {
+                        document.body.className = `theme-${window.currentUserDoc.theme}`;
+                        document.getElementById('theme-select').value = window.currentUserDoc.theme;
+                    }
+                    
                     renderProfileMenu(); 
                     
                     const challenge = window.currentUserDoc.activeChallenge;
@@ -606,6 +656,15 @@
             document.getElementById('logout-btn').style.display = 'none'; 
             document.getElementById('open-profile-btn').style.display = 'none'; 
             window.currentUserDoc = null;
+        }
+    });
+
+    // CHANGE THEME LOGIC
+    document.getElementById('theme-select').addEventListener('change', async function() {
+        const selectedTheme = this.value;
+        document.body.className = `theme-${selectedTheme}`;
+        if(window.auth.currentUser) {
+            await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { theme: selectedTheme });
         }
     });
 
@@ -635,7 +694,6 @@
         document.getElementById('start-btn').click();
     };
 
-    // SUB-MENU NAVIGATION LOGIC
     document.getElementById('open-profile-btn').addEventListener('click', () => {
         setupLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
@@ -667,13 +725,14 @@
         profileLayer.classList.remove('hidden');
     });
 
-
     document.getElementById('reset-stats-btn').addEventListener('click', async () => {
-        if(confirm("Are you sure you want to completely reset your Lifetime Stats? This clears your Average, High Out, and Match History.")) {
+        if(confirm("Are you sure you want to completely reset your Lifetime Stats? This clears your Average, Checkout %, High Out, and Match History.")) {
             try {
                 await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), {
                     totalPts: 0,
                     totalDarts: 0,
+                    coAtt: 0,
+                    coHit: 0,
                     highCheckout: 0,
                     matchHistory: []
                 });
@@ -682,30 +741,24 @@
         }
     });
 
-    window.deleteHistoryItem = async function(matchId, matchDate, matchDesc, pts, darts) {
-        if(!confirm("Delete this match? This will remove its points and darts from your Lifetime Average.")) return;
+    window.deleteHistoryItem = async function(matchId, matchDate, matchDesc, pts, darts, coAtt, coHit) {
+        if(!confirm("Delete this match? This will remove its points and darts from your Lifetime Stats.")) return;
         if(!window.auth.currentUser || !window.currentUserDoc) return;
         
         try {
             const userRef = doc(window.db, "users", window.auth.currentUser.uid);
             let historyArray = window.currentUserDoc.matchHistory || [];
-            let targetItem = null;
-            
-            if (matchId) { targetItem = historyArray.find(h => h.id === matchId); } 
-            else { targetItem = historyArray.find(h => h.date === matchDate && h.desc === matchDesc); }
+            let targetItem = historyArray.find(h => h.id === matchId) || historyArray.find(h => h.date === matchDate && h.desc === matchDesc);
             
             if (!targetItem) return;
 
             let newHistory = historyArray.filter(h => h !== targetItem);
             let newTotalPts = Math.max(0, (window.currentUserDoc.totalPts || 0) - (targetItem.pts || 0));
             let newTotalDarts = Math.max(0, (window.currentUserDoc.totalDarts || 0) - (targetItem.darts || 0));
+            let newCoAtt = Math.max(0, (window.currentUserDoc.coAtt || 0) - (targetItem.coAtt || 0));
+            let newCoHit = Math.max(0, (window.currentUserDoc.coHit || 0) - (targetItem.coHit || 0));
 
-            await updateDoc(userRef, {
-                matchHistory: newHistory,
-                totalPts: newTotalPts,
-                totalDarts: newTotalDarts
-            });
-            
+            await updateDoc(userRef, { matchHistory: newHistory, totalPts: newTotalPts, totalDarts: newTotalDarts, coAtt: newCoAtt, coHit: newCoHit });
         } catch(e) { alert("Error deleting match."); }
     };
 
@@ -734,7 +787,6 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 const base64Img = canvas.toDataURL('image/jpeg', 0.7); 
-                
                 await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { photoURL: base64Img });
             }
             img.src = event.target.result;
@@ -746,9 +798,7 @@
         const email = document.getElementById('friend-email').value.trim().toLowerCase();
         const err = document.getElementById('friend-error');
         if(!email) return;
-        
         err.style.color = "white"; err.innerText = "Searching...";
-        
         const q = query(collection(window.db, "users"), where("email", "==", email));
         const snap = await getDocs(q);
         
@@ -756,14 +806,11 @@
             const friendId = snap.docs[0].id;
             if(friendId === window.auth.currentUser.uid) { err.innerText = "You can't add yourself!"; return; }
             if(window.currentUserDoc.friends && window.currentUserDoc.friends.includes(friendId)) { err.innerText = "Already friends!"; return; }
-            
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { friends: arrayUnion(friendId) });
             document.getElementById('friend-email').value = "";
             err.style.color = "#4caf50"; err.innerText = "Friend Added!";
             renderProfileMenu();
-        } else {
-            err.style.color = "#ff4d4d"; err.innerText = "User not found.";
-        }
+        } else { err.style.color = "#ff4d4d"; err.innerText = "User not found."; }
     });
 
     async function renderProfileMenu() {
@@ -772,13 +819,16 @@
         if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
         
         let avg = window.currentUserDoc.totalDarts > 0 ? ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
+        let coPerc = window.currentUserDoc.coAtt > 0 ? Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
+        
         document.getElementById('prof-avg').innerText = avg;
         document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0;
+        document.getElementById('prof-co').innerText = coPerc;
         
         const histContainer = document.getElementById('history-list-container');
         if(window.currentUserDoc.matchHistory && window.currentUserDoc.matchHistory.length > 0) {
             let histHtml = '';
-            let recent = window.currentUserDoc.matchHistory.slice(-10).reverse();
+            let recent = window.currentUserDoc.matchHistory.slice(-15).reverse();
             recent.forEach(h => {
                 let color = h.desc.startsWith("WON") ? "#4caf50" : "#ff4d4d";
                 let safeId = h.id ? `'${h.id}'` : `null`;
@@ -790,7 +840,7 @@
                         <div style="color:${color}; font-weight:bold; line-height: 1.2;">${h.desc}</div>
                         <div style="color:#aaa; font-size:11px; margin-top:3px; line-height:1.4;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
                     </div>
-                    <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
+                    <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0}, ${h.coAtt || 0}, ${h.coHit || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
                 </div>`;
             });
             histContainer.innerHTML = histHtml;
@@ -816,7 +866,7 @@
                             <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue);">
                             <div style="flex: 1;">
                                 <div style="color:var(--blue); font-weight:bold; font-size:14px; line-height:1.2;">${f.displayName}</div>
-                                <div style="color:#aaa; font-size:11px; margin-top:3px; line-height:1.4;">Avg: ${fAvg} | High Out: ${fHc}</div>
+                                <div style="color:#aaa; font-size:10px; margin-top:3px; line-height:1.4;">Avg: ${fAvg} | High Out: ${fHc}</div>
                             </div>
                             <button onclick="window.issueChallenge('${uid}')" style="background:var(--blue); color:black; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:11px;">⚔️ PLAY</button>
                         </div>
@@ -870,7 +920,7 @@
     async function saveStatsToCloud() {
         if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
         const validGames = ["301", "501", "701", "1001", "170_race"];
-        if(state.mode === 'single') return; 
+        if(state.mode === 'single' || state.mode === 'bot') return; 
 
         try {
             let myP = state.p[myIndex]; 
@@ -894,22 +944,23 @@
                 let newPts = dbData.totalPts || 0;
                 let newDarts = dbData.totalDarts || 0;
                 let newHc = dbData.highCheckout || 0;
-                let matchPts = 0;
-                let matchDarts = 0;
+                let newCoAtt = dbData.coAtt || 0;
+                let newCoHit = dbData.coHit || 0;
+                
+                let matchPts = 0; let matchDarts = 0; let matchCoAtt = 0; let matchCoHit = 0;
                 
                 if(validGames.includes(state.gameType)) {
-                    matchPts = myP.pts;
-                    matchDarts = myP.d;
-                    newPts += matchPts;
-                    newDarts += matchDarts;
+                    matchPts = myP.pts; matchDarts = myP.d;
+                    matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
+                    
+                    newPts += matchPts; newDarts += matchDarts;
+                    newCoAtt += matchCoAtt; newCoHit += matchCoHit;
                     newHc = Math.max(newHc, myP.hc);
                 }
 
                 await updateDoc(userRef, { 
-                    totalPts: newPts, 
-                    totalDarts: newDarts, 
-                    highCheckout: newHc,
-                    matchHistory: arrayUnion({ id: matchId, date: dateStr, desc: matchText, avg: finalAvg, pts: matchPts, darts: matchDarts })
+                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
+                    matchHistory: arrayUnion({ id: matchId, date: dateStr, desc: matchText, avg: finalAvg, pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit })
                 });
                 statsSavedThisMatch = true;
             }
@@ -937,36 +988,28 @@
 
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
+        e.preventDefault(); deferredPrompt = e;
         const installBtn = document.getElementById('install-btn');
         if (installBtn) installBtn.style.display = 'block';
     });
 
     const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
-    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
 
-    let stream, peer, currentCall;
-    let conns = []; 
-    let spectatorCalls = []; 
-    let myIndex = 0;
-    let currentZoom = 1; 
-    let isLocalMatch = false; 
-    let localInputMode = 'total';
+    let stream, peer, currentCall, botTimeout;
+    let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
+    let isLocalMatch = false; let localInputMode = 'total'; let numpadVal = "";
     
-    let state = { mode: 'online', gameType: '501', limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
-        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
-        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
+    let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
+        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
+        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
     ]};
     let history = null;
 
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    let currentFacingMode = "user";
-    let currentCamIndex = 0;
+    let currentFacingMode = "user"; let currentCamIndex = 0;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join');
-    const spectateId = urlParams.get('spectate');
+    const joinId = urlParams.get('join'); const spectateId = urlParams.get('spectate');
 
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
@@ -1026,7 +1069,7 @@
     }
 
     document.addEventListener('visibilitychange', () => {
-        if (!stream || state.mode === 'single') return;
+        if (!stream || state.mode === 'single' || state.mode === 'bot') return;
         const videoTrack = stream.getVideoTracks()[0];
         if (videoTrack) {
             const isHidden = document.visibilityState === 'hidden';
@@ -1065,15 +1108,24 @@
             const gameType = gameTypeInput.value;
 
             document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
             document.getElementById('game-type-group').style.display = 'block'; 
             document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
             document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
             
             const p1Label = document.getElementById('p1-label');
             if (p1Label) {
-                if (mode === 'single') p1Label.innerText = 'Your Name';
+                if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
                 else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
                 else p1Label.innerText = 'Your Name';
+            }
+            
+            // Bot can only play standard games
+            if (mode === 'bot') {
+                if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
+                    gameTypeInput.value = '501';
+                    alert("DartBot currently only supports standard 301-1001 games.");
+                }
             }
         }
 
@@ -1105,7 +1157,7 @@
         document.getElementById('spectate-btn').onclick = shareSpectator;
         
         document.getElementById('undo-btn').onclick = undo;
-        document.getElementById('hit-btn').onclick = processHit;
+        document.getElementById('hit-btn').onclick = () => processHit();
         
         document.getElementById('atc-undo-btn').onclick = undo;
         document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
@@ -1120,15 +1172,66 @@
 
         document.getElementById('rematch-btn').onclick = triggerRematch;
         
-        const ptsInput = document.getElementById('pts-input');
-        if (ptsInput) {
-            ptsInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') { e.preventDefault(); processHit(); }});
-        }
         const d3Input = document.getElementById('d3-input');
-        if (d3Input) {
-            d3Input.addEventListener('keypress', function(e) { if (e.key === 'Enter') { e.preventDefault(); processHit(); }});
-        }
+        if (d3Input) { d3Input.addEventListener('keypress', function(e) { if (e.key === 'Enter') { e.preventDefault(); processHit(); }}); }
     });
+
+    // CUSTOM NUMPAD LOGIC
+    window.np = function(val) {
+        if(val === 'C') { numpadVal = ""; }
+        else if(val === 'E') {
+            let v = parseInt(numpadVal);
+            if(!isNaN(v)) processHit(v);
+            numpadVal = "";
+        }
+        else {
+            if(numpadVal.length < 3) numpadVal += val;
+        }
+        let display = document.getElementById('numpad-display');
+        if(display) display.innerText = numpadVal || "0";
+    }
+
+    // CHECKOUT LOGIC
+    window.logMissedDouble = function(pIndex) {
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
+        state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
+        render();
+        if (!isLocalMatch) broadcast(state);
+    }
+
+    // BOT LOGIC
+    function playBotTurn() {
+        if(state.winner !== undefined || state.turn !== 1 || state.mode !== 'bot') return;
+        
+        let level = state.botLevel || 5;
+        let targetAvg = 25 + (level * 10);
+        let p = state.p[1];
+        let s = p.s;
+        let val = 0;
+
+        if (s > 170 || !checkouts[s]) {
+            let variance = 20;
+            val = Math.floor(targetAvg + (Math.random() * variance * 2) - variance);
+            val = Math.max(0, Math.min(180, val));
+            if (s - val <= 1 && s - val !== 0) val = s - 2; 
+        } else {
+            let hitChance = level * 0.08; 
+            if (Math.random() < hitChance) {
+                val = s; 
+            } else {
+                val = Math.floor(s / 2);
+                if (val % 2 !== 0) val -= 1;
+                if (val < 0) val = 0;
+            }
+        }
+
+        document.getElementById('numpad-display').innerText = val;
+        botTimeout = setTimeout(() => {
+            document.getElementById('numpad-display').innerText = "0";
+            processHit(val);
+        }, 1500);
+    }
+
 
     function toggleBullPhase(isActive) {
         if (isActive) { document.body.classList.add('bull-throw'); } 
@@ -1139,7 +1242,7 @@
         document.getElementById('first-throw-layer').classList.remove('hidden');
         document.getElementById('ft-step-1').classList.remove('hidden');
         document.getElementById('ft-step-2').classList.add('hidden');
-        if (!isLocalMatch && state.mode !== 'single') { toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true }); }
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') { toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true }); }
     }
 
     function showFtStep2(mode) {
@@ -1156,7 +1259,7 @@
         state.turn = playerIndex;
         document.getElementById('first-throw-layer').classList.add('hidden');
         
-        if (!isLocalMatch && state.mode !== 'single') {
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
             toggleBullPhase(false);
             broadcast({ type: 'BULL_PHASE', active: false });
         }
@@ -1181,7 +1284,7 @@
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
         state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
         
-        isLocalMatch = (state.mode === 'local');
+        isLocalMatch = (state.mode === 'local' || state.mode === 'bot');
 
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
@@ -1193,43 +1296,47 @@
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
-        if (isLocalMatch) {
-            state.p[0].name = document.getElementById('name-input').value || "Player 1";
-            state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
-            
-            state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
-            state.p[1].avatar = ""; 
+        state.p[0].name = document.getElementById('name-input').value || "Player 1";
+        state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
+        state.p[0].target170 = 170;
+        state.p[0].s = startScore;
+        state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
+        state.p[0].coAtt = 0; state.p[0].coHit = 0;
 
-            state.p[0].target170 = 170; state.p[1].target170 = 170;
-            state.p[0].s = startScore; state.p[1].s = startScore;
-            state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
-            state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
+        state.p[1].target170 = 170;
+        state.p[1].s = startScore;
+        state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
+        state.p[1].coAtt = 0; state.p[1].coHit = 0;
 
+        if (state.mode === 'bot') {
+            state.botLevel = parseInt(document.getElementById('bot-level-input').value) || 5;
+            state.p[1].name = `DartBot Lvl ${state.botLevel}`;
+            state.p[1].avatar = "";
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-            
+            document.getElementById('setup-layer').classList.add('hidden');
+            document.body.classList.add('local-mode');
+            showFirstThrowUI();
+            return;
+        }
+
+        if (state.mode === 'local') {
+            state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
+            state.p[1].avatar = ""; 
+            state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
             document.getElementById('setup-layer').classList.add('hidden');
             document.body.classList.add('local-mode'); 
-            
             if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') { 
-                playDartSound('gameon');
-                render(); 
+                playDartSound('gameon'); render(); 
             } else { showFirstThrowUI(); }
             return; 
         }
 
         if (state.mode === 'single') {
             document.body.classList.add('single-mode');
-            state.p[0].name = document.getElementById('name-input').value || "Player 1";
-            state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
-            state.p[0].target170 = 170;
-            state.p[0].s = startScore;
-            state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
             document.getElementById('setup-layer').classList.add('hidden');
             playDartSound('gameon');
             render();
         } else {
-            state.p[0].name = document.getElementById('name-input').value || "Host";
-            state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
         }
 
@@ -1388,6 +1495,7 @@
                     player.f9d = player.f9d ?? 0; player.hc = player.hc ?? 0;
                     player.n140 = player.n140 ?? 0; player.n180 = player.n180 ?? 0;
                     player.target170 = player.target170 || 170;
+                    player.coAtt = player.coAtt || 0; player.coHit = player.coHit || 0;
                     player.marks = player.marks || {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
                     if(data.p[i].avatar !== undefined) player.avatar = data.p[i].avatar; 
                 });
@@ -1457,6 +1565,7 @@
     
     function processAtcDart(multiplier) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
+        if(botTimeout) clearTimeout(botTimeout);
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
 
@@ -1491,6 +1600,7 @@
     window.hitCricket = function(val) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         if (val === 25 && cricketMult === 3) { alert("Invalid Dart: Cannot throw a Treble Bull."); return; }
+        if(botTimeout) clearTimeout(botTimeout);
         
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
@@ -1543,24 +1653,33 @@
         return { val: val, mult: mult, pts: val * mult };
     }
 
-    function processHit() {
-        if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
+    function processHit(manualVal = null) {
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
+        if(botTimeout) clearTimeout(botTimeout);
         
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
 
         p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0; p.f9d = p.f9d ?? 0; p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
-        
+        p.coAtt = p.coAtt || 0; p.coHit = p.coHit || 0;
+
         let val = 0;
-        if (localInputMode === 'darts') {
+        if (manualVal !== null) {
+            val = manualVal;
+        } else if (localInputMode === 'darts') {
             let d1 = parseDart(document.getElementById('d1-input').value);
             let d2 = parseDart(document.getElementById('d2-input').value);
             let d3 = parseDart(document.getElementById('d3-input').value);
             if (d1 === null || d2 === null || d3 === null) { alert("Invalid format! Use T20, D10, 25..."); return; }
             val = d1.pts + d2.pts + d3.pts;
+            
+            if (p.s <= 170 && checkouts[p.s]) {
+                if(d1.mult === 2 || d1.val === 25) p.coAtt++;
+                if(d2.mult === 2 || d2.val === 25) p.coAtt++;
+                if(d3.mult === 2 || d3.val === 25) p.coAtt++;
+            }
         } else {
-            const valStr = document.getElementById('pts-input').value.trim();
-            val = valStr === '' ? 0 : parseInt(valStr);
+            val = numpadVal === '' ? 0 : parseInt(numpadVal);
             if (isNaN(val) || val < 0 || val > 180) return;
         }
         
@@ -1580,8 +1699,7 @@
         if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
             if (state.gameType === '121') { p.l = Math.max(0, p.l - 1); p.s = 121 + p.l; } 
             else { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; }
-            p.ld = 0;
-            soundToPlay = 0;
+            p.ld = 0; soundToPlay = 0;
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
         }
         else if (p.s - val >= 0 && p.s - val !== 1) {
@@ -1592,14 +1710,14 @@
             if (p.s === 0) { 
                 soundToPlay = 'gameshot';
                 if (val > p.hc) p.hc = val; 
-                p.l++; 
+                p.l++; p.coHit++; 
+                if (localInputMode !== 'darts') p.coAtt++; 
                 
                 if (state.gameType === '170') { p.target170 = Math.min(170, (p.target170 || 170) + 1); }
                 
                 if (state.mode === 'single') {
                     state.p[0].s = state.gameType === '121' ? 121 + p.l : (state.gameType === '170' ? p.target170 : startScore);
-                    state.p[0].ld = 0;
-                    state.turn = 0;
+                    state.p[0].ld = 0; state.turn = 0;
                 } else {
                     if (state.gameType !== '121' && state.gameType !== '170') {
                         const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
@@ -1611,16 +1729,14 @@
                         }
                     } else {
                         p.s = state.gameType === '121' ? 121 + p.l : p.target170;
-                        p.ld = 0;
-                        state.turn = (state.turn === 0) ? 1 : 0; 
+                        p.ld = 0; state.turn = (state.turn === 0) ? 1 : 0; 
                     }
                 }
             } else { 
                 if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
                     if (state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; } 
                     else { p.s = 121 + p.l; }
-                    p.ld = 0;
-                    soundToPlay = 'bust'; 
+                    p.ld = 0; soundToPlay = 'bust'; 
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
                 } else if (state.mode !== 'single') {
                     state.turn = (state.turn === 0) ? 1 : 0; 
@@ -1638,12 +1754,14 @@
 
         if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
         
-        document.getElementById('pts-input').value = ''; document.getElementById('pts-input').blur();
+        numpadVal = "";
+        document.getElementById('numpad-display').innerText = "0";
         ['d1-input', 'd2-input', 'd3-input'].forEach(id => document.getElementById(id).value = '');
         if (localInputMode === 'darts') document.getElementById('d1-input').focus();
     }
 
     function undo() {
+        if(botTimeout) clearTimeout(botTimeout);
         if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state); }
     }
 
@@ -1664,6 +1782,7 @@
             x.target170 = 170;
             x.s = state.gameType === '170' ? 170 : startScore; 
             x.l = 0; x.pts = 0; x.d = 0; x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
+            x.coAtt = 0; x.coHit = 0;
             x.marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
         });
         delete state.winner; history = null;
@@ -1687,17 +1806,23 @@
             if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
             else { avatarImg.style.display = 'none'; }
             
+            let coStatStr = p.coAtt > 0 ? Math.round((p.coHit / p.coAtt) * 100) + "%" : "0%";
+
             if (state.gameType === 'atc') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
                 document.getElementById(`avg-${i}`).innerText = p.d;
                 document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
                 document.getElementById(`co-${i}`).innerText = "TARGET";
                 document.getElementById(`l-area-${i}`).style.display = 'none';
+                document.getElementById(`co-stat-${i}`).style.display = 'none';
+                document.getElementById(`miss-btn-${i}`).classList.add('hidden');
             } 
             else if (state.gameType === 'cricket') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
                 document.getElementById(`avg-${i}`).innerText = p.d;
                 document.getElementById(`s-${i}`).innerText = p.s;
+                document.getElementById(`co-stat-${i}`).style.display = 'none';
+                document.getElementById(`miss-btn-${i}`).classList.add('hidden');
             }
             else if (state.gameType === '121' || state.gameType === '170') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
@@ -1708,6 +1833,14 @@
                 document.getElementById(`l-area-${i}`).style.display = 'block';
                 document.getElementById(`l-${i}`).innerText = p.l; 
                 document.getElementById(`co-${i}`).style.display = 'block';
+                
+                document.getElementById(`co-stat-${i}`).style.display = 'block';
+                document.getElementById(`co-perc-${i}`).innerText = coStatStr;
+                
+                if(p.s <= 170 && checkouts[p.s] && state.turn === i && localInputMode !== 'darts') {
+                    document.getElementById(`miss-btn-${i}`).classList.remove('hidden');
+                } else { document.getElementById(`miss-btn-${i}`).classList.add('hidden'); }
+
             } else {
                 document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                 document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
@@ -1716,6 +1849,13 @@
                 document.getElementById(`l-area-${i}`).style.display = 'block';
                 document.getElementById(`l-${i}`).innerText = p.l;
                 document.getElementById(`co-${i}`).style.display = 'block';
+
+                document.getElementById(`co-stat-${i}`).style.display = 'block';
+                document.getElementById(`co-perc-${i}`).innerText = coStatStr;
+
+                if(p.s <= 170 && checkouts[p.s] && state.turn === i && localInputMode !== 'darts') {
+                    document.getElementById(`miss-btn-${i}`).classList.remove('hidden');
+                } else { document.getElementById(`miss-btn-${i}`).classList.add('hidden'); }
             }
             
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
@@ -1725,7 +1865,7 @@
             
             if (state.gameType === 'atc') {
                 document.getElementById('cricket-center').classList.add('hidden');
-                document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local') ? 'column' : 'row';
+                document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
                 [0, 1].forEach(i => {
                     if(document.getElementById(`srow-${i}`)) document.getElementById(`srow-${i}`).style.flexDirection = 'row';
                     document.getElementById(`s-${i}`).style.fontSize = 'clamp(30px, 6dvh, 50px)';
@@ -1804,7 +1944,7 @@
             } else {
                 
                 document.getElementById('cricket-center').classList.add('hidden');
-                document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local') ? 'column' : 'row';
+                document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
                 [0, 1].forEach(i => {
                     if(document.getElementById(`srow-${i}`)) {
                         document.getElementById(`srow-${i}`).style.flexDirection = 'row';
@@ -1813,22 +1953,24 @@
                     document.getElementById(`s-${i}`).style.fontSize = 'clamp(30px, 6dvh, 50px)';
                 });
 
-                document.getElementById('standard-controls').style.display = 'grid';
+                document.getElementById('standard-controls').style.display = 'flex';
                 document.getElementById('atc-controls').style.display = 'none';
                 document.getElementById('cricket-controls').style.display = 'none';
                 
                 if (localInputMode === 'darts') {
-                    document.getElementById('total-input-box').style.display = 'none';
-                    document.getElementById('darts-input-box').style.display = 'flex';
+                    document.getElementById('total-mode-ui').style.display = 'none';
+                    document.getElementById('darts-mode-ui').style.display = 'flex';
                     document.getElementById('mode-toggle-btn').innerText = 'MODE: DART-BY-DART';
                 } else {
-                    document.getElementById('total-input-box').style.display = 'flex';
-                    document.getElementById('darts-input-box').style.display = 'none';
+                    document.getElementById('total-mode-ui').style.display = 'flex';
+                    document.getElementById('darts-mode-ui').style.display = 'none';
                     document.getElementById('mode-toggle-btn').innerText = 'MODE: TOTAL SCORE';
+                    document.getElementById('numpad-display').innerText = numpadVal || "0";
                 }
 
-                const isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
-                document.getElementById('pts-input').disabled = !isMyTurn;
+                const isMyTurn = (state.mode === 'bot') ? (state.turn === 0) : (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
+                
+                document.querySelectorAll('.np-btn').forEach(b => b.disabled = !isMyTurn);
                 document.getElementById('d1-input').disabled = !isMyTurn;
                 document.getElementById('d2-input').disabled = !isMyTurn;
                 document.getElementById('d3-input').disabled = !isMyTurn;
@@ -1844,7 +1986,7 @@
         }
 
         if (myIndex === 0 && spectatorCalls.length > 0) {
-            const activeStream = (state.turn === 0 || state.mode === 'single') ? stream : document.getElementById('peer').srcObject;
+            const activeStream = (state.turn === 0 || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer').srcObject;
             if (activeStream) {
                 const videoTrack = activeStream.getVideoTracks()[0];
                 const audioTrack = activeStream.getAudioTracks()[0];
@@ -1886,6 +2028,11 @@
             winnerLayer.classList.remove('hidden');
         } else {
             winnerLayer.classList.add('hidden');
+            
+            // TRIGGER DARTBOT
+            if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined) {
+                playBotTurn();
+            }
         }
     }
 
