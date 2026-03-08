@@ -773,7 +773,7 @@
                 await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { friends: arrayUnion(friendId) });
                 document.getElementById('friend-email').value = "";
                 err.style.color = "#4caf50"; err.innerText = "Friend Added!";
-                renderProfileMenu();
+                // Automatically triggers snapshot listener, which rebuilds the list safely.
             } else {
                 err.style.color = "#ff4d4d"; err.innerText = "User not found.";
             }
@@ -781,7 +781,11 @@
 
         async function renderProfileMenu() {
             if(!window.currentUserDoc) return;
-            document.getElementById('prof-email').innerText = window.auth.currentUser.email;
+            
+            // Fix 1: Safe fallback for email on immediate login
+            let displayEmail = window.auth?.currentUser?.email || window.currentUserDoc.email || "Player";
+            document.getElementById('prof-email').innerText = displayEmail;
+            
             if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
             
             let avg = window.currentUserDoc.totalDarts > 0 ? ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
@@ -795,14 +799,17 @@
                 let histHtml = '';
                 let recent = window.currentUserDoc.matchHistory.slice(-15).reverse();
                 recent.forEach(h => {
-                    let color = h.desc.startsWith("WON") ? "#4caf50" : "#ff4d4d";
+                    let color = (h.desc && h.desc.startsWith("WON")) ? "#4caf50" : "#ff4d4d";
                     let safeId = h.id ? `'${h.id}'` : `null`;
                     let safeDate = `'${h.date}'`;
-                    let safeDesc = `'${h.desc}'`;
+                    let descText = h.desc ? h.desc.replace(/'/g, "\\'") : 'Match';
+                    let safeDesc = `'${descText}'`;
+                    let displayDesc = h.desc || 'Match';
+
                     histHtml += `
                     <div class="history-item">
                         <div style="flex:1;">
-                            <div style="color:${color}; font-weight:bold; line-height: 1.2;">${h.desc}</div>
+                            <div style="color:${color}; font-weight:bold; line-height: 1.2;">${displayDesc}</div>
                             <div style="color:#aaa; font-size:11px; margin-top:3px; line-height:1.4;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
                         </div>
                         <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0}, ${h.coAtt || 0}, ${h.coHit || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
@@ -815,27 +822,34 @@
 
             const list = document.getElementById('friends-list-container');
             list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>Loading friends...</p>";
+            
             if(window.currentUserDoc.friends && window.currentUserDoc.friends.length > 0) {
-                list.innerHTML = "";
+                // Fix 2: Batch HTML rendering prevents the async list from overwriting itself and going blank
+                let tempFriendsHtml = "";
                 for(let uid of window.currentUserDoc.friends) {
-                    const fSnap = await getDoc(doc(window.db, "users", uid));
-                    if(fSnap.exists()) {
-                        let f = fSnap.data();
-                        let fAvg = f.totalDarts > 0 ? ((f.totalPts / f.totalDarts) * 3).toFixed(1) : "0.0";
-                        let fHc = f.highCheckout || 0;
-                        let fImg = f.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=';
-                        list.innerHTML += `
-                        <div class="friend-item">
-                            <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue);">
-                            <div style="flex: 1;">
-                                <div style="color:var(--blue); font-weight:bold; font-size:14px; line-height:1.2;">${f.displayName}</div>
-                                <div style="color:#aaa; font-size:10px; margin-top:3px; line-height:1.4;">Avg: ${fAvg} | High Out: ${fHc}</div>
+                    try {
+                        const fSnap = await getDoc(doc(window.db, "users", uid));
+                        if(fSnap.exists()) {
+                            let f = fSnap.data();
+                            let fAvg = f.totalDarts > 0 ? ((f.totalPts / f.totalDarts) * 3).toFixed(1) : "0.0";
+                            let fHc = f.highCheckout || 0;
+                            let fImg = f.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=';
+                            
+                            // Fix 3: Added flex-shrink: 0 to the image, and truncation limits on the text span
+                            tempFriendsHtml += `
+                            <div class="friend-item">
+                                <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue);flex-shrink:0;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="color:var(--blue); font-weight:bold; font-size:14px; line-height:1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.displayName}</div>
+                                    <div style="color:#aaa; font-size:10px; margin-top:3px; line-height:1.4;">Avg: ${fAvg} | High Out: ${fHc}</div>
+                                </div>
+                                <button onclick="window.issueChallenge('${uid}')" style="background:var(--blue); color:black; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:11px;">⚔️ PLAY</button>
                             </div>
-                            <button onclick="window.issueChallenge('${uid}')" style="background:var(--blue); color:black; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:11px;">⚔️ PLAY</button>
-                        </div>
-                        `;
-                    }
+                            `;
+                        }
+                    } catch(e) {}
                 }
+                list.innerHTML = tempFriendsHtml;
             } else {
                 list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>No friends added yet.</p>";
             }
