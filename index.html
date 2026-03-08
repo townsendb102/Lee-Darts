@@ -296,10 +296,19 @@
             <label style="color: white;">Game Type</label>
             <select id="game-type-input" class="setup-input">
                 <option value="121">121 Checkout</option>
+                <option value="170">170 Big Fish</option>
                 <option value="301">301</option>
                 <option value="501" selected>501</option>
                 <option value="701">701</option>
                 <option value="atc">Around the Clock</option>
+            </select>
+        </div>
+
+        <div class="input-group" id="dart-limit-group" style="display: none;">
+            <label style="color: white;">Dart Limit</label>
+            <select id="dart-limit-input" class="setup-input">
+                <option value="6">6 Darts</option>
+                <option value="9" selected>9 Darts</option>
             </select>
         </div>
 
@@ -444,7 +453,6 @@
             updateBtn.innerText = "Clearing Cache & Updating...";
             updateBtn.style.color = "#4caf50";
             
-            // 1. Unregister all hidden Service Workers
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
                     for(let registration of registrations) {
@@ -453,14 +461,12 @@
                 });
             }
             
-            // 2. Delete all saved App Caches
             if (window.caches) {
                 caches.keys().then(function(names) {
                     for (let name of names) caches.delete(name);
                 });
             }
             
-            // 3. Force reload page with a timestamp to completely bust the browser cache
             setTimeout(() => {
                 window.location.href = window.location.pathname + '?update=' + new Date().getTime();
             }, 800);
@@ -471,10 +477,10 @@
     let isMicMuted = false;
     let isCallerMuted = false;
 
-    // --- NATIVE AUDIO PLAYER LOGIC (FIX FOR HOME SCREEN APPS) ---
+    // --- NATIVE AUDIO PLAYER LOGIC ---
     function playDartSound(type) {
         if (isCallerMuted) return;
-        if (state.gameType === 'atc') return; // Hard override: No sounds for Around The Clock
+        if (state.gameType === 'atc') return;
 
         let audioSrc = "";
 
@@ -520,7 +526,8 @@
     let currentZoom = 1; 
     let isLocalMatch = false; 
     
-    let state = { mode: 'online', gameType: '501', turn: 0, startingPlayer: 0, bestOf: 5, p: [
+    // Added limit170 variable to the state to track dart limit
+    let state = { mode: 'online', gameType: '501', limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
         { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }
     ]};
@@ -605,7 +612,6 @@
         if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); 
     }
 
-    // Force unlock audio objects for iOS Home Screen App
     function unlockAudio() {
         const peerVideo = document.getElementById('peer');
         if (peerVideo && peerVideo.paused && peerVideo.srcObject) {
@@ -614,7 +620,6 @@
         
         const dartAudio = document.getElementById('dart-audio');
         if (dartAudio && dartAudio.src === "") {
-            // Load a tiny silent sound into the player on first tap to unlock the Apple restrictions
             dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
             dartAudio.play().catch(e => {});
         }
@@ -623,7 +628,6 @@
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
     window.addEventListener('load', () => {
-        
         const installBtn = document.getElementById('install-btn');
         if (installBtn) {
             installBtn.addEventListener('click', async () => {
@@ -654,7 +658,12 @@
 
             document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
             document.getElementById('game-type-group').style.display = (mode === 'single' || mode === 'local') ? 'block' : 'none';
-            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121') ? 'none' : 'block';
+            
+            // Show dart limit ONLY for 170 Big Fish
+            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
+            
+            // Hide "Best of Legs" if playing ATC, 121, or 170
+            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170') ? 'none' : 'block';
             
             const p1Label = document.getElementById('p1-label');
             if (p1Label) {
@@ -758,6 +767,10 @@
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
+        
+        // Grab Dart limit from Menu
+        state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
+        
         isLocalMatch = (state.mode === 'local');
 
         let startScore = 501;
@@ -765,6 +778,7 @@
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '121') startScore = 121;
         if (state.gameType === 'atc') startScore = 1;
+        if (state.gameType === '170') startScore = 170;
 
         if (isLocalMatch) {
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
@@ -776,7 +790,7 @@
             document.getElementById('setup-layer').classList.add('hidden');
             document.body.classList.add('local-mode'); 
             
-            if (state.gameType === 'atc' || state.gameType === '121') { 
+            if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170') { 
                 playDartSound('gameon');
                 render(); 
             } else { 
@@ -934,6 +948,7 @@
             state.bestOf = data.state.bestOf;
             state.mode = data.state.mode;
             state.gameType = data.state.gameType;
+            state.limit170 = data.state.limit170 || 9;
             state.p[0].name = data.state.p[0].name;
             state.startingPlayer = data.state.startingPlayer || 0;
             if (state.mode === 'single') { document.body.classList.add('single-mode'); }
@@ -1061,9 +1076,11 @@
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '121') startScore = 121 + p.l;
+        if (state.gameType === '170') startScore = 170;
 
         let soundToPlay = val; 
 
+        // 121 Specific logic to drop score
         if (state.gameType === '121' && val === 0) {
             p.l = Math.max(0, p.l - 1);
             p.s = 121 + p.l;
@@ -1082,11 +1099,11 @@
                 p.l++; 
                 
                 if (state.mode === 'single') {
-                    state.p[0].s = state.gameType === '121' ? 121 + p.l : startScore;
+                    state.p[0].s = state.gameType === '121' ? 121 + p.l : (state.gameType === '170' ? 170 : startScore);
                     state.p[0].ld = 0;
                     state.turn = 0;
                 } else {
-                    if (state.gameType !== '121') {
+                    if (state.gameType !== '121' && state.gameType !== '170') {
                         const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
                         if (p.l >= legsRequiredToWin) { state.winner = state.turn; } 
                         else {
@@ -1095,14 +1112,17 @@
                             state.turn = state.startingPlayer; 
                         }
                     } else {
-                        state.p.forEach((x, i) => { x.s = 121 + x.l; x.ld = 0; });
+                        // 121 or 170 in Local mode resets for both
+                        state.p.forEach((x, i) => { x.s = state.gameType === '121' ? 121 + x.l : 170; x.ld = 0; });
                         state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
                         state.turn = state.startingPlayer; 
                     }
                 }
             } else { 
-                if (state.gameType === '121' && p.ld >= 9) {
-                    p.s = 121 + p.l; p.ld = 0;
+                // Hit, but not finished. Check Dart Limits for practice modes.
+                if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
+                    p.s = state.gameType === '121' ? 121 + p.l : 170;
+                    p.ld = 0;
                     soundToPlay = 'bust'; 
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
                 } else if (state.mode !== 'single') {
@@ -1110,9 +1130,11 @@
                 }
             }
         } else { 
+            // Standard Bust
             soundToPlay = 'bust';
-            if (state.gameType === '121' && p.ld >= 9) {
-                p.s = 121 + p.l; p.ld = 0; 
+            if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
+                p.s = state.gameType === '121' ? 121 + p.l : 170;
+                p.ld = 0; 
             }
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
         }
@@ -1137,6 +1159,7 @@
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '121') startScore = 121;
         if (state.gameType === 'atc') startScore = 1;
+        if (state.gameType === '170') startScore = 170;
 
         state.p.forEach(x => { 
             x.s = startScore; x.l = 0; x.pts = 0; x.d = 0; x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
@@ -1145,7 +1168,7 @@
         document.getElementById('winner-layer').classList.add('hidden');
         if (!isLocalMatch) broadcast(state);
 
-        if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121') { 
+        if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170') { 
             playDartSound('gameon');
             if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
             render(); 
@@ -1168,9 +1191,16 @@
                 document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
                 document.getElementById(`co-${i}`).innerText = "TARGET";
                 document.getElementById(`l-area-${i}`).style.display = 'none';
-            } else if (state.gameType === '121') {
+            } else if (state.gameType === '121' || state.gameType === '170') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
-                document.getElementById(`avg-${i}`).innerText = p.ld; 
+                
+                // Show standard counter for 121, but show Limit counter for 170
+                if (state.gameType === '170') {
+                    document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`;
+                } else {
+                    document.getElementById(`avg-${i}`).innerText = p.ld; 
+                }
+                
                 document.getElementById(`s-${i}`).innerText = p.s;
                 document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 document.getElementById(`l-area-${i}`).style.display = 'block';
@@ -1258,7 +1288,7 @@
                 let pStats = state.p[i];
                 document.getElementById(`ws-n${i}`).innerText = pStats.name;
                 
-                if (state.gameType === 'atc' || state.gameType === '121') {
+                if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170') {
                     document.getElementById('ws-label-avg').innerText = "Total Darts";
                     document.getElementById(`ws-avg${i}`).innerText = pStats.d;
                 } else {
