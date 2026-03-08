@@ -166,7 +166,7 @@
         .stat-box { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; flex: 1; border: 1px solid rgba(255,255,255,0.1); }
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
         .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
-        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
         
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: #ffeb3b; color: black; padding: 15px; border-radius: 10px; z-index: 30000; display: none; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; border: 2px solid #fbc02d; }
@@ -240,7 +240,7 @@
         </div>
 
         <h3 style="color: white; margin-bottom: 10px; font-size: 14px; text-align: left;">MATCH HISTORY</h3>
-        <div id="history-list-container" style="max-height: 120px; overflow-y: auto; margin-bottom: 20px; text-align: left;"></div>
+        <div id="history-list-container" style="max-height: 140px; overflow-y: auto; margin-bottom: 20px; text-align: left;"></div>
 
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 0 0 15px 0; width: 100%;">
 
@@ -605,6 +605,34 @@
         document.getElementById('start-btn').click();
     };
 
+    // --- DELETE MATCH HISTORY LOGIC ---
+    window.deleteHistoryItem = async function(matchId, matchDate, matchDesc, pts, darts) {
+        if(!confirm("Delete this match? This will remove its points and darts from your Lifetime Average.")) return;
+        if(!window.auth.currentUser || !window.currentUserDoc) return;
+        
+        try {
+            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
+            let historyArray = window.currentUserDoc.matchHistory || [];
+            let targetItem = null;
+            
+            if (matchId) { targetItem = historyArray.find(h => h.id === matchId); } 
+            else { targetItem = historyArray.find(h => h.date === matchDate && h.desc === matchDesc); } // Fallback
+            
+            if (!targetItem) return;
+
+            let newHistory = historyArray.filter(h => h !== targetItem);
+            let newTotalPts = Math.max(0, (window.currentUserDoc.totalPts || 0) - (targetItem.pts || 0));
+            let newTotalDarts = Math.max(0, (window.currentUserDoc.totalDarts || 0) - (targetItem.darts || 0));
+
+            await updateDoc(userRef, {
+                matchHistory: newHistory,
+                totalPts: newTotalPts,
+                totalDarts: newTotalDarts
+            });
+            
+        } catch(e) { alert("Error deleting match."); }
+    };
+
     document.getElementById('open-profile-btn').addEventListener('click', () => {
         setupLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
@@ -688,10 +716,16 @@
             let recent = window.currentUserDoc.matchHistory.slice(-10).reverse();
             recent.forEach(h => {
                 let color = h.desc.startsWith("WON") ? "#4caf50" : "#ff4d4d";
+                let safeId = h.id ? `'${h.id}'` : `null`;
+                let safeDate = `'${h.date}'`;
+                let safeDesc = `'${h.desc}'`;
+                
                 histHtml += `<div class="history-item">
-                    <span style="color:${color}; font-weight:bold;">${h.desc}</span>
-                    <span style="color:#aaa;">Avg: <b style="color:white;">${h.avg}</b></span>
-                    <span style="color:#888;">${h.date}</span>
+                    <div style="flex:1;">
+                        <div style="color:${color}; font-weight:bold;">${h.desc}</div>
+                        <div style="color:#aaa; font-size:10px;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
+                    </div>
+                    <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
                 </div>`;
             });
             histContainer.innerHTML = histHtml;
@@ -733,7 +767,6 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
-    // --- SCREEN WAKELOCK ---
     let wakeLock = null;
     async function requestWakeLock() {
         try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
@@ -784,6 +817,7 @@
             let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
             let dateStr = new Date().toLocaleDateString();
             let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
+            let matchId = Date.now().toString();
 
             const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
             const userRef = doc(window.db, "users", window.auth.currentUser.uid);
@@ -795,10 +829,14 @@
                 let newPts = dbData.totalPts || 0;
                 let newDarts = dbData.totalDarts || 0;
                 let newHc = dbData.highCheckout || 0;
+                let matchPts = 0;
+                let matchDarts = 0;
                 
                 if(validGames.includes(state.gameType)) {
-                    newPts += myP.pts;
-                    newDarts += myP.d;
+                    matchPts = myP.pts;
+                    matchDarts = myP.d;
+                    newPts += matchPts;
+                    newDarts += matchDarts;
                     newHc = Math.max(newHc, myP.hc);
                 }
 
@@ -806,7 +844,7 @@
                     totalPts: newPts, 
                     totalDarts: newDarts, 
                     highCheckout: newHc,
-                    matchHistory: arrayUnion({ date: dateStr, desc: matchText, avg: finalAvg })
+                    matchHistory: arrayUnion({ id: matchId, date: dateStr, desc: matchText, avg: finalAvg, pts: matchPts, darts: matchDarts })
                 });
                 statsSavedThisMatch = true;
             }
