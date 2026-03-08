@@ -22,7 +22,7 @@
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            grid-template-rows: calc(40px + env(safe-area-inset-top)) 45dvh 1fr 80px calc(25px + env(safe-area-inset-bottom));
+            grid-template-rows: calc(40px + env(safe-area-inset-top)) 45dvh 1fr auto calc(25px + env(safe-area-inset-bottom));
             overflow: hidden; 
         }
 
@@ -47,7 +47,7 @@
         body.spectator-mode .checkout-hint { font-size: 12px; }
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         
-        body.single-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr 80px calc(25px + env(safe-area-inset-bottom)) !important; }
+        body.single-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
         body.single-mode .v-container { display: none !important; }
         body.single-mode #card-1 { display: none !important; }
         body.single-mode .score-area { flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -56,7 +56,7 @@
         body.single-mode.spectator-mode #card-0 { width: 150px; }
         body.single-mode #mic-btn, body.single-mode #zoom-btn, body.single-mode #flip-btn { display: none !important; }
 
-        body.local-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr 80px calc(25px + env(safe-area-inset-bottom)) !important; }
+        body.local-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
         body.local-mode .v-container { display: none !important; }
         body.local-mode header > div:first-child { display: none; }
         body.local-mode header { justify-content: flex-end; }
@@ -130,26 +130,29 @@
         .cricket-item span { color: var(--blue); font-weight: bold; font-size: 13px; }
         .cricket-item.closed { background: rgba(76, 175, 80, 0.2); border-color: #4caf50; }
 
-        .controls-wrapper { width: 100%; height: 100%; background: #000; border-top: 1px solid #1b4965; }
-        .controls { display: grid; height: 100%; padding: 8px; gap: 8px; }
+        .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid #1b4965; padding: 8px; }
+        .controls { display: grid; gap: 8px; }
         
         #standard-controls { grid-template-columns: 1.5fr 0.5fr 1fr; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
-        .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-        .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; }
-        .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; }
+        .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 50px;}
+        .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; min-height: 50px;}
+        .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; min-height: 50px;}
         #atc-controls .btn-hit { font-size: 16px; } 
         
         #pts-input:disabled { color: #555; }
         .btn-hit:disabled { background: #333; color: #666; cursor: not-allowed; }
         
-        #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
-        
         /* DART-BY-DART INPUT STYLES */
         .dart-box { flex: 1; height: 100%; text-align: center; font-size: 20px; font-weight: bold; text-transform: uppercase; background: transparent; border: none; color: white; border-right: 1px solid #333; outline: none; }
         .dart-box:last-child { border-right: none; }
         .dart-box:focus { background: rgba(0, 212, 255, 0.1); }
+
+        /* CRICKET CUSTOM KEYPAD STYLES */
+        .cric-mult { flex: 1; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 14px;}
+        .cric-mult.active { background: var(--blue); color: black; border-color: var(--blue); }
+        .cric-num-btn { background: #111; border: 1px solid #333; border-radius: 6px; color: white; font-size: 18px; font-weight: bold; padding: 12px; cursor: pointer; }
 
         .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid #1b4965; z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
@@ -285,14 +288,6 @@
             </select>
         </div>
 
-        <div class="input-group" id="input-mode-group">
-            <label style="color: white;">Input Mode</label>
-            <select id="input-mode-input" class="setup-input">
-                <option value="total" selected>Total Score</option>
-                <option value="darts">Dart-by-Dart (e.g. T20, D10)</option>
-            </select>
-        </div>
-
         <div class="input-group" id="dart-limit-group" style="display: none;">
             <label style="color: white;">Dart Limit</label>
             <select id="dart-limit-input" class="setup-input">
@@ -414,27 +409,57 @@
 </div>
 
 <div class="controls-wrapper">
+    
     <div class="controls" id="standard-controls">
-        
+        <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-bottom: -5px;">
+            <button id="mode-toggle-btn" class="header-btn" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold;">MODE: TOTAL SCORE</button>
+        </div>
+
         <div class="score-input-box" id="total-input-box">
             <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
         </div>
-        
         <div class="score-input-box hidden" id="darts-input-box" style="display: none; gap: 5px; background: transparent; border: none;">
-            <input type="text" id="d1-input" class="dart-box" placeholder="1" maxlength="4">
-            <input type="text" id="d2-input" class="dart-box" placeholder="2" maxlength="4">
-            <input type="text" id="d3-input" class="dart-box" placeholder="3" maxlength="4">
+            <input type="text" id="d1-input" class="dart-box" placeholder="1" maxlength="3">
+            <input type="text" id="d2-input" class="dart-box" placeholder="2" maxlength="3">
+            <input type="text" id="d3-input" class="dart-box" placeholder="3" maxlength="3">
         </div>
 
         <button class="btn-undo" id="undo-btn">⟲</button>
         <button class="btn-hit" id="hit-btn">HIT</button>
     </div>
+
     <div class="controls" id="atc-controls" style="display: none;">
         <button class="btn-undo" id="atc-undo-btn">⟲</button>
         <button class="btn-hit" id="atc-miss-btn" style="background: #444; color: white;">MISS</button>
         <button class="btn-hit" id="atc-s-btn">S1</button>
         <button class="btn-hit" id="atc-d-btn">D1</button>
         <button class="btn-hit" id="atc-t-btn">T1</button>
+    </div>
+
+    <div class="controls" id="cricket-controls" style="display: none;">
+        <div style="display: flex; gap: 5px; grid-column: 1 / -1; margin-bottom: 5px;">
+            <button class="cric-mult active" id="cric-m-1" onclick="setCricMult(1)">SINGLE</button>
+            <button class="cric-mult" id="cric-m-2" onclick="setCricMult(2)">DOUBLE</button>
+            <button class="cric-mult" id="cric-m-3" onclick="setCricMult(3)">TREBLE</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; grid-column: 1 / -1;">
+            <button class="cric-num-btn" onclick="hitCricket(20)">20</button>
+            <button class="cric-num-btn" onclick="hitCricket(19)">19</button>
+            <button class="cric-num-btn" onclick="hitCricket(18)">18</button>
+            <button class="cric-num-btn" onclick="hitCricket(17)">17</button>
+            <button class="cric-num-btn" onclick="hitCricket(16)">16</button>
+            <button class="cric-num-btn" onclick="hitCricket(15)">15</button>
+            <button class="cric-num-btn" onclick="hitCricket(14)">14</button>
+            <button class="cric-num-btn" onclick="hitCricket(13)">13</button>
+            <button class="cric-num-btn" onclick="hitCricket(12)">12</button>
+            <button class="cric-num-btn" onclick="hitCricket(11)">11</button>
+            <button class="cric-num-btn" onclick="hitCricket(10)">10</button>
+            <button class="cric-num-btn" onclick="hitCricket(25)">BULL</button>
+        </div>
+        <div style="display: flex; gap: 5px; grid-column: 1 / -1; margin-top: 5px;">
+            <button class="btn-undo" onclick="undo()" style="flex: 1;">⟲ UNDO</button>
+            <button class="cric-num-btn" onclick="hitCricket(0)" style="flex: 2; background: #444; color: white;">MISS</button>
+        </div>
     </div>
 </div>
 
@@ -450,7 +475,6 @@
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, collection, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // YOUR FIREBASE CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyCdgCBs5ofkSyV66ydW4JPfZOUMog9wpfU",
       authDomain: "raf-darts.firebaseapp.com",
@@ -651,11 +675,9 @@
         document.getElementById('prof-avg').innerText = avg;
         document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0;
         
-        // Render History
         const histContainer = document.getElementById('history-list-container');
         if(window.currentUserDoc.matchHistory && window.currentUserDoc.matchHistory.length > 0) {
             let histHtml = '';
-            // Show last 10 games, newest first
             let recent = window.currentUserDoc.matchHistory.slice(-10).reverse();
             recent.forEach(h => {
                 let color = h.desc.startsWith("WON") ? "#4caf50" : "#ff4d4d";
@@ -670,7 +692,6 @@
             histContainer.innerHTML = "<p style='color:#888; font-size:11px;'>No matches played yet.</p>";
         }
 
-        // Render Friends
         const list = document.getElementById('friends-list-container');
         list.innerHTML = "<p style='color:#888; font-size:11px;'>Loading friends...</p>";
         
@@ -701,7 +722,6 @@
         }
     }
 </script>
-
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
@@ -710,7 +730,7 @@
     async function requestWakeLock() {
         try {
             if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); }
-        } catch (err) { console.log(err); }
+        } catch (err) {}
     }
     document.addEventListener('visibilitychange', () => {
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
@@ -746,14 +766,12 @@
     async function saveStatsToCloud() {
         if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
         const validGames = ["301", "501", "701", "1001", "170_race"];
-        if(!validGames.includes(state.gameType)) return;
         if(state.mode === 'single') return; 
 
         try {
             let myP = state.p[myIndex]; 
             if(state.mode === 'local') myP = state.p[0]; 
 
-            // Save history
             let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
             let resultStr = isWin ? "WON" : "LOST";
             let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
@@ -767,9 +785,17 @@
             
             if(userSnap.exists()) {
                 let dbData = userSnap.data();
-                let newPts = (dbData.totalPts || 0) + myP.pts;
-                let newDarts = (dbData.totalDarts || 0) + myP.d;
-                let newHc = Math.max((dbData.highCheckout || 0), myP.hc);
+                
+                // Only add to Lifetime Stats if it's a standard X01 game
+                let newPts = dbData.totalPts || 0;
+                let newDarts = dbData.totalDarts || 0;
+                let newHc = dbData.highCheckout || 0;
+                
+                if(validGames.includes(state.gameType)) {
+                    newPts += myP.pts;
+                    newDarts += myP.d;
+                    newHc = Math.max(newHc, myP.hc);
+                }
 
                 await updateDoc(userRef, { 
                     totalPts: newPts, 
@@ -779,7 +805,7 @@
                 });
                 statsSavedThisMatch = true;
             }
-        } catch(e) { console.log("Stat save failed", e); }
+        } catch(e) {}
     }
 
     let isMicMuted = false;
@@ -790,7 +816,6 @@
         if (state.gameType === 'atc' || state.gameType === 'cricket') return;
 
         let audioSrc = "";
-
         if (type === 'bust') { audioSrc = "sounds/bust.wav"; } 
         else if (type === 'gameshot') { audioSrc = "sounds/gameshot.wav"; } 
         else if (type === 'gameon') { audioSrc = "sounds/gameon.wav"; } 
@@ -798,10 +823,7 @@
 
         if (audioSrc !== "") {
             const dartAudio = document.getElementById('dart-audio');
-            if (dartAudio) {
-                dartAudio.src = audioSrc;
-                dartAudio.play().catch(e => console.log("Audio blocked by phone. User must tap screen first.", e));
-            }
+            if (dartAudio) { dartAudio.src = audioSrc; dartAudio.play().catch(e => {}); }
         }
     }
 
@@ -813,10 +835,7 @@
         if (installBtn) installBtn.style.display = 'block';
     });
 
-    const isIos = () => {
-        const userAgent = window.navigator.userAgent.toLowerCase();
-        return /iphone|ipad|ipod/.test(userAgent);
-    };
+    const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
     const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
 
     let stream, peer, currentCall;
@@ -825,15 +844,12 @@
     let myIndex = 0;
     let currentZoom = 1; 
     let isLocalMatch = false; 
+    let localInputMode = 'total'; // NEW: LOCAL TOGGLE STATE
     
-    // ADDED INPUT MODE AND CRICKET MARKS TO STATE
-    let state = { 
-        mode: 'online', gameType: '501', inputMode: 'total', limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, 
-        p: [
-            { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
-            { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
-        ]
-    };
+    let state = { mode: 'online', gameType: '501', limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
+        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
+        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
+    ]};
     let history = null;
 
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -911,16 +927,11 @@
         }
     });
 
-    function broadcast(data) { 
-        if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); 
-    }
+    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
 
     function unlockAudio() {
         const peerVideo = document.getElementById('peer');
-        if (peerVideo && peerVideo.paused && peerVideo.srcObject) {
-            peerVideo.play().catch(e => {});
-        }
-        
+        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
         const dartAudio = document.getElementById('dart-audio');
         if (dartAudio && dartAudio.src === "") {
             dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
@@ -930,7 +941,7 @@
     document.body.addEventListener('click', unlockAudio, { once: true });
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
-    // Auto-focus next dart box
+    // DART-BY-DART AUTO FOCUS
     document.querySelectorAll('.dart-box').forEach((box, index, boxes) => {
         box.addEventListener('input', function() {
             if(this.value.length >= 3 && index < boxes.length - 1) { boxes[index + 1].focus(); }
@@ -940,7 +951,6 @@
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
-        const inputModeEl = document.getElementById('input-mode-input');
 
         function updateMenuUI() {
             if (!modeInput) return;
@@ -949,16 +959,6 @@
 
             document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
             document.getElementById('game-type-group').style.display = 'block'; 
-            document.getElementById('input-mode-group').style.display = (gameType === 'atc') ? 'none' : 'block';
-            
-            // Force dart-by-dart for Cricket
-            if (gameType === 'cricket') {
-                inputModeEl.value = 'darts';
-                inputModeEl.disabled = true;
-            } else {
-                inputModeEl.disabled = false;
-            }
-
             document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
             document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
             
@@ -992,10 +992,8 @@
         document.getElementById('start-btn').onclick = initApp;
         document.getElementById('flip-btn').onclick = swapCam;
         document.getElementById('zoom-btn').onclick = cycleZoom;
-        
         document.getElementById('mic-btn').onclick = toggleMic;
         document.getElementById('caller-btn').onclick = toggleCaller;
-
         document.getElementById('share-btn').onclick = shareInvite;
         document.getElementById('spectate-btn').onclick = shareSpectator;
         
@@ -1008,19 +1006,21 @@
         document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
         document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
 
+        // ON THE FLY INPUT TOGGLE
+        document.getElementById('mode-toggle-btn').onclick = () => {
+            localInputMode = localInputMode === 'total' ? 'darts' : 'total';
+            render();
+        };
+
         document.getElementById('rematch-btn').onclick = triggerRematch;
         
         const ptsInput = document.getElementById('pts-input');
         if (ptsInput) {
-            ptsInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); processHit(); }
-            });
+            ptsInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') { e.preventDefault(); processHit(); }});
         }
         const d3Input = document.getElementById('d3-input');
         if (d3Input) {
-            d3Input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); processHit(); }
-            });
+            d3Input.addEventListener('keypress', function(e) { if (e.key === 'Enter') { e.preventDefault(); processHit(); }});
         }
     });
 
@@ -1033,11 +1033,7 @@
         document.getElementById('first-throw-layer').classList.remove('hidden');
         document.getElementById('ft-step-1').classList.remove('hidden');
         document.getElementById('ft-step-2').classList.add('hidden');
-        
-        if (!isLocalMatch && state.mode !== 'single') {
-            toggleBullPhase(true);
-            broadcast({ type: 'BULL_PHASE', active: true });
-        }
+        if (!isLocalMatch && state.mode !== 'single') { toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true }); }
     }
 
     function showFtStep2(mode) {
@@ -1067,7 +1063,7 @@
     }
 
     async function initApp() {
-        requestWakeLock(); // Keep screen alive
+        requestWakeLock();
         statsSavedThisMatch = false; 
         
         const log = document.getElementById('error-log');
@@ -1077,7 +1073,6 @@
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
-        state.inputMode = document.getElementById('input-mode-input') ? document.getElementById('input-mode-input').value : 'total';
         state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
         
         isLocalMatch = (state.mode === 'local');
@@ -1134,9 +1129,8 @@
 
         try {
             if (!spectateId) {
-                if (state.mode === 'single') {
-                    stream = null; 
-                } else {
+                if (state.mode === 'single') { stream = null; } 
+                else {
                     log.innerText = "Accessing Camera...";
                     let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
                     if (isMobile) {
@@ -1269,7 +1263,6 @@
             state.bestOf = data.state.bestOf;
             state.mode = data.state.mode;
             state.gameType = data.state.gameType;
-            state.inputMode = data.state.inputMode;
             state.limit170 = data.state.limit170 || 9;
             state.p[0].name = data.state.p[0].name;
             state.p[0].avatar = data.state.p[0].avatar; 
@@ -1373,7 +1366,58 @@
         if (!isLocalMatch) { broadcast(state); }
     }
 
-    // NEW DART PARSER FOR DART-BY-DART INPUT
+    // --- CRICKET KEYPAD LOGIC ---
+    let cricketMult = 1;
+    window.setCricMult = function(m) {
+        cricketMult = m;
+        document.getElementById('cric-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('cric-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('cric-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
+    };
+
+    function checkCricketWin(pIndex) {
+        let p = state.p[pIndex];
+        let opp = state.p[pIndex === 0 ? 1 : 0];
+        let targets = [10,11,12,13,14,15,16,17,18,19,20,25];
+        for (let t of targets) { if ((p.marks[t] || 0) < 3) return false; }
+        return p.s >= opp.s;
+    }
+
+    window.hitCricket = function(val) {
+        if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
+        if (val === 25 && cricketMult === 3) { alert("Invalid Dart: Cannot throw a Treble Bull."); return; }
+        
+        history = JSON.parse(JSON.stringify(state));
+        let p = state.p[state.turn];
+        let opp = state.p[state.turn === 0 ? 1 : 0];
+
+        p.d++;
+        
+        if (val > 0) {
+            let currentMarks = p.marks[val] || 0;
+            let newMarks = Math.min(3, currentMarks + cricketMult);
+            let excess = (currentMarks + cricketMult) - 3;
+            
+            p.marks[val] = newMarks;
+            
+            if (excess > 0 && (opp.marks[val] || 0) < 3) {
+                p.s += excess * val;
+            }
+        }
+        
+        setCricMult(1); // Reset toggle to Single
+        
+        if (checkCricketWin(state.turn)) {
+            state.winner = state.turn;
+        } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
+            state.turn = state.turn === 0 ? 1 : 0;
+        }
+        
+        render();
+        if (!isLocalMatch) { broadcast(state); }
+    }
+
+    // --- STANDARD INPUT LOGIC ---
     function parseDart(str) {
         str = str.toUpperCase().trim();
         if (!str || str === '0' || str === 'MISS' || str === 'M') return { val: 0, mult: 0, pts: 0 };
@@ -1386,19 +1430,8 @@
         else if (str.startsWith('S')) { mult = 1; str = str.substring(1); }
         
         let val = parseInt(str);
-        if (isNaN(val) || val < 0 || val > 20) return null; // Invalid input
+        if (isNaN(val) || val < 0 || val > 20) return null;
         return { val: val, mult: mult, pts: val * mult };
-    }
-
-    // CHECK CRICKET WIN CONDITION
-    function checkCricketWin(pIndex) {
-        let p = state.p[pIndex];
-        let opp = state.p[pIndex === 0 ? 1 : 0];
-        let allClosed = true;
-        for (let num of [10,11,12,13,14,15,16,17,18,19,20,25]) {
-            if (p.marks[num] < 3) allClosed = false;
-        }
-        return allClosed && (p.s >= opp.s);
     }
 
     function processHit() {
@@ -1408,53 +1441,9 @@
         let p = state.p[state.turn];
 
         p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0; p.f9d = p.f9d ?? 0; p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
-
-        let soundToPlay = 0; 
         
-        // --- CRICKET LOGIC ---
-        if (state.gameType === 'cricket') {
-            let d1 = parseDart(document.getElementById('d1-input').value);
-            let d2 = parseDart(document.getElementById('d2-input').value);
-            let d3 = parseDart(document.getElementById('d3-input').value);
-            
-            if (d1 === null || d2 === null || d3 === null) { alert("Invalid format! Use T20, D15, B, etc."); return; }
-            
-            let opp = state.p[state.turn === 0 ? 1 : 0];
-            p.d += 3; p.ld += 3;
-            
-            let darts = [d1, d2, d3];
-            for (let d of darts) {
-                if ((d.val >= 10 && d.val <= 20) || d.val === 25) {
-                    let currentMarks = p.marks[d.val];
-                    let newMarks = Math.min(3, currentMarks + d.mult);
-                    let excess = (currentMarks + d.mult) - 3;
-                    p.marks[d.val] = newMarks;
-                    if (excess > 0 && opp.marks[d.val] < 3) {
-                        p.s += excess * d.val;
-                    }
-                }
-            }
-            
-            soundToPlay = 'gameon'; 
-            
-            if (checkCricketWin(state.turn)) {
-                state.winner = state.turn;
-            } else if (state.mode !== 'single') {
-                state.turn = state.turn === 0 ? 1 : 0;
-            }
-            
-            playDartSound(soundToPlay);
-            render(); 
-            if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
-            
-            ['d1-input', 'd2-input', 'd3-input'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('d1-input').focus();
-            return;
-        }
-
-        // --- X01 / 121 / 170 LOGIC ---
         let val = 0;
-        if (state.inputMode === 'darts') {
+        if (localInputMode === 'darts') {
             let d1 = parseDart(document.getElementById('d1-input').value);
             let d2 = parseDart(document.getElementById('d2-input').value);
             let d3 = parseDart(document.getElementById('d3-input').value);
@@ -1477,16 +1466,11 @@
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
-        soundToPlay = val; 
+        let soundToPlay = val; 
 
         if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
-            if (state.gameType === '121') {
-                p.l = Math.max(0, p.l - 1);
-                p.s = 121 + p.l;
-            } else {
-                p.target170 = (p.target170 || 170) - 1;
-                p.s = p.target170;
-            }
+            if (state.gameType === '121') { p.l = Math.max(0, p.l - 1); p.s = 121 + p.l; } 
+            else { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; }
             p.ld = 0;
             soundToPlay = 0;
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
@@ -1547,7 +1531,7 @@
         
         document.getElementById('pts-input').value = ''; document.getElementById('pts-input').blur();
         ['d1-input', 'd2-input', 'd3-input'].forEach(id => document.getElementById(id).value = '');
-        if (state.inputMode === 'darts') document.getElementById('d1-input').focus();
+        if (localInputMode === 'darts') document.getElementById('d1-input').focus();
     }
 
     function undo() {
@@ -1582,12 +1566,8 @@
             if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
             render(); 
         } 
-        else if (isLocalMatch || myIndex === 0) { 
-            showFirstThrowUI(); 
-        } 
-        else { 
-            render(); 
-        }
+        else if (isLocalMatch || myIndex === 0) { showFirstThrowUI(); } 
+        else { render(); }
     }
 
     function render() {
@@ -1619,7 +1599,7 @@
                 [20,19,18,17,16,15,14,13,12,11,10,25].forEach(num => {
                     let m = p.marks[num] || 0;
                     let sym = m === 0 ? '-' : (m === 1 ? '╱' : (m === 2 ? 'X' : '⊗'));
-                    let cls = m === 3 ? 'cricket-item closed' : 'cricket-item';
+                    let cls = m >= 3 ? 'cricket-item closed' : 'cricket-item';
                     let label = num === 25 ? 'B' : num;
                     cricHtml += `<div class="${cls}">${label}: <span>${sym}</span></div>`;
                 });
@@ -1655,6 +1635,7 @@
             if (state.gameType === 'atc') {
                 document.getElementById('standard-controls').style.display = 'none';
                 document.getElementById('atc-controls').style.display = 'grid';
+                document.getElementById('cricket-controls').style.display = 'none';
                 
                 let target = state.p[state.turn].s;
                 if (target <= 20) {
@@ -1674,17 +1655,30 @@
                     document.getElementById(id).disabled = !isMyTurn;
                     document.getElementById(id).style.opacity = isMyTurn ? 1 : 0.5;
                 });
+            } else if (state.gameType === 'cricket') {
+                document.getElementById('standard-controls').style.display = 'none';
+                document.getElementById('atc-controls').style.display = 'none';
+                document.getElementById('cricket-controls').style.display = 'grid';
+
+                let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
+                document.querySelectorAll('.cric-num-btn, .btn-undo').forEach(btn => {
+                    btn.disabled = !isMyTurn;
+                    btn.style.opacity = isMyTurn ? 1 : 0.5;
+                });
+
             } else {
                 document.getElementById('standard-controls').style.display = 'grid';
                 document.getElementById('atc-controls').style.display = 'none';
+                document.getElementById('cricket-controls').style.display = 'none';
                 
-                // TOGGLE INPUT BOXES
-                if (state.inputMode === 'darts') {
+                if (localInputMode === 'darts') {
                     document.getElementById('total-input-box').style.display = 'none';
                     document.getElementById('darts-input-box').style.display = 'flex';
+                    document.getElementById('mode-toggle-btn').innerText = 'MODE: DART-BY-DART';
                 } else {
                     document.getElementById('total-input-box').style.display = 'flex';
                     document.getElementById('darts-input-box').style.display = 'none';
+                    document.getElementById('mode-toggle-btn').innerText = 'MODE: TOTAL SCORE';
                 }
 
                 const isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
