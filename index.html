@@ -25,6 +25,7 @@
             padding: 0; 
         }
         
+        /* RESPONSIVE GRID - PREVENTS VIDEO OVERLAPPING SCORES ON MOBILE */
         body { 
             background: var(--dark); 
             color: white; 
@@ -32,7 +33,7 @@
             height: 100dvh; 
             width: 100vw; 
             display: grid; 
-            grid-template-rows: calc(40px + env(safe-area-inset-top)) 45dvh 1fr auto calc(25px + env(safe-area-inset-bottom)); 
+            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(30dvh, 40dvh) 1fr auto calc(25px + env(safe-area-inset-bottom)); 
             overflow: hidden; 
             transition: background 0.3s ease; 
         }
@@ -44,16 +45,36 @@
         
         body.spectator-mode { display: block; }
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
-        body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
+        body.spectator-mode #box-me { display: none !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
         body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; }
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); border: none; }
-        body.spectator-mode .score-area { position: fixed; top: calc(40px + env(safe-area-inset-top)); bottom: 25px; width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: stretch; padding: 0; }
-        body.spectator-mode .player-card { flex: 0 0 auto; width: 115px; background-color: var(--card) !important; background-image: none !important; border: 1px solid rgba(255, 255, 255, 0.15); justify-content: space-evenly; opacity: 0.85;}
+        
+        /* SPECTATOR MODE BROADCAST LAYOUT */
+        body.spectator-mode .score-area { 
+            position: fixed; 
+            bottom: 60px; 
+            top: auto;
+            width: 100%; 
+            z-index: 10; 
+            background: transparent; 
+            flex-direction: row; 
+            justify-content: center; 
+            align-items: flex-end; 
+            gap: 20px;
+            padding: 10px; 
+        }
+        body.spectator-mode .player-card { 
+            flex: 0 1 140px; 
+            background-color: rgba(13, 27, 42, 0.85) !important; 
+            background-image: none !important; 
+            border: 1px solid rgba(255, 255, 255, 0.15); 
+            justify-content: space-evenly; 
+        }
         body.spectator-mode .player-card.active { opacity: 1; border-left: 2px solid var(--blue); border-right: 2px solid var(--blue); }
-        body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
-        body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
-        body.spectator-mode .score-val { font-size: 40px; }
+        body.spectator-mode .score-row { flex-direction: column; gap: 10px; }
+        body.spectator-mode .p-name { font-size: 16px; text-align: center; margin-bottom: 5px; color: var(--blue); }
+        body.spectator-mode .score-val { font-size: 36px; }
         body.spectator-mode .legs-count { text-align: center; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
@@ -86,7 +107,7 @@
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(40px + 45dvh + env(safe-area-inset-top)); background: rgba(2, 4, 8, 0.95); }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(40px + 35dvh + env(safe-area-inset-top)); background: rgba(2, 4, 8, 0.95); }
         
         .setup-card { background-color: var(--card); padding: 25px; border-radius: 15px; width: 100%; max-width: 360px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 10px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
@@ -120,13 +141,13 @@
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
         
-        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
+        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; overflow: hidden; }
         .player-card { flex: 1; background-color: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; min-width: 0; transition: background 0.3s; }
         .player-card.active { border-color: var(--blue); background-color: var(--active); }
         
         /* FIXED PLAYER NAME AND AVATAR FLEX ALIGNMENT */
-        .p-name { font-size: 14px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
-        .p-name span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+        .p-name { font-size: 14px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-width: 0; }
+        .p-name span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0; display: block; }
         .in-game-avatar { flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
         
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
@@ -172,9 +193,6 @@
         .btn-hit:active, .btn-undo:active { background: var(--blue); color: black; }
         .btn-hit:disabled, .btn-undo:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* THE CRUCIAL MISSING CLASS HAS RETURNED */
-        .hidden { display: none !important; }
-
         .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
         
         /* PROFILE STYLES */
@@ -198,8 +216,8 @@
             <button id="decline-challenge-btn" style="background:#ff4d4d; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:bold; flex:1;">DECLINE</button>
         </div>
     </div>
-
-    <div id="login-layer">
+    
+    <div id="login-layer" style="display: flex;">
         <div class="setup-card">
             <h2>🎯 RAF DARTS SCORER 🎯</h2>
             <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Log in to save stats and play friends</p>
@@ -218,7 +236,7 @@
         </div>
     </div>
 
-    <div id="profile-layer" class="hidden">
+    <div id="profile-layer" style="display: none;">
         <div class="setup-card" style="max-height: 85vh; overflow-y: auto;">
             <h2 style="margin-bottom: 5px;">MY PROFILE</h2>
             <p id="prof-email" style="color: #888; font-size: 12px; margin-bottom: 15px;">loading...</p>
@@ -266,7 +284,7 @@
         </div>
     </div>
 
-    <div id="history-layer" class="hidden">
+    <div id="history-layer" style="display: none;">
         <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 360px;">
             <h2 style="margin-bottom: 15px;">MATCH HISTORY</h2>
             <div id="history-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
@@ -274,7 +292,7 @@
         </div>
     </div>
 
-    <div id="friends-layer" class="hidden">
+    <div id="friends-layer" style="display: none;">
         <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 360px;">
             <h2 style="margin-bottom: 15px;">FRIENDS LIST</h2>
             <div id="friends-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
@@ -287,7 +305,7 @@
         </div>
     </div>
 
-    <div id="setup-layer" class="hidden">
+    <div id="setup-layer" style="display: none;">
         <div class="setup-card">
             <h2>🎯 RAF DARTS SCORER 🎯</h2>
             <button id="install-btn" class="btn-start install-btn">📲 INSTALL APP</button>
@@ -364,7 +382,7 @@
         </div>
     </div>
 
-    <div id="waiting-layer" class="hidden">
+    <div id="waiting-layer" style="display: none;">
         <div class="setup-card">
             <h2 style="color: white; font-weight: bold; margin-bottom: 20px; font-size: 22px;">Waiting for Opponent...</h2>
             <h1 style="color: var(--blue); margin-bottom: 20px; font-size: 32px;" id="wait-id">...</h1>
@@ -372,20 +390,20 @@
         </div>
     </div>
 
-    <div id="first-throw-layer" class="hidden">
-        <div class="setup-card" id="ft-step-1">
+    <div id="first-throw-layer" style="display: none;">
+        <div class="setup-card" id="ft-step-1" style="display: flex; flex-direction: column;">
             <h2 style="color: white; font-weight: bold; margin-bottom: 20px; font-size: 22px;">Who Throws First?</h2>
             <button class="btn-start" onclick="showFtStep2('bull')" style="margin-bottom: 10px;">Closest to Bull</button>
             <button class="btn-start" onclick="showFtStep2('manual')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white;">Choose Player</button>
         </div>
-        <div class="setup-card hidden" id="ft-step-2">
+        <div class="setup-card" id="ft-step-2" style="display: none; flex-direction: column;">
             <h2 id="ft-title" style="color: white; font-weight: bold; margin-bottom: 20px; font-size: 22px;">Who won the Bull?</h2>
             <button class="btn-start" id="ft-p1-btn" onclick="setFirstPlayer(0)" style="margin-bottom: 10px;">P1</button>
             <button class="btn-start" id="ft-p2-btn" onclick="setFirstPlayer(1)" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white;">P2</button>
         </div>
     </div>
 
-    <div id="winner-layer" class="hidden">
+    <div id="winner-layer" style="display: none;">
         <div class="setup-card">
             <h1 id="winner-name" style="color: white; font-weight: bold; margin: 10px 0 20px 0; font-size: 24px;">P1 Wins!</h1>
             <table class="stats-table">
@@ -439,10 +457,10 @@
                 <div class="legs-count" id="l-area-0"><span id="l-0">0</span>LEGS</div>
             </div>
             <div class="checkout-hint" id="co-0"></div>
-            <button class="missed-db-btn hidden" id="miss-btn-0" onclick="logMissedDouble(0)">+ Missed Double</button>
+            <button class="missed-db-btn hidden" id="miss-btn-0" style="display:none;" onclick="logMissedDouble(0)">+ Missed Double</button>
         </div>
 
-        <div id="cricket-center" class="hidden">
+        <div id="cricket-center" style="display:none;">
             <div style="text-align: center; font-size: 10px; color: #888; margin-bottom: 2px; font-weight: bold; letter-spacing: 1px;">CRICKET</div>
             <div id="cric-board-rows" style="display: flex; flex-direction: column; gap: 2px;"></div>
         </div>
@@ -458,7 +476,7 @@
                 <div class="legs-count" id="l-area-1"><span id="l-1">0</span>LEGS</div>
             </div>
             <div class="checkout-hint" id="co-1"></div>
-            <button class="missed-db-btn hidden" id="miss-btn-1" onclick="logMissedDouble(1)">+ Missed Double</button>
+            <button class="missed-db-btn hidden" id="miss-btn-1" style="display:none;" onclick="logMissedDouble(1)">+ Missed Double</button>
         </div>
     </div>
 
@@ -584,8 +602,8 @@
         window.db = getFirestore(app);
 
         document.getElementById('guest-btn').addEventListener('click', () => { 
-            document.getElementById('login-layer').classList.add('hidden'); 
-            document.getElementById('setup-layer').classList.remove('hidden'); 
+            document.getElementById('login-layer').style.display = 'none'; 
+            document.getElementById('setup-layer').style.display = 'flex'; 
             document.getElementById('name-input').value = "Guest"; 
         });
 
@@ -614,19 +632,23 @@
         });
 
         onAuthStateChanged(window.auth, async (user) => {
-            // EXTREME CACHE BUSTER: Force hide all overlays via classList immediately
-            const layers = ['login-layer', 'profile-layer', 'history-layer', 'friends-layer', 'waiting-layer', 'first-throw-layer', 'winner-layer', 'setup-layer'];
-            layers.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.classList.add('hidden');
-            });
+            // HARD RESET ALL MENUS
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('profile-layer').style.display = 'none';
+            document.getElementById('history-layer').style.display = 'none';
+            document.getElementById('friends-layer').style.display = 'none';
+            document.getElementById('waiting-layer').style.display = 'none';
+            document.getElementById('first-throw-layer').style.display = 'none';
+            document.getElementById('winner-layer').style.display = 'none';
+            document.getElementById('setup-layer').style.display = 'none';
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const isJoiningOrSpectating = urlParams.get('spectate') || urlParams.get('join');
 
             if (user) {
                 document.getElementById('logout-btn').style.display = 'block';
                 document.getElementById('open-profile-btn').style.display = 'block';
-                
-                // If they loaded from a spectate/join link, let them see the setup layer so they can join
-                document.getElementById('setup-layer').classList.remove('hidden');
+                document.getElementById('setup-layer').style.display = 'flex';
 
                 const userRef = doc(window.db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
@@ -662,12 +684,10 @@
                 document.getElementById('open-profile-btn').style.display = 'none';
                 window.currentUserDoc = null;
                 
-                const urlParams = new URLSearchParams(window.location.search);
-                // If they have a link, let them see setup without logging in
-                if (urlParams.get('spectate') || urlParams.get('join')) {
-                    document.getElementById('setup-layer').classList.remove('hidden');
+                if (isJoiningOrSpectating) {
+                    document.getElementById('setup-layer').style.display = 'flex';
                 } else {
-                    document.getElementById('login-layer').classList.remove('hidden');
+                    document.getElementById('login-layer').style.display = 'flex';
                 }
             }
         });
@@ -696,39 +716,39 @@
 
         window.issueChallenge = async function(friendUid) {
             window.targetChallengeFriend = friendUid;
-            document.getElementById('friends-layer').classList.add('hidden');
-            document.getElementById('profile-layer').classList.add('hidden');
-            document.getElementById('setup-layer').classList.remove('hidden');
+            document.getElementById('friends-layer').style.display = 'none';
+            document.getElementById('profile-layer').style.display = 'none';
+            document.getElementById('setup-layer').style.display = 'flex';
             document.getElementById('mode-input').value = 'online';
             document.getElementById('mode-input').dispatchEvent(new Event('change'));
             document.getElementById('start-btn').click();
         };
 
-        // RESTORED PROPER ROUTING VIA CLASSLIST
+        // INLINE STYLES - AVOIDS BROWSER CACHE GLITCHES
         document.getElementById('open-profile-btn').addEventListener('click', () => { 
-            document.getElementById('setup-layer').classList.add('hidden'); 
-            document.getElementById('profile-layer').classList.remove('hidden'); 
+            document.getElementById('setup-layer').style.display = 'none'; 
+            document.getElementById('profile-layer').style.display = 'flex'; 
             renderProfileMenu(); 
         });
         document.getElementById('close-profile-btn').addEventListener('click', () => { 
-            document.getElementById('profile-layer').classList.add('hidden'); 
-            document.getElementById('setup-layer').classList.remove('hidden'); 
+            document.getElementById('profile-layer').style.display = 'none'; 
+            document.getElementById('setup-layer').style.display = 'flex'; 
         });
         document.getElementById('open-history-btn').addEventListener('click', () => { 
-            document.getElementById('profile-layer').classList.add('hidden'); 
-            document.getElementById('history-layer').classList.remove('hidden'); 
+            document.getElementById('profile-layer').style.display = 'none'; 
+            document.getElementById('history-layer').style.display = 'flex'; 
         });
         document.getElementById('close-history-btn').addEventListener('click', () => { 
-            document.getElementById('history-layer').classList.add('hidden'); 
-            document.getElementById('profile-layer').classList.remove('hidden'); 
+            document.getElementById('history-layer').style.display = 'none'; 
+            document.getElementById('profile-layer').style.display = 'flex'; 
         });
         document.getElementById('open-friends-btn').addEventListener('click', () => { 
-            document.getElementById('profile-layer').classList.add('hidden'); 
-            document.getElementById('friends-layer').classList.remove('hidden'); 
+            document.getElementById('profile-layer').style.display = 'none'; 
+            document.getElementById('friends-layer').style.display = 'flex'; 
         });
         document.getElementById('close-friends-btn').addEventListener('click', () => { 
-            document.getElementById('friends-layer').classList.add('hidden'); 
-            document.getElementById('profile-layer').classList.remove('hidden'); 
+            document.getElementById('friends-layer').style.display = 'none'; 
+            document.getElementById('profile-layer').style.display = 'flex'; 
         });
 
         document.getElementById('reset-stats-btn').addEventListener('click', async () => {
@@ -1145,14 +1165,15 @@
                 document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
                 document.getElementById('name-input').placeholder = "Your Name (Optional)";
                 document.getElementById('mode-group').style.display = 'none';
-                document.getElementById('login-layer').classList.add('hidden');
-                document.getElementById('setup-layer').classList.remove('hidden');
+                document.getElementById('login-layer').style.display = 'none';
+                document.getElementById('setup-layer').style.display = 'flex';
             } else if (joinId) {
                 document.getElementById('legs-group').style.display = 'none';
+                document.getElementById('game-type-group').style.display = 'none'; // Hides Game Type dropdown for joiners
                 document.getElementById('start-btn').innerText = "JOIN MATCH";
                 document.getElementById('mode-group').style.display = 'none';
-                document.getElementById('login-layer').classList.add('hidden');
-                document.getElementById('setup-layer').classList.remove('hidden');
+                document.getElementById('login-layer').style.display = 'none';
+                document.getElementById('setup-layer').style.display = 'flex';
             }
 
             document.getElementById('start-btn').onclick = initApp;
@@ -1259,17 +1280,19 @@
         }
 
         function showFirstThrowUI() {
-            document.getElementById('first-throw-layer').classList.remove('hidden');
-            document.getElementById('ft-step-1').classList.remove('hidden');
-            document.getElementById('ft-step-2').classList.add('hidden');
+            document.getElementById('setup-layer').style.display = 'none';
+            document.getElementById('waiting-layer').style.display = 'none';
+            document.getElementById('first-throw-layer').style.display = 'flex';
+            document.getElementById('ft-step-1').style.display = 'flex';
+            document.getElementById('ft-step-2').style.display = 'none';
             if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
                 toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true });
             }
         }
 
         function showFtStep2(mode) {
-            document.getElementById('ft-step-1').classList.add('hidden');
-            document.getElementById('ft-step-2').classList.remove('hidden');
+            document.getElementById('ft-step-1').style.display = 'none';
+            document.getElementById('ft-step-2').style.display = 'flex';
             document.getElementById('ft-p1-btn').innerText = state.p[0].name;
             document.getElementById('ft-p2-btn').innerText = state.p[1].name;
             if (mode === 'bull') { document.getElementById('ft-title').innerText = "Who was closest to Bull?"; } 
@@ -1279,7 +1302,7 @@
         function setFirstPlayer(playerIndex) {
             state.startingPlayer = playerIndex;
             state.turn = playerIndex;
-            document.getElementById('first-throw-layer').classList.add('hidden');
+            document.getElementById('first-throw-layer').style.display = 'none';
             if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
                 toggleBullPhase(false); broadcast({ type: 'BULL_PHASE', active: false });
             }
@@ -1329,7 +1352,7 @@
                 state.p[1].name = `DartBot Lvl ${state.botLevel}`;
                 state.p[1].avatar = "";
                 state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                document.getElementById('setup-layer').classList.add('hidden');
+                document.getElementById('setup-layer').style.display = 'none';
                 document.body.classList.add('local-mode');
                 showFirstThrowUI();
                 return;
@@ -1338,7 +1361,7 @@
                 state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
                 state.p[1].avatar = "";
                 state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                document.getElementById('setup-layer').classList.add('hidden');
+                document.getElementById('setup-layer').style.display = 'none';
                 document.body.classList.add('local-mode');
                 if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') { 
                     playDartSound('gameon'); render(); 
@@ -1352,7 +1375,7 @@
                 state.p[0].target170 = 170;
                 state.p[0].s = startScore;
                 state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
-                document.getElementById('setup-layer').classList.add('hidden');
+                document.getElementById('setup-layer').style.display = 'none';
                 playDartSound('gameon');
                 render();
             } else {
@@ -1405,17 +1428,17 @@
                     }
 
                     if (spectateId) {
-                        document.getElementById('setup-layer').classList.add('hidden');
+                        document.getElementById('setup-layer').style.display = 'none';
                         connectToMatch(spectateId, true);
                     } else if (joinId) {
-                        document.getElementById('setup-layer').classList.add('hidden');
+                        document.getElementById('setup-layer').style.display = 'none';
                         myIndex = 1;
                         state.p[1].name = document.getElementById('name-input').value || "Guest";
                         state.p[1].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
                         connectToMatch(joinId, false);
                     } else if (state.mode !== 'single') {
-                        document.getElementById('setup-layer').classList.add('hidden');
-                        document.getElementById('waiting-layer').classList.remove('hidden');
+                        document.getElementById('setup-layer').style.display = 'none';
+                        document.getElementById('waiting-layer').style.display = 'flex';
                     }
                     if (joinId || spectateId) render();
                 });
@@ -1450,10 +1473,17 @@
             }
         }
 
+        // FORCE UNMUTED VIDEO TO PLAY (Bypasses mobile autoplay blocks)
         function attachPeerVideo(s) {
             const peerVideo = document.getElementById('peer');
             peerVideo.srcObject = s;
-            peerVideo.onloadedmetadata = () => { peerVideo.play().catch(e => {}); };
+            peerVideo.onloadedmetadata = () => { 
+                peerVideo.play().catch(e => {
+                    // If blocked by browser, mute it to force stream rendering
+                    peerVideo.muted = true;
+                    peerVideo.play();
+                }); 
+            };
         }
 
         function connectToMatch(id, isSpectator = false) {
@@ -1497,7 +1527,7 @@
             } else if (data.type === 'JOIN') {
                 state.p[1].name = data.name;
                 state.p[1].avatar = data.avatar;
-                document.getElementById('waiting-layer').classList.add('hidden');
+                document.getElementById('waiting-layer').style.display = 'none';
                 if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) { showFirstThrowUI(); }
             } else {
                 if (data.p) {
@@ -1739,7 +1769,7 @@
                 x.marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
             });
             delete state.winner; history = null;
-            document.getElementById('winner-layer').classList.add('hidden');
+            document.getElementById('winner-layer').style.display = 'none';
             if (!isLocalMatch) broadcast(state);
             if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
                 playDartSound('gameon'); if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' }); render();
@@ -1777,7 +1807,7 @@
                     document.getElementById(`co-${i}`).style.display = 'block';
                     document.getElementById(`co-stat-${i}`).style.display = 'block';
                     document.getElementById(`co-perc-${i}`).innerText = coStatStr;
-                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) { document.getElementById(`miss-btn-${i}`).classList.remove('hidden'); } else { document.getElementById(`miss-btn-${i}`).classList.add('hidden'); }
+                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) { document.getElementById(`miss-btn-${i}`).style.display = 'inline-block'; } else { document.getElementById(`miss-btn-${i}`).style.display = 'none'; }
                 } else {
                     document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                     document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
@@ -1788,7 +1818,7 @@
                     document.getElementById(`co-${i}`).style.display = 'block';
                     document.getElementById(`co-stat-${i}`).style.display = 'block';
                     document.getElementById(`co-perc-${i}`).innerText = coStatStr;
-                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) { document.getElementById(`miss-btn-${i}`).classList.remove('hidden'); } else { document.getElementById(`miss-btn-${i}`).classList.add('hidden'); }
+                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) { document.getElementById(`miss-btn-${i}`).style.display = 'inline-block'; } else { document.getElementById(`miss-btn-${i}`).style.display = 'none'; }
                 }
                 document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
             });
@@ -1868,82 +1898,4 @@
                         let display = document.getElementById('numpad-display');
                         if(display) display.innerText = numpadVal || "0";
                     }
-                    let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
-                    if (state.mode === 'bot') { isMyTurn = (state.turn === 0); }
-                    document.querySelectorAll('.np-btn, .dbd-btn, .cric-mult').forEach(b => b.disabled = !isMyTurn);
-                    document.getElementById('undo-btn').disabled = !isMyTurn;
-                }
-
-                if (!isLocalMatch && !document.body.classList.contains('bull-throw') && state.mode !== 'single') {
-                    document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-                    document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
-                }
-            } else {
-                document.querySelector('#box-peer .cam-label').innerText = state.p[state.turn].name.toUpperCase();
-            }
-
-            if (myIndex === 0 && spectatorCalls.length > 0) {
-                const activeStream = (state.turn === 0 || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer').srcObject;
-                if (activeStream) {
-                    const videoTrack = activeStream.getVideoTracks()[0];
-                    const audioTrack = activeStream.getAudioTracks()[0];
-                    spectatorCalls.forEach(call => {
-                        if (call.peerConnection) {
-                            const senders = call.peerConnection.getSenders();
-                            const vSender = senders.find(s => s.track && s.track.kind === 'video');
-                            const aSender = senders.find(s => s.track && s.track.kind === 'audio');
-                            if (vSender && videoTrack && vSender.track !== videoTrack) { vSender.replaceTrack(videoTrack).catch(e => {}); }
-                            if (aSender && audioTrack && aSender.track !== audioTrack) { aSender.replaceTrack(audioTrack).catch(e => {}); }
-                        }
-                    });
-                }
-            }
-
-            const winnerLayer = document.getElementById('winner-layer');
-            if (state.winner !== undefined) {
-                saveStatsToCloud();
-                const w = state.p[state.winner];
-                document.getElementById('winner-name').innerText = w.name + " WINS!";
-                for (let i = 0; i < 2; i++) {
-                    let pStats = state.p[i];
-                    document.getElementById(`ws-n${i}`).innerText = pStats.name;
-                    if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
-                        document.getElementById('ws-label-avg').innerText = "Total Darts"; document.getElementById(`ws-avg${i}`).innerText = pStats.d;
-                    } else {
-                        document.getElementById('ws-label-avg').innerText = "Match Avg"; document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
-                    }
-                    document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
-                    document.getElementById(`ws-hc${i}`).innerText = pStats.hc > 0 ? pStats.hc : "-";
-                    document.getElementById(`ws-140${i}`).innerText = pStats.n140 ?? 0;
-                    document.getElementById(`ws-180${i}`).innerText = pStats.n180 ?? 0;
-                }
-                winnerLayer.classList.remove('hidden');
-            } else {
-                winnerLayer.classList.add('hidden');
-                if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined) { playBotTurn(); }
-            }
-        }
-
-        function shareInvite() {
-            const id = document.getElementById('display-id').innerText;
-            const url = window.location.origin + window.location.pathname + '?join=' + id;
-            if (navigator.share) navigator.share({ title: 'Darts Match', url });
-            else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
-        }
-
-        function shareSpectator() {
-            const id = document.getElementById('display-id').innerText;
-            const url = window.location.origin + window.location.pathname + '?spectate=' + id;
-            const p1 = state.p[0]; const p2 = state.p[1];
-            let currentScoreText = "";
-            if (state.gameType === 'atc') { currentScoreText = `🎯 ${p1.name} - Target: ${p1.s <= 20 ? p1.s : "BULL"}`; }
-            else if (state.gameType === 'cricket') { currentScoreText = `🎯 ${p1.name} [Cricket] ${p2.name}`; }
-            else { currentScoreText = `🎯 ${p1.name} (${p1.l} legs) ${p1.s} - ${p2.s} (${p2.l} legs) ${p2.name}`; }
-            
-            const shareData = { title: 'Watch our Darts Match!', text: `Live Score: ${currentScoreText}. Watch the live stream here: `, url: url };
-            if (navigator.share) { navigator.share(shareData).catch(console.error); }
-            else { navigator.clipboard.writeText(`${shareData.text} ${url}`); alert("Spectator link & scores copied to clipboard!"); }
-        }
-    </script>
-</body>
-</html>
+                    let isMyTurn = (isLocalMatch || state.mode === 'single' ||
