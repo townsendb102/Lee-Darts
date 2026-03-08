@@ -30,7 +30,7 @@
         /* --- INSTALL PROMPTS --- */
         .install-btn { background: #4caf50 !important; color: white !important; display: none; margin-bottom: 15px; border: 2px solid #81c784 !important; }
         .ios-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 15px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; font-weight: bold; z-index: 20000; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); display: none; }
-        .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent enhancements; }
+        .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
         .ios-close { position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 16px; color: #888; padding: 5px; }
 
         /* --- FULL SCREEN TRANSPARENT OVERLAY FOR SPECTATOR --- */
@@ -180,6 +180,12 @@
         }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* The new Manual Check for Updates Button */
+        .btn-update {
+            background: transparent; border: none; color: #888; 
+            font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline;
+        }
+
         header { 
             display: flex; align-items: center; justify-content: space-between; 
             padding: env(safe-area-inset-top) 10px 0 10px; /* Safe padding for notch */
@@ -263,13 +269,11 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-            // Appends a unique version string so the phone ALWAYS looks for the newest sw.js
-            navigator.serviceWorker.register('sw.js?v=2').then(registration => {
+            navigator.serviceWorker.register('sw.js?v=' + new Date().getTime()).then(registration => {
                 registration.onupdatefound = () => {
                     const installingWorker = registration.installing;
                     installingWorker.onstatechange = () => {
                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // Quietly automatically refresh the app when the new update arrives
                             window.location.reload();
                         }
                     };
@@ -330,6 +334,8 @@
         </div>
         <button id="start-btn" class="btn-start">START MATCH</button>
         <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center;"></p>
+        
+        <button id="update-btn" class="btn-update">🔄 Check for Updates / Fix App</button>
     </div>
 </div>
 
@@ -440,6 +446,36 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
+    // --- FORCE UPDATE / CACHE CLEAR LOGIC ---
+    const updateBtn = document.getElementById('update-btn');
+    if (updateBtn) {
+        updateBtn.addEventListener('click', () => {
+            updateBtn.innerText = "Clearing Cache & Updating...";
+            updateBtn.style.color = "#4caf50";
+            
+            // 1. Unregister all hidden Service Workers
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
+            }
+            
+            // 2. Delete all saved App Caches
+            if (window.caches) {
+                caches.keys().then(function(names) {
+                    for (let name of names) caches.delete(name);
+                });
+            }
+            
+            // 3. Force reload page with a timestamp to completely bust the browser cache
+            setTimeout(() => {
+                window.location.href = window.location.pathname + '?update=' + new Date().getTime();
+            }, 800);
+        });
+    }
+
     // --- SPLIT AUDIO STATES ---
     let isMicMuted = false;
     let isCallerMuted = false;
