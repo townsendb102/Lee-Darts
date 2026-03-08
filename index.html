@@ -1133,7 +1133,7 @@
         if (state.gameType === '1001') startScore = 1001;
         if (state.gameType === '121') startScore = 121;
         
-        // FIXED: ADDED ATC BACK TO THE START SCORE LOGIC
+        // --- FIXED: ADDED ATC BACK TO THE START SCORE LOGIC ---
         if (state.gameType === 'atc') startScore = 1; 
         
         if (state.gameType === '170') startScore = 170;
@@ -1143,7 +1143,6 @@
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
             
-            // Set Avatars if logged in
             state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
             state.p[1].avatar = ""; 
 
@@ -1218,7 +1217,6 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
 
-                // SEND CHALLENGE PING
                 if(window.targetChallengeFriend && window.db) {
                     try {
                         const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
@@ -1601,7 +1599,6 @@
         state.p.forEach((p, i) => {
             document.getElementById(`n-${i}`).innerText = p.name;
             
-            // RENDERING AVATAR IN GAME
             const avatarImg = document.getElementById(`avatar-${i}`);
             if (p.avatar && p.avatar !== "") {
                 avatarImg.src = p.avatar;
