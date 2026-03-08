@@ -123,7 +123,7 @@
         .player-card { flex: 1; background-color: var(--card); background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg'); background-position: center; background-repeat: no-repeat; background-size: contain; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
         .player-card.active { border-color: var(--blue); background-color: var(--active); background-image: linear-gradient(rgba(22, 42, 63, 0.85), rgba(22, 42, 63, 0.85)), url('51693.jpg'); }
         
-        .p-name { font-size: 14px; color: #fff; font-weight: bold; }
+        .p-name { font-size: 14px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;}
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .score-val { font-size: clamp(30px, 6dvh, 50px); font-weight: 900; line-height: 1; }
         .legs-count { font-size: 11px; color: #888; text-align: right; }
@@ -153,6 +153,10 @@
         .stat-box { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; flex: 1; border: 1px solid rgba(255,255,255,0.1); }
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
         .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
+        .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
+        
+        /* INCOMING CHALLENGE POPUP */
+        #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: #ffeb3b; color: black; padding: 15px; border-radius: 10px; z-index: 30000; display: none; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; border: 2px solid #fbc02d; }
     </style>
 
     <script>
@@ -164,6 +168,14 @@
 <body>
 
 <audio id="dart-audio" playsinline webkit-playsinline></audio>
+
+<div id="challenge-popup">
+    <div id="challenge-text" style="margin-bottom:10px; font-size: 16px;">⚔️ Someone has challenged you!</div>
+    <div style="display:flex; gap:10px; justify-content:center;">
+        <button id="accept-challenge-btn" style="background:#4caf50; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:bold; flex:1;">ACCEPT</button>
+        <button id="decline-challenge-btn" style="background:#ff4d4d; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:bold; flex:1;">DECLINE</button>
+    </div>
+</div>
 
 <div id="login-layer">
     <div class="setup-card">
@@ -191,7 +203,7 @@
 </div>
 
 <div id="profile-layer" class="hidden">
-    <div class="setup-card" style="max-height: 80vh; overflow-y: auto;">
+    <div class="setup-card" style="max-height: 85vh; overflow-y: auto;">
         
         <h2 style="margin-bottom: 5px;">MY PROFILE</h2>
         <p id="prof-email" style="color: #888; font-size: 12px; margin-bottom: 15px;">loading...</p>
@@ -199,6 +211,11 @@
         <img id="prof-pic" class="profile-avatar" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=" alt="Tap to upload picture">
         <input type="file" id="pic-upload" hidden accept="image/*">
         <p style="font-size: 10px; color: #888; margin-top: -5px; margin-bottom: 15px;">Tap image to change</p>
+
+        <div style="display: flex; gap: 5px; margin-bottom: 20px;">
+            <input type="text" id="edit-name-input" class="setup-input" placeholder="Display Name..." style="flex: 1; padding: 8px; font-size: 14px;">
+            <button id="save-name-btn" class="btn-start" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">SAVE</button>
+        </div>
 
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
             <div class="stat-box">
@@ -214,8 +231,7 @@
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 0 0 15px 0; width: 100%;">
 
         <h3 style="color: white; margin-bottom: 10px;">FRIENDS LIST</h3>
-        <div id="friends-list-container" style="max-height: 150px; overflow-y: auto; margin-bottom: 15px;">
-            </div>
+        <div id="friends-list-container" style="max-height: 180px; overflow-y: auto; margin-bottom: 15px;"></div>
 
         <div style="display: flex; gap: 5px;">
             <input type="email" id="friend-email" class="setup-input" placeholder="Friend's Email..." style="flex: 1; padding: 8px; font-size: 14px;">
@@ -234,8 +250,7 @@
         <button id="install-btn" class="btn-start install-btn">📲 INSTALL APP</button>
         
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <button id="open-profile-btn" class="btn-update" style="display: none; color: var(--blue); margin-top: 0; text-decoration: none; border: 1px solid var(--blue); padding: 4px 8px; border-radius: 4px;">👤 My Profile</button>
-            
+            <button id="open-profile-btn" class="btn-update" style="display: none; color: var(--blue); margin-top: 0; text-decoration: none; border: 1px solid var(--blue); padding: 4px 8px; border-radius: 4px;">👤 My Profile & Friends</button>
             <button id="logout-btn" class="btn-update" style="display: none; color: #ff4d4d; margin-top: 0; text-decoration: none;">Log Out</button>
         </div>
 
@@ -360,7 +375,10 @@
 
 <div class="score-area">
     <div id="card-0" class="player-card active">
-        <div class="p-name" id="n-0">P1</div>
+        <div class="p-name">
+            <img id="avatar-0" class="in-game-avatar" src="">
+            <span id="n-0">P1</span>
+        </div>
         <div class="score-row">
             <div style="font-size:10px; color:var(--blue)"><span id="avg-label-0">AVG: </span><span id="avg-0">0.0</span></div>
             <div class="score-val" id="s-0">501</div>
@@ -369,7 +387,10 @@
         <div class="checkout-hint" id="co-0"></div>
     </div>
     <div id="card-1" class="player-card">
-        <div class="p-name" id="n-1">P2</div>
+        <div class="p-name">
+            <img id="avatar-1" class="in-game-avatar" src="">
+            <span id="n-1">P2</span>
+        </div>
         <div class="score-row">
             <div style="font-size:10px; color:var(--blue)"><span id="avg-label-1">AVG: </span><span id="avg-1">0.0</span></div>
             <div class="score-val" id="s-1">501</div>
@@ -401,11 +422,10 @@
 
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
 
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, collection, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     // YOUR FIREBASE CONFIG
     const firebaseConfig = {
@@ -418,59 +438,58 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    window.db = getFirestore(app); // Made global so game logic can save stats
+    window.auth = getAuth(app); // Global so app can read user
+    window.db = getFirestore(app);
 
     const loginLayer = document.getElementById('login-layer');
     const setupLayer = document.getElementById('setup-layer');
     const profileLayer = document.getElementById('profile-layer');
     
-    let currentUserDoc = null;
-
-    // --- GUEST MODE LOGIC ---
+    // --- GUEST MODE ---
     document.getElementById('guest-btn').addEventListener('click', () => {
         loginLayer.style.display = 'none'; 
         setupLayer.classList.remove('hidden');
         document.getElementById('name-input').value = "Guest";
     });
 
-    // --- SIGN UP LOGIC ---
+    // --- SIGN UP ---
     document.getElementById('signup-btn').addEventListener('click', () => {
         const email = document.getElementById('email-input').value;
         const pass = document.getElementById('password-input').value;
         const err = document.getElementById('auth-error');
         if(pass.length < 6) { err.innerText = "Password must be at least 6 characters."; return; }
         
-        createUserWithEmailAndPassword(auth, email, pass).catch((error) => {
+        createUserWithEmailAndPassword(window.auth, email, pass).catch((error) => {
             err.style.color = "#ff4d4d";
             if (error.code === 'auth/email-already-in-use') err.innerText = "Email already registered.";
             else err.innerText = error.message;
         });
     });
 
-    // --- LOG IN LOGIC ---
+    // --- LOG IN ---
     document.getElementById('login-btn').addEventListener('click', () => {
-        signInWithEmailAndPassword(auth, document.getElementById('email-input').value, document.getElementById('password-input').value)
+        signInWithEmailAndPassword(window.auth, document.getElementById('email-input').value, document.getElementById('password-input').value)
             .catch((error) => { document.getElementById('auth-error').innerText = "Invalid Email or Password."; });
     });
 
-    // --- LOG OUT LOGIC ---
+    // --- LOG OUT ---
     document.getElementById('logout-btn').addEventListener('click', () => {
-        signOut(auth).then(() => { location.reload(); });
+        if(window.userUnsub) window.userUnsub();
+        signOut(window.auth).then(() => { location.reload(); });
     });
 
-    // --- FIREBASE "WATCHER" ---
-    onAuthStateChanged(auth, async (user) => {
+    // --- FIREBASE "WATCHER" (REAL-TIME UPDATES) ---
+    onAuthStateChanged(window.auth, async (user) => {
         if (user) {
             loginLayer.style.display = 'none'; 
             setupLayer.classList.remove('hidden');
             document.getElementById('logout-btn').style.display = 'block'; 
             document.getElementById('open-profile-btn').style.display = 'block'; 
             
-            // FETCH OR CREATE USER PROFILE IN FIRESTORE
             const userRef = doc(window.db, "users", user.uid);
             const userSnap = await getDoc(userRef);
             
+            // First time setup
             if (!userSnap.exists()) {
                 let defaultName = user.email.split('@')[0];
                 await setDoc(userRef, {
@@ -480,23 +499,69 @@
                     totalPts: 0,
                     totalDarts: 0,
                     highCheckout: 0,
-                    friends: []
+                    friends: [],
+                    activeChallenge: null
                 });
-                currentUserDoc = { displayName: defaultName, photoURL: "", totalPts: 0, totalDarts: 0, highCheckout: 0, friends: [] };
-            } else {
-                currentUserDoc = userSnap.data();
             }
-            
-            document.getElementById('name-input').value = currentUserDoc.displayName;
-            renderProfileMenu();
+
+            // Real-time listener for challenges and stats
+            window.userUnsub = onSnapshot(userRef, (docSnap) => {
+                if(docSnap.exists()) {
+                    window.currentUserDoc = docSnap.data();
+                    
+                    // Update setup menu name & profile menu name
+                    document.getElementById('name-input').value = window.currentUserDoc.displayName;
+                    document.getElementById('edit-name-input').value = window.currentUserDoc.displayName;
+                    
+                    if(!profileLayer.classList.contains('hidden')) { renderProfileMenu(); }
+                    
+                    // CHECK FOR INCOMING CHALLENGE PING
+                    const challenge = window.currentUserDoc.activeChallenge;
+                    if(challenge && challenge.time > Date.now() - 60000) { // Valid for 60 seconds
+                        showChallengePopup(challenge);
+                    } else if (document.getElementById('challenge-popup').style.display === 'block') {
+                        document.getElementById('challenge-popup').style.display = 'none'; // Auto close if expired
+                    }
+                }
+            });
 
         } else {
             loginLayer.style.display = 'flex'; 
             setupLayer.classList.add('hidden');
             document.getElementById('logout-btn').style.display = 'none'; 
             document.getElementById('open-profile-btn').style.display = 'none'; 
+            window.currentUserDoc = null;
         }
     });
+
+    // --- INCOMING CHALLENGE POPUP LOGIC ---
+    function showChallengePopup(challenge) {
+        const popup = document.getElementById('challenge-popup');
+        document.getElementById('challenge-text').innerText = `⚔️ ${challenge.hostName} challenged you!`;
+        popup.style.display = 'block';
+        
+        document.getElementById('accept-challenge-btn').onclick = async () => {
+            await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { activeChallenge: null });
+            window.location.href = '?join=' + challenge.matchId; // Join the peer room instantly!
+        };
+        
+        document.getElementById('decline-challenge-btn').onclick = async () => {
+            popup.style.display = 'none';
+            await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { activeChallenge: null });
+        };
+    }
+
+    // --- SEND CHALLENGE LOGIC (Attached to window so standard script can use it) ---
+    window.issueChallenge = async function(friendUid) {
+        window.targetChallengeFriend = friendUid;
+        
+        // Hide profile, set game mode to online, start match to generate Peer ID!
+        profileLayer.classList.add('hidden');
+        setupLayer.classList.remove('hidden');
+        document.getElementById('mode-input').value = 'online';
+        document.getElementById('mode-input').dispatchEvent(new Event('change'));
+        document.getElementById('start-btn').click();
+    };
 
     // --- PROFILE MENU LOGIC ---
     document.getElementById('open-profile-btn').addEventListener('click', () => {
@@ -510,11 +575,18 @@
         setupLayer.classList.remove('hidden');
     });
 
-    // --- PICTURE UPLOAD (Resizes image to save space) ---
-    document.getElementById('prof-pic').addEventListener('click', () => {
-        document.getElementById('pic-upload').click();
+    // --- CHANGE DISPLAY NAME ---
+    document.getElementById('save-name-btn').addEventListener('click', async () => {
+        const newName = document.getElementById('edit-name-input').value.trim();
+        if(newName && newName.length <= 12) {
+            await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { displayName: newName });
+            document.getElementById('save-name-btn').innerText = "SAVED!";
+            setTimeout(() => document.getElementById('save-name-btn').innerText = "SAVE", 2000);
+        }
     });
 
+    // --- PICTURE UPLOAD (Resizes image to save DB space) ---
+    document.getElementById('prof-pic').addEventListener('click', () => { document.getElementById('pic-upload').click(); });
     document.getElementById('pic-upload').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
@@ -529,13 +601,9 @@
                 canvas.height = img.height * scaleSize;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const base64Img = canvas.toDataURL('image/jpeg', 0.7); // compress
+                const base64Img = canvas.toDataURL('image/jpeg', 0.7); 
                 
-                document.getElementById('prof-pic').src = base64Img;
-                
-                // Save to Firestore
-                await updateDoc(doc(window.db, "users", auth.currentUser.uid), { photoURL: base64Img });
-                currentUserDoc.photoURL = base64Img;
+                await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { photoURL: base64Img });
             }
             img.src = event.target.result;
         }
@@ -555,14 +623,10 @@
         
         if(!snap.empty) {
             const friendId = snap.docs[0].id;
-            if(friendId === auth.currentUser.uid) { err.innerText = "You can't add yourself!"; return; }
-            if(currentUserDoc.friends && currentUserDoc.friends.includes(friendId)) { err.innerText = "Already friends!"; return; }
+            if(friendId === window.auth.currentUser.uid) { err.innerText = "You can't add yourself!"; return; }
+            if(window.currentUserDoc.friends && window.currentUserDoc.friends.includes(friendId)) { err.innerText = "Already friends!"; return; }
             
-            await updateDoc(doc(window.db, "users", auth.currentUser.uid), {
-                friends: arrayUnion(friendId)
-            });
-            if(!currentUserDoc.friends) currentUserDoc.friends = [];
-            currentUserDoc.friends.push(friendId);
+            await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { friends: arrayUnion(friendId) });
             document.getElementById('friend-email').value = "";
             err.style.color = "#4caf50"; err.innerText = "Friend Added!";
             renderProfileMenu();
@@ -573,20 +637,20 @@
 
     // --- RENDER PROFILE AND FRIENDS LIST ---
     async function renderProfileMenu() {
-        if(!currentUserDoc) return;
-        document.getElementById('prof-email').innerText = auth.currentUser.email;
-        if(currentUserDoc.photoURL) document.getElementById('prof-pic').src = currentUserDoc.photoURL;
+        if(!window.currentUserDoc) return;
+        document.getElementById('prof-email').innerText = window.auth.currentUser.email;
+        if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
         
-        let avg = currentUserDoc.totalDarts > 0 ? ((currentUserDoc.totalPts / currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
+        let avg = window.currentUserDoc.totalDarts > 0 ? ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
         document.getElementById('prof-avg').innerText = avg;
-        document.getElementById('prof-hc').innerText = currentUserDoc.highCheckout || 0;
+        document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0;
         
         const list = document.getElementById('friends-list-container');
         list.innerHTML = "<p style='color:#888; font-size:11px;'>Loading friends...</p>";
         
-        if(currentUserDoc.friends && currentUserDoc.friends.length > 0) {
+        if(window.currentUserDoc.friends && window.currentUserDoc.friends.length > 0) {
             list.innerHTML = "";
-            for(let uid of currentUserDoc.friends) {
+            for(let uid of window.currentUserDoc.friends) {
                 const fSnap = await getDoc(doc(window.db, "users", uid));
                 if(fSnap.exists()) {
                     let f = fSnap.data();
@@ -597,10 +661,11 @@
                     list.innerHTML += `
                         <div class="friend-item">
                             <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue);">
-                            <div>
+                            <div style="flex: 1;">
                                 <div style="color:var(--blue); font-weight:bold; font-size:14px;">${f.displayName}</div>
                                 <div style="color:#aaa; font-size:10px;">Avg: ${fAvg} | High Out: ${fHc}</div>
                             </div>
+                            <button onclick="window.issueChallenge('${uid}')" style="background:var(--blue); color:black; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:11px;">⚔️ PLAY</button>
                         </div>
                     `;
                 }
@@ -610,50 +675,36 @@
         }
     }
 </script>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
 <script>
     // --- FORCE UPDATE / CACHE CLEAR LOGIC ---
     document.querySelectorAll('.cache-clear-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             btn.innerText = "Clearing Cache & Updating...";
             btn.style.color = "#4caf50";
-            
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
                     for(let registration of registrations) { registration.unregister(); }
                 });
             }
-            if (window.caches) {
-                caches.keys().then(function(names) {
-                    for (let name of names) caches.delete(name);
-                });
-            }
-            setTimeout(() => {
-                window.location.href = window.location.pathname + '?update=' + new Date().getTime();
-            }, 800);
+            if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+            setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
         });
     });
 
     // --- CLOUD STATS SAVER ---
     let statsSavedThisMatch = false;
     async function saveStatsToCloud() {
-        // Only save if logged in, and if playing a standard game
-        if(!window.db || statsSavedThisMatch) return;
+        if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
         const validGames = ["301", "501", "701", "1001", "170_race"];
         if(!validGames.includes(state.gameType)) return;
-        if(state.mode === 'single') return; // Don't track practice against yourself
+        if(state.mode === 'single') return; 
 
         try {
-            // Get current user auth safely
-            const auth = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js").then(m => m.getAuth());
-            if(!auth.currentUser) return;
-
-            let myP = state.p[myIndex]; // Works for online
-            if(state.mode === 'local') myP = state.p[0]; // If local, just save P1's stats to the logged in account
+            let myP = state.p[myIndex]; 
+            if(state.mode === 'local') myP = state.p[0]; 
 
             const { doc, getDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-            const userRef = doc(window.db, "users", auth.currentUser.uid);
+            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
             const userSnap = await getDoc(userRef);
             
             if(userSnap.exists()) {
@@ -662,11 +713,7 @@
                 let newDarts = (dbData.totalDarts || 0) + myP.d;
                 let newHc = Math.max((dbData.highCheckout || 0), myP.hc);
 
-                await updateDoc(userRef, {
-                    totalPts: newPts,
-                    totalDarts: newDarts,
-                    highCheckout: newHc
-                });
+                await updateDoc(userRef, { totalPts: newPts, totalDarts: newDarts, highCheckout: newHc });
                 statsSavedThisMatch = true;
             }
         } catch(e) { console.log("Stat save failed", e); }
@@ -722,9 +769,10 @@
     let currentZoom = 1; 
     let isLocalMatch = false; 
     
+    // ADDED AVATAR TO STATE
     let state = { mode: 'online', gameType: '501', limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
-        { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170 }, 
-        { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170 }
+        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170 }, 
+        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170 }
     ]};
     let history = null;
 
@@ -936,7 +984,7 @@
     }
 
     async function initApp() {
-        statsSavedThisMatch = false; // Reset cloud saver
+        statsSavedThisMatch = false; 
         
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
@@ -960,6 +1008,11 @@
         if (isLocalMatch) {
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
+            
+            // Set Avatars if logged in
+            state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
+            state.p[1].avatar = ""; 
+
             state.p[0].target170 = 170;
             state.p[1].target170 = 170;
             state.p[0].s = startScore;
@@ -981,6 +1034,7 @@
         if (state.mode === 'single') {
             document.body.classList.add('single-mode');
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
+            state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
             state.p[0].target170 = 170;
             state.p[0].s = startScore;
             document.getElementById('setup-layer').classList.add('hidden');
@@ -988,6 +1042,7 @@
             render();
         } else {
             state.p[0].name = document.getElementById('name-input').value || "Host";
+            state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
         }
 
@@ -1025,9 +1080,25 @@
                 }
             });
 
-            peer.on('open', (id) => {
+            peer.on('open', async (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
+
+                // IF WE AUTO-STARTED VIA THE CHALLENGE BUTTON, SEND THE PING!
+                if(window.targetChallengeFriend && window.db) {
+                    try {
+                        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+                        await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
+                            activeChallenge: {
+                                hostName: window.currentUserDoc.displayName,
+                                matchId: id,
+                                time: Date.now()
+                            }
+                        });
+                        alert("Challenge sent! Waiting for them to accept...");
+                    } catch(e) {}
+                    window.targetChallengeFriend = null;
+                }
                 
                 if (spectateId) { 
                     document.getElementById('setup-layer').classList.add('hidden');
@@ -1036,6 +1107,7 @@
                     document.getElementById('setup-layer').classList.add('hidden');
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
+                    state.p[1].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
                     connectToMatch(joinId, false);
                 } else if (state.mode !== 'single') {
                     document.getElementById('setup-layer').classList.add('hidden');
@@ -1092,7 +1164,9 @@
     function connectToMatch(id, isSpectator = false) {
         const c = peer.connect(id);
         conns.push(c);
-        c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name }); });
+        c.on('open', () => { 
+            if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); 
+        });
         c.on('data', d => handleData(d));
         
         if (isSpectator) {
@@ -1130,21 +1204,24 @@
             state.gameType = data.state.gameType;
             state.limit170 = data.state.limit170 || 9;
             state.p[0].name = data.state.p[0].name;
+            state.p[0].avatar = data.state.p[0].avatar; 
             state.startingPlayer = data.state.startingPlayer || 0;
             if (state.mode === 'single') { document.body.classList.add('single-mode'); }
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
+            state.p[1].avatar = data.avatar; 
             document.getElementById('waiting-layer').classList.add('hidden');
             if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) {
                 showFirstThrowUI();
             }
         } else {
             if (data.p) {
-                data.p.forEach(player => {
+                data.p.forEach((player, i) => {
                     player.ld = player.ld ?? 0; player.f9pts = player.f9pts ?? 0;
                     player.f9d = player.f9d ?? 0; player.hc = player.hc ?? 0;
                     player.n140 = player.n140 ?? 0; player.n180 = player.n180 ?? 0;
                     player.target170 = player.target170 || 170;
+                    if(data.p[i].avatar !== undefined) player.avatar = data.p[i].avatar; 
                 });
             }
             state = data; 
@@ -1361,7 +1438,7 @@
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
-        statsSavedThisMatch = false; // Allow saving stats again
+        statsSavedThisMatch = false; 
 
         state.p.forEach(x => { 
             x.target170 = 170;
@@ -1389,6 +1466,15 @@
         state.p.forEach((p, i) => {
             document.getElementById(`n-${i}`).innerText = p.name;
             
+            // RENDERING AVATAR IN GAME
+            const avatarImg = document.getElementById(`avatar-${i}`);
+            if (p.avatar && p.avatar !== "") {
+                avatarImg.src = p.avatar;
+                avatarImg.style.display = 'inline-block';
+            } else {
+                avatarImg.style.display = 'none';
+            }
+            
             if (state.gameType === 'atc') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
                 document.getElementById(`avg-${i}`).innerText = p.d;
@@ -1397,13 +1483,8 @@
                 document.getElementById(`l-area-${i}`).style.display = 'none';
             } else if (state.gameType === '121' || state.gameType === '170') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
-                
-                if (state.gameType === '170') {
-                    document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`;
-                } else {
-                    document.getElementById(`avg-${i}`).innerText = p.ld; 
-                }
-                
+                if (state.gameType === '170') { document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`; } 
+                else { document.getElementById(`avg-${i}`).innerText = p.ld; }
                 document.getElementById(`s-${i}`).innerText = p.s;
                 document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 document.getElementById(`l-area-${i}`).style.display = 'block';
@@ -1416,7 +1497,6 @@
                 document.getElementById(`l-area-${i}`).style.display = 'block';
                 document.getElementById(`l-${i}`).innerText = p.l;
             }
-            
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
@@ -1485,8 +1565,6 @@
 
         const winnerLayer = document.getElementById('winner-layer');
         if (state.winner !== undefined) {
-            
-            // SAVE STATS TO CLOUD IF MATCH IS WON
             saveStatsToCloud();
 
             const w = state.p[state.winner];
