@@ -503,7 +503,7 @@
                 </div>
             </div>
 
-            <div id="darts-mode-ui" style="display: none; flex-direction: column; gap: 6px; height: 100%;">
+            <div id="darts-mode-ui" class="hidden" style="display: none; flex-direction: column; gap: 6px; height: 100%;">
                 <div style="display: flex; gap: 6px; align-items: center;">
                     <div class="dbd-slot" id="dbd-slot-1">-</div>
                     <div class="dbd-slot" id="dbd-slot-2">-</div>
@@ -599,9 +599,15 @@
         window.auth = getAuth(app);
         window.db = getFirestore(app);
 
+        const loginLayer = document.getElementById('login-layer');
+        const setupLayer = document.getElementById('setup-layer');
+        const profileLayer = document.getElementById('profile-layer');
+        const historyLayer = document.getElementById('history-layer');
+        const friendsLayer = document.getElementById('friends-layer');
+
         document.getElementById('guest-btn').addEventListener('click', () => { 
-            document.getElementById('login-layer').classList.add('hidden'); 
-            document.getElementById('setup-layer').classList.remove('hidden'); 
+            loginLayer.style.display = 'none'; 
+            setupLayer.classList.remove('hidden'); 
             document.getElementById('name-input').value = "Guest"; 
         });
 
@@ -630,20 +636,11 @@
         });
 
         onAuthStateChanged(window.auth, async (user) => {
-            const layers = ['login-layer', 'profile-layer', 'history-layer', 'friends-layer', 'waiting-layer', 'first-throw-layer', 'winner-layer', 'setup-layer'];
-            layers.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.classList.add('hidden');
-            });
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const isJoiningOrSpectating = urlParams.get('spectate') || urlParams.get('join');
-
             if (user) {
+                loginLayer.style.display = 'none';
+                setupLayer.classList.remove('hidden');
                 document.getElementById('logout-btn').style.display = 'block';
                 document.getElementById('open-profile-btn').style.display = 'block';
-                document.getElementById('setup-layer').classList.remove('hidden');
-
                 const userRef = doc(window.db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
                 
@@ -674,15 +671,11 @@
                     }
                 });
             } else {
+                loginLayer.style.display = 'flex';
+                setupLayer.classList.add('hidden');
                 document.getElementById('logout-btn').style.display = 'none';
                 document.getElementById('open-profile-btn').style.display = 'none';
                 window.currentUserDoc = null;
-                
-                if (isJoiningOrSpectating) {
-                    document.getElementById('setup-layer').classList.remove('hidden');
-                } else {
-                    document.getElementById('login-layer').classList.remove('hidden');
-                }
             }
         });
 
@@ -710,40 +703,20 @@
 
         window.issueChallenge = async function(friendUid) {
             window.targetChallengeFriend = friendUid;
-            document.getElementById('friends-layer').classList.add('hidden');
-            document.getElementById('profile-layer').classList.add('hidden');
-            document.getElementById('setup-layer').classList.remove('hidden');
+            friendsLayer.classList.add('hidden');
+            profileLayer.classList.add('hidden');
+            setupLayer.classList.remove('hidden');
             document.getElementById('mode-input').value = 'online';
             document.getElementById('mode-input').dispatchEvent(new Event('change'));
             document.getElementById('start-btn').click();
         };
 
-        // RESTORED PROPER ROUTING VIA CLASSLIST
-        document.getElementById('open-profile-btn').addEventListener('click', () => { 
-            document.getElementById('setup-layer').classList.add('hidden'); 
-            document.getElementById('profile-layer').classList.remove('hidden'); 
-            renderProfileMenu(); 
-        });
-        document.getElementById('close-profile-btn').addEventListener('click', () => { 
-            document.getElementById('profile-layer').classList.add('hidden'); 
-            document.getElementById('setup-layer').classList.remove('hidden'); 
-        });
-        document.getElementById('open-history-btn').addEventListener('click', () => { 
-            document.getElementById('profile-layer').classList.add('hidden'); 
-            document.getElementById('history-layer').classList.remove('hidden'); 
-        });
-        document.getElementById('close-history-btn').addEventListener('click', () => { 
-            document.getElementById('history-layer').classList.add('hidden'); 
-            document.getElementById('profile-layer').classList.remove('hidden'); 
-        });
-        document.getElementById('open-friends-btn').addEventListener('click', () => { 
-            document.getElementById('profile-layer').classList.add('hidden'); 
-            document.getElementById('friends-layer').classList.remove('hidden'); 
-        });
-        document.getElementById('close-friends-btn').addEventListener('click', () => { 
-            document.getElementById('friends-layer').classList.add('hidden'); 
-            document.getElementById('profile-layer').classList.remove('hidden'); 
-        });
+        document.getElementById('open-profile-btn').addEventListener('click', () => { setupLayer.classList.add('hidden'); profileLayer.classList.remove('hidden'); renderProfileMenu(); });
+        document.getElementById('close-profile-btn').addEventListener('click', () => { profileLayer.classList.add('hidden'); setupLayer.classList.remove('hidden'); });
+        document.getElementById('open-history-btn').addEventListener('click', () => { profileLayer.classList.add('hidden'); historyLayer.classList.remove('hidden'); });
+        document.getElementById('close-history-btn').addEventListener('click', () => { historyLayer.classList.add('hidden'); profileLayer.classList.remove('hidden'); });
+        document.getElementById('open-friends-btn').addEventListener('click', () => { profileLayer.classList.add('hidden'); friendsLayer.classList.remove('hidden'); });
+        document.getElementById('close-friends-btn').addEventListener('click', () => { friendsLayer.classList.add('hidden'); profileLayer.classList.remove('hidden'); });
 
         document.getElementById('reset-stats-btn').addEventListener('click', async () => {
             if(confirm("Are you sure you want to completely reset your Lifetime Stats? This clears your Average, Checkout %, High Out, and Match History.")) {
@@ -822,6 +795,7 @@
                 await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { friends: arrayUnion(friendId) });
                 document.getElementById('friend-email').value = "";
                 err.style.color = "#4caf50"; err.innerText = "Friend Added!";
+                renderProfileMenu();
             } else {
                 err.style.color = "#ff4d4d"; err.innerText = "User not found.";
             }
@@ -830,9 +804,7 @@
         async function renderProfileMenu() {
             if(!window.currentUserDoc) return;
             
-            let displayEmail = (window.auth && window.auth.currentUser) ? window.auth.currentUser.email : (window.currentUserDoc.email || "Player");
-            document.getElementById('prof-email').innerText = displayEmail;
-            
+            document.getElementById('prof-email').innerText = window.auth.currentUser.email;
             if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
             
             let avg = window.currentUserDoc.totalDarts > 0 ? ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
@@ -846,17 +818,14 @@
                 let histHtml = '';
                 let recent = window.currentUserDoc.matchHistory.slice(-15).reverse();
                 recent.forEach(h => {
-                    let color = (h.desc && h.desc.startsWith("WON")) ? "#4caf50" : "#ff4d4d";
+                    let color = h.desc.startsWith("WON") ? "#4caf50" : "#ff4d4d";
                     let safeId = h.id ? `'${h.id}'` : `null`;
                     let safeDate = `'${h.date}'`;
-                    let descText = h.desc ? h.desc.replace(/'/g, "\\'") : 'Match';
-                    let safeDesc = `'${descText}'`;
-                    let displayDesc = h.desc || 'Match';
-
+                    let safeDesc = `'${h.desc}'`;
                     histHtml += `
                     <div class="history-item">
                         <div style="flex:1;">
-                            <div style="color:${color}; font-weight:bold; line-height: 1.2;">${displayDesc}</div>
+                            <div style="color:${color}; font-weight:bold; line-height: 1.2;">${h.desc}</div>
                             <div style="color:#aaa; font-size:11px; margin-top:3px; line-height:1.4;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
                         </div>
                         <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0}, ${h.coAtt || 0}, ${h.coHit || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
@@ -871,30 +840,26 @@
             list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>Loading friends...</p>";
             
             if(window.currentUserDoc.friends && window.currentUserDoc.friends.length > 0) {
-                let tempFriendsHtml = "";
+                list.innerHTML = "";
                 for(let uid of window.currentUserDoc.friends) {
-                    try {
-                        const fSnap = await getDoc(doc(window.db, "users", uid));
-                        if(fSnap.exists()) {
-                            let f = fSnap.data();
-                            let fAvg = f.totalDarts > 0 ? ((f.totalPts / f.totalDarts) * 3).toFixed(1) : "0.0";
-                            let fHc = f.highCheckout || 0;
-                            let fImg = f.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=';
-                            
-                            tempFriendsHtml += `
-                            <div class="friend-item">
-                                <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue);flex-shrink:0;">
-                                <div style="flex: 1; min-width: 0;">
-                                    <div style="color:var(--blue); font-weight:bold; font-size:14px; line-height:1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.displayName}</div>
-                                    <div style="color:#aaa; font-size:10px; margin-top:3px; line-height:1.4;">Avg: ${fAvg} | High Out: ${fHc}</div>
-                                </div>
-                                <button onclick="window.issueChallenge('${uid}')" style="background:var(--blue); color:black; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:11px;">⚔️ PLAY</button>
+                    const fSnap = await getDoc(doc(window.db, "users", uid));
+                    if(fSnap.exists()) {
+                        let f = fSnap.data();
+                        let fAvg = f.totalDarts > 0 ? ((f.totalPts / f.totalDarts) * 3).toFixed(1) : "0.0";
+                        let fHc = f.highCheckout || 0;
+                        let fImg = f.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=';
+                        list.innerHTML += `
+                        <div class="friend-item">
+                            <img src="${fImg}" style="flex: 0 0 24px; width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue);">
+                            <div style="flex: 1;">
+                                <div style="color:var(--blue); font-weight:bold; font-size:14px; line-height:1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.displayName}</div>
+                                <div style="color:#aaa; font-size:10px; margin-top:3px; line-height:1.4;">Avg: ${fAvg} | High Out: ${fHc}</div>
                             </div>
-                            `;
-                        }
-                    } catch(e) {}
+                            <button onclick="window.issueChallenge('${uid}')" style="background:var(--blue); color:black; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:11px;">⚔️ PLAY</button>
+                        </div>
+                        `;
+                    }
                 }
-                list.innerHTML = tempFriendsHtml;
             } else {
                 list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>No friends added yet.</p>";
             }
@@ -912,25 +877,26 @@
             if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); } 
         });
 
-        // 1. BYPASS PWA CACHE DEAD-BUTTON ISSUE BY BINDING GLOBALLY
-        const quitBtn = document.getElementById('quit-btn');
-        if (quitBtn) {
-            quitBtn.addEventListener('click', () => {
-                if (confirm("Are you sure you want to quit the match and return to the menu?")) { window.location.href = window.location.pathname; }
-            });
-        }
-        
-        const installBtn = document.getElementById('install-btn');
-        if (installBtn) {
-            installBtn.addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') { installBtn.style.display = 'none'; }
-                    deferredPrompt = null;
-                }
-            });
-        }
+        window.addEventListener('load', () => {
+            const quitBtn = document.getElementById('quit-btn');
+            if (quitBtn) {
+                quitBtn.addEventListener('click', () => {
+                    if (confirm("Are you sure you want to quit the match and return to the menu?")) { window.location.href = window.location.pathname; }
+                });
+            }
+            
+            const installBtn = document.getElementById('install-btn');
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') { installBtn.style.display = 'none'; }
+                        deferredPrompt = null;
+                    }
+                });
+            }
+        });
 
         document.querySelectorAll('.cache-clear-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1016,8 +982,8 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            const instBtn = document.getElementById('install-btn');
-            if (instBtn) instBtn.style.display = 'block';
+            const installBtn = document.getElementById('install-btn');
+            if (installBtn) installBtn.style.display = 'block';
         });
 
         const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
@@ -1121,82 +1087,72 @@
             if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); });
         }
 
-        // BIND UI AND BUTTONS IMMEDIATELY
-        const modeInput = document.getElementById('mode-input');
-        const gameTypeInput = document.getElementById('game-type-input');
+        window.addEventListener('load', () => {
+            const modeInput = document.getElementById('mode-input');
+            const gameTypeInput = document.getElementById('game-type-input');
 
-        function updateMenuUI() {
-            if (!modeInput) return;
-            const mode = modeInput.value;
-            const gameType = gameTypeInput.value;
-            
-            const isJoinOrSpectate = spectateId || joinId;
-
-            if (isJoinOrSpectate) {
-                document.getElementById('mode-group').style.display = 'none';
-                document.getElementById('game-type-group').style.display = 'none';
-                document.getElementById('p2-name-group').style.display = 'none';
-                document.getElementById('bot-level-group').style.display = 'none';
-                document.getElementById('dart-limit-group').style.display = 'none';
-                document.getElementById('legs-group').style.display = 'none';
+            function updateMenuUI() {
+                if (!modeInput) return;
+                const mode = modeInput.value;
+                const gameType = gameTypeInput.value;
+                document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+                document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
+                document.getElementById('game-type-group').style.display = 'block';
+                document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
+                document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
                 
                 const p1Label = document.getElementById('p1-label');
-                if (p1Label) p1Label.innerText = 'Your Name';
-                return;
-            }
-
-            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
-            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
-            document.getElementById('game-type-group').style.display = 'block';
-            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
-            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
-            
-            const p1Label = document.getElementById('p1-label');
-            if (p1Label) {
-                if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
-                else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
-                else p1Label.innerText = 'Your Name';
-            }
-            
-            if (mode === 'bot') {
-                if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
-                    gameTypeInput.value = '501';
-                    alert("DartBot currently only supports standard 301-1001 games.");
+                if (p1Label) {
+                    if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
+                    else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
+                    else p1Label.innerText = 'Your Name';
+                }
+                
+                if (mode === 'bot') {
+                    if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
+                        gameTypeInput.value = '501';
+                        alert("DartBot currently only supports standard 301-1001 games.");
+                    }
                 }
             }
-        }
 
-        if (modeInput) modeInput.addEventListener('change', updateMenuUI);
-        if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
-        updateMenuUI();
+            if (modeInput) modeInput.addEventListener('change', updateMenuUI);
+            if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
+            updateMenuUI();
 
-        if (spectateId) {
-            document.body.classList.add('spectator-mode');
-            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
-            document.getElementById('name-input').placeholder = "Your Name (Optional)";
-            document.getElementById('login-layer').classList.add('hidden');
-            document.getElementById('setup-layer').classList.remove('hidden');
-        } else if (joinId) {
-            document.getElementById('start-btn').innerText = "JOIN MATCH";
-            document.getElementById('login-layer').classList.add('hidden');
-            document.getElementById('setup-layer').classList.remove('hidden');
-        }
+            if (spectateId) {
+                document.body.classList.add('spectator-mode');
+                document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
+                document.getElementById('name-input').placeholder = "Your Name (Optional)";
+                document.getElementById('mode-group').style.display = 'none';
+                document.getElementById('game-type-group').style.display = 'none';
+                document.getElementById('login-layer').classList.add('hidden');
+                document.getElementById('setup-layer').classList.remove('hidden');
+            } else if (joinId) {
+                document.getElementById('legs-group').style.display = 'none';
+                document.getElementById('start-btn').innerText = "JOIN MATCH";
+                document.getElementById('mode-group').style.display = 'none';
+                document.getElementById('game-type-group').style.display = 'none';
+                document.getElementById('login-layer').classList.add('hidden');
+                document.getElementById('setup-layer').classList.remove('hidden');
+            }
 
-        document.getElementById('start-btn').onclick = initApp;
-        document.getElementById('flip-btn').onclick = swapCam;
-        document.getElementById('zoom-btn').onclick = cycleZoom;
-        document.getElementById('mic-btn').onclick = toggleMic;
-        document.getElementById('caller-btn').onclick = toggleCaller;
-        document.getElementById('share-btn').onclick = shareInvite;
-        document.getElementById('spectate-btn').onclick = shareSpectator;
-        document.getElementById('undo-btn').onclick = undo;
-        document.getElementById('atc-undo-btn').onclick = undo;
-        document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
-        document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
-        document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
-        document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
-        document.getElementById('mode-toggle-btn').onclick = () => { localInputMode = localInputMode === 'total' ? 'darts' : 'total'; render(); };
-        document.getElementById('rematch-btn').onclick = triggerRematch;
+            document.getElementById('start-btn').onclick = initApp;
+            document.getElementById('flip-btn').onclick = swapCam;
+            document.getElementById('zoom-btn').onclick = cycleZoom;
+            document.getElementById('mic-btn').onclick = toggleMic;
+            document.getElementById('caller-btn').onclick = toggleCaller;
+            document.getElementById('share-btn').onclick = shareInvite;
+            document.getElementById('spectate-btn').onclick = shareSpectator;
+            document.getElementById('undo-btn').onclick = undo;
+            document.getElementById('atc-undo-btn').onclick = undo;
+            document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
+            document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
+            document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
+            document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
+            document.getElementById('mode-toggle-btn').onclick = () => { localInputMode = localInputMode === 'total' ? 'darts' : 'total'; render(); };
+            document.getElementById('rematch-btn').onclick = triggerRematch;
+        });
 
         window.np = function(val) {
             if(val === 'C') { numpadVal = ""; }
@@ -1285,8 +1241,6 @@
         }
 
         function showFirstThrowUI() {
-            document.getElementById('setup-layer').classList.add('hidden');
-            document.getElementById('waiting-layer').classList.add('hidden');
             document.getElementById('first-throw-layer').classList.remove('hidden');
             document.getElementById('ft-step-1').classList.remove('hidden');
             document.getElementById('ft-step-2').classList.add('hidden');
@@ -1449,15 +1403,12 @@
                 });
 
                 peer.on('call', call => {
-                    // Force answer to establish connection
-                    if (stream) { call.answer(stream); } else { call.answer(); }
-                    
                     if (call.metadata && call.metadata.spectator) {
+                        if (stream) { call.answer(stream); } else { call.answer(); }
                         spectatorCalls.push(call);
                         setTimeout(() => { render(); }, 1000);
-                    } else if (spectateId) {
-                        call.on('stream', s => { attachPeerVideo(s); render(); });
                     } else {
+                        if (stream) { call.answer(stream); } else { call.answer(); }
                         limitVideoBitrate(call.peerConnection, 1500);
                         call.on('stream', s => { currentCall = call; if(s) { attachPeerVideo(s); } render(); });
                     }
@@ -1465,17 +1416,7 @@
 
                 peer.on('connection', c => {
                     conns.push(c);
-                    c.on('open', () => {
-                        c.send({ type: 'SYNC', state });
-                        // Push stream to spectator actively
-                        if (c.metadata && c.metadata.spectator) {
-                            const activeStream = (state.turn === 0 || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer').srcObject;
-                            if (activeStream) {
-                                const call = peer.call(c.peer, activeStream);
-                                spectatorCalls.push(call);
-                            }
-                        }
-                    });
+                    c.on('open', () => c.send({ type: 'SYNC', state }));
                     c.on('data', d => {
                         handleData(d);
                         if (myIndex === 0 && d.type !== 'JOIN' && d.type !== 'ZOOM' && d.type !== 'BULL_PHASE' && d.type !== 'CAM_PAUSED') { broadcast(state); }
@@ -1491,26 +1432,22 @@
             }
         }
 
-        // FORCE UNMUTED VIDEO TO PLAY (Bypasses mobile autoplay blocks)
         function attachPeerVideo(s) {
             const peerVideo = document.getElementById('peer');
             peerVideo.srcObject = s;
-            peerVideo.onloadedmetadata = () => { 
-                peerVideo.play().catch(e => {
-                    // If blocked by browser, mute it to force stream rendering
-                    peerVideo.muted = true;
-                    peerVideo.play();
-                }); 
-            };
+            peerVideo.onloadedmetadata = () => { peerVideo.play().catch(e => {}); };
         }
 
         function connectToMatch(id, isSpectator = false) {
-            const c = peer.connect(id, { metadata: isSpectator ? { spectator: true } : {} });
+            const c = peer.connect(id);
             conns.push(c);
             c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); });
             c.on('data', d => handleData(d));
 
-            if (!isSpectator) {
+            if (isSpectator) {
+                const specCall = peer.call(id, null, { metadata: { spectator: true } });
+                specCall.on('stream', s => { attachPeerVideo(s); render(); });
+            } else {
                 currentCall = peer.call(id, stream);
                 limitVideoBitrate(currentCall.peerConnection, 1500);
                 currentCall.on('stream', s => { attachPeerVideo(s); render(); });
@@ -1910,45 +1847,4 @@
                         document.getElementById('total-mode-ui').style.display = 'flex';
                         document.getElementById('darts-mode-ui').style.display = 'none';
                         document.getElementById('mode-toggle-btn').innerText = 'MODE: TOTAL SCORE';
-                        let display = document.getElementById('numpad-display');
-                        if(display) display.innerText = numpadVal || "0";
-                    }
-                    let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
-                    if (state.mode === 'bot') { isMyTurn = (state.turn === 0); }
-                    document.querySelectorAll('.np-btn, .dbd-btn, .cric-mult').forEach(b => b.disabled = !isMyTurn);
-                    document.getElementById('undo-btn').disabled = !isMyTurn;
-                }
-
-                if (!isLocalMatch && !document.body.classList.contains('bull-throw') && state.mode !== 'single') {
-                    document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-                    document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
-                }
-            } else {
-                document.querySelector('#box-peer .cam-label').innerText = state.p[state.turn].name.toUpperCase();
-            }
-
-            if (myIndex === 0 && spectatorCalls.length > 0) {
-                const activeStream = (state.turn === 0 || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer').srcObject;
-                if (activeStream) {
-                    const videoTrack = activeStream.getVideoTracks()[0];
-                    const audioTrack = activeStream.getAudioTracks()[0];
-                    spectatorCalls.forEach(call => {
-                        if (call.peerConnection) {
-                            const senders = call.peerConnection.getSenders();
-                            const vSender = senders.find(s => s.track && s.track.kind === 'video');
-                            const aSender = senders.find(s => s.track && s.track.kind === 'audio');
-                            if (vSender && videoTrack && vSender.track !== videoTrack) { vSender.replaceTrack(videoTrack).catch(e => {}); }
-                            if (aSender && audioTrack && aSender.track !== audioTrack) { aSender.replaceTrack(audioTrack).catch(e => {}); }
-                        }
-                    });
-                }
-            }
-
-            const winnerLayer = document.getElementById('winner-layer');
-            if (state.winner !== undefined) {
-                saveStatsToCloud();
-                const w = state.p[state.winner];
-                document.getElementById('winner-name').innerText = w.name + " WINS!";
-                for (let i = 0; i < 2; i++) {
-                    let pStats = state.p[i];
-                    document.getElementById(`ws-n${i}`).innerText =
+                        let display = document.getElementById('nump
