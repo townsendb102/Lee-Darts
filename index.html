@@ -128,10 +128,19 @@
         #login-layer { z-index: 20000; } 
         #profile-layer { z-index: 15000; background: rgba(2, 4, 8, 0.98); }
         
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box {
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 1 !important;
+            width: 50% !important;
+        }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(40px + 45dvh + env(safe-area-inset-top)); background: rgba(2, 4, 8, 0.95); }
+        
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer {
+            top: calc(40px + 45dvh + env(safe-area-inset-top));
+            background: rgba(2, 4, 8, 0.95);
+        }
         
         .setup-card { 
             background-color: var(--card); 
@@ -152,31 +161,81 @@
         .input-group { margin-bottom: 10px; text-align: left; }
         .input-group label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
         
-        .setup-input { width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.15); color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .setup-input { 
+            width: 100%; 
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white; 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            outline: none; 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
         .setup-input option { background: var(--dark); color: white; }
         
-        .btn-start { background: var(--blue); color: black; width: 100%; padding: 16px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: block !important; visibility: visible !important; }
+        .btn-start { 
+            background: var(--blue); color: black; width: 100%; padding: 16px; 
+            font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; 
+            margin-top: 10px; display: block !important; visibility: visible !important;
+        }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-update { background: transparent; border: none; color: #888; font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
+        /* The Manual Check for Updates Button */
+        .btn-update {
+            background: transparent; border: none; color: #888; 
+            font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline;
+        }
 
-        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 0 10px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
+        header { 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: env(safe-area-inset-top) 10px 0 10px; /* Safe padding for notch */
+            border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; 
+        }
         .header-controls { display: flex; gap: 5px; align-items: center; }
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
-        .v-box { position: absolute; inset: 0; visibility: hidden; opacity: 0; z-index: -1; transition: opacity 0.2s; }
-        .v-box.visible { visibility: visible; opacity: 1; z-index: 1; }
+        
+        .v-box { 
+            position: absolute; 
+            inset: 0; 
+            visibility: hidden; 
+            opacity: 0; 
+            z-index: -1; 
+            transition: opacity 0.2s; 
+        }
+        .v-box.visible { 
+            visibility: visible; 
+            opacity: 1; 
+            z-index: 1; 
+        }
 
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
+        
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
-        .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
+        .paused-overlay {
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue);
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5;
+            visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px;
+        }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
 
         .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
-        .player-card { flex: 1; background-color: var(--card); background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg'); background-position: center; background-repeat: no-repeat; background-size: contain; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
-        .player-card.active { border-color: var(--blue); background-color: var(--active); background-image: linear-gradient(rgba(22, 42, 63, 0.85), rgba(22, 42, 63, 0.85)), url('51693.jpg'); }
+        
+        .player-card { 
+            flex: 1; background-color: var(--card); 
+            background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg');
+            background-position: center; background-repeat: no-repeat; background-size: contain;
+            border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; 
+        }
+        .player-card.active { 
+            border-color: var(--blue); background-color: var(--active); 
+            background-image: linear-gradient(rgba(22, 42, 63, 0.85), rgba(22, 42, 63, 0.85)), url('51693.jpg');
+        }
         
         .p-name { font-size: 14px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;}
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
@@ -198,9 +257,15 @@
         
         #pts-input:disabled { color: #555; }
         .btn-hit:disabled { background: #333; color: #666; cursor: not-allowed; }
+        
         #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
         
-        .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid #1b4965; z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
+        .site-footer { 
+            display: flex; align-items: center; justify-content: center; 
+            background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; 
+            border-top: 1px solid #1b4965; z-index: 10002; 
+            padding-bottom: env(safe-area-inset-bottom); /* Safe padding for home bar */
+        }
         .hidden { display: none !important; }
 
         /* PROFILE STYLES */
@@ -726,6 +791,8 @@
         }
     }
 </script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
 <script>
     // --- APP QUIT BUTTON LOGIC ---
     window.addEventListener('load', () => {
@@ -733,8 +800,6 @@
         if (quitBtn) {
             quitBtn.addEventListener('click', () => {
                 if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-                    // Safe reload drops WebRTC, drops Camera, and clears match variables.
-                    // Firebase remembers login state so you bypass the login screen.
                     window.location.href = window.location.pathname;
                 }
             });
