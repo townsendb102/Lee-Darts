@@ -22,75 +22,31 @@
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            /* NOTCH SAFE GRID: Automatically adds padding for iPhone Notches */
             grid-template-rows: calc(40px + env(safe-area-inset-top)) 45dvh 1fr 80px calc(25px + env(safe-area-inset-bottom));
             overflow: hidden; 
         }
 
-        /* --- INSTALL PROMPTS --- */
         .install-btn { background: #4caf50 !important; color: white !important; display: none; margin-bottom: 15px; border: 2px solid #81c784 !important; }
         .ios-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 15px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; font-weight: bold; z-index: 20000; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); display: none; }
         .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
         .ios-close { position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 16px; color: #888; padding: 5px; }
 
-        /* --- FULL SCREEN TRANSPARENT OVERLAY FOR SPECTATOR --- */
         body.spectator-mode { display: block; } 
-        
-        body.spectator-mode .controls-wrapper,
-        body.spectator-mode .header-controls,
-        body.spectator-mode #legs-group { display: none !important; }
+        body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
-        
         body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; }
-        
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
-        
-        body.spectator-mode .score-area { 
-            position: fixed; 
-            top: calc(40px + env(safe-area-inset-top)); 
-            bottom: 25px; 
-            width: 100%; 
-            z-index: 10; 
-            background: transparent; 
-            flex-direction: row; 
-            justify-content: space-between; 
-            align-items: stretch; 
-            padding: 0; 
-        }
-        
-        body.spectator-mode .player-card { 
-            flex: 0 0 auto; 
-            width: 115px; 
-            background-color: rgba(13, 27, 42, 0.45) !important; 
-            background-image: linear-gradient(rgba(13, 27, 42, 0.8), rgba(13, 27, 42, 0.8)), url('51693.jpg') !important; 
-            background-size: 100% 100%, contain !important; 
-            background-position: center, center !important;
-            background-repeat: no-repeat, no-repeat !important;
-            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); 
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-top: none;
-            border-bottom: none;
-            border-radius: 0; 
-            justify-content: space-evenly; 
-        }
-        
-        body.spectator-mode .player-card.active { 
-            background-color: rgba(0, 212, 255, 0.1) !important; 
-            background-image: linear-gradient(rgba(0, 212, 255, 0.25), rgba(13, 27, 42, 0.85)), url('51693.jpg') !important;
-            border-left: 2px solid var(--blue);
-            border-right: 2px solid var(--blue);
-        }
-        
+        body.spectator-mode .score-area { position: fixed; top: calc(40px + env(safe-area-inset-top)); bottom: 25px; width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: stretch; padding: 0; }
+        body.spectator-mode .player-card { flex: 0 0 auto; width: 115px; background-color: rgba(13, 27, 42, 0.45) !important; background-image: linear-gradient(rgba(13, 27, 42, 0.8), rgba(13, 27, 42, 0.8)), url('51693.jpg') !important; background-size: 100% 100%, contain !important; background-position: center, center !important; background-repeat: no-repeat, no-repeat !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, 0.15); border-top: none; border-bottom: none; border-radius: 0; justify-content: space-evenly; }
+        body.spectator-mode .player-card.active { background-color: rgba(0, 212, 255, 0.1) !important; background-image: linear-gradient(rgba(0, 212, 255, 0.25), rgba(13, 27, 42, 0.85)), url('51693.jpg') !important; border-left: 2px solid var(--blue); border-right: 2px solid var(--blue); }
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
         body.spectator-mode .score-val { font-size: 40px; }
         body.spectator-mode .legs-count { text-align: center; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
-        
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         
-        /* --- SINGLE PLAYER MODE FIXES --- */
         body.single-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr 80px calc(25px + env(safe-area-inset-bottom)) !important; }
         body.single-mode .v-container { display: none !important; }
         body.single-mode #card-1 { display: none !important; }
@@ -98,24 +54,13 @@
         body.single-mode #card-0 { max-width: 320px; width: 100%; border: 2px solid var(--blue); }
         body.single-mode.spectator-mode .score-area { flex-direction: row; justify-content: center; }
         body.single-mode.spectator-mode #card-0 { width: 150px; }
+        body.single-mode #mic-btn, body.single-mode #zoom-btn, body.single-mode #flip-btn { display: none !important; }
 
-        /* Hide specific Header Buttons for Single Player */
-        body.single-mode #mic-btn,
-        body.single-mode #zoom-btn,
-        body.single-mode #flip-btn { display: none !important; }
-
-        /* --- LOCAL MODE FIXES --- */
         body.local-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr 80px calc(25px + env(safe-area-inset-bottom)) !important; }
         body.local-mode .v-container { display: none !important; }
-        
         body.local-mode header > div:first-child { display: none; }
         body.local-mode header { justify-content: flex-end; }
-
-        body.local-mode #mic-btn,
-        body.local-mode #zoom-btn,
-        body.local-mode #flip-btn,
-        body.local-mode #spectate-btn,
-        body.local-mode #share-btn { display: none !important; }
+        body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn { display: none !important; }
 
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer { 
             position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
@@ -128,27 +73,12 @@
         #login-layer { z-index: 20000; } 
         #profile-layer { z-index: 15000; background: rgba(2, 4, 8, 0.98); }
         
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box {
-            visibility: visible !important;
-            opacity: 1 !important;
-            z-index: 1 !important;
-            width: 50% !important;
-        }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(40px + 45dvh + env(safe-area-inset-top)); background: rgba(2, 4, 8, 0.95); }
         
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer {
-            top: calc(40px + 45dvh + env(safe-area-inset-top));
-            background: rgba(2, 4, 8, 0.95);
-        }
-        
-        .setup-card { 
-            background-color: var(--card); 
-            background-image: linear-gradient(rgba(13, 27, 42, 0.65), rgba(13, 27, 42, 0.65)), url('51693.jpg');
-            background-position: center; background-repeat: no-repeat; background-size: contain;
-            padding: 25px; border-radius: 15px; width: 100%; max-width: 360px; border: 1px solid #1b4965;
-            display: flex; flex-direction: column; gap: 10px; text-align: center;
-        }
+        .setup-card { background-color: var(--card); background-image: linear-gradient(rgba(13, 27, 42, 0.65), rgba(13, 27, 42, 0.65)), url('51693.jpg'); background-position: center; background-repeat: no-repeat; background-size: contain; padding: 25px; border-radius: 15px; width: 100%; max-width: 360px; border: 1px solid #1b4965; display: flex; flex-direction: column; gap: 10px; text-align: center; }
         .setup-card h2 { color: var(--blue); margin-bottom: 10px; }
         
         .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
@@ -161,81 +91,31 @@
         .input-group { margin-bottom: 10px; text-align: left; }
         .input-group label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
         
-        .setup-input { 
-            width: 100%; 
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: white; 
-            padding: 12px; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            outline: none; 
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-        }
+        .setup-input { width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.15); color: white; padding: 12px; border-radius: 8px; font-size: 16px; outline: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
         .setup-input option { background: var(--dark); color: white; }
         
-        .btn-start { 
-            background: var(--blue); color: black; width: 100%; padding: 16px; 
-            font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; 
-            margin-top: 10px; display: block !important; visibility: visible !important;
-        }
+        .btn-start { background: var(--blue); color: black; width: 100%; padding: 16px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: block !important; visibility: visible !important; }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* The Manual Check for Updates Button */
-        .btn-update {
-            background: transparent; border: none; color: #888; 
-            font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline;
-        }
+        .btn-update { background: transparent; border: none; color: #888; font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
 
-        header { 
-            display: flex; align-items: center; justify-content: space-between; 
-            padding: env(safe-area-inset-top) 10px 0 10px; /* Safe padding for notch */
-            border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; 
-        }
+        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 0 10px; border-bottom: 1px solid #1b4965; font-size: 11px; background: #000; }
         .header-controls { display: flex; gap: 5px; align-items: center; }
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid #1b4965; overflow: hidden; }
-        
-        .v-box { 
-            position: absolute; 
-            inset: 0; 
-            visibility: hidden; 
-            opacity: 0; 
-            z-index: -1; 
-            transition: opacity 0.2s; 
-        }
-        .v-box.visible { 
-            visibility: visible; 
-            opacity: 1; 
-            z-index: 1; 
-        }
+        .v-box { position: absolute; inset: 0; visibility: hidden; opacity: 0; z-index: -1; transition: opacity 0.2s; }
+        .v-box.visible { visibility: visible; opacity: 1; z-index: 1; }
 
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
-        
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
-        .paused-overlay {
-            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue);
-            display: flex; align-items: center; justify-content: center; text-align: center;
-            font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5;
-            visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px;
-        }
+        .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
 
         .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
-        
-        .player-card { 
-            flex: 1; background-color: var(--card); 
-            background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg');
-            background-position: center; background-repeat: no-repeat; background-size: contain;
-            border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; 
-        }
-        .player-card.active { 
-            border-color: var(--blue); background-color: var(--active); 
-            background-image: linear-gradient(rgba(22, 42, 63, 0.85), rgba(22, 42, 63, 0.85)), url('51693.jpg');
-        }
+        .player-card { flex: 1; background-color: var(--card); background-image: linear-gradient(rgba(13, 27, 42, 0.85), rgba(13, 27, 42, 0.85)), url('51693.jpg'); background-position: center; background-repeat: no-repeat; background-size: contain; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; }
+        .player-card.active { border-color: var(--blue); background-color: var(--active); background-image: linear-gradient(rgba(22, 42, 63, 0.85), rgba(22, 42, 63, 0.85)), url('51693.jpg'); }
         
         .p-name { font-size: 14px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;}
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
@@ -243,6 +123,12 @@
         .legs-count { font-size: 11px; color: #888; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
+
+        /* CRICKET GRID STYLES */
+        .cricket-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-top: 5px; }
+        .cricket-item { background: rgba(0,0,0,0.5); padding: 4px; font-size: 11px; text-align: center; border-radius: 4px; color: white; border: 1px solid rgba(255,255,255,0.1); }
+        .cricket-item span { color: var(--blue); font-weight: bold; font-size: 13px; }
+        .cricket-item.closed { background: rgba(76, 175, 80, 0.2); border-color: #4caf50; }
 
         .controls-wrapper { width: 100%; height: 100%; background: #000; border-top: 1px solid #1b4965; }
         .controls { display: grid; height: 100%; padding: 8px; gap: 8px; }
@@ -260,12 +146,12 @@
         
         #pts-input { width: 100%; height: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 32px; outline: none; }
         
-        .site-footer { 
-            display: flex; align-items: center; justify-content: center; 
-            background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; 
-            border-top: 1px solid #1b4965; z-index: 10002; 
-            padding-bottom: env(safe-area-inset-bottom); /* Safe padding for home bar */
-        }
+        /* DART-BY-DART INPUT STYLES */
+        .dart-box { flex: 1; height: 100%; text-align: center; font-size: 20px; font-weight: bold; text-transform: uppercase; background: transparent; border: none; color: white; border-right: 1px solid #333; outline: none; }
+        .dart-box:last-child { border-right: none; }
+        .dart-box:focus { background: rgba(0, 212, 255, 0.1); }
+
+        .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid #1b4965; z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
 
         /* PROFILE STYLES */
@@ -273,9 +159,9 @@
         .stat-box { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; flex: 1; border: 1px solid rgba(255,255,255,0.1); }
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
         .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
+        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); }
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
         
-        /* INCOMING CHALLENGE POPUP */
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: #ffeb3b; color: black; padding: 15px; border-radius: 10px; z-index: 30000; display: none; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; border: 2px solid #fbc02d; }
     </style>
 
@@ -315,9 +201,7 @@
         <p id="auth-error" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
 
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 20px 0; width: 100%;">
-        
         <button id="guest-btn" class="btn-start" style="background: transparent; border: 1px solid var(--blue); color: var(--blue);">PLAY AS GUEST</button>
-
         <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
     </div>
 </div>
@@ -347,6 +231,9 @@
                 <div class="stat-box-val" id="prof-hc">0</div>
             </div>
         </div>
+
+        <h3 style="color: white; margin-bottom: 10px; font-size: 14px; text-align: left;">MATCH HISTORY</h3>
+        <div id="history-list-container" style="max-height: 120px; overflow-y: auto; margin-bottom: 20px; text-align: left;"></div>
 
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 0 0 15px 0; width: 100%;">
 
@@ -393,7 +280,16 @@
                 <option value="501" selected>501</option>
                 <option value="701">701</option>
                 <option value="1001">1001</option>
+                <option value="cricket">Cricket (10 to Bull)</option>
                 <option value="atc">Around the Clock</option>
+            </select>
+        </div>
+
+        <div class="input-group" id="input-mode-group">
+            <label style="color: white;">Input Mode</label>
+            <select id="input-mode-input" class="setup-input">
+                <option value="total" selected>Total Score</option>
+                <option value="darts">Dart-by-Dart (e.g. T20, D10)</option>
             </select>
         </div>
 
@@ -477,7 +373,6 @@
         <button class="header-btn" id="flip-btn">FLIP</button>
         <button class="header-btn" id="spectate-btn" style="color: var(--blue);">SPECTATE</button>
         <button class="header-btn" id="share-btn">INVITE</button>
-        
         <button class="header-btn" id="quit-btn" style="color: #ff4d4d; font-weight: bold;">QUIT</button>
     </div>
 </header>
@@ -497,34 +392,40 @@
 
 <div class="score-area">
     <div id="card-0" class="player-card active">
-        <div class="p-name">
-            <img id="avatar-0" class="in-game-avatar" src="">
-            <span id="n-0">P1</span>
-        </div>
-        <div class="score-row">
+        <div class="p-name"><img id="avatar-0" class="in-game-avatar" src=""><span id="n-0">P1</span></div>
+        <div class="score-row" id="srow-0">
             <div style="font-size:10px; color:var(--blue)"><span id="avg-label-0">AVG: </span><span id="avg-0">0.0</span></div>
             <div class="score-val" id="s-0">501</div>
             <div class="legs-count" id="l-area-0"><span id="l-0">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-0"></div>
+        <div class="cricket-grid hidden" id="cric-0"></div>
     </div>
     <div id="card-1" class="player-card">
-        <div class="p-name">
-            <img id="avatar-1" class="in-game-avatar" src="">
-            <span id="n-1">P2</span>
-        </div>
-        <div class="score-row">
+        <div class="p-name"><img id="avatar-1" class="in-game-avatar" src=""><span id="n-1">P2</span></div>
+        <div class="score-row" id="srow-1">
             <div style="font-size:10px; color:var(--blue)"><span id="avg-label-1">AVG: </span><span id="avg-1">0.0</span></div>
             <div class="score-val" id="s-1">501</div>
             <div class="legs-count" id="l-area-1"><span id="l-1">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-1"></div>
+        <div class="cricket-grid hidden" id="cric-1"></div>
     </div>
 </div>
 
 <div class="controls-wrapper">
     <div class="controls" id="standard-controls">
-        <div class="score-input-box"><input type="number" id="pts-input" placeholder="0" inputmode="numeric"></div>
+        
+        <div class="score-input-box" id="total-input-box">
+            <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
+        </div>
+        
+        <div class="score-input-box hidden" id="darts-input-box" style="display: none; gap: 5px; background: transparent; border: none;">
+            <input type="text" id="d1-input" class="dart-box" placeholder="1" maxlength="4">
+            <input type="text" id="d2-input" class="dart-box" placeholder="2" maxlength="4">
+            <input type="text" id="d3-input" class="dart-box" placeholder="3" maxlength="4">
+        </div>
+
         <button class="btn-undo" id="undo-btn">⟲</button>
         <button class="btn-hit" id="hit-btn">HIT</button>
     </div>
@@ -567,14 +468,12 @@
     const setupLayer = document.getElementById('setup-layer');
     const profileLayer = document.getElementById('profile-layer');
     
-    // GUEST MODE
     document.getElementById('guest-btn').addEventListener('click', () => {
         loginLayer.style.display = 'none'; 
         setupLayer.classList.remove('hidden');
         document.getElementById('name-input').value = "Guest";
     });
 
-    // SIGN UP
     document.getElementById('signup-btn').addEventListener('click', () => {
         const email = document.getElementById('email-input').value;
         const pass = document.getElementById('password-input').value;
@@ -588,19 +487,16 @@
         });
     });
 
-    // LOG IN
     document.getElementById('login-btn').addEventListener('click', () => {
         signInWithEmailAndPassword(window.auth, document.getElementById('email-input').value, document.getElementById('password-input').value)
             .catch((error) => { document.getElementById('auth-error').innerText = "Invalid Email or Password."; });
     });
 
-    // LOG OUT
     document.getElementById('logout-btn').addEventListener('click', () => {
         if(window.userUnsub) window.userUnsub();
         signOut(window.auth).then(() => { window.location.href = window.location.pathname; });
     });
 
-    // FIREBASE "WATCHER"
     onAuthStateChanged(window.auth, async (user) => {
         if (user) {
             loginLayer.style.display = 'none'; 
@@ -621,6 +517,7 @@
                     totalDarts: 0,
                     highCheckout: 0,
                     friends: [],
+                    matchHistory: [],
                     activeChallenge: null
                 });
             }
@@ -652,7 +549,6 @@
         }
     });
 
-    // INCOMING CHALLENGE POPUP LOGIC
     function showChallengePopup(challenge) {
         const popup = document.getElementById('challenge-popup');
         document.getElementById('challenge-text').innerText = `⚔️ ${challenge.hostName} challenged you!`;
@@ -669,7 +565,6 @@
         };
     }
 
-    // SEND CHALLENGE LOGIC
     window.issueChallenge = async function(friendUid) {
         window.targetChallengeFriend = friendUid;
         profileLayer.classList.add('hidden');
@@ -679,7 +574,6 @@
         document.getElementById('start-btn').click();
     };
 
-    // PROFILE MENU LOGIC
     document.getElementById('open-profile-btn').addEventListener('click', () => {
         setupLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
@@ -691,7 +585,6 @@
         setupLayer.classList.remove('hidden');
     });
 
-    // CHANGE DISPLAY NAME
     document.getElementById('save-name-btn').addEventListener('click', async () => {
         const newName = document.getElementById('edit-name-input').value.trim();
         if(newName && newName.length <= 12) {
@@ -701,7 +594,6 @@
         }
     });
 
-    // PICTURE UPLOAD
     document.getElementById('prof-pic').addEventListener('click', () => { document.getElementById('pic-upload').click(); });
     document.getElementById('pic-upload').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -726,7 +618,6 @@
         reader.readAsDataURL(file);
     });
 
-    // ADD FRIEND LOGIC
     document.getElementById('add-friend-btn').addEventListener('click', async () => {
         const email = document.getElementById('friend-email').value.trim().toLowerCase();
         const err = document.getElementById('friend-error');
@@ -751,7 +642,6 @@
         }
     });
 
-    // RENDER PROFILE AND FRIENDS LIST
     async function renderProfileMenu() {
         if(!window.currentUserDoc) return;
         document.getElementById('prof-email').innerText = window.auth.currentUser.email;
@@ -761,6 +651,26 @@
         document.getElementById('prof-avg').innerText = avg;
         document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0;
         
+        // Render History
+        const histContainer = document.getElementById('history-list-container');
+        if(window.currentUserDoc.matchHistory && window.currentUserDoc.matchHistory.length > 0) {
+            let histHtml = '';
+            // Show last 10 games, newest first
+            let recent = window.currentUserDoc.matchHistory.slice(-10).reverse();
+            recent.forEach(h => {
+                let color = h.desc.startsWith("WON") ? "#4caf50" : "#ff4d4d";
+                histHtml += `<div class="history-item">
+                    <span style="color:${color}; font-weight:bold;">${h.desc}</span>
+                    <span style="color:#aaa;">Avg: <b style="color:white;">${h.avg}</b></span>
+                    <span style="color:#888;">${h.date}</span>
+                </div>`;
+            });
+            histContainer.innerHTML = histHtml;
+        } else {
+            histContainer.innerHTML = "<p style='color:#888; font-size:11px;'>No matches played yet.</p>";
+        }
+
+        // Render Friends
         const list = document.getElementById('friends-list-container');
         list.innerHTML = "<p style='color:#888; font-size:11px;'>Loading friends...</p>";
         
@@ -791,10 +701,21 @@
         }
     }
 </script>
+
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
-    // --- APP QUIT BUTTON LOGIC ---
+    // --- SCREEN WAKELOCK ---
+    let wakeLock = null;
+    async function requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); }
+        } catch (err) { console.log(err); }
+    }
+    document.addEventListener('visibilitychange', () => {
+        if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
+    });
+
     window.addEventListener('load', () => {
         const quitBtn = document.getElementById('quit-btn');
         if (quitBtn) {
@@ -806,7 +727,6 @@
         }
     });
 
-    // --- FORCE UPDATE / CACHE CLEAR LOGIC ---
     document.querySelectorAll('.cache-clear-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             btn.innerText = "Clearing Cache & Updating...";
@@ -833,7 +753,15 @@
             let myP = state.p[myIndex]; 
             if(state.mode === 'local') myP = state.p[0]; 
 
-            const { doc, getDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+            // Save history
+            let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
+            let resultStr = isWin ? "WON" : "LOST";
+            let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
+            let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
+            let dateStr = new Date().toLocaleDateString();
+            let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
+
+            const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
             const userRef = doc(window.db, "users", window.auth.currentUser.uid);
             const userSnap = await getDoc(userRef);
             
@@ -843,31 +771,30 @@
                 let newDarts = (dbData.totalDarts || 0) + myP.d;
                 let newHc = Math.max((dbData.highCheckout || 0), myP.hc);
 
-                await updateDoc(userRef, { totalPts: newPts, totalDarts: newDarts, highCheckout: newHc });
+                await updateDoc(userRef, { 
+                    totalPts: newPts, 
+                    totalDarts: newDarts, 
+                    highCheckout: newHc,
+                    matchHistory: arrayUnion({ date: dateStr, desc: matchText, avg: finalAvg })
+                });
                 statsSavedThisMatch = true;
             }
         } catch(e) { console.log("Stat save failed", e); }
     }
 
-    // --- SPLIT AUDIO STATES ---
     let isMicMuted = false;
     let isCallerMuted = false;
 
     function playDartSound(type) {
         if (isCallerMuted) return;
-        if (state.gameType === 'atc') return;
+        if (state.gameType === 'atc' || state.gameType === 'cricket') return;
 
         let audioSrc = "";
 
-        if (type === 'bust') {
-            audioSrc = "sounds/bust.wav";
-        } else if (type === 'gameshot') {
-            audioSrc = "sounds/gameshot.wav";
-        } else if (type === 'gameon') {
-            audioSrc = "sounds/gameon.wav";
-        } else if (typeof type === 'number' && type >= 0 && type <= 180) {
-            audioSrc = `sounds/${type}.wav`;
-        }
+        if (type === 'bust') { audioSrc = "sounds/bust.wav"; } 
+        else if (type === 'gameshot') { audioSrc = "sounds/gameshot.wav"; } 
+        else if (type === 'gameon') { audioSrc = "sounds/gameon.wav"; } 
+        else if (typeof type === 'number' && type >= 0 && type <= 180) { audioSrc = `sounds/${type}.wav`; }
 
         if (audioSrc !== "") {
             const dartAudio = document.getElementById('dart-audio');
@@ -899,11 +826,14 @@
     let currentZoom = 1; 
     let isLocalMatch = false; 
     
-    // ADDED AVATAR TO STATE
-    let state = { mode: 'online', gameType: '501', limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
-        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170 }, 
-        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170 }
-    ]};
+    // ADDED INPUT MODE AND CRICKET MARKS TO STATE
+    let state = { 
+        mode: 'online', gameType: '501', inputMode: 'total', limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, 
+        p: [
+            { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
+            { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
+        ]
+    };
     let history = null;
 
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -1000,20 +930,37 @@
     document.body.addEventListener('click', unlockAudio, { once: true });
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
+    // Auto-focus next dart box
+    document.querySelectorAll('.dart-box').forEach((box, index, boxes) => {
+        box.addEventListener('input', function() {
+            if(this.value.length >= 3 && index < boxes.length - 1) { boxes[index + 1].focus(); }
+        });
+    });
+
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
+        const inputModeEl = document.getElementById('input-mode-input');
 
         function updateMenuUI() {
             if (!modeInput) return;
             const mode = modeInput.value;
-            const gameType = gameTypeInput ? gameTypeInput.value : '501';
+            const gameType = gameTypeInput.value;
 
             document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
             document.getElementById('game-type-group').style.display = 'block'; 
+            document.getElementById('input-mode-group').style.display = (gameType === 'atc') ? 'none' : 'block';
             
+            // Force dart-by-dart for Cricket
+            if (gameType === 'cricket') {
+                inputModeEl.value = 'darts';
+                inputModeEl.disabled = true;
+            } else {
+                inputModeEl.disabled = false;
+            }
+
             document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
-            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170') ? 'none' : 'block';
+            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
             
             const p1Label = document.getElementById('p1-label');
             if (p1Label) {
@@ -1069,6 +1016,12 @@
                 if (e.key === 'Enter') { e.preventDefault(); processHit(); }
             });
         }
+        const d3Input = document.getElementById('d3-input');
+        if (d3Input) {
+            d3Input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); processHit(); }
+            });
+        }
     });
 
     function toggleBullPhase(isActive) {
@@ -1114,6 +1067,7 @@
     }
 
     async function initApp() {
+        requestWakeLock(); // Keep screen alive
         statsSavedThisMatch = false; 
         
         const log = document.getElementById('error-log');
@@ -1123,6 +1077,7 @@
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
+        state.inputMode = document.getElementById('input-mode-input') ? document.getElementById('input-mode-input').value : 'total';
         state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
         
         isLocalMatch = (state.mode === 'local');
@@ -1132,10 +1087,8 @@
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '1001') startScore = 1001;
         if (state.gameType === '121') startScore = 121;
-        
-        // --- FIXED: ADDED ATC BACK TO THE START SCORE LOGIC ---
         if (state.gameType === 'atc') startScore = 1; 
-        
+        if (state.gameType === 'cricket') startScore = 0; 
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
@@ -1146,21 +1099,20 @@
             state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
             state.p[1].avatar = ""; 
 
-            state.p[0].target170 = 170;
-            state.p[1].target170 = 170;
-            state.p[0].s = startScore;
-            state.p[1].s = startScore;
+            state.p[0].target170 = 170; state.p[1].target170 = 170;
+            state.p[0].s = startScore; state.p[1].s = startScore;
+            state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
+            state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
+
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
             
             document.getElementById('setup-layer').classList.add('hidden');
             document.body.classList.add('local-mode'); 
             
-            if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170') { 
+            if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') { 
                 playDartSound('gameon');
                 render(); 
-            } else { 
-                showFirstThrowUI(); 
-            }
+            } else { showFirstThrowUI(); }
             return; 
         }
 
@@ -1170,6 +1122,7 @@
             state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
             state.p[0].target170 = 170;
             state.p[0].s = startScore;
+            state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
             document.getElementById('setup-layer').classList.add('hidden');
             playDartSound('gameon');
             render();
@@ -1221,11 +1174,7 @@
                     try {
                         const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
                         await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
-                            activeChallenge: {
-                                hostName: window.currentUserDoc.displayName,
-                                matchId: id,
-                                time: Date.now()
-                            }
+                            activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
                         });
                         alert("Challenge sent! Waiting for them to accept...");
                     } catch(e) {}
@@ -1257,11 +1206,7 @@
                 } else {
                     if (stream) { call.answer(stream); } else { call.answer(); }
                     limitVideoBitrate(call.peerConnection, 1500);
-                    call.on('stream', s => {
-                        currentCall = call;
-                        if(s) { attachPeerVideo(s); }
-                        render();
-                    });
+                    call.on('stream', s => { currentCall = call; if(s) { attachPeerVideo(s); } render(); });
                 }
             });
 
@@ -1275,10 +1220,7 @@
             });
 
             peer.on('error', err => {
-                if (state.mode !== 'single') {
-                    log.innerText = "Connection Error: " + err.type;
-                    startBtn.disabled = false;
-                }
+                if (state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
             });
 
         } catch (e) {
@@ -1296,9 +1238,7 @@
     function connectToMatch(id, isSpectator = false) {
         const c = peer.connect(id);
         conns.push(c);
-        c.on('open', () => { 
-            if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); 
-        });
+        c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); });
         c.on('data', d => handleData(d));
         
         if (isSpectator) {
@@ -1312,17 +1252,12 @@
     }
 
     function handleData(data) {
-        if (data.type === 'SOUND') {
-            playDartSound(data.sound);
-            return;
-        }
-
+        if (data.type === 'SOUND') { playDartSound(data.sound); return; }
         if (data.type === 'CAM_PAUSED') {
             const overlay = document.getElementById('peer-paused-msg');
             if (overlay) { data.paused ? overlay.classList.add('visible') : overlay.classList.remove('visible'); }
             return;
         }
-
         if (data.type === 'BULL_PHASE') { toggleBullPhase(data.active); return; }
         if (data.type === 'ZOOM') {
             const peerVid = document.getElementById('peer');
@@ -1334,6 +1269,7 @@
             state.bestOf = data.state.bestOf;
             state.mode = data.state.mode;
             state.gameType = data.state.gameType;
+            state.inputMode = data.state.inputMode;
             state.limit170 = data.state.limit170 || 9;
             state.p[0].name = data.state.p[0].name;
             state.p[0].avatar = data.state.p[0].avatar; 
@@ -1353,6 +1289,7 @@
                     player.f9d = player.f9d ?? 0; player.hc = player.hc ?? 0;
                     player.n140 = player.n140 ?? 0; player.n180 = player.n180 ?? 0;
                     player.target170 = player.target170 || 170;
+                    player.marks = player.marks || {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
                     if(data.p[i].avatar !== undefined) player.avatar = data.p[i].avatar; 
                 });
             }
@@ -1372,13 +1309,9 @@
 
     function toggleMic() {
         isMicMuted = !isMicMuted;
-        if (stream && stream.getAudioTracks().length > 0) {
-            stream.getAudioTracks()[0].enabled = !isMicMuted;
-        }
-        
+        if (stream && stream.getAudioTracks().length > 0) { stream.getAudioTracks()[0].enabled = !isMicMuted; }
         const peerVideo = document.getElementById('peer');
         if (peerVideo) peerVideo.muted = isMicMuted;
-
         const btn = document.getElementById('mic-btn');
         if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
         else { btn.innerText = "MIC ON"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
@@ -1429,35 +1362,109 @@
         let p = state.p[state.turn];
 
         p.d++; 
-        if (multiplier > 0) { 
-            p.s += multiplier; 
-        } 
+        if (multiplier > 0) { p.s += multiplier; } 
         
         if (p.s > 21) {
             state.winner = state.turn;
         } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
             state.turn = (state.turn === 0) ? 1 : 0;
         }
-        
         render(); 
-        if (!isLocalMatch) {
-            broadcast(state);
+        if (!isLocalMatch) { broadcast(state); }
+    }
+
+    // NEW DART PARSER FOR DART-BY-DART INPUT
+    function parseDart(str) {
+        str = str.toUpperCase().trim();
+        if (!str || str === '0' || str === 'MISS' || str === 'M') return { val: 0, mult: 0, pts: 0 };
+        if (str === 'BULL' || str === 'DB' || str === '50') return { val: 25, mult: 2, pts: 50 };
+        if (str === '25' || str === 'B' || str === 'SB') return { val: 25, mult: 1, pts: 25 };
+        
+        let mult = 1;
+        if (str.startsWith('T')) { mult = 3; str = str.substring(1); }
+        else if (str.startsWith('D')) { mult = 2; str = str.substring(1); }
+        else if (str.startsWith('S')) { mult = 1; str = str.substring(1); }
+        
+        let val = parseInt(str);
+        if (isNaN(val) || val < 0 || val > 20) return null; // Invalid input
+        return { val: val, mult: mult, pts: val * mult };
+    }
+
+    // CHECK CRICKET WIN CONDITION
+    function checkCricketWin(pIndex) {
+        let p = state.p[pIndex];
+        let opp = state.p[pIndex === 0 ? 1 : 0];
+        let allClosed = true;
+        for (let num of [10,11,12,13,14,15,16,17,18,19,20,25]) {
+            if (p.marks[num] < 3) allClosed = false;
         }
+        return allClosed && (p.s >= opp.s);
     }
 
     function processHit() {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
-        const input = document.getElementById('pts-input');
-        
-        const valStr = input.value.trim();
-        const val = valStr === '' ? 0 : parseInt(valStr);
-
-        if (isNaN(val) || val < 0 || val > 180) return;
         
         history = JSON.parse(JSON.stringify(state));
         let p = state.p[state.turn];
 
         p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0; p.f9d = p.f9d ?? 0; p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
+
+        let soundToPlay = 0; 
+        
+        // --- CRICKET LOGIC ---
+        if (state.gameType === 'cricket') {
+            let d1 = parseDart(document.getElementById('d1-input').value);
+            let d2 = parseDart(document.getElementById('d2-input').value);
+            let d3 = parseDart(document.getElementById('d3-input').value);
+            
+            if (d1 === null || d2 === null || d3 === null) { alert("Invalid format! Use T20, D15, B, etc."); return; }
+            
+            let opp = state.p[state.turn === 0 ? 1 : 0];
+            p.d += 3; p.ld += 3;
+            
+            let darts = [d1, d2, d3];
+            for (let d of darts) {
+                if ((d.val >= 10 && d.val <= 20) || d.val === 25) {
+                    let currentMarks = p.marks[d.val];
+                    let newMarks = Math.min(3, currentMarks + d.mult);
+                    let excess = (currentMarks + d.mult) - 3;
+                    p.marks[d.val] = newMarks;
+                    if (excess > 0 && opp.marks[d.val] < 3) {
+                        p.s += excess * d.val;
+                    }
+                }
+            }
+            
+            soundToPlay = 'gameon'; 
+            
+            if (checkCricketWin(state.turn)) {
+                state.winner = state.turn;
+            } else if (state.mode !== 'single') {
+                state.turn = state.turn === 0 ? 1 : 0;
+            }
+            
+            playDartSound(soundToPlay);
+            render(); 
+            if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
+            
+            ['d1-input', 'd2-input', 'd3-input'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('d1-input').focus();
+            return;
+        }
+
+        // --- X01 / 121 / 170 LOGIC ---
+        let val = 0;
+        if (state.inputMode === 'darts') {
+            let d1 = parseDart(document.getElementById('d1-input').value);
+            let d2 = parseDart(document.getElementById('d2-input').value);
+            let d3 = parseDart(document.getElementById('d3-input').value);
+            if (d1 === null || d2 === null || d3 === null) { alert("Invalid format! Use T20, D10, 25..."); return; }
+            val = d1.pts + d2.pts + d3.pts;
+        } else {
+            const valStr = document.getElementById('pts-input').value.trim();
+            val = valStr === '' ? 0 : parseInt(valStr);
+            if (isNaN(val) || val < 0 || val > 180) return;
+        }
         
         if (p.ld < 9) { p.f9d += 3; }
         p.d += 3; p.ld += 3;
@@ -1467,11 +1474,10 @@
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '1001') startScore = 1001;
         if (state.gameType === '121') startScore = 121 + p.l;
-        if (state.gameType === 'atc') startScore = 1;
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
-        let soundToPlay = val; 
+        soundToPlay = val; 
 
         if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
             if (state.gameType === '121') {
@@ -1495,9 +1501,7 @@
                 if (val > p.hc) p.hc = val; 
                 p.l++; 
                 
-                if (state.gameType === '170') {
-                    p.target170 = Math.min(170, (p.target170 || 170) + 1);
-                }
+                if (state.gameType === '170') { p.target170 = Math.min(170, (p.target170 || 170) + 1); }
                 
                 if (state.mode === 'single') {
                     state.p[0].s = state.gameType === '121' ? 121 + p.l : (state.gameType === '170' ? p.target170 : startScore);
@@ -1506,9 +1510,7 @@
                 } else {
                     if (state.gameType !== '121' && state.gameType !== '170') {
                         const legsRequiredToWin = Math.ceil(state.bestOf / 2); 
-                        if (p.l >= legsRequiredToWin) { 
-                            state.winner = state.turn; 
-                        } 
+                        if (p.l >= legsRequiredToWin) { state.winner = state.turn; } 
                         else {
                             state.p.forEach(x => { x.s = startScore; x.ld = 0; }); 
                             state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
@@ -1522,12 +1524,8 @@
                 }
             } else { 
                 if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
-                    if (state.gameType === '170') {
-                        p.target170 = (p.target170 || 170) - 1;
-                        p.s = p.target170;
-                    } else {
-                        p.s = 121 + p.l;
-                    }
+                    if (state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; } 
+                    else { p.s = 121 + p.l; }
                     p.ld = 0;
                     soundToPlay = 'bust'; 
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
@@ -1537,24 +1535,19 @@
             }
         } else { 
             soundToPlay = 'bust';
-            if (state.gameType === '121' && p.ld >= 9) {
-                p.s = 121 + p.l; p.ld = 0; 
-            } else if (state.gameType === '170') {
-                p.target170 = (p.target170 || 170) - 1;
-                p.s = p.target170;
-                p.ld = 0;
-            }
+            if (state.gameType === '121' && p.ld >= 9) { p.s = 121 + p.l; p.ld = 0; } 
+            else if (state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; p.ld = 0; }
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
         }
         
         playDartSound(soundToPlay);
         render(); 
 
-        if (!isLocalMatch) {
-            broadcast(state);
-            broadcast({ type: 'SOUND', sound: soundToPlay });
-        }
-        input.value = ''; input.blur(); 
+        if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
+        
+        document.getElementById('pts-input').value = ''; document.getElementById('pts-input').blur();
+        ['d1-input', 'd2-input', 'd3-input'].forEach(id => document.getElementById(id).value = '');
+        if (state.inputMode === 'darts') document.getElementById('d1-input').focus();
     }
 
     function undo() {
@@ -1568,6 +1561,7 @@
         if (state.gameType === '1001') startScore = 1001;
         if (state.gameType === '121') startScore = 121;
         if (state.gameType === 'atc') startScore = 1;
+        if (state.gameType === 'cricket') startScore = 0;
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
@@ -1577,12 +1571,13 @@
             x.target170 = 170;
             x.s = state.gameType === '170' ? 170 : startScore; 
             x.l = 0; x.pts = 0; x.d = 0; x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
+            x.marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
         });
         delete state.winner; history = null;
         document.getElementById('winner-layer').classList.add('hidden');
         if (!isLocalMatch) broadcast(state);
 
-        if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170') { 
+        if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') { 
             playDartSound('gameon');
             if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
             render(); 
@@ -1600,12 +1595,8 @@
             document.getElementById(`n-${i}`).innerText = p.name;
             
             const avatarImg = document.getElementById(`avatar-${i}`);
-            if (p.avatar && p.avatar !== "") {
-                avatarImg.src = p.avatar;
-                avatarImg.style.display = 'inline-block';
-            } else {
-                avatarImg.style.display = 'none';
-            }
+            if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
+            else { avatarImg.style.display = 'none'; }
             
             if (state.gameType === 'atc') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
@@ -1613,19 +1604,38 @@
                 document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
                 document.getElementById(`co-${i}`).innerText = "TARGET";
                 document.getElementById(`l-area-${i}`).style.display = 'none';
-            } else if (state.gameType === '121' || state.gameType === '170') {
+                document.getElementById(`cric-${i}`).style.display = 'none';
+                document.getElementById(`srow-${i}`).style.display = 'flex';
+            } 
+            else if (state.gameType === 'cricket') {
+                document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
+                document.getElementById(`avg-${i}`).innerText = p.d;
+                document.getElementById(`s-${i}`).innerText = p.s;
+                document.getElementById(`l-area-${i}`).style.display = 'none';
+                document.getElementById(`co-${i}`).style.display = 'none';
+                document.getElementById(`srow-${i}`).style.display = 'flex';
+                
+                let cricHtml = '';
+                [20,19,18,17,16,15,14,13,12,11,10,25].forEach(num => {
+                    let m = p.marks[num] || 0;
+                    let sym = m === 0 ? '-' : (m === 1 ? '╱' : (m === 2 ? 'X' : '⊗'));
+                    let cls = m === 3 ? 'cricket-item closed' : 'cricket-item';
+                    let label = num === 25 ? 'B' : num;
+                    cricHtml += `<div class="${cls}">${label}: <span>${sym}</span></div>`;
+                });
+                document.getElementById(`cric-${i}`).innerHTML = cricHtml;
+                document.getElementById(`cric-${i}`).style.display = 'grid';
+            }
+            else if (state.gameType === '121' || state.gameType === '170') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
-                
-                if (state.gameType === '170') {
-                    document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`;
-                } else {
-                    document.getElementById(`avg-${i}`).innerText = p.ld; 
-                }
-                
+                if (state.gameType === '170') { document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`; } 
+                else { document.getElementById(`avg-${i}`).innerText = p.ld; }
                 document.getElementById(`s-${i}`).innerText = p.s;
                 document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 document.getElementById(`l-area-${i}`).style.display = 'block';
                 document.getElementById(`l-${i}`).innerText = p.l; 
+                document.getElementById(`cric-${i}`).style.display = 'none';
+                document.getElementById(`co-${i}`).style.display = 'block';
             } else {
                 document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                 document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
@@ -1633,6 +1643,8 @@
                 document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 document.getElementById(`l-area-${i}`).style.display = 'block';
                 document.getElementById(`l-${i}`).innerText = p.l;
+                document.getElementById(`cric-${i}`).style.display = 'none';
+                document.getElementById(`co-${i}`).style.display = 'block';
             }
             
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
@@ -1666,14 +1678,21 @@
                 document.getElementById('standard-controls').style.display = 'grid';
                 document.getElementById('atc-controls').style.display = 'none';
                 
-                const ptsInput = document.getElementById('pts-input');
-                const hitBtn = document.getElementById('hit-btn');
-                
-                if (isLocalMatch || state.mode === 'single' || state.turn === myIndex) {
-                    ptsInput.disabled = false; hitBtn.disabled = false; ptsInput.placeholder = "0";
+                // TOGGLE INPUT BOXES
+                if (state.inputMode === 'darts') {
+                    document.getElementById('total-input-box').style.display = 'none';
+                    document.getElementById('darts-input-box').style.display = 'flex';
                 } else {
-                    ptsInput.disabled = true; hitBtn.disabled = true; ptsInput.placeholder = "Waiting...";
+                    document.getElementById('total-input-box').style.display = 'flex';
+                    document.getElementById('darts-input-box').style.display = 'none';
                 }
+
+                const isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
+                document.getElementById('pts-input').disabled = !isMyTurn;
+                document.getElementById('d1-input').disabled = !isMyTurn;
+                document.getElementById('d2-input').disabled = !isMyTurn;
+                document.getElementById('d3-input').disabled = !isMyTurn;
+                document.getElementById('hit-btn').disabled = !isMyTurn;
             }
 
             if (!isLocalMatch && !document.body.classList.contains('bull-throw') && state.mode !== 'single') {
@@ -1711,7 +1730,7 @@
                 let pStats = state.p[i];
                 document.getElementById(`ws-n${i}`).innerText = pStats.name;
                 
-                if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170') {
+                if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
                     document.getElementById('ws-label-avg').innerText = "Total Darts";
                     document.getElementById(`ws-avg${i}`).innerText = pStats.d;
                 } else {
@@ -1745,6 +1764,8 @@
         let currentScoreText = "";
         if (state.gameType === 'atc') {
             currentScoreText = `🎯 ${p1.name} - Target: ${p1.s <= 20 ? p1.s : "BULL"}`;
+        } else if (state.gameType === 'cricket') {
+            currentScoreText = `🎯 ${p1.name} [Cricket] ${p2.name}`;
         } else {
             currentScoreText = `🎯 ${p1.name} (${p1.l} legs) ${p1.s} - ${p2.s} (${p2.l} legs) ${p2.name}`;
         }
