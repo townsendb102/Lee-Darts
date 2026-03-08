@@ -124,11 +124,12 @@
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
 
-        /* CRICKET GRID STYLES */
-        .cricket-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-top: 5px; }
-        .cricket-item { background: rgba(0,0,0,0.5); padding: 4px; font-size: 11px; text-align: center; border-radius: 4px; color: white; border: 1px solid rgba(255,255,255,0.1); }
-        .cricket-item span { color: var(--blue); font-weight: bold; font-size: 13px; }
-        .cricket-item.closed { background: rgba(76, 175, 80, 0.2); border-color: #4caf50; }
+        /* CRICKET CENTER BOARD STYLES */
+        #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--card); border-radius: 8px; padding: 4px; border: 1px solid #1b4965; justify-content: space-evenly; margin: 0 5px; }
+        .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
+        .cric-mark { flex: 1; text-align: center; font-size: 14px; font-weight: bold; color: var(--blue); }
+        .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: #222; border-radius: 4px; padding: 1px 0; border: 1px solid #444;}
+        .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: #111; border-color: #222;}
 
         .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid #1b4965; padding: 8px; }
         .controls { display: grid; gap: 8px; }
@@ -385,7 +386,7 @@
     </div>
 </div>
 
-<div class="score-area">
+<div class="score-area" id="main-score-area">
     <div id="card-0" class="player-card active">
         <div class="p-name"><img id="avatar-0" class="in-game-avatar" src=""><span id="n-0">P1</span></div>
         <div class="score-row" id="srow-0">
@@ -394,8 +395,13 @@
             <div class="legs-count" id="l-area-0"><span id="l-0">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-0"></div>
-        <div class="cricket-grid hidden" id="cric-0"></div>
     </div>
+    
+    <div id="cricket-center" class="hidden">
+        <div style="text-align: center; font-size: 10px; color: #888; margin-bottom: 2px; font-weight: bold; letter-spacing: 1px;">CRICKET</div>
+        <div id="cric-board-rows" style="display: flex; flex-direction: column; gap: 2px;"></div>
+    </div>
+
     <div id="card-1" class="player-card">
         <div class="p-name"><img id="avatar-1" class="in-game-avatar" src=""><span id="n-1">P2</span></div>
         <div class="score-row" id="srow-1">
@@ -404,15 +410,13 @@
             <div class="legs-count" id="l-area-1"><span id="l-1">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-1"></div>
-        <div class="cricket-grid hidden" id="cric-1"></div>
     </div>
 </div>
 
 <div class="controls-wrapper">
-    
     <div class="controls" id="standard-controls">
         <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-bottom: -5px;">
-            <button id="mode-toggle-btn" class="header-btn" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold;">MODE: TOTAL SCORE</button>
+            <button id="mode-toggle-btn" class="header-btn" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
         </div>
 
         <div class="score-input-box" id="total-input-box">
@@ -722,15 +726,15 @@
         }
     }
 </script>
+
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
     // --- SCREEN WAKELOCK ---
     let wakeLock = null;
     async function requestWakeLock() {
-        try {
-            if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); }
-        } catch (err) {}
+        try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
+        catch (err) {}
     }
     document.addEventListener('visibilitychange', () => {
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
@@ -761,7 +765,6 @@
         });
     });
 
-    // --- CLOUD STATS SAVER ---
     let statsSavedThisMatch = false;
     async function saveStatsToCloud() {
         if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
@@ -786,7 +789,6 @@
             if(userSnap.exists()) {
                 let dbData = userSnap.data();
                 
-                // Only add to Lifetime Stats if it's a standard X01 game
                 let newPts = dbData.totalPts || 0;
                 let newDarts = dbData.totalDarts || 0;
                 let newHc = dbData.highCheckout || 0;
@@ -844,7 +846,7 @@
     let myIndex = 0;
     let currentZoom = 1; 
     let isLocalMatch = false; 
-    let localInputMode = 'total'; // NEW: LOCAL TOGGLE STATE
+    let localInputMode = 'total';
     
     let state = { mode: 'online', gameType: '501', limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
@@ -941,7 +943,6 @@
     document.body.addEventListener('click', unlockAudio, { once: true });
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
-    // DART-BY-DART AUTO FOCUS
     document.querySelectorAll('.dart-box').forEach((box, index, boxes) => {
         box.addEventListener('input', function() {
             if(this.value.length >= 3 && index < boxes.length - 1) { boxes[index + 1].focus(); }
@@ -1006,7 +1007,6 @@
         document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
         document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
 
-        // ON THE FLY INPUT TOGGLE
         document.getElementById('mode-toggle-btn').onclick = () => {
             localInputMode = localInputMode === 'total' ? 'darts' : 'total';
             render();
@@ -1366,7 +1366,6 @@
         if (!isLocalMatch) { broadcast(state); }
     }
 
-    // --- CRICKET KEYPAD LOGIC ---
     let cricketMult = 1;
     window.setCricMult = function(m) {
         cricketMult = m;
@@ -1395,17 +1394,22 @@
         
         if (val > 0) {
             let currentMarks = p.marks[val] || 0;
-            let newMarks = Math.min(3, currentMarks + cricketMult);
-            let excess = (currentMarks + cricketMult) - 3;
+            let oppMarks = opp.marks[val] || 0;
             
-            p.marks[val] = newMarks;
+            let marksToAdd = cricketMult;
+            let spaceLeft = 3 - currentMarks;
             
-            if (excess > 0 && (opp.marks[val] || 0) < 3) {
-                p.s += excess * val;
+            let marksApplied = Math.min(spaceLeft, marksToAdd);
+            let excess = marksToAdd - marksApplied;
+            
+            p.marks[val] += marksApplied;
+            
+            if (excess > 0 && oppMarks < 3) {
+                p.s += (excess * val);
             }
         }
         
-        setCricMult(1); // Reset toggle to Single
+        setCricMult(1);
         
         if (checkCricketWin(state.turn)) {
             state.winner = state.turn;
@@ -1417,7 +1421,6 @@
         if (!isLocalMatch) { broadcast(state); }
     }
 
-    // --- STANDARD INPUT LOGIC ---
     function parseDart(str) {
         str = str.toUpperCase().trim();
         if (!str || str === '0' || str === 'MISS' || str === 'M') return { val: 0, mult: 0, pts: 0 };
@@ -1584,27 +1587,11 @@
                 document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
                 document.getElementById(`co-${i}`).innerText = "TARGET";
                 document.getElementById(`l-area-${i}`).style.display = 'none';
-                document.getElementById(`cric-${i}`).style.display = 'none';
-                document.getElementById(`srow-${i}`).style.display = 'flex';
             } 
             else if (state.gameType === 'cricket') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
                 document.getElementById(`avg-${i}`).innerText = p.d;
                 document.getElementById(`s-${i}`).innerText = p.s;
-                document.getElementById(`l-area-${i}`).style.display = 'none';
-                document.getElementById(`co-${i}`).style.display = 'none';
-                document.getElementById(`srow-${i}`).style.display = 'flex';
-                
-                let cricHtml = '';
-                [20,19,18,17,16,15,14,13,12,11,10,25].forEach(num => {
-                    let m = p.marks[num] || 0;
-                    let sym = m === 0 ? '-' : (m === 1 ? '╱' : (m === 2 ? 'X' : '⊗'));
-                    let cls = m >= 3 ? 'cricket-item closed' : 'cricket-item';
-                    let label = num === 25 ? 'B' : num;
-                    cricHtml += `<div class="${cls}">${label}: <span>${sym}</span></div>`;
-                });
-                document.getElementById(`cric-${i}`).innerHTML = cricHtml;
-                document.getElementById(`cric-${i}`).style.display = 'grid';
             }
             else if (state.gameType === '121' || state.gameType === '170') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
@@ -1614,7 +1601,6 @@
                 document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 document.getElementById(`l-area-${i}`).style.display = 'block';
                 document.getElementById(`l-${i}`).innerText = p.l; 
-                document.getElementById(`cric-${i}`).style.display = 'none';
                 document.getElementById(`co-${i}`).style.display = 'block';
             } else {
                 document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
@@ -1623,7 +1609,6 @@
                 document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 document.getElementById(`l-area-${i}`).style.display = 'block';
                 document.getElementById(`l-${i}`).innerText = p.l;
-                document.getElementById(`cric-${i}`).style.display = 'none';
                 document.getElementById(`co-${i}`).style.display = 'block';
             }
             
@@ -1633,6 +1618,13 @@
         if (!spectateId) {
             
             if (state.gameType === 'atc') {
+                document.getElementById('cricket-center').classList.add('hidden');
+                document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local') ? 'column' : 'row';
+                [0, 1].forEach(i => {
+                    if(document.getElementById(`srow-${i}`)) document.getElementById(`srow-${i}`).style.flexDirection = 'row';
+                    document.getElementById(`s-${i}`).style.fontSize = 'clamp(30px, 6dvh, 50px)';
+                });
+
                 document.getElementById('standard-controls').style.display = 'none';
                 document.getElementById('atc-controls').style.display = 'grid';
                 document.getElementById('cricket-controls').style.display = 'none';
@@ -1656,17 +1648,66 @@
                     document.getElementById(id).style.opacity = isMyTurn ? 1 : 0.5;
                 });
             } else if (state.gameType === 'cricket') {
+                
+                // RENDER CRICKET BOARD
+                document.getElementById('cricket-center').classList.remove('hidden');
+                document.getElementById('main-score-area').style.flexDirection = 'row';
+                
+                let cricRowsHtml = '';
+                [20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 25].forEach(t => {
+                    let m0 = state.p[0].marks[t] || 0;
+                    let m1 = state.p[1] ? (state.p[1].marks[t] || 0) : 0;
+                    
+                    let sym0 = m0 === 0 ? '' : (m0 === 1 ? '╱' : (m0 === 2 ? 'X' : '⊗'));
+                    let sym1 = m1 === 0 ? '' : (m1 === 1 ? '╱' : (m1 === 2 ? 'X' : '⊗'));
+                    
+                    let isClosed = (state.mode === 'single') ? (m0 === 3) : (m0 === 3 && m1 === 3);
+                    let numClass = isClosed ? 'cric-num closed' : 'cric-num';
+                    let label = t === 25 ? 'B' : t;
+                    
+                    cricRowsHtml += `
+                        <div class="cric-row">
+                            <div class="cric-mark">${sym0}</div>
+                            <div class="${numClass}">${label}</div>
+                            <div class="cric-mark">${state.mode === 'single' ? '' : sym1}</div>
+                        </div>
+                    `;
+                });
+                document.getElementById('cric-board-rows').innerHTML = cricRowsHtml;
+                
+                [0, 1].forEach(i => {
+                    if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'none';
+                    if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).style.display = 'none';
+                    if(document.getElementById(`srow-${i}`)) {
+                        document.getElementById(`srow-${i}`).style.flexDirection = 'column';
+                        document.getElementById(`srow-${i}`).style.alignItems = 'center';
+                        document.getElementById(`srow-${i}`).style.gap = '5px';
+                    }
+                    document.getElementById(`s-${i}`).style.fontSize = '28px';
+                });
+
                 document.getElementById('standard-controls').style.display = 'none';
                 document.getElementById('atc-controls').style.display = 'none';
-                document.getElementById('cricket-controls').style.display = 'grid';
+                document.getElementById('cricket-controls').style.display = 'block';
 
                 let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
-                document.querySelectorAll('.cric-num-btn, .btn-undo').forEach(btn => {
+                document.querySelectorAll('.cric-num-btn, .cric-mult, .btn-undo').forEach(btn => {
                     btn.disabled = !isMyTurn;
                     btn.style.opacity = isMyTurn ? 1 : 0.5;
                 });
 
             } else {
+                
+                document.getElementById('cricket-center').classList.add('hidden');
+                document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local') ? 'column' : 'row';
+                [0, 1].forEach(i => {
+                    if(document.getElementById(`srow-${i}`)) {
+                        document.getElementById(`srow-${i}`).style.flexDirection = 'row';
+                        document.getElementById(`srow-${i}`).style.alignItems = 'center';
+                    }
+                    document.getElementById(`s-${i}`).style.fontSize = 'clamp(30px, 6dvh, 50px)';
+                });
+
                 document.getElementById('standard-controls').style.display = 'grid';
                 document.getElementById('atc-controls').style.display = 'none';
                 document.getElementById('cricket-controls').style.display = 'none';
