@@ -615,8 +615,13 @@
 
         onAuthStateChanged(window.auth, async (user) => {
             if (user) {
+                // FORCE UI RESET TO STOP CACHING GLITCHES
                 loginLayer.style.display = 'none';
+                profileLayer.classList.add('hidden');
+                historyLayer.classList.add('hidden');
+                friendsLayer.classList.add('hidden');
                 setupLayer.classList.remove('hidden');
+
                 document.getElementById('logout-btn').style.display = 'block';
                 document.getElementById('open-profile-btn').style.display = 'block';
                 const userRef = doc(window.db, "users", user.uid);
@@ -773,7 +778,6 @@
                 await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { friends: arrayUnion(friendId) });
                 document.getElementById('friend-email').value = "";
                 err.style.color = "#4caf50"; err.innerText = "Friend Added!";
-                // Automatically triggers snapshot listener, which rebuilds the list safely.
             } else {
                 err.style.color = "#ff4d4d"; err.innerText = "User not found.";
             }
@@ -782,8 +786,7 @@
         async function renderProfileMenu() {
             if(!window.currentUserDoc) return;
             
-            // Fix 1: Safe fallback for email on immediate login
-            let displayEmail = window.auth?.currentUser?.email || window.currentUserDoc.email || "Player";
+            let displayEmail = (window.auth && window.auth.currentUser) ? window.auth.currentUser.email : (window.currentUserDoc.email || "Player");
             document.getElementById('prof-email').innerText = displayEmail;
             
             if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
@@ -824,7 +827,6 @@
             list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>Loading friends...</p>";
             
             if(window.currentUserDoc.friends && window.currentUserDoc.friends.length > 0) {
-                // Fix 2: Batch HTML rendering prevents the async list from overwriting itself and going blank
                 let tempFriendsHtml = "";
                 for(let uid of window.currentUserDoc.friends) {
                     try {
@@ -835,7 +837,6 @@
                             let fHc = f.highCheckout || 0;
                             let fImg = f.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=';
                             
-                            // Fix 3: Added flex-shrink: 0 to the image, and truncation limits on the text span
                             tempFriendsHtml += `
                             <div class="friend-item">
                                 <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue);flex-shrink:0;">
