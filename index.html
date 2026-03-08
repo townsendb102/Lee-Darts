@@ -1132,6 +1132,10 @@
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '1001') startScore = 1001;
         if (state.gameType === '121') startScore = 121;
+        
+        // FIXED: ADDED ATC BACK TO THE START SCORE LOGIC
+        if (state.gameType === 'atc') startScore = 1; 
+        
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
@@ -1465,6 +1469,7 @@
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '1001') startScore = 1001;
         if (state.gameType === '121') startScore = 121 + p.l;
+        if (state.gameType === 'atc') startScore = 1;
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
