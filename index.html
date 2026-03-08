@@ -150,18 +150,23 @@
         .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
         .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 12px 0;}
         .np-btn:active { background: var(--blue); color: black; }
+        .np-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .np-btn.enter { background: var(--blue); color: black; grid-column: span 2; }
         .np-btn.enter:disabled { background: #333; color: #666; }
         
-        /* DART-BY-DART INPUT STYLES */
-        .darts-input-row { display: flex; gap: 5px; height: 45px;}
-        .dart-box { flex: 1; text-align: center; font-size: 20px; font-weight: bold; text-transform: uppercase; background: rgba(0,0,0,0.5) !important; border: 1px solid rgba(255, 255, 255, 0.15); color: white; outline: none; -webkit-appearance: none; appearance: none; border-radius: 8px; box-shadow: none; }
-        .dart-box:focus { background: rgba(0, 212, 255, 0.1) !important; border-color: var(--blue); }
+        /* NEW DART-BY-DART GRID STYLES */
+        .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+        .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 16px; font-weight: bold; border-radius: 6px; padding: 10px 0; cursor: pointer; text-align: center;}
+        .dbd-btn:active { background: var(--blue); color: black; }
+        .dbd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 40px; font-size: 20px; font-weight: bold; border-radius: 6px; height: 40px; }
 
         /* CRICKET CUSTOM KEYPAD STYLES */
-        .cric-mult { flex: 1; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 14px;}
+        .cric-mult { flex: 1; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer;}
         .cric-mult.active { background: var(--blue); color: black; border-color: var(--blue); }
+        .cric-mult:disabled { opacity: 0.5; cursor: not-allowed; }
         .cric-num-btn { background: #111; border: 1px solid #333; border-radius: 6px; color: white; font-size: 18px; font-weight: bold; padding: 12px; cursor: pointer; }
+        .cric-num-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
@@ -481,7 +486,7 @@
         </div>
 
         <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            <div id="numpad-display"></div>
+            <div id="numpad-display">0</div>
             <div class="np-grid">
                 <button class="np-btn" onclick="np(1)">1</button>
                 <button class="np-btn" onclick="np(2)">2</button>
@@ -498,13 +503,45 @@
             </div>
         </div>
 
-        <div id="darts-mode-ui" class="hidden" style="display: none; flex-direction: column; gap: 8px; height: 100%;">
-            <div class="darts-input-row">
-                <input type="text" id="d1-input" class="dart-box" placeholder="1" maxlength="3">
-                <input type="text" id="d2-input" class="dart-box" placeholder="2" maxlength="3">
-                <input type="text" id="d3-input" class="dart-box" placeholder="3" maxlength="3">
+        <div id="darts-mode-ui" class="hidden" style="display: none; flex-direction: column; gap: 6px; height: 100%;">
+            <div style="display: flex; gap: 6px; align-items: center;">
+                <div class="dbd-slot" id="dbd-slot-1">-</div>
+                <div class="dbd-slot" id="dbd-slot-2">-</div>
+                <div class="dbd-slot" id="dbd-slot-3">-</div>
+                <button class="dbd-btn" id="dbd-del-btn" style="background:#444; width:50px;" onclick="dbdDel()">⌫</button>
+                <button class="dbd-btn" id="dbd-enter-btn" style="background:var(--blue); color:black; width:60px; font-weight:bold;" onclick="dbdEnter()">OK</button>
             </div>
-            <button class="btn-hit" id="hit-btn" style="height: 100%; min-height: 60px;">HIT</button>
+            <div style="display: flex; gap: 4px;">
+                <button class="cric-mult active" id="dbd-m-1" onclick="setDbdMult(1)">SINGLE</button>
+                <button class="cric-mult" id="dbd-m-2" onclick="setDbdMult(2)">DOUBLE</button>
+                <button class="cric-mult" id="dbd-m-3" onclick="setDbdMult(3)">TREBLE</button>
+            </div>
+            <div class="dbd-grid">
+                <button class="dbd-btn" onclick="hitDbd(20)">20</button>
+                <button class="dbd-btn" onclick="hitDbd(19)">19</button>
+                <button class="dbd-btn" onclick="hitDbd(18)">18</button>
+                <button class="dbd-btn" onclick="hitDbd(17)">17</button>
+                <button class="dbd-btn" onclick="hitDbd(16)">16</button>
+                <button class="dbd-btn" onclick="hitDbd(15)">15</button>
+                <button class="dbd-btn" onclick="hitDbd(14)">14</button>
+                <button class="dbd-btn" onclick="hitDbd(13)">13</button>
+                <button class="dbd-btn" onclick="hitDbd(12)">12</button>
+                <button class="dbd-btn" onclick="hitDbd(11)">11</button>
+                <button class="dbd-btn" onclick="hitDbd(10)">10</button>
+                <button class="dbd-btn" onclick="hitDbd(9)">9</button>
+                <button class="dbd-btn" onclick="hitDbd(8)">8</button>
+                <button class="dbd-btn" onclick="hitDbd(7)">7</button>
+                <button class="dbd-btn" onclick="hitDbd(6)">6</button>
+                <button class="dbd-btn" onclick="hitDbd(5)">5</button>
+                <button class="dbd-btn" onclick="hitDbd(4)">4</button>
+                <button class="dbd-btn" onclick="hitDbd(3)">3</button>
+                <button class="dbd-btn" onclick="hitDbd(2)">2</button>
+                <button class="dbd-btn" onclick="hitDbd(1)">1</button>
+            </div>
+            <div style="display:flex; gap:4px;">
+                <button class="dbd-btn" style="flex:1;" onclick="hitDbd(25)">BULL</button>
+                <button class="dbd-btn" style="flex:1; background:#444;" onclick="hitDbd(0)">MISS</button>
+            </div>
         </div>
     </div>
 
@@ -633,7 +670,6 @@
                     document.getElementById('name-input').value = window.currentUserDoc.displayName;
                     document.getElementById('edit-name-input').value = window.currentUserDoc.displayName;
                     
-                    // APPLY THEME
                     if(window.currentUserDoc.theme) {
                         document.body.className = `theme-${window.currentUserDoc.theme}`;
                         document.getElementById('theme-select').value = window.currentUserDoc.theme;
@@ -659,7 +695,6 @@
         }
     });
 
-    // CHANGE THEME LOGIC
     document.getElementById('theme-select').addEventListener('change', async function() {
         const selectedTheme = this.value;
         document.body.className = `theme-${selectedTheme}`;
@@ -729,12 +764,7 @@
         if(confirm("Are you sure you want to completely reset your Lifetime Stats? This clears your Average, Checkout %, High Out, and Match History.")) {
             try {
                 await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), {
-                    totalPts: 0,
-                    totalDarts: 0,
-                    coAtt: 0,
-                    coHit: 0,
-                    highCheckout: 0,
-                    matchHistory: []
+                    totalPts: 0, totalDarts: 0, coAtt: 0, coHit: 0, highCheckout: 0, matchHistory: []
                 });
                 alert("Stats successfully reset!");
             } catch(e) { alert("Error resetting stats."); }
@@ -798,6 +828,7 @@
         const email = document.getElementById('friend-email').value.trim().toLowerCase();
         const err = document.getElementById('friend-error');
         if(!email) return;
+        
         err.style.color = "white"; err.innerText = "Searching...";
         const q = query(collection(window.db, "users"), where("email", "==", email));
         const snap = await getDocs(q);
@@ -806,6 +837,7 @@
             const friendId = snap.docs[0].id;
             if(friendId === window.auth.currentUser.uid) { err.innerText = "You can't add yourself!"; return; }
             if(window.currentUserDoc.friends && window.currentUserDoc.friends.includes(friendId)) { err.innerText = "Already friends!"; return; }
+            
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { friends: arrayUnion(friendId) });
             document.getElementById('friend-email').value = "";
             err.style.color = "#4caf50"; err.innerText = "Friend Added!";
@@ -999,6 +1031,10 @@
     let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
     let isLocalMatch = false; let localInputMode = 'total'; let numpadVal = "";
     
+    // NEW DART BY DART STATE
+    let dbdMult = 1;
+    let currentDarts = [];
+
     let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
         { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
@@ -1092,12 +1128,6 @@
     document.body.addEventListener('click', unlockAudio, { once: true });
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
-    document.querySelectorAll('.dart-box').forEach((box, index, boxes) => {
-        box.addEventListener('input', function() {
-            if(this.value.length >= 3 && index < boxes.length - 1) { boxes[index + 1].focus(); }
-        });
-    });
-
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
@@ -1120,7 +1150,6 @@
                 else p1Label.innerText = 'Your Name';
             }
             
-            // Bot can only play standard games
             if (mode === 'bot') {
                 if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
                     gameTypeInput.value = '501';
@@ -1157,7 +1186,6 @@
         document.getElementById('spectate-btn').onclick = shareSpectator;
         
         document.getElementById('undo-btn').onclick = undo;
-        document.getElementById('hit-btn').onclick = () => processHit();
         
         document.getElementById('atc-undo-btn').onclick = undo;
         document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
@@ -1171,18 +1199,13 @@
         };
 
         document.getElementById('rematch-btn').onclick = triggerRematch;
-        
-        const d3Input = document.getElementById('d3-input');
-        if (d3Input) { d3Input.addEventListener('keypress', function(e) { if (e.key === 'Enter') { e.preventDefault(); processHit(); }}); }
     });
 
-    // CUSTOM NUMPAD LOGIC
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
         else if(val === 'E') {
             let v = parseInt(numpadVal);
             if(!isNaN(v)) processHit(v);
-            numpadVal = "";
         }
         else {
             if(numpadVal.length < 3) numpadVal += val;
@@ -1191,7 +1214,50 @@
         if(display) display.innerText = numpadVal || "0";
     }
 
-    // CHECKOUT LOGIC
+    // --- NEW DART-BY-DART LOGIC ---
+    window.setDbdMult = function(m) {
+        dbdMult = m;
+        document.getElementById('dbd-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
+    };
+
+    window.hitDbd = function(val) {
+        if(currentDarts.length >= 3) return;
+        let label = ""; let pts = 0;
+        
+        if (val === 0) { label = "MISS"; pts = 0; dbdMult = 1; } 
+        else if (val === 25) {
+            if (dbdMult === 3) { alert("Cannot hit Treble Bull."); return; }
+            label = dbdMult === 2 ? "DB" : "B";
+            pts = val * dbdMult;
+        } else {
+            label = (dbdMult === 3 ? "T" : dbdMult === 2 ? "D" : "") + val;
+            pts = val * dbdMult;
+        }
+        
+        currentDarts.push({ val: val, mult: val===0?1:dbdMult, pts: pts, label: label });
+        setDbdMult(1);
+        updateDbdDisplay();
+    };
+
+    window.dbdDel = function() {
+        if(currentDarts.length > 0) { currentDarts.pop(); updateDbdDisplay(); }
+    };
+
+    window.updateDbdDisplay = function() {
+        for(let i=0; i<3; i++) {
+            let slot = document.getElementById(`dbd-slot-${i+1}`);
+            if(currentDarts[i]) { slot.innerText = currentDarts[i].label; } 
+            else { slot.innerText = "-"; }
+        }
+    };
+
+    window.dbdEnter = function() {
+        if(currentDarts.length === 0) return;
+        processHit(null, currentDarts);
+    };
+
     window.logMissedDouble = function(pIndex) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
@@ -1199,7 +1265,6 @@
         if (!isLocalMatch) broadcast(state);
     }
 
-    // BOT LOGIC
     function playBotTurn() {
         if(state.winner !== undefined || state.turn !== 1 || state.mode !== 'bot') return;
         
@@ -1216,9 +1281,8 @@
             if (s - val <= 1 && s - val !== 0) val = s - 2; 
         } else {
             let hitChance = level * 0.08; 
-            if (Math.random() < hitChance) {
-                val = s; 
-            } else {
+            if (Math.random() < hitChance) { val = s; } 
+            else {
                 val = Math.floor(s / 2);
                 if (val % 2 !== 0) val -= 1;
                 if (val < 0) val = 0;
@@ -1637,23 +1701,8 @@
         if (!isLocalMatch) { broadcast(state); }
     }
 
-    function parseDart(str) {
-        str = str.toUpperCase().trim();
-        if (!str || str === '0' || str === 'MISS' || str === 'M') return { val: 0, mult: 0, pts: 0 };
-        if (str === 'BULL' || str === 'DB' || str === '50') return { val: 25, mult: 2, pts: 50 };
-        if (str === '25' || str === 'B' || str === 'SB') return { val: 25, mult: 1, pts: 25 };
-        
-        let mult = 1;
-        if (str.startsWith('T')) { mult = 3; str = str.substring(1); }
-        else if (str.startsWith('D')) { mult = 2; str = str.substring(1); }
-        else if (str.startsWith('S')) { mult = 1; str = str.substring(1); }
-        
-        let val = parseInt(str);
-        if (isNaN(val) || val < 0 || val > 20) return null;
-        return { val: val, mult: mult, pts: val * mult };
-    }
-
-    function processHit(manualVal = null) {
+    // --- REVISED processHit WITH DART-BY-DART LOGIC ---
+    function processHit(manualVal = null, dartsArr = null) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
         
@@ -1666,17 +1715,16 @@
         let val = 0;
         if (manualVal !== null) {
             val = manualVal;
-        } else if (localInputMode === 'darts') {
-            let d1 = parseDart(document.getElementById('d1-input').value);
-            let d2 = parseDart(document.getElementById('d2-input').value);
-            let d3 = parseDart(document.getElementById('d3-input').value);
-            if (d1 === null || d2 === null || d3 === null) { alert("Invalid format! Use T20, D10, 25..."); return; }
-            val = d1.pts + d2.pts + d3.pts;
+        } else if (localInputMode === 'darts' && dartsArr !== null) {
+            val = dartsArr.reduce((sum, d) => sum + d.pts, 0);
             
-            if (p.s <= 170 && checkouts[p.s]) {
-                if(d1.mult === 2 || d1.val === 25) p.coAtt++;
-                if(d2.mult === 2 || d2.val === 25) p.coAtt++;
-                if(d3.mult === 2 || d3.val === 25) p.coAtt++;
+            let tempS = p.s;
+            for (let d of dartsArr) {
+                if (tempS <= 170 && checkouts[tempS]) {
+                    if (d.mult === 2 || (d.val === 25 && d.label === 'DB')) { p.coAtt++; }
+                }
+                tempS -= d.pts;
+                if (tempS <= 1 && tempS !== 0) break; // Bust
             }
         } else {
             val = numpadVal === '' ? 0 : parseInt(numpadVal);
@@ -1750,18 +1798,19 @@
         }
         
         playDartSound(soundToPlay);
-        render(); 
-
-        if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
         
+        // Reset inputs
         numpadVal = "";
-        document.getElementById('numpad-display').innerText = "0";
-        ['d1-input', 'd2-input', 'd3-input'].forEach(id => document.getElementById(id).value = '');
-        if (localInputMode === 'darts') document.getElementById('d1-input').focus();
+        currentDarts = [];
+        updateDbdDisplay();
+
+        render(); 
+        if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
     }
 
     function undo() {
         if(botTimeout) clearTimeout(botTimeout);
+        numpadVal = ""; currentDarts = []; updateDbdDisplay();
         if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state); }
     }
 
@@ -1837,7 +1886,7 @@
                 document.getElementById(`co-stat-${i}`).style.display = 'block';
                 document.getElementById(`co-perc-${i}`).innerText = coStatStr;
                 
-                if(p.s <= 170 && checkouts[p.s] && state.turn === i && localInputMode !== 'darts') {
+                if(p.s <= 170 && checkouts[p.s] && state.turn === i) {
                     document.getElementById(`miss-btn-${i}`).classList.remove('hidden');
                 } else { document.getElementById(`miss-btn-${i}`).classList.add('hidden'); }
 
@@ -1853,7 +1902,7 @@
                 document.getElementById(`co-stat-${i}`).style.display = 'block';
                 document.getElementById(`co-perc-${i}`).innerText = coStatStr;
 
-                if(p.s <= 170 && checkouts[p.s] && state.turn === i && localInputMode !== 'darts') {
+                if(p.s <= 170 && checkouts[p.s] && state.turn === i) {
                     document.getElementById(`miss-btn-${i}`).classList.remove('hidden');
                 } else { document.getElementById(`miss-btn-${i}`).classList.add('hidden'); }
             }
@@ -1970,11 +2019,8 @@
 
                 const isMyTurn = (state.mode === 'bot') ? (state.turn === 0) : (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
                 
-                document.querySelectorAll('.np-btn').forEach(b => b.disabled = !isMyTurn);
-                document.getElementById('d1-input').disabled = !isMyTurn;
-                document.getElementById('d2-input').disabled = !isMyTurn;
-                document.getElementById('d3-input').disabled = !isMyTurn;
-                document.getElementById('hit-btn').disabled = !isMyTurn;
+                document.querySelectorAll('.np-btn, .dbd-btn, .cric-mult').forEach(b => b.disabled = !isMyTurn);
+                document.getElementById('undo-btn').disabled = !isMyTurn;
             }
 
             if (!isLocalMatch && !document.body.classList.contains('bull-throw') && state.mode !== 'single') {
@@ -2013,58 +2059,4 @@
                 document.getElementById(`ws-n${i}`).innerText = pStats.name;
                 
                 if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
-                    document.getElementById('ws-label-avg').innerText = "Total Darts";
-                    document.getElementById(`ws-avg${i}`).innerText = pStats.d;
-                } else {
-                    document.getElementById('ws-label-avg').innerText = "Match Avg";
-                    document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
-                }
-                
-                document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
-                document.getElementById(`ws-hc${i}`).innerText = pStats.hc > 0 ? pStats.hc : "-";
-                document.getElementById(`ws-140${i}`).innerText = pStats.n140 ?? 0;
-                document.getElementById(`ws-180${i}`).innerText = pStats.n180 ?? 0;
-            }
-            winnerLayer.classList.remove('hidden');
-        } else {
-            winnerLayer.classList.add('hidden');
-            
-            // TRIGGER DARTBOT
-            if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined) {
-                playBotTurn();
-            }
-        }
-    }
-
-    function shareInvite() {
-        const id = document.getElementById('display-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?join=' + id;
-        if (navigator.share) navigator.share({ title: 'Darts Match', url });
-        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
-    }
-
-    function shareSpectator() {
-        const id = document.getElementById('display-id').innerText;
-        const url = window.location.origin + window.location.pathname + '?spectate=' + id;
-        const p1 = state.p[0]; const p2 = state.p[1];
-        
-        let currentScoreText = "";
-        if (state.gameType === 'atc') {
-            currentScoreText = `🎯 ${p1.name} - Target: ${p1.s <= 20 ? p1.s : "BULL"}`;
-        } else if (state.gameType === 'cricket') {
-            currentScoreText = `🎯 ${p1.name} [Cricket] ${p2.name}`;
-        } else {
-            currentScoreText = `🎯 ${p1.name} (${p1.l} legs) ${p1.s} - ${p2.s} (${p2.l} legs) ${p2.name}`;
-        }
-        
-        const shareData = {
-            title: 'Watch our Darts Match!',
-            text: `Live Score: ${currentScoreText}. Watch the live stream here: `,
-            url: url
-        };
-        if (navigator.share) { navigator.share(shareData).catch(console.error); } 
-        else { navigator.clipboard.writeText(`${shareData.text} ${url}`); alert("Spectator link & scores copied to clipboard!"); }
-    }
-</script>
-</body>
-</html>
+                    document.getElementById('ws-label-avg
