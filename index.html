@@ -526,10 +526,10 @@
     let currentZoom = 1; 
     let isLocalMatch = false; 
     
-    // Added limit170 variable to the state to track dart limit
+    // Added limit170 variable and target170 tracking to the state
     let state = { mode: 'online', gameType: '501', limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
-        { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }, 
-        { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0 }
+        { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170 }, 
+        { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170 }
     ]};
     let history = null;
 
@@ -783,6 +783,8 @@
         if (isLocalMatch) {
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
             state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
+            state.p[0].target170 = 170;
+            state.p[1].target170 = 170;
             state.p[0].s = startScore;
             state.p[1].s = startScore;
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
@@ -802,6 +804,7 @@
         if (state.mode === 'single') {
             document.body.classList.add('single-mode');
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
+            state.p[0].target170 = 170;
             state.p[0].s = startScore;
             document.getElementById('setup-layer').classList.add('hidden');
             playDartSound('gameon');
@@ -964,6 +967,7 @@
                     player.ld = player.ld ?? 0; player.f9pts = player.f9pts ?? 0;
                     player.f9d = player.f9d ?? 0; player.hc = player.hc ?? 0;
                     player.n140 = player.n140 ?? 0; player.n180 = player.n180 ?? 0;
+                    player.target170 = player.target170 || 170;
                 });
             }
             state = data; 
@@ -1080,10 +1084,15 @@
 
         let soundToPlay = val; 
 
-        // 121 Specific logic to drop score
-        if (state.gameType === '121' && val === 0) {
-            p.l = Math.max(0, p.l - 1);
-            p.s = 121 + p.l;
+        // Handle manual 0 input for 121 and 170 (acts as an instant FAIL/SKIP)
+        if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
+            if (state.gameType === '121') {
+                p.l = Math.max(0, p.l - 1);
+                p.s = 121 + p.l;
+            } else {
+                p.target170 = (p.target170 || 170) - 1;
+                p.s = p.target170;
+            }
             p.ld = 0;
             soundToPlay = 0;
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
@@ -1098,8 +1107,12 @@
                 if (val > p.hc) p.hc = val; 
                 p.l++; 
                 
+                if (state.gameType === '170') {
+                    p.target170 = Math.min(170, (p.target170 || 170) + 1);
+                }
+                
                 if (state.mode === 'single') {
-                    state.p[0].s = state.gameType === '121' ? 121 + p.l : (state.gameType === '170' ? 170 : startScore);
+                    state.p[0].s = state.gameType === '121' ? 121 + p.l : (state.gameType === '170' ? p.target170 : startScore);
                     state.p[0].ld = 0;
                     state.turn = 0;
                 } else {
@@ -1112,8 +1125,11 @@
                             state.turn = state.startingPlayer; 
                         }
                     } else {
-                        // 121 or 170 in Local mode resets for both
-                        state.p.forEach((x, i) => { x.s = state.gameType === '121' ? 121 + x.l : 170; x.ld = 0; });
+                        state.p.forEach((x, i) => { 
+                            x.target170 = x.target170 || 170; 
+                            x.s = state.gameType === '121' ? 121 + x.l : x.target170; 
+                            x.ld = 0; 
+                        });
                         state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
                         state.turn = state.startingPlayer; 
                     }
@@ -1121,7 +1137,12 @@
             } else { 
                 // Hit, but not finished. Check Dart Limits for practice modes.
                 if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
-                    p.s = state.gameType === '121' ? 121 + p.l : 170;
+                    if (state.gameType === '170') {
+                        p.target170 = (p.target170 || 170) - 1;
+                        p.s = p.target170;
+                    } else {
+                        p.s = 121 + p.l;
+                    }
                     p.ld = 0;
                     soundToPlay = 'bust'; 
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
@@ -1132,9 +1153,13 @@
         } else { 
             // Standard Bust
             soundToPlay = 'bust';
-            if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
-                p.s = state.gameType === '121' ? 121 + p.l : 170;
-                p.ld = 0; 
+            if (state.gameType === '121' && p.ld >= 9) {
+                p.s = 121 + p.l; p.ld = 0; 
+            } else if (state.gameType === '170') {
+                // Busting on 170 fails the attempt instantly
+                p.target170 = (p.target170 || 170) - 1;
+                p.s = p.target170;
+                p.ld = 0;
             }
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
         }
@@ -1162,7 +1187,9 @@
         if (state.gameType === '170') startScore = 170;
 
         state.p.forEach(x => { 
-            x.s = startScore; x.l = 0; x.pts = 0; x.d = 0; x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
+            x.target170 = 170;
+            x.s = state.gameType === '170' ? 170 : startScore; 
+            x.l = 0; x.pts = 0; x.d = 0; x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
         });
         delete state.winner; history = null;
         document.getElementById('winner-layer').classList.add('hidden');
@@ -1194,7 +1221,7 @@
             } else if (state.gameType === '121' || state.gameType === '170') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
                 
-                // Show standard counter for 121, but show Limit counter for 170
+                // Show limit for 170
                 if (state.gameType === '170') {
                     document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`;
                 } else {
