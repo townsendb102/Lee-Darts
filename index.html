@@ -188,6 +188,9 @@
         .btn-hit:active, .btn-undo:active { background: var(--blue); color: black; }
         .btn-hit:disabled, .btn-undo:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* THE CRUCIAL MISSING CLASS HAS RETURNED */
+        .hidden { display: none !important; }
+
         .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
         
         /* PROFILE STYLES */
@@ -597,8 +600,8 @@
         window.db = getFirestore(app);
 
         document.getElementById('guest-btn').addEventListener('click', () => { 
-            document.getElementById('login-layer').style.display = 'none'; 
-            document.getElementById('setup-layer').style.display = 'flex'; 
+            document.getElementById('login-layer').classList.add('hidden'); 
+            document.getElementById('setup-layer').classList.remove('hidden'); 
             document.getElementById('name-input').value = "Guest"; 
         });
 
@@ -627,23 +630,19 @@
         });
 
         onAuthStateChanged(window.auth, async (user) => {
-            // HARD RESET ALL MENUS
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('profile-layer').style.display = 'none';
-            document.getElementById('history-layer').style.display = 'none';
-            document.getElementById('friends-layer').style.display = 'none';
-            document.getElementById('waiting-layer').style.display = 'none';
-            document.getElementById('first-throw-layer').style.display = 'none';
-            document.getElementById('winner-layer').style.display = 'none';
-            document.getElementById('setup-layer').style.display = 'none';
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const isJoiningOrSpectating = urlParams.get('spectate') || urlParams.get('join');
+            // EXTREME CACHE BUSTER: Force hide all overlays via classList immediately
+            const layers = ['login-layer', 'profile-layer', 'history-layer', 'friends-layer', 'waiting-layer', 'first-throw-layer', 'winner-layer', 'setup-layer'];
+            layers.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
 
             if (user) {
                 document.getElementById('logout-btn').style.display = 'block';
                 document.getElementById('open-profile-btn').style.display = 'block';
-                document.getElementById('setup-layer').style.display = 'flex';
+                
+                // If they loaded from a spectate/join link, let them see the setup layer so they can join
+                document.getElementById('setup-layer').classList.remove('hidden');
 
                 const userRef = doc(window.db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
@@ -679,10 +678,12 @@
                 document.getElementById('open-profile-btn').style.display = 'none';
                 window.currentUserDoc = null;
                 
-                if (isJoiningOrSpectating) {
-                    document.getElementById('setup-layer').style.display = 'flex';
+                const urlParams = new URLSearchParams(window.location.search);
+                // If they have a link, let them see setup without logging in
+                if (urlParams.get('spectate') || urlParams.get('join')) {
+                    document.getElementById('setup-layer').classList.remove('hidden');
                 } else {
-                    document.getElementById('login-layer').style.display = 'flex';
+                    document.getElementById('login-layer').classList.remove('hidden');
                 }
             }
         });
@@ -711,39 +712,39 @@
 
         window.issueChallenge = async function(friendUid) {
             window.targetChallengeFriend = friendUid;
-            document.getElementById('friends-layer').style.display = 'none';
-            document.getElementById('profile-layer').style.display = 'none';
-            document.getElementById('setup-layer').style.display = 'flex';
+            document.getElementById('friends-layer').classList.add('hidden');
+            document.getElementById('profile-layer').classList.add('hidden');
+            document.getElementById('setup-layer').classList.remove('hidden');
             document.getElementById('mode-input').value = 'online';
             document.getElementById('mode-input').dispatchEvent(new Event('change'));
             document.getElementById('start-btn').click();
         };
 
-        // INLINE STYLES - AVOIDS BROWSER CACHE GLITCHES
+        // RESTORED PROPER ROUTING VIA CLASSLIST
         document.getElementById('open-profile-btn').addEventListener('click', () => { 
-            document.getElementById('setup-layer').style.display = 'none'; 
-            document.getElementById('profile-layer').style.display = 'flex'; 
+            document.getElementById('setup-layer').classList.add('hidden'); 
+            document.getElementById('profile-layer').classList.remove('hidden'); 
             renderProfileMenu(); 
         });
         document.getElementById('close-profile-btn').addEventListener('click', () => { 
-            document.getElementById('profile-layer').style.display = 'none'; 
-            document.getElementById('setup-layer').style.display = 'flex'; 
+            document.getElementById('profile-layer').classList.add('hidden'); 
+            document.getElementById('setup-layer').classList.remove('hidden'); 
         });
         document.getElementById('open-history-btn').addEventListener('click', () => { 
-            document.getElementById('profile-layer').style.display = 'none'; 
-            document.getElementById('history-layer').style.display = 'flex'; 
+            document.getElementById('profile-layer').classList.add('hidden'); 
+            document.getElementById('history-layer').classList.remove('hidden'); 
         });
         document.getElementById('close-history-btn').addEventListener('click', () => { 
-            document.getElementById('history-layer').style.display = 'none'; 
-            document.getElementById('profile-layer').style.display = 'flex'; 
+            document.getElementById('history-layer').classList.add('hidden'); 
+            document.getElementById('profile-layer').classList.remove('hidden'); 
         });
         document.getElementById('open-friends-btn').addEventListener('click', () => { 
-            document.getElementById('profile-layer').style.display = 'none'; 
-            document.getElementById('friends-layer').style.display = 'flex'; 
+            document.getElementById('profile-layer').classList.add('hidden'); 
+            document.getElementById('friends-layer').classList.remove('hidden'); 
         });
         document.getElementById('close-friends-btn').addEventListener('click', () => { 
-            document.getElementById('friends-layer').style.display = 'none'; 
-            document.getElementById('profile-layer').style.display = 'flex'; 
+            document.getElementById('friends-layer').classList.add('hidden'); 
+            document.getElementById('profile-layer').classList.remove('hidden'); 
         });
 
         document.getElementById('reset-stats-btn').addEventListener('click', async () => {
@@ -1130,6 +1131,22 @@
             if (!modeInput) return;
             const mode = modeInput.value;
             const gameType = gameTypeInput.value;
+            
+            const isJoinOrSpectate = spectateId || joinId;
+
+            if (isJoinOrSpectate) {
+                document.getElementById('mode-group').style.display = 'none';
+                document.getElementById('game-type-group').style.display = 'none';
+                document.getElementById('p2-name-group').style.display = 'none';
+                document.getElementById('bot-level-group').style.display = 'none';
+                document.getElementById('dart-limit-group').style.display = 'none';
+                document.getElementById('legs-group').style.display = 'none';
+                
+                const p1Label = document.getElementById('p1-label');
+                if (p1Label) p1Label.innerText = 'Your Name';
+                return;
+            }
+
             document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
             document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
             document.getElementById('game-type-group').style.display = 'block';
@@ -1159,16 +1176,12 @@
             document.body.classList.add('spectator-mode');
             document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
             document.getElementById('name-input').placeholder = "Your Name (Optional)";
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('setup-layer').style.display = 'flex';
+            document.getElementById('login-layer').classList.add('hidden');
+            document.getElementById('setup-layer').classList.remove('hidden');
         } else if (joinId) {
-            document.getElementById('legs-group').style.display = 'none';
-            document.getElementById('game-type-group').style.display = 'none'; 
             document.getElementById('start-btn').innerText = "JOIN MATCH";
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('setup-layer').style.display = 'flex';
+            document.getElementById('login-layer').classList.add('hidden');
+            document.getElementById('setup-layer').classList.remove('hidden');
         }
 
         document.getElementById('start-btn').onclick = initApp;
@@ -1274,9 +1287,9 @@
         }
 
         function showFirstThrowUI() {
-            document.getElementById('setup-layer').style.display = 'none';
-            document.getElementById('waiting-layer').style.display = 'none';
-            document.getElementById('first-throw-layer').style.display = 'flex';
+            document.getElementById('setup-layer').classList.add('hidden');
+            document.getElementById('waiting-layer').classList.add('hidden');
+            document.getElementById('first-throw-layer').classList.remove('hidden');
             document.getElementById('ft-step-1').style.display = 'flex';
             document.getElementById('ft-step-2').style.display = 'none';
             if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
@@ -1296,7 +1309,7 @@
         function setFirstPlayer(playerIndex) {
             state.startingPlayer = playerIndex;
             state.turn = playerIndex;
-            document.getElementById('first-throw-layer').style.display = 'none';
+            document.getElementById('first-throw-layer').classList.add('hidden');
             if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
                 toggleBullPhase(false); broadcast({ type: 'BULL_PHASE', active: false });
             }
@@ -1346,7 +1359,7 @@
                 state.p[1].name = `DartBot Lvl ${state.botLevel}`;
                 state.p[1].avatar = "";
                 state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                document.getElementById('setup-layer').style.display = 'none';
+                document.getElementById('setup-layer').classList.add('hidden');
                 document.body.classList.add('local-mode');
                 showFirstThrowUI();
                 return;
@@ -1355,7 +1368,7 @@
                 state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
                 state.p[1].avatar = "";
                 state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-                document.getElementById('setup-layer').style.display = 'none';
+                document.getElementById('setup-layer').classList.add('hidden');
                 document.body.classList.add('local-mode');
                 if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') { 
                     playDartSound('gameon'); render(); 
@@ -1369,7 +1382,7 @@
                 state.p[0].target170 = 170;
                 state.p[0].s = startScore;
                 state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
-                document.getElementById('setup-layer').style.display = 'none';
+                document.getElementById('setup-layer').classList.add('hidden');
                 playDartSound('gameon');
                 render();
             } else {
@@ -1422,17 +1435,17 @@
                     }
 
                     if (spectateId) {
-                        document.getElementById('setup-layer').style.display = 'none';
+                        document.getElementById('setup-layer').classList.add('hidden');
                         connectToMatch(spectateId, true);
                     } else if (joinId) {
-                        document.getElementById('setup-layer').style.display = 'none';
+                        document.getElementById('setup-layer').classList.add('hidden');
                         myIndex = 1;
                         state.p[1].name = document.getElementById('name-input').value || "Guest";
                         state.p[1].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
                         connectToMatch(joinId, false);
                     } else if (state.mode !== 'single') {
-                        document.getElementById('setup-layer').style.display = 'none';
-                        document.getElementById('waiting-layer').style.display = 'flex';
+                        document.getElementById('setup-layer').classList.add('hidden');
+                        document.getElementById('waiting-layer').classList.remove('hidden');
                     }
                     if (joinId || spectateId) render();
                 });
@@ -1504,7 +1517,6 @@
                 limitVideoBitrate(currentCall.peerConnection, 1500);
                 currentCall.on('stream', s => { attachPeerVideo(s); render(); });
             }
-            // If spectator, we wait for the host to 'push' the call to us.
         }
 
         function handleData(data) {
@@ -1532,7 +1544,7 @@
             } else if (data.type === 'JOIN') {
                 state.p[1].name = data.name;
                 state.p[1].avatar = data.avatar;
-                document.getElementById('waiting-layer').style.display = 'none';
+                document.getElementById('waiting-layer').classList.add('hidden');
                 if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) { showFirstThrowUI(); }
             } else {
                 if (data.p) {
@@ -1774,7 +1786,7 @@
                 x.marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
             });
             delete state.winner; history = null;
-            document.getElementById('winner-layer').style.display = 'none';
+            document.getElementById('winner-layer').classList.add('hidden');
             if (!isLocalMatch) broadcast(state);
             if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
                 playDartSound('gameon'); if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' }); render();
@@ -1795,13 +1807,13 @@
                     document.getElementById(`co-${i}`).innerText = "TARGET";
                     document.getElementById(`l-area-${i}`).style.display = 'none';
                     document.getElementById(`co-stat-${i}`).style.display = 'none';
-                    document.getElementById(`miss-btn-${i}`).style.display = 'none';
+                    document.getElementById(`miss-btn-${i}`).classList.add('hidden');
                 } else if (state.gameType === 'cricket') {
                     document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
                     document.getElementById(`avg-${i}`).innerText = p.d;
                     document.getElementById(`s-${i}`).innerText = p.s;
                     document.getElementById(`co-stat-${i}`).style.display = 'none';
-                    document.getElementById(`miss-btn-${i}`).style.display = 'none';
+                    document.getElementById(`miss-btn-${i}`).classList.add('hidden');
                 } else if (state.gameType === '121' || state.gameType === '170') {
                     document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
                     if (state.gameType === '170') { document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`; } else { document.getElementById(`avg-${i}`).innerText = p.ld; }
@@ -1812,7 +1824,7 @@
                     document.getElementById(`co-${i}`).style.display = 'block';
                     document.getElementById(`co-stat-${i}`).style.display = 'block';
                     document.getElementById(`co-perc-${i}`).innerText = coStatStr;
-                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) { document.getElementById(`miss-btn-${i}`).style.display = 'inline-block'; } else { document.getElementById(`miss-btn-${i}`).style.display = 'none'; }
+                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) { document.getElementById(`miss-btn-${i}`).classList.remove('hidden'); } else { document.getElementById(`miss-btn-${i}`).classList.add('hidden'); }
                 } else {
                     document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                     document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
@@ -1823,14 +1835,14 @@
                     document.getElementById(`co-${i}`).style.display = 'block';
                     document.getElementById(`co-stat-${i}`).style.display = 'block';
                     document.getElementById(`co-perc-${i}`).innerText = coStatStr;
-                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) { document.getElementById(`miss-btn-${i}`).style.display = 'inline-block'; } else { document.getElementById(`miss-btn-${i}`).style.display = 'none'; }
+                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) { document.getElementById(`miss-btn-${i}`).classList.remove('hidden'); } else { document.getElementById(`miss-btn-${i}`).classList.add('hidden'); }
                 }
                 document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
             });
 
             if (!spectateId) {
                 if (state.gameType === 'atc') {
-                    document.getElementById('cricket-center').style.display = 'none';
+                    document.getElementById('cricket-center').classList.add('hidden');
                     document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
                     [0, 1].forEach(i => {
                         if(document.getElementById(`srow-${i}`)) document.getElementById(`srow-${i}`).style.flexDirection = 'row';
@@ -1857,7 +1869,7 @@
                         document.getElementById(id).style.opacity = isMyTurn ? 1 : 0.5;
                     });
                 } else if (state.gameType === 'cricket') {
-                    document.getElementById('cricket-center').style.display = 'flex';
+                    document.getElementById('cricket-center').classList.remove('hidden');
                     document.getElementById('main-score-area').style.flexDirection = 'row';
                     let cricRowsHtml = '';
                     [20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 25].forEach(t => {
@@ -1883,7 +1895,7 @@
                     if (state.mode === 'bot') { isMyTurn = (state.turn === 0); }
                     document.querySelectorAll('.cric-num-btn, .cric-mult').forEach(btn => { btn.disabled = !isMyTurn; btn.style.opacity = isMyTurn ? 1 : 0.5; });
                 } else {
-                    document.getElementById('cricket-center').style.display = 'none';
+                    document.getElementById('cricket-center').classList.add('hidden');
                     document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
                     [0, 1].forEach(i => {
                         if(document.getElementById(`srow-${i}`)) { document.getElementById(`srow-${i}`).style.flexDirection = 'row'; document.getElementById(`srow-${i}`).style.alignItems = 'center'; }
@@ -1952,9 +1964,9 @@
                     document.getElementById(`ws-140${i}`).innerText = pStats.n140 ?? 0;
                     document.getElementById(`ws-180${i}`).innerText = pStats.n180 ?? 0;
                 }
-                winnerLayer.style.display = 'flex';
+                winnerLayer.classList.remove('hidden');
             } else {
-                winnerLayer.style.display = 'none';
+                winnerLayer.classList.add('hidden');
                 if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined) { playBotTurn(); }
             }
         }
