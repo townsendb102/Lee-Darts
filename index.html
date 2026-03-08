@@ -129,10 +129,8 @@
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
         
-        /* MISSED DOUBLE BUTTON */
         .missed-db-btn { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; cursor: pointer; }
 
-        /* CRICKET CENTER BOARD STYLES */
         #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--card); border-radius: 8px; padding: 4px; border: 1px solid rgba(255,255,255,0.1); justify-content: space-evenly; margin: 0 5px; }
         .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
         .cric-mark { flex: 1; text-align: center; font-size: 14px; font-weight: bold; color: var(--blue); }
@@ -145,7 +143,7 @@
         #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
-        /* CUSTOM NUMPAD STYLES */
+        /* CUSTOM NUMPAD */
         #numpad-display { font-size: 32px; font-weight: bold; text-align: center; height: 45px; line-height: 45px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
         .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
         .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 12px 0;}
@@ -154,14 +152,13 @@
         .np-btn.enter { background: var(--blue); color: black; grid-column: span 2; }
         .np-btn.enter:disabled { background: #333; color: #666; }
         
-        /* NEW DART-BY-DART GRID STYLES */
+        /* NEW DART-BY-DART CUSTOM GRID */
         .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
         .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 16px; font-weight: bold; border-radius: 6px; padding: 10px 0; cursor: pointer; text-align: center;}
         .dbd-btn:active { background: var(--blue); color: black; }
         .dbd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 40px; font-size: 20px; font-weight: bold; border-radius: 6px; height: 40px; }
 
-        /* CRICKET CUSTOM KEYPAD STYLES */
         .cric-mult { flex: 1; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer;}
         .cric-mult.active { background: var(--blue); color: black; border-color: var(--blue); }
         .cric-mult:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -175,18 +172,13 @@
         .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 2px solid var(--blue); cursor: pointer; margin: 0 auto 10px auto; display: block; background: #111; }
         .stat-box { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; flex: 1; border: 1px solid rgba(255,255,255,0.1); }
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
-        
         .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
         .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
-        
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: #ffeb3b; color: black; padding: 15px; border-radius: 10px; z-index: 30000; display: none; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; border: 2px solid #fbc02d; }
     </style>
-
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW setup failed', err));
-        }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(err => console.log('SW setup failed', err)); }
     </script>
 </head>
 <body class="theme-classic">
@@ -205,19 +197,11 @@
     <div class="setup-card">
         <h2>🎯 RAF DARTS SCORER 🎯</h2>
         <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Log in to save stats and play friends</p>
-        
-        <div class="input-group">
-            <input type="email" id="email-input" class="setup-input" placeholder="Email Address">
-        </div>
-        <div class="input-group">
-            <input type="password" id="password-input" class="setup-input" placeholder="Password">
-        </div>
-
+        <div class="input-group"><input type="email" id="email-input" class="setup-input" placeholder="Email Address"></div>
+        <div class="input-group"><input type="password" id="password-input" class="setup-input" placeholder="Password"></div>
         <button id="login-btn" class="btn-start">LOG IN</button>
         <button id="signup-btn" class="btn-start" style="background: #444; color: white; margin-top: 10px;">SIGN UP</button>
-        
         <p id="auth-error" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
-
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 20px 0; width: 100%;">
         <button id="guest-btn" class="btn-start" style="background: transparent; border: 1px solid var(--blue); color: var(--blue);">PLAY AS GUEST</button>
         <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
@@ -226,19 +210,15 @@
 
 <div id="profile-layer" class="hidden">
     <div class="setup-card" style="max-height: 85vh; overflow-y: auto;">
-        
         <h2 style="margin-bottom: 5px;">MY PROFILE</h2>
         <p id="prof-email" style="color: #888; font-size: 12px; margin-bottom: 15px;">loading...</p>
-
         <img id="prof-pic" class="profile-avatar" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=" alt="Tap to upload picture">
         <input type="file" id="pic-upload" hidden accept="image/*">
         <p style="font-size: 10px; color: #888; margin-top: -5px; margin-bottom: 15px;">Tap image to change</p>
-
-        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+        <div style="display: flex; gap: 5px; margin-bottom: 20px;">
             <input type="text" id="edit-name-input" class="setup-input" placeholder="Display Name..." style="flex: 1; padding: 8px; font-size: 14px;">
             <button id="save-name-btn" class="btn-start" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">SAVE</button>
         </div>
-
         <div class="input-group" style="margin-bottom: 20px;">
             <label style="color: white;">App Theme</label>
             <select id="theme-select" class="setup-input" style="padding: 8px; font-size: 14px;">
@@ -247,7 +227,6 @@
                 <option value="pub">Pub Green & Gold</option>
             </select>
         </div>
-
         <div style="display: flex; gap: 10px; margin-bottom: 5px;">
             <div class="stat-box">
                 <div style="font-size: 11px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; line-height: 1.2;">Lifetime Avg</div>
@@ -258,16 +237,12 @@
                 <div class="stat-box-val" id="prof-co">0%</div>
             </div>
         </div>
-        
         <div style="text-align: right; margin-bottom: 20px;">
             <button id="reset-stats-btn" style="background:transparent; border:none; color:#ff4d4d; font-size:11px; text-decoration:underline; cursor:pointer;">Reset Stats & History</button>
         </div>
-
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 0 0 15px 0; width: 100%;">
-
         <button id="open-history-btn" class="btn-start" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; margin-top: 0;">📜 MATCH HISTORY</button>
         <button id="open-friends-btn" class="btn-start" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; margin-top: 10px;">👥 FRIENDS LIST</button>
-
         <button id="close-profile-btn" class="btn-start" style="background: #444; color: white; margin-top: 20px;">BACK TO MENU</button>
     </div>
 </div>
@@ -296,14 +271,11 @@
 <div id="setup-layer" class="hidden">
     <div class="setup-card">
         <h2>🎯 RAF DARTS SCORER 🎯</h2>
-        
         <button id="install-btn" class="btn-start install-btn">📲 INSTALL APP</button>
-        
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <button id="open-profile-btn" class="btn-update" style="display: none; color: var(--blue); margin-top: 0; text-decoration: none; border: 1px solid var(--blue); padding: 4px 8px; border-radius: 4px;">👤 My Profile & Friends</button>
             <button id="logout-btn" class="btn-update" style="display: none; color: #ff4d4d; margin-top: 0; text-decoration: none;">Log Out</button>
         </div>
-
         <div class="input-group" id="mode-group">
             <label style="color: white;">Match Type</label>
             <select id="mode-input" class="setup-input">
@@ -313,7 +285,6 @@
                 <option value="bot">Play vs DartBot (AI)</option>
             </select>
         </div>
-
         <div class="input-group" id="game-type-group">
             <label style="color: white;">Game Type</label>
             <select id="game-type-input" class="setup-input">
@@ -328,7 +299,6 @@
                 <option value="atc">Around the Clock</option>
             </select>
         </div>
-
         <div class="input-group" id="bot-level-group" style="display: none;">
             <label style="color: white;">Bot Difficulty</label>
             <select id="bot-level-input" class="setup-input">
@@ -344,7 +314,6 @@
                 <option value="10">Level 10 (~125 Avg)</option>
             </select>
         </div>
-
         <div class="input-group" id="dart-limit-group" style="display: none;">
             <label style="color: white;">Dart Limit</label>
             <select id="dart-limit-input" class="setup-input">
@@ -352,17 +321,14 @@
                 <option value="9" selected>9 Darts</option>
             </select>
         </div>
-
         <div class="input-group" id="p1-name-group">
             <label id="p1-label" style="color: white;">Your Name</label>
             <input type="text" id="name-input" class="setup-input" placeholder="Name..." maxlength="12">
         </div>
-        
         <div class="input-group" id="p2-name-group" style="display: none;">
             <label style="color: white;">Player 2 Name</label>
             <input type="text" id="p2-name-input" class="setup-input" placeholder="Player 2 Name..." maxlength="12">
         </div>
-
         <div class="input-group" id="legs-group">
             <label style="color: white;">Best Of (Legs)</label>
             <select id="legs-input" class="setup-input">
@@ -375,7 +341,6 @@
         </div>
         <button id="start-btn" class="btn-start">START MATCH</button>
         <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center; line-height: 1.4;"></p>
-        
         <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
     </div>
 </div>
@@ -1031,7 +996,7 @@
     let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
     let isLocalMatch = false; let localInputMode = 'total'; let numpadVal = "";
     
-    // NEW DART BY DART STATE
+    // DBD Variables
     let dbdMult = 1;
     let currentDarts = [];
 
@@ -1115,18 +1080,6 @@
     });
 
     function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
-
-    function unlockAudio() {
-        const peerVideo = document.getElementById('peer');
-        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
-        const dartAudio = document.getElementById('dart-audio');
-        if (dartAudio && dartAudio.src === "") {
-            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-            dartAudio.play().catch(e => {});
-        }
-    }
-    document.body.addEventListener('click', unlockAudio, { once: true });
-    document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
@@ -1214,7 +1167,6 @@
         if(display) display.innerText = numpadVal || "0";
     }
 
-    // --- NEW DART-BY-DART LOGIC ---
     window.setDbdMult = function(m) {
         dbdMult = m;
         document.getElementById('dbd-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
@@ -1255,7 +1207,7 @@
 
     window.dbdEnter = function() {
         if(currentDarts.length === 0) return;
-        processHit(null, currentDarts);
+        processHit();
     };
 
     window.logMissedDouble = function(pIndex) {
@@ -1289,9 +1241,11 @@
             }
         }
 
-        document.getElementById('numpad-display').innerText = val;
+        let display = document.getElementById('numpad-display');
+        if(display) display.innerText = val;
+        
         botTimeout = setTimeout(() => {
-            document.getElementById('numpad-display').innerText = "0";
+            if(display) display.innerText = "0";
             processHit(val);
         }, 1500);
     }
@@ -1397,10 +1351,17 @@
 
         if (state.mode === 'single') {
             document.body.classList.add('single-mode');
+            state.p[0].name = document.getElementById('name-input').value || "Player 1";
+            state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
+            state.p[0].target170 = 170;
+            state.p[0].s = startScore;
+            state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
             document.getElementById('setup-layer').classList.add('hidden');
             playDartSound('gameon');
             render();
         } else {
+            state.p[0].name = document.getElementById('name-input').value || "Host";
+            state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
         }
 
@@ -1701,8 +1662,7 @@
         if (!isLocalMatch) { broadcast(state); }
     }
 
-    // --- REVISED processHit WITH DART-BY-DART LOGIC ---
-    function processHit(manualVal = null, dartsArr = null) {
+    function processHit(manualVal = null) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
         
@@ -1715,11 +1675,12 @@
         let val = 0;
         if (manualVal !== null) {
             val = manualVal;
-        } else if (localInputMode === 'darts' && dartsArr !== null) {
-            val = dartsArr.reduce((sum, d) => sum + d.pts, 0);
+        } else if (localInputMode === 'darts') {
+            if (currentDarts.length === 0) return;
+            val = currentDarts.reduce((sum, d) => sum + d.pts, 0);
             
             let tempS = p.s;
-            for (let d of dartsArr) {
+            for (let d of currentDarts) {
                 if (tempS <= 170 && checkouts[tempS]) {
                     if (d.mult === 2 || (d.val === 25 && d.label === 'DB')) { p.coAtt++; }
                 }
@@ -1799,12 +1760,9 @@
         
         playDartSound(soundToPlay);
         
-        // Reset inputs
-        numpadVal = "";
-        currentDarts = [];
-        updateDbdDisplay();
-
+        numpadVal = ""; currentDarts = []; updateDbdDisplay();
         render(); 
+
         if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
     }
 
@@ -1985,7 +1943,9 @@
                 document.getElementById('cricket-controls').style.display = 'block';
 
                 let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
-                document.querySelectorAll('.cric-num-btn, .cric-mult, .btn-undo').forEach(btn => {
+                if (state.mode === 'bot') { isMyTurn = (state.turn === 0); }
+
+                document.querySelectorAll('.cric-num-btn, .cric-mult').forEach(btn => {
                     btn.disabled = !isMyTurn;
                     btn.style.opacity = isMyTurn ? 1 : 0.5;
                 });
@@ -2014,10 +1974,12 @@
                     document.getElementById('total-mode-ui').style.display = 'flex';
                     document.getElementById('darts-mode-ui').style.display = 'none';
                     document.getElementById('mode-toggle-btn').innerText = 'MODE: TOTAL SCORE';
-                    document.getElementById('numpad-display').innerText = numpadVal || "0";
+                    let display = document.getElementById('numpad-display');
+                    if(display) display.innerText = numpadVal || "0";
                 }
 
-                const isMyTurn = (state.mode === 'bot') ? (state.turn === 0) : (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
+                let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
+                if (state.mode === 'bot') { isMyTurn = (state.turn === 0); }
                 
                 document.querySelectorAll('.np-btn, .dbd-btn, .cric-mult').forEach(b => b.disabled = !isMyTurn);
                 document.getElementById('undo-btn').disabled = !isMyTurn;
@@ -2059,4 +2021,57 @@
                 document.getElementById(`ws-n${i}`).innerText = pStats.name;
                 
                 if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
-                    document.getElementById('ws-label-avg
+                    document.getElementById('ws-label-avg').innerText = "Total Darts";
+                    document.getElementById(`ws-avg${i}`).innerText = pStats.d;
+                } else {
+                    document.getElementById('ws-label-avg').innerText = "Match Avg";
+                    document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
+                }
+                
+                document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
+                document.getElementById(`ws-hc${i}`).innerText = pStats.hc > 0 ? pStats.hc : "-";
+                document.getElementById(`ws-140${i}`).innerText = pStats.n140 ?? 0;
+                document.getElementById(`ws-180${i}`).innerText = pStats.n180 ?? 0;
+            }
+            winnerLayer.classList.remove('hidden');
+        } else {
+            winnerLayer.classList.add('hidden');
+            
+            if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined) {
+                playBotTurn();
+            }
+        }
+    }
+
+    function shareInvite() {
+        const id = document.getElementById('display-id').innerText;
+        const url = window.location.origin + window.location.pathname + '?join=' + id;
+        if (navigator.share) navigator.share({ title: 'Darts Match', url });
+        else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
+    }
+
+    function shareSpectator() {
+        const id = document.getElementById('display-id').innerText;
+        const url = window.location.origin + window.location.pathname + '?spectate=' + id;
+        const p1 = state.p[0]; const p2 = state.p[1];
+        
+        let currentScoreText = "";
+        if (state.gameType === 'atc') {
+            currentScoreText = `🎯 ${p1.name} - Target: ${p1.s <= 20 ? p1.s : "BULL"}`;
+        } else if (state.gameType === 'cricket') {
+            currentScoreText = `🎯 ${p1.name} [Cricket] ${p2.name}`;
+        } else {
+            currentScoreText = `🎯 ${p1.name} (${p1.l} legs) ${p1.s} - ${p2.s} (${p2.l} legs) ${p2.name}`;
+        }
+        
+        const shareData = {
+            title: 'Watch our Darts Match!',
+            text: `Live Score: ${currentScoreText}. Watch the live stream here: `,
+            url: url
+        };
+        if (navigator.share) { navigator.share(shareData).catch(console.error); } 
+        else { navigator.clipboard.writeText(`${shareData.text} ${url}`); alert("Spectator link & scores copied to clipboard!"); }
+    }
+</script>
+</body>
+</html>
