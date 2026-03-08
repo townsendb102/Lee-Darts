@@ -1,28 +1,20 @@
-// This forces the phone to update the app immediately
+// sw.js - The Cache Assassin
 self.addEventListener('install', (e) => {
-  self.skipWaiting(); 
+  self.skipWaiting(); // Force the phone to install this update immediately
 });
 
-// This hunts down the old, broken caches and permanently deletes them
 self.addEventListener('activate', (e) => {
+  // This hunts down ALL old, broken caches on the user's phone and deletes them
   e.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          return caches.delete(cache);
-        })
+        cacheNames.map((cache) => caches.delete(cache))
       );
-    }).then(() => {
-      self.clients.claim();
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
-// This tells the app: "Always use the internet to get the newest files!"
 self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    fetch(e.request).catch((err) => {
-      console.log("Network request failed, user might be offline.");
-    })
-  );
+  // This tells the phone: NEVER use offline cache again. Always pull the live internet version.
+  e.respondWith(fetch(e.request));
 });
