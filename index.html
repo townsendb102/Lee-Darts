@@ -22,31 +22,75 @@
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
+            /* NOTCH SAFE GRID: Automatically adds padding for iPhone Notches */
             grid-template-rows: calc(40px + env(safe-area-inset-top)) 45dvh 1fr 80px calc(25px + env(safe-area-inset-bottom));
             overflow: hidden; 
         }
 
+        /* --- INSTALL PROMPTS --- */
         .install-btn { background: #4caf50 !important; color: white !important; display: none; margin-bottom: 15px; border: 2px solid #81c784 !important; }
         .ios-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 15px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; font-weight: bold; z-index: 20000; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); display: none; }
         .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
         .ios-close { position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 16px; color: #888; padding: 5px; }
 
+        /* --- FULL SCREEN TRANSPARENT OVERLAY FOR SPECTATOR --- */
         body.spectator-mode { display: block; } 
-        body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
+        
+        body.spectator-mode .controls-wrapper,
+        body.spectator-mode .header-controls,
+        body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
+        
         body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; }
+        
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
-        body.spectator-mode .score-area { position: fixed; top: calc(40px + env(safe-area-inset-top)); bottom: 25px; width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: stretch; padding: 0; }
-        body.spectator-mode .player-card { flex: 0 0 auto; width: 115px; background-color: rgba(13, 27, 42, 0.45) !important; background-image: linear-gradient(rgba(13, 27, 42, 0.8), rgba(13, 27, 42, 0.8)), url('51693.jpg') !important; background-size: 100% 100%, contain !important; background-position: center, center !important; background-repeat: no-repeat, no-repeat !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, 0.15); border-top: none; border-bottom: none; border-radius: 0; justify-content: space-evenly; }
-        body.spectator-mode .player-card.active { background-color: rgba(0, 212, 255, 0.1) !important; background-image: linear-gradient(rgba(0, 212, 255, 0.25), rgba(13, 27, 42, 0.85)), url('51693.jpg') !important; border-left: 2px solid var(--blue); border-right: 2px solid var(--blue); }
+        
+        body.spectator-mode .score-area { 
+            position: fixed; 
+            top: calc(40px + env(safe-area-inset-top)); 
+            bottom: 25px; 
+            width: 100%; 
+            z-index: 10; 
+            background: transparent; 
+            flex-direction: row; 
+            justify-content: space-between; 
+            align-items: stretch; 
+            padding: 0; 
+        }
+        
+        body.spectator-mode .player-card { 
+            flex: 0 0 auto; 
+            width: 115px; 
+            background-color: rgba(13, 27, 42, 0.45) !important; 
+            background-image: linear-gradient(rgba(13, 27, 42, 0.8), rgba(13, 27, 42, 0.8)), url('51693.jpg') !important; 
+            background-size: 100% 100%, contain !important; 
+            background-position: center, center !important;
+            background-repeat: no-repeat, no-repeat !important;
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); 
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-top: none;
+            border-bottom: none;
+            border-radius: 0; 
+            justify-content: space-evenly; 
+        }
+        
+        body.spectator-mode .player-card.active { 
+            background-color: rgba(0, 212, 255, 0.1) !important; 
+            background-image: linear-gradient(rgba(0, 212, 255, 0.25), rgba(13, 27, 42, 0.85)), url('51693.jpg') !important;
+            border-left: 2px solid var(--blue);
+            border-right: 2px solid var(--blue);
+        }
+        
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
         body.spectator-mode .score-val { font-size: 40px; }
         body.spectator-mode .legs-count { text-align: center; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
+        
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         
+        /* --- SINGLE PLAYER MODE FIXES --- */
         body.single-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr 80px calc(25px + env(safe-area-inset-bottom)) !important; }
         body.single-mode .v-container { display: none !important; }
         body.single-mode #card-1 { display: none !important; }
@@ -54,13 +98,24 @@
         body.single-mode #card-0 { max-width: 320px; width: 100%; border: 2px solid var(--blue); }
         body.single-mode.spectator-mode .score-area { flex-direction: row; justify-content: center; }
         body.single-mode.spectator-mode #card-0 { width: 150px; }
-        body.single-mode #mic-btn, body.single-mode #zoom-btn, body.single-mode #flip-btn { display: none !important; }
 
+        /* Hide specific Header Buttons for Single Player */
+        body.single-mode #mic-btn,
+        body.single-mode #zoom-btn,
+        body.single-mode #flip-btn { display: none !important; }
+
+        /* --- LOCAL MODE FIXES --- */
         body.local-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr 80px calc(25px + env(safe-area-inset-bottom)) !important; }
         body.local-mode .v-container { display: none !important; }
+        
         body.local-mode header > div:first-child { display: none; }
         body.local-mode header { justify-content: flex-end; }
-        body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn { display: none !important; }
+
+        body.local-mode #mic-btn,
+        body.local-mode #zoom-btn,
+        body.local-mode #flip-btn,
+        body.local-mode #spectate-btn,
+        body.local-mode #share-btn { display: none !important; }
 
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer { 
             position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
@@ -357,6 +412,8 @@
         <button class="header-btn" id="flip-btn">FLIP</button>
         <button class="header-btn" id="spectate-btn" style="color: var(--blue);">SPECTATE</button>
         <button class="header-btn" id="share-btn">INVITE</button>
+        
+        <button class="header-btn" id="quit-btn" style="color: #ff4d4d; font-weight: bold;">QUIT</button>
     </div>
 </header>
 
@@ -438,21 +495,21 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    window.auth = getAuth(app); // Global so app can read user
+    window.auth = getAuth(app); 
     window.db = getFirestore(app);
 
     const loginLayer = document.getElementById('login-layer');
     const setupLayer = document.getElementById('setup-layer');
     const profileLayer = document.getElementById('profile-layer');
     
-    // --- GUEST MODE ---
+    // GUEST MODE
     document.getElementById('guest-btn').addEventListener('click', () => {
         loginLayer.style.display = 'none'; 
         setupLayer.classList.remove('hidden');
         document.getElementById('name-input').value = "Guest";
     });
 
-    // --- SIGN UP ---
+    // SIGN UP
     document.getElementById('signup-btn').addEventListener('click', () => {
         const email = document.getElementById('email-input').value;
         const pass = document.getElementById('password-input').value;
@@ -466,19 +523,19 @@
         });
     });
 
-    // --- LOG IN ---
+    // LOG IN
     document.getElementById('login-btn').addEventListener('click', () => {
         signInWithEmailAndPassword(window.auth, document.getElementById('email-input').value, document.getElementById('password-input').value)
             .catch((error) => { document.getElementById('auth-error').innerText = "Invalid Email or Password."; });
     });
 
-    // --- LOG OUT ---
+    // LOG OUT
     document.getElementById('logout-btn').addEventListener('click', () => {
         if(window.userUnsub) window.userUnsub();
-        signOut(window.auth).then(() => { location.reload(); });
+        signOut(window.auth).then(() => { window.location.href = window.location.pathname; });
     });
 
-    // --- FIREBASE "WATCHER" (REAL-TIME UPDATES) ---
+    // FIREBASE "WATCHER"
     onAuthStateChanged(window.auth, async (user) => {
         if (user) {
             loginLayer.style.display = 'none'; 
@@ -489,7 +546,6 @@
             const userRef = doc(window.db, "users", user.uid);
             const userSnap = await getDoc(userRef);
             
-            // First time setup
             if (!userSnap.exists()) {
                 let defaultName = user.email.split('@')[0];
                 await setDoc(userRef, {
@@ -504,23 +560,20 @@
                 });
             }
 
-            // Real-time listener for challenges and stats
             window.userUnsub = onSnapshot(userRef, (docSnap) => {
                 if(docSnap.exists()) {
                     window.currentUserDoc = docSnap.data();
                     
-                    // Update setup menu name & profile menu name
                     document.getElementById('name-input').value = window.currentUserDoc.displayName;
                     document.getElementById('edit-name-input').value = window.currentUserDoc.displayName;
                     
                     if(!profileLayer.classList.contains('hidden')) { renderProfileMenu(); }
                     
-                    // CHECK FOR INCOMING CHALLENGE PING
                     const challenge = window.currentUserDoc.activeChallenge;
-                    if(challenge && challenge.time > Date.now() - 60000) { // Valid for 60 seconds
+                    if(challenge && challenge.time > Date.now() - 60000) { 
                         showChallengePopup(challenge);
                     } else if (document.getElementById('challenge-popup').style.display === 'block') {
-                        document.getElementById('challenge-popup').style.display = 'none'; // Auto close if expired
+                        document.getElementById('challenge-popup').style.display = 'none'; 
                     }
                 }
             });
@@ -534,7 +587,7 @@
         }
     });
 
-    // --- INCOMING CHALLENGE POPUP LOGIC ---
+    // INCOMING CHALLENGE POPUP LOGIC
     function showChallengePopup(challenge) {
         const popup = document.getElementById('challenge-popup');
         document.getElementById('challenge-text').innerText = `⚔️ ${challenge.hostName} challenged you!`;
@@ -542,7 +595,7 @@
         
         document.getElementById('accept-challenge-btn').onclick = async () => {
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { activeChallenge: null });
-            window.location.href = '?join=' + challenge.matchId; // Join the peer room instantly!
+            window.location.href = window.location.pathname + '?join=' + challenge.matchId; 
         };
         
         document.getElementById('decline-challenge-btn').onclick = async () => {
@@ -551,11 +604,9 @@
         };
     }
 
-    // --- SEND CHALLENGE LOGIC (Attached to window so standard script can use it) ---
+    // SEND CHALLENGE LOGIC
     window.issueChallenge = async function(friendUid) {
         window.targetChallengeFriend = friendUid;
-        
-        // Hide profile, set game mode to online, start match to generate Peer ID!
         profileLayer.classList.add('hidden');
         setupLayer.classList.remove('hidden');
         document.getElementById('mode-input').value = 'online';
@@ -563,7 +614,7 @@
         document.getElementById('start-btn').click();
     };
 
-    // --- PROFILE MENU LOGIC ---
+    // PROFILE MENU LOGIC
     document.getElementById('open-profile-btn').addEventListener('click', () => {
         setupLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
@@ -575,7 +626,7 @@
         setupLayer.classList.remove('hidden');
     });
 
-    // --- CHANGE DISPLAY NAME ---
+    // CHANGE DISPLAY NAME
     document.getElementById('save-name-btn').addEventListener('click', async () => {
         const newName = document.getElementById('edit-name-input').value.trim();
         if(newName && newName.length <= 12) {
@@ -585,7 +636,7 @@
         }
     });
 
-    // --- PICTURE UPLOAD (Resizes image to save DB space) ---
+    // PICTURE UPLOAD
     document.getElementById('prof-pic').addEventListener('click', () => { document.getElementById('pic-upload').click(); });
     document.getElementById('pic-upload').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -610,9 +661,9 @@
         reader.readAsDataURL(file);
     });
 
-    // --- ADD FRIEND LOGIC ---
+    // ADD FRIEND LOGIC
     document.getElementById('add-friend-btn').addEventListener('click', async () => {
-        const email = document.getElementById('friend-email').value.trim();
+        const email = document.getElementById('friend-email').value.trim().toLowerCase();
         const err = document.getElementById('friend-error');
         if(!email) return;
         
@@ -635,7 +686,7 @@
         }
     });
 
-    // --- RENDER PROFILE AND FRIENDS LIST ---
+    // RENDER PROFILE AND FRIENDS LIST
     async function renderProfileMenu() {
         if(!window.currentUserDoc) return;
         document.getElementById('prof-email').innerText = window.auth.currentUser.email;
@@ -676,6 +727,20 @@
     }
 </script>
 <script>
+    // --- APP QUIT BUTTON LOGIC ---
+    window.addEventListener('load', () => {
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) {
+            quitBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                    // Safe reload drops WebRTC, drops Camera, and clears match variables.
+                    // Firebase remembers login state so you bypass the login screen.
+                    window.location.href = window.location.pathname;
+                }
+            });
+        }
+    });
+
     // --- FORCE UPDATE / CACHE CLEAR LOGIC ---
     document.querySelectorAll('.cache-clear-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1084,7 +1149,7 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
 
-                // IF WE AUTO-STARTED VIA THE CHALLENGE BUTTON, SEND THE PING!
+                // SEND CHALLENGE PING
                 if(window.targetChallengeFriend && window.db) {
                     try {
                         const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
@@ -1483,8 +1548,13 @@
                 document.getElementById(`l-area-${i}`).style.display = 'none';
             } else if (state.gameType === '121' || state.gameType === '170') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
-                if (state.gameType === '170') { document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`; } 
-                else { document.getElementById(`avg-${i}`).innerText = p.ld; }
+                
+                if (state.gameType === '170') {
+                    document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`;
+                } else {
+                    document.getElementById(`avg-${i}`).innerText = p.ld; 
+                }
+                
                 document.getElementById(`s-${i}`).innerText = p.s;
                 document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 document.getElementById(`l-area-${i}`).style.display = 'block';
@@ -1497,6 +1567,7 @@
                 document.getElementById(`l-area-${i}`).style.display = 'block';
                 document.getElementById(`l-${i}`).innerText = p.l;
             }
+            
             document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
