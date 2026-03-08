@@ -165,6 +165,7 @@
         .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 2px solid var(--blue); cursor: pointer; margin: 0 auto 10px auto; display: block; background: #111; }
         .stat-box { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; flex: 1; border: 1px solid rgba(255,255,255,0.1); }
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
+        
         .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
         .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
@@ -230,11 +231,11 @@
 
         <div style="display: flex; gap: 10px; margin-bottom: 5px;">
             <div class="stat-box">
-                <div style="font-size: 10px; color: #aaa; text-transform: uppercase;">Lifetime Avg</div>
+                <div style="font-size: 11px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; line-height: 1.2;">Lifetime Avg</div>
                 <div class="stat-box-val" id="prof-avg">0.0</div>
             </div>
             <div class="stat-box">
-                <div style="font-size: 10px; color: #aaa; text-transform: uppercase;">High Out</div>
+                <div style="font-size: 11px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; line-height: 1.2;">High Out</div>
                 <div class="stat-box-val" id="prof-hc">0</div>
             </div>
         </div>
@@ -243,19 +244,19 @@
             <button id="reset-stats-btn" style="background:transparent; border:none; color:#ff4d4d; font-size:11px; text-decoration:underline; cursor:pointer;">Reset Stats & History</button>
         </div>
 
-        <h3 style="color: white; margin-bottom: 10px; font-size: 14px; text-align: left;">MATCH HISTORY</h3>
-        <div id="history-list-container" style="max-height: 140px; overflow-y: auto; margin-bottom: 20px; text-align: left;"></div>
+        <h3 style="color: white; margin-bottom: 10px; font-size: 14px; text-align: left; line-height: 1.4;">MATCH HISTORY</h3>
+        <div id="history-list-container" style="max-height: 140px; overflow-y: auto; margin-bottom: 20px; text-align: left; padding-bottom: 5px;"></div>
 
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 0 0 15px 0; width: 100%;">
 
-        <h3 style="color: white; margin-bottom: 10px;">FRIENDS LIST</h3>
-        <div id="friends-list-container" style="max-height: 180px; overflow-y: auto; margin-bottom: 15px;"></div>
+        <h3 style="color: white; margin-bottom: 10px; font-size: 14px; text-align: left; line-height: 1.4;">FRIENDS LIST</h3>
+        <div id="friends-list-container" style="max-height: 180px; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-bottom: 5px;"></div>
 
         <div style="display: flex; gap: 5px;">
             <input type="email" id="friend-email" class="setup-input" placeholder="Friend's Email..." style="flex: 1; padding: 8px; font-size: 14px;">
             <button id="add-friend-btn" class="btn-start" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">ADD</button>
         </div>
-        <p id="friend-error" style="color: #ffeb3b; font-size: 11px; margin-top: 5px;"></p>
+        <p id="friend-error" style="color: #ffeb3b; font-size: 11px; margin-top: 5px; line-height: 1.4;"></p>
 
         <button id="close-profile-btn" class="btn-start" style="background: #444; color: white; margin-top: 20px;">BACK TO MENU</button>
     </div>
@@ -325,7 +326,7 @@
             </select>
         </div>
         <button id="start-btn" class="btn-start">START MATCH</button>
-        <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center;"></p>
+        <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center; line-height: 1.4;"></p>
         
         <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
     </div>
@@ -609,7 +610,6 @@
         document.getElementById('start-btn').click();
     };
 
-    // --- FULL STAT RESET LOGIC (Fixes the Ghost Match Bug) ---
     document.getElementById('reset-stats-btn').addEventListener('click', async () => {
         if(confirm("Are you sure you want to completely reset your Lifetime Stats? This clears your Average, High Out, and Match History.")) {
             try {
@@ -740,19 +740,19 @@
                 
                 histHtml += `<div class="history-item">
                     <div style="flex:1;">
-                        <div style="color:${color}; font-weight:bold;">${h.desc}</div>
-                        <div style="color:#aaa; font-size:10px;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
+                        <div style="color:${color}; font-weight:bold; line-height: 1.2;">${h.desc}</div>
+                        <div style="color:#aaa; font-size:11px; margin-top:3px; line-height:1.4;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
                     </div>
                     <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
                 </div>`;
             });
             histContainer.innerHTML = histHtml;
         } else {
-            histContainer.innerHTML = "<p style='color:#888; font-size:11px;'>No matches played yet.</p>";
+            histContainer.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>No matches played yet.</p>";
         }
 
         const list = document.getElementById('friends-list-container');
-        list.innerHTML = "<p style='color:#888; font-size:11px;'>Loading friends...</p>";
+        list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>Loading friends...</p>";
         
         if(window.currentUserDoc.friends && window.currentUserDoc.friends.length > 0) {
             list.innerHTML = "";
@@ -768,8 +768,8 @@
                         <div class="friend-item">
                             <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue);">
                             <div style="flex: 1;">
-                                <div style="color:var(--blue); font-weight:bold; font-size:14px;">${f.displayName}</div>
-                                <div style="color:#aaa; font-size:10px;">Avg: ${fAvg} | High Out: ${fHc}</div>
+                                <div style="color:var(--blue); font-weight:bold; font-size:14px; line-height:1.2;">${f.displayName}</div>
+                                <div style="color:#aaa; font-size:11px; margin-top:3px; line-height:1.4;">Avg: ${fAvg} | High Out: ${fHc}</div>
                             </div>
                             <button onclick="window.issueChallenge('${uid}')" style="background:var(--blue); color:black; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:11px;">⚔️ PLAY</button>
                         </div>
@@ -777,7 +777,7 @@
                 }
             }
         } else {
-            list.innerHTML = "<p style='color:#888; font-size:11px;'>No friends added yet.</p>";
+            list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>No friends added yet.</p>";
         }
     }
 </script>
@@ -1001,12 +1001,6 @@
     }
     document.body.addEventListener('click', unlockAudio, { once: true });
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
-
-    document.querySelectorAll('.dart-box').forEach((box, index, boxes) => {
-        box.addEventListener('input', function() {
-            if(this.value.length >= 3 && index < boxes.length - 1) { boxes[index + 1].focus(); }
-        });
-    });
 
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
