@@ -526,7 +526,6 @@
     let currentZoom = 1; 
     let isLocalMatch = false; 
     
-    // Added limit170 variable and target170 tracking to the state
     let state = { mode: 'online', gameType: '501', limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170 }, 
         { name: "P2", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170 }
@@ -659,10 +658,7 @@
             document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
             document.getElementById('game-type-group').style.display = (mode === 'single' || mode === 'local') ? 'block' : 'none';
             
-            // Show dart limit ONLY for 170 Big Fish
             document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
-            
-            // Hide "Best of Legs" if playing ATC, 121, or 170
             document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170') ? 'none' : 'block';
             
             const p1Label = document.getElementById('p1-label');
@@ -767,8 +763,6 @@
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
-        
-        // Grab Dart limit from Menu
         state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
         
         isLocalMatch = (state.mode === 'local');
@@ -777,7 +771,6 @@
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '121') startScore = 121;
-        if (state.gameType === 'atc') startScore = 1;
         if (state.gameType === '170') startScore = 170;
 
         if (isLocalMatch) {
@@ -1084,7 +1077,6 @@
 
         let soundToPlay = val; 
 
-        // Handle manual 0 input for 121 and 170 (acts as an instant FAIL/SKIP)
         if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
             if (state.gameType === '121') {
                 p.l = Math.max(0, p.l - 1);
@@ -1125,17 +1117,13 @@
                             state.turn = state.startingPlayer; 
                         }
                     } else {
-                        state.p.forEach((x, i) => { 
-                            x.target170 = x.target170 || 170; 
-                            x.s = state.gameType === '121' ? 121 + x.l : x.target170; 
-                            x.ld = 0; 
-                        });
-                        state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
-                        state.turn = state.startingPlayer; 
+                        // INDEPENDENT PRACTICE MODE: DO NOT RESET THE OPPONENT!
+                        p.s = state.gameType === '121' ? 121 + p.l : p.target170;
+                        p.ld = 0;
+                        state.turn = (state.turn === 0) ? 1 : 0; 
                     }
                 }
             } else { 
-                // Hit, but not finished. Check Dart Limits for practice modes.
                 if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
                     if (state.gameType === '170') {
                         p.target170 = (p.target170 || 170) - 1;
@@ -1151,12 +1139,10 @@
                 }
             }
         } else { 
-            // Standard Bust
             soundToPlay = 'bust';
             if (state.gameType === '121' && p.ld >= 9) {
                 p.s = 121 + p.l; p.ld = 0; 
             } else if (state.gameType === '170') {
-                // Busting on 170 fails the attempt instantly
                 p.target170 = (p.target170 || 170) - 1;
                 p.s = p.target170;
                 p.ld = 0;
@@ -1221,7 +1207,6 @@
             } else if (state.gameType === '121' || state.gameType === '170') {
                 document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
                 
-                // Show limit for 170
                 if (state.gameType === '170') {
                     document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`;
                 } else {
