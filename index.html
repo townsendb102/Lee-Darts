@@ -292,14 +292,16 @@
             </select>
         </div>
 
-        <div class="input-group" id="game-type-group" style="display: none;">
+        <div class="input-group" id="game-type-group">
             <label style="color: white;">Game Type</label>
             <select id="game-type-input" class="setup-input">
                 <option value="121">121 Checkout</option>
+                <option value="170_race">170 (Normal)</option>
                 <option value="170">170 Big Fish</option>
                 <option value="301">301</option>
                 <option value="501" selected>501</option>
                 <option value="701">701</option>
+                <option value="1001">1001</option>
                 <option value="atc">Around the Clock</option>
             </select>
         </div>
@@ -656,7 +658,9 @@
             const gameType = gameTypeInput ? gameTypeInput.value : '501';
 
             document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
-            document.getElementById('game-type-group').style.display = (mode === 'single' || mode === 'local') ? 'block' : 'none';
+            
+            // ALWAYS display the Game Type selector regardless of mode!
+            document.getElementById('game-type-group').style.display = 'block'; 
             
             document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
             document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170') ? 'none' : 'block';
@@ -770,8 +774,10 @@
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
+        if (state.gameType === '1001') startScore = 1001;
         if (state.gameType === '121') startScore = 121;
         if (state.gameType === '170') startScore = 170;
+        if (state.gameType === '170_race') startScore = 170;
 
         if (isLocalMatch) {
             state.p[0].name = document.getElementById('name-input').value || "Player 1";
@@ -1072,8 +1078,10 @@
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
+        if (state.gameType === '1001') startScore = 1001;
         if (state.gameType === '121') startScore = 121 + p.l;
         if (state.gameType === '170') startScore = 170;
+        if (state.gameType === '170_race') startScore = 170;
 
         let soundToPlay = val; 
 
@@ -1168,9 +1176,11 @@
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
+        if (state.gameType === '1001') startScore = 1001;
         if (state.gameType === '121') startScore = 121;
         if (state.gameType === 'atc') startScore = 1;
         if (state.gameType === '170') startScore = 170;
+        if (state.gameType === '170_race') startScore = 170;
 
         state.p.forEach(x => { 
             x.target170 = 170;
