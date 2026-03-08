@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#020408">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -259,14 +263,13 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-            // Adding a timestamp forces the phone to check for updates immediately
-            const swUrl = 'sw.js?v=' + new Date().getTime();
-            navigator.serviceWorker.register(swUrl).then(registration => {
+            // Appends a unique version string so the phone ALWAYS looks for the newest sw.js
+            navigator.serviceWorker.register('sw.js?v=2').then(registration => {
                 registration.onupdatefound = () => {
                     const installingWorker = registration.installing;
                     installingWorker.onstatechange = () => {
                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // Automatically refresh the page if a new version is found!
+                            // Quietly automatically refresh the app when the new update arrives
                             window.location.reload();
                         }
                     };
@@ -584,7 +587,6 @@
         
         const dartAudio = document.getElementById('dart-audio');
         if (dartAudio && dartAudio.src === "") {
-            // Load a tiny silent sound into the player on first tap to unlock the Apple restrictions
             dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
             dartAudio.play().catch(e => {});
         }
@@ -1276,4 +1278,4 @@
     }
 </script>
 </body>
-            </html>
+</html>
