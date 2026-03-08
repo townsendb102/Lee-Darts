@@ -137,18 +137,21 @@
         #standard-controls { grid-template-columns: 1.5fr 0.5fr 1fr; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
-        .score-input-box { background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 50px;}
+        /* UPDATED GLASSMORPHIC SCORE INPUT BOX */
+        .score-input-box { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 50px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow: hidden; }
         .btn-undo { background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-size: 20px; cursor: pointer; min-height: 50px;}
         .btn-hit { background: var(--blue); border: none; border-radius: 8px; color: black; font-weight: bold; font-size: 20px; cursor: pointer; min-height: 50px;}
         #atc-controls .btn-hit { font-size: 16px; } 
         
-        #pts-input:disabled { color: #555; }
         .btn-hit:disabled { background: #333; color: #666; cursor: not-allowed; }
         
-        /* DART-BY-DART INPUT STYLES */
-        .dart-box { flex: 1; height: 100%; text-align: center; font-size: 20px; font-weight: bold; text-transform: uppercase; background: transparent; border: none; color: white; border-right: 1px solid #333; outline: none; }
+        /* STRIPPING NATIVE MOBILE WHITE BACKGROUNDS FROM INPUTS */
+        #pts-input { width: 100%; height: 100%; background: transparent !important; border: none; color: white; text-align: center; font-size: 32px; outline: none; -webkit-appearance: none; appearance: none; border-radius: 0; padding: 0; margin: 0; box-shadow: none; }
+        #pts-input:disabled { color: #555; -webkit-text-fill-color: #555; opacity: 1; }
+        
+        .dart-box { flex: 1; height: 100%; text-align: center; font-size: 20px; font-weight: bold; text-transform: uppercase; background: transparent !important; border: none; color: white; border-right: 1px solid rgba(255, 255, 255, 0.15); outline: none; -webkit-appearance: none; appearance: none; border-radius: 0; padding: 0; margin: 0; box-shadow: none; }
         .dart-box:last-child { border-right: none; }
-        .dart-box:focus { background: rgba(0, 212, 255, 0.1); }
+        .dart-box:focus { background: rgba(0, 212, 255, 0.1) !important; }
 
         /* CRICKET CUSTOM KEYPAD STYLES */
         .cric-mult { flex: 1; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 14px;}
@@ -422,7 +425,7 @@
         <div class="score-input-box" id="total-input-box">
             <input type="number" id="pts-input" placeholder="0" inputmode="numeric">
         </div>
-        <div class="score-input-box hidden" id="darts-input-box" style="display: none; gap: 5px; background: transparent; border: none;">
+        <div class="score-input-box hidden" id="darts-input-box" style="display: none; gap: 5px;">
             <input type="text" id="d1-input" class="dart-box" placeholder="1" maxlength="3">
             <input type="text" id="d2-input" class="dart-box" placeholder="2" maxlength="3">
             <input type="text" id="d3-input" class="dart-box" placeholder="3" maxlength="3">
@@ -1649,7 +1652,6 @@
                 });
             } else if (state.gameType === 'cricket') {
                 
-                // RENDER CRICKET BOARD
                 document.getElementById('cricket-center').classList.remove('hidden');
                 document.getElementById('main-score-area').style.flexDirection = 'row';
                 
@@ -1661,7 +1663,7 @@
                     let sym0 = m0 === 0 ? '' : (m0 === 1 ? '╱' : (m0 === 2 ? 'X' : '⊗'));
                     let sym1 = m1 === 0 ? '' : (m1 === 1 ? '╱' : (m1 === 2 ? 'X' : '⊗'));
                     
-                    let isClosed = (state.mode === 'single') ? (m0 === 3) : (m0 === 3 && m1 === 3);
+                    let isClosed = (state.mode === 'single') ? (m0 >= 3) : (m0 >= 3 && m1 >= 3);
                     let numClass = isClosed ? 'cric-num closed' : 'cric-num';
                     let label = t === 25 ? 'B' : t;
                     
