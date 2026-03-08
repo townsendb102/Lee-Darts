@@ -117,7 +117,7 @@
         body.local-mode #spectate-btn,
         body.local-mode #share-btn { display: none !important; }
 
-        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer { 
+        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer { 
             position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
             overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
@@ -125,6 +125,9 @@
         #winner-layer { background: rgba(2, 4, 8, 0.95); z-index: 10001; }
         #first-throw-layer { background: rgba(2, 4, 8, 0.98); z-index: 10002; }
         #waiting-layer { background: rgba(2, 4, 8, 0.98); z-index: 10003; }
+        
+        /* LOGIN LAYER STYLING */
+        #login-layer { z-index: 20000; } 
         
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box {
             visibility: visible !important;
@@ -277,11 +280,37 @@
 
 <audio id="dart-audio" playsinline webkit-playsinline></audio>
 
+<div id="login-layer">
+    <div class="setup-card">
+        <h2>🎯 RAF DARTS SCORER 🎯</h2>
+        <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Log in to save stats and play friends</p>
+        
+        <div class="input-group">
+            <input type="email" id="email-input" class="setup-input" placeholder="Email Address">
+        </div>
+        <div class="input-group">
+            <input type="password" id="password-input" class="setup-input" placeholder="Password">
+        </div>
+
+        <button id="login-btn" class="btn-start">LOG IN</button>
+        <button id="signup-btn" class="btn-start" style="background: #444; color: white; margin-top: 10px;">SIGN UP</button>
+        
+        <p id="auth-error" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
+
+        <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 20px 0; width: 100%;">
+        
+        <button id="guest-btn" class="btn-start" style="background: transparent; border: 1px solid var(--blue); color: var(--blue);">PLAY AS GUEST</button>
+    </div>
+</div>
+
 <div id="setup-layer">
     <div class="setup-card">
         <h2>🎯 RAF DARTS SCORER 🎯</h2>
         
         <button id="install-btn" class="btn-start install-btn">📲 INSTALL APP</button>
+        
+        <button id="logout-btn" class="btn-update" style="display: none; color: #ff4d4d; float: right; margin-top: 0; text-decoration: none;">Log Out</button>
+        <div style="clear: both; margin-bottom: 10px;"></div>
 
         <div class="input-group" id="mode-group">
             <label style="color: white;">Match Type</label>
@@ -444,6 +473,106 @@
 </div>
 
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { 
+        getAuth, 
+        createUserWithEmailAndPassword, 
+        signInWithEmailAndPassword, 
+        onAuthStateChanged,
+        signOut
+    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+    // YOUR ACTUAL FIREBASE CONFIG
+    const firebaseConfig = {
+      apiKey: "AIzaSyCdgCBs5ofkSyV66ydW4JPfZOUMog9wpfU",
+      authDomain: "raf-darts.firebaseapp.com",
+      projectId: "raf-darts",
+      storageBucket: "raf-darts.firebasestorage.app",
+      messagingSenderId: "551286613527",
+      appId: "1:551286613527:web:7b80ae6c58b769364e5e52"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Grab the HTML elements
+    const loginLayer = document.getElementById('login-layer');
+    const emailInput = document.getElementById('email-input');
+    const passwordInput = document.getElementById('password-input');
+    const authError = document.getElementById('auth-error');
+    const logoutBtn = document.getElementById('logout-btn');
+    
+    // --- GUEST MODE LOGIC ---
+    document.getElementById('guest-btn').addEventListener('click', () => {
+        loginLayer.style.display = 'none'; // Hide login screen
+        document.getElementById('name-input').value = "Guest";
+    });
+
+    // --- SIGN UP LOGIC ---
+    document.getElementById('signup-btn').addEventListener('click', () => {
+        if(passwordInput.value.length < 6) {
+            authError.style.color = "#ff4d4d";
+            authError.innerText = "Password must be at least 6 characters.";
+            return;
+        }
+        createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
+            .then((userCredential) => {
+                authError.style.color = "#4caf50";
+                authError.innerText = "Account created! Logging in...";
+            })
+            .catch((error) => {
+                authError.style.color = "#ff4d4d";
+                authError.innerText = getFriendlyErrorMessage(error.code);
+            });
+    });
+
+    // --- LOG IN LOGIC ---
+    document.getElementById('login-btn').addEventListener('click', () => {
+        signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
+            .catch((error) => {
+                authError.style.color = "#ff4d4d";
+                authError.innerText = "Invalid Email or Password.";
+            });
+    });
+
+    // --- LOG OUT LOGIC ---
+    logoutBtn.addEventListener('click', () => {
+        signOut(auth).then(() => {
+            // Sign-out successful.
+            location.reload(); // Refresh the app to clear session
+        });
+    });
+
+    // --- FIREBASE "WATCHER" (Checks if they are logged in) ---
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // USER IS LOGGED IN
+            loginLayer.style.display = 'none'; // Hide login screen
+            logoutBtn.style.display = 'block'; // Show logout button in main menu
+            
+            // Auto-fill their menu name with their email prefix
+            let username = user.email.split('@')[0];
+            document.getElementById('name-input').value = username;
+            
+        } else {
+            // USER IS LOGGED OUT
+            loginLayer.style.display = 'flex'; // Show login screen
+            logoutBtn.style.display = 'none'; // Hide logout button
+        }
+    });
+
+    // Helper to make Firebase errors easy to read
+    function getFriendlyErrorMessage(errorCode) {
+        if (errorCode === 'auth/email-already-in-use') return "Email is already registered.";
+        if (errorCode === 'auth/weak-password') return "Password should be at least 6 characters.";
+        if (errorCode === 'auth/invalid-email') return "Please enter a valid email.";
+        if (errorCode === 'auth/missing-password') return "Please enter a password.";
+        return "An error occurred. Please try again.";
+    }
+</script>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
