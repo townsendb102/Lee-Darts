@@ -35,21 +35,41 @@
         .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
         .ios-close { position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 16px; color: #888; padding: 5px; }
 
+        /* SPECTATOR MODE OVERRIDES */
         body.spectator-mode { display: block; } 
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
-        body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; }
-        body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; }
-        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; }
-        body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); border: none; }
-        body.spectator-mode .score-area { position: fixed; top: calc(40px + env(safe-area-inset-top)); bottom: 25px; width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: stretch; padding: 0; }
-        body.spectator-mode .player-card { flex: 0 0 auto; width: 115px; background-color: var(--card) !important; background-image: none !important; border: 1px solid rgba(255, 255, 255, 0.15); justify-content: space-evenly; opacity: 0.85;}
-        body.spectator-mode .player-card.active { opacity: 1; border-left: 2px solid var(--blue); border-right: 2px solid var(--blue); }
+        body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; display: none !important; }
+        body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 100% !important; height: 100% !important; left: 0 !important; border: none !important; }
+        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; display: block !important; }
+        body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
+        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
+        body.spectator-mode .score-area { position: fixed; top: calc(40px + env(safe-area-inset-top)); bottom: 25px; width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: stretch; padding: 0; pointer-events: none; }
+        
+        /* GLASSMORPHISM TRANSPARENT CARDS */
+        body.spectator-mode .player-card { 
+            flex: 0 0 auto; 
+            width: 125px; 
+            background-color: rgba(0, 0, 0, 0.45) !important; 
+            background-image: none !important; 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            justify-content: space-evenly; 
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            margin: 10px;
+            border-radius: 12px;
+            pointer-events: auto;
+        }
+        body.spectator-mode .player-card.active { 
+            background-color: rgba(22, 42, 63, 0.6) !important; 
+            border: 2px solid var(--blue); 
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
         body.spectator-mode .score-val { font-size: 40px; }
         body.spectator-mode .legs-count { text-align: center; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
-        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         
         body.single-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
         body.single-mode .v-container { display: none !important; }
@@ -1350,6 +1370,21 @@
         if (!isLocalMatch) broadcast(state);
     }
 
+    // Creates an invisible video and audio stream to force WebRTC receivers open
+    function createDummyStream() {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1; canvas.height = 1;
+            const vStream = canvas.captureStream(1);
+            
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const dest = audioCtx.createMediaStreamDestination();
+            const aStream = dest.stream;
+            
+            return new MediaStream([vStream.getVideoTracks()[0], aStream.getAudioTracks()[0]]);
+        } catch (e) { return null; }
+    }
+
     async function initApp() {
         requestWakeLock();
         statsSavedThisMatch = false; 
@@ -1528,7 +1563,8 @@
         c.on('data', d => handleData(d));
         
         if (isSpectator) {
-            const specCall = peer.call(id, null, { metadata: { spectator: true } });
+            const dummy = createDummyStream();
+            const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
             specCall.on('stream', s => { attachPeerVideo(s); render(); });
         } else {
             currentCall = peer.call(id, stream);
@@ -2101,21 +2137,3 @@
     }
 
     function shareInvite() {
-        if (peer && peer.id) {
-            const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
-        }
-    }
-
-    function shareSpectator() {
-        if (peer && peer.id) {
-            const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
-        }
-    }
-
-</script>
-</body>
-</html>
