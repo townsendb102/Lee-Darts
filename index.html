@@ -1424,7 +1424,7 @@
             
             if (state.mode !== 'single') log.innerText = "Connecting to server...";
             
-                        peer = new Peer({
+            peer = new Peer({
                 config: {
                     'iceServers': [
                         { urls: "stun:stun.l.google.com:19302" }, 
@@ -1436,7 +1436,6 @@
                     ]
                 }
             });
-
 
             peer.on('open', async (id) => {
                 document.getElementById('display-id').innerText = id;
@@ -1663,7 +1662,7 @@
     }
 
     window.hitCricket = function(val) {
-        if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if (val === 25 && cricketMult === 3) { alert("Invalid Dart: Cannot throw a Treble Bull."); return; }
         if(botTimeout) clearTimeout(botTimeout);
         
@@ -2060,4 +2059,48 @@
                 document.getElementById(`ws-n${i}`).innerText = pStats.name;
                 
                 if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
-                    document.getElementById('ws-label-avg
+                    document.getElementById('ws-label-avg').innerText = "AVG (Darts)";
+                    document.getElementById(`ws-avg${i}`).innerText = pStats.d;
+                    document.getElementById(`ws-f9${i}`).innerText = "-";
+                } else {
+                    document.getElementById('ws-label-avg').innerText = "Match Avg";
+                    document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
+                    document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
+                }
+                
+                document.getElementById(`ws-hc${i}`).innerText = pStats.hc;
+                document.getElementById(`ws-140${i}`).innerText = pStats.n140;
+                document.getElementById(`ws-180${i}`).innerText = pStats.n180;
+            }
+            winnerLayer.classList.remove('hidden');
+        } else {
+            winnerLayer.classList.add('hidden');
+        }
+
+        if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined && !botTimeout) {
+            playBotTurn();
+        } else if (state.mode === 'bot' && state.turn === 0 && botTimeout) {
+            clearTimeout(botTimeout);
+            botTimeout = null;
+        }
+    }
+
+    function shareInvite() {
+        if (peer && peer.id) {
+            const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
+            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
+        }
+    }
+
+    function shareSpectator() {
+        if (peer && peer.id) {
+            const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
+            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
+        }
+    }
+
+</script>
+</body>
+</html>
