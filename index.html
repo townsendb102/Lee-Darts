@@ -671,7 +671,8 @@
                     document.getElementById('edit-name-input').value = window.currentUserDoc.displayName;
                     
                     if(window.currentUserDoc.theme) {
-                        document.body.className = `theme-${window.currentUserDoc.theme}`;
+                        document.body.classList.remove('theme-classic', 'theme-neon', 'theme-pub');
+                        document.body.classList.add(`theme-${window.currentUserDoc.theme}`);
                         document.getElementById('theme-select').value = window.currentUserDoc.theme;
                     }
                     
@@ -697,7 +698,8 @@
 
     document.getElementById('theme-select').addEventListener('change', async function() {
         const selectedTheme = this.value;
-        document.body.className = `theme-${selectedTheme}`;
+        document.body.classList.remove('theme-classic', 'theme-neon', 'theme-pub');
+        document.body.classList.add(`theme-${selectedTheme}`);
         if(window.auth.currentUser) {
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { theme: selectedTheme });
         }
