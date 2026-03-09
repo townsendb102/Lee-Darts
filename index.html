@@ -2137,3 +2137,21 @@
     }
 
     function shareInvite() {
+        if (peer && peer.id) {
+            const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
+            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
+        }
+    }
+
+    function shareSpectator() {
+        if (peer && peer.id) {
+            const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
+            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
+        }
+    }
+
+</script>
+</body>
+</html>
