@@ -854,7 +854,7 @@
         let coPerc = window.currentUserDoc.coAtt > 0 ? Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
-        document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0;
+        // document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0; // Removed as element does not exist
         document.getElementById('prof-co').innerText = coPerc;
         
         const histContainer = document.getElementById('history-list-container');
@@ -1020,9 +1020,22 @@
 
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault(); deferredPrompt = e;
+        e.preventDefault(); 
+        deferredPrompt = e;
         const installBtn = document.getElementById('install-btn');
-        if (installBtn) installBtn.style.display = 'block';
+        if (installBtn) {
+            installBtn.style.display = 'block';
+            installBtn.onclick = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installBtn.style.display = 'none';
+                    }
+                    deferredPrompt = null;
+                }
+            };
+        }
     });
 
     const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
