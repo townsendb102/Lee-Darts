@@ -1526,7 +1526,7 @@
                     setTimeout(() => { render(); }, 1000);
                 } else {
                     if (stream) { call.answer(stream); } else { call.answer(); }
-                    limitVideoBitrate(call.peerConnection, 1500);
+                    limitVideoBitrate(call.peerConnection, 500);
                     call.on('stream', s => { currentCall = call; if(s) { attachPeerVideo(s); } render(); });
                 }
             });
@@ -1568,7 +1568,7 @@
             specCall.on('stream', s => { attachPeerVideo(s); render(); });
         } else {
             currentCall = peer.call(id, stream);
-            limitVideoBitrate(currentCall.peerConnection, 1500); 
+            limitVideoBitrate(currentCall.peerConnection, 500); 
             currentCall.on('stream', s => { attachPeerVideo(s); render(); });
         }
     }
