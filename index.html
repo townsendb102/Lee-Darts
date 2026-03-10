@@ -870,6 +870,7 @@
         let coPerc = window.currentUserDoc.coAtt > 0 ? Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
+        // document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0; // Removed as element does not exist
         document.getElementById('prof-co').innerText = coPerc;
         
         const histContainer = document.getElementById('history-list-container');
@@ -936,6 +937,31 @@
     }
     document.addEventListener('visibilitychange', () => {
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
+    });
+
+    window.addEventListener('load', () => {
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) {
+            quitBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                    window.location.href = window.location.pathname;
+                }
+            });
+        }
+    });
+
+    document.querySelectorAll('.cache-clear-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.innerText = "Clearing Cache & Updating...";
+            btn.style.color = "#4caf50";
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) { registration.unregister(); }
+                });
+            }
+            if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+            setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+        });
     });
 
     let statsSavedThisMatch = false;
@@ -1142,9 +1168,8 @@
         }
     }
 
-    // Wrap everything in DOMContentLoaded to prevent buttons breaking if libraries load slowly
-    document.addEventListener('DOMContentLoaded', () => {
-        
+    // Load buttons directly on window load exactly as they were before
+    window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
 
@@ -1193,55 +1218,30 @@
             document.getElementById('setup-layer').classList.remove('hidden');
         }
 
-        // Safe Button Assignments
-        const startBtn = document.getElementById('start-btn');
-        if (startBtn) startBtn.addEventListener('click', initApp);
+        document.getElementById('start-btn').onclick = initApp;
+        if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
+        if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
+        if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
+        if(document.getElementById('caller-btn')) document.getElementById('caller-btn').onclick = toggleCaller;
+        if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
+        if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
         
-        document.getElementById('flip-btn')?.addEventListener('click', swapCam);
-        document.getElementById('zoom-btn')?.addEventListener('click', cycleZoom);
-        document.getElementById('mic-btn')?.addEventListener('click', toggleMic);
-        document.getElementById('caller-btn')?.addEventListener('click', toggleCaller);
-        document.getElementById('share-btn')?.addEventListener('click', shareInvite);
-        document.getElementById('spectate-btn')?.addEventListener('click', shareSpectator);
+        if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
+        if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
         
-        document.getElementById('undo-btn')?.addEventListener('click', undo);
-        document.getElementById('atc-undo-btn')?.addEventListener('click', undo);
-        
-        document.getElementById('atc-miss-btn')?.addEventListener('click', () => processAtcDart(0));
-        document.getElementById('atc-s-btn')?.addEventListener('click', () => processAtcDart(1));
-        document.getElementById('atc-d-btn')?.addEventListener('click', () => processAtcDart(2));
-        document.getElementById('atc-t-btn')?.addEventListener('click', () => processAtcDart(3));
+        if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
+        if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
+        if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
+        if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
 
-        document.getElementById('mode-toggle-btn')?.addEventListener('click', () => {
-            localInputMode = localInputMode === 'total' ? 'darts' : 'total';
-            render();
-        });
-
-        document.getElementById('rematch-btn')?.addEventListener('click', triggerRematch);
-
-        const quitBtn = document.getElementById('quit-btn');
-        if (quitBtn) {
-            quitBtn.addEventListener('click', () => {
-                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-                    window.location.href = window.location.pathname;
-                }
-            });
+        if(document.getElementById('mode-toggle-btn')) {
+            document.getElementById('mode-toggle-btn').onclick = () => {
+                localInputMode = localInputMode === 'total' ? 'darts' : 'total';
+                render();
+            };
         }
 
-        // Cache clear / Update buttons
-        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.innerText = "Clearing Cache & Updating...";
-                btn.style.color = "#4caf50";
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                        for(let registration of registrations) { registration.unregister(); }
-                    });
-                }
-                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
-                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
-            });
-        });
+        if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
     });
 
     window.np = function(val) {
@@ -2170,4 +2170,10 @@
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
             if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
-            else {
+            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
+        }
+    }
+
+</script>
+</body>
+</html>
