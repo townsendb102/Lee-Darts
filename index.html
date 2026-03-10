@@ -23,10 +23,11 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
+        /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            grid-template-rows: calc(40px + env(safe-area-inset-top)) 45dvh 1fr auto calc(25px + env(safe-area-inset-bottom));
+            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(25dvh, 40dvh) minmax(100px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
             overflow: hidden; transition: background 0.3s ease;
         }
 
@@ -43,26 +44,25 @@
         body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; display: block !important; }
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
-        body.spectator-mode .score-area { position: fixed; top: calc(40px + env(safe-area-inset-top)); bottom: 25px; width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: stretch; padding: 0; pointer-events: none; }
+        body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
         
         /* GLASSMORPHISM TRANSPARENT CARDS */
         body.spectator-mode .player-card { 
             flex: 0 0 auto; 
             width: 125px; 
-            background-color: rgba(0, 0, 0, 0.45) !important; 
+            background-color: rgba(13, 27, 42, 0.45) !important; 
             background-image: none !important; 
             border: 1px solid rgba(255, 255, 255, 0.2); 
             justify-content: space-evenly; 
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            margin: 10px;
-            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 15px;
             pointer-events: auto;
         }
         body.spectator-mode .player-card.active { 
             background-color: rgba(22, 42, 63, 0.6) !important; 
             border: 2px solid var(--blue); 
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
         }
         
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
@@ -144,7 +144,7 @@
         
         .p-name { font-size: 14px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;}
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .score-val { font-size: clamp(30px, 6dvh, 50px); font-weight: 900; line-height: 1; }
+        .score-val { font-size: clamp(28px, 6dvh, 50px); font-weight: 900; line-height: 1; }
         .legs-count { font-size: 11px; color: #888; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
@@ -166,26 +166,26 @@
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
         /* CUSTOM NUMPAD STYLES */
-        #numpad-display { font-size: 32px; font-weight: bold; text-align: center; height: 45px; line-height: 45px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
+        #numpad-display { font-size: 28px; font-weight: bold; text-align: center; height: 35px; line-height: 35px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
         .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
-        .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 12px 0;}
+        .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px 0;}
         .np-btn:active { background: var(--blue); color: black; }
         .np-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .np-btn.enter { background: var(--blue); color: black; grid-column: span 2; }
         .np-btn.enter:disabled { background: #333; color: #666; }
         
-        /* NEW DART-BY-DART GRID STYLES */
+        /* NEW DART-BY-DART GRID STYLES - Optimized for iPhone height */
         .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-        .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 16px; font-weight: bold; border-radius: 6px; padding: 10px 0; cursor: pointer; text-align: center;}
+        .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 14px; font-weight: bold; border-radius: 6px; padding: 6px 0; cursor: pointer; text-align: center;}
         .dbd-btn:active { background: var(--blue); color: black; }
         .dbd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 40px; font-size: 20px; font-weight: bold; border-radius: 6px; height: 40px; }
+        .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 32px; font-size: 16px; font-weight: bold; border-radius: 6px; height: 32px; }
 
         /* CRICKET CUSTOM KEYPAD STYLES */
-        .cric-mult { flex: 1; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer;}
+        .cric-mult { flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;}
         .cric-mult.active { background: var(--blue); color: black; border-color: var(--blue); }
         .cric-mult:disabled { opacity: 0.5; cursor: not-allowed; }
-        .cric-num-btn { background: #111; border: 1px solid #333; border-radius: 6px; color: white; font-size: 18px; font-weight: bold; padding: 12px; cursor: pointer; }
+        .cric-num-btn { background: #111; border: 1px solid #333; border-radius: 6px; color: white; font-size: 16px; font-weight: bold; padding: 10px; cursor: pointer; }
         .cric-num-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
@@ -202,12 +202,6 @@
         
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: #ffeb3b; color: black; padding: 15px; border-radius: 10px; z-index: 30000; display: none; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; border: 2px solid #fbc02d; }
     </style>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW setup failed', err));
-        }
-    </script>
 </head>
 <body class="theme-classic">
 
@@ -523,7 +517,7 @@
             </div>
         </div>
 
-        <div id="darts-mode-ui" class="hidden" style="display: none; flex-direction: column; gap: 6px; height: 100%;">
+        <div id="darts-mode-ui" style="display: none; flex-direction: column; gap: 6px; height: 100%;">
             <div style="display: flex; gap: 6px; align-items: center;">
                 <div class="dbd-slot" id="dbd-slot-1">-</div>
                 <div class="dbd-slot" id="dbd-slot-2">-</div>
@@ -876,7 +870,6 @@
         let coPerc = window.currentUserDoc.coAtt > 0 ? Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
-        // document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0; // Removed as element does not exist
         document.getElementById('prof-co').innerText = coPerc;
         
         const histContainer = document.getElementById('history-list-container');
@@ -943,31 +936,6 @@
     }
     document.addEventListener('visibilitychange', () => {
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
-    });
-
-    window.addEventListener('load', () => {
-        const quitBtn = document.getElementById('quit-btn');
-        if (quitBtn) {
-            quitBtn.addEventListener('click', () => {
-                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-                    window.location.href = window.location.pathname;
-                }
-            });
-        }
-    });
-
-    document.querySelectorAll('.cache-clear-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.innerText = "Clearing Cache & Updating...";
-            btn.style.color = "#4caf50";
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) { registration.unregister(); }
-                });
-            }
-            if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
-            setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
-        });
     });
 
     let statsSavedThisMatch = false;
@@ -1163,7 +1131,20 @@
     document.body.addEventListener('click', unlockAudio, { once: true });
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
-    window.addEventListener('load', () => {
+    // Creates an invisible video and audio stream to force WebRTC receivers open on iOS Safari
+    function createDummyStream() {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1; canvas.height = 1;
+            return canvas.captureStream(1); // 1 FPS is enough to trick WebRTC
+        } catch (e) { 
+            return null; 
+        }
+    }
+
+    // Wrap everything in DOMContentLoaded to prevent buttons breaking if libraries load slowly
+    document.addEventListener('DOMContentLoaded', () => {
+        
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
 
@@ -1212,28 +1193,55 @@
             document.getElementById('setup-layer').classList.remove('hidden');
         }
 
-        document.getElementById('start-btn').onclick = initApp;
-        document.getElementById('flip-btn').onclick = swapCam;
-        document.getElementById('zoom-btn').onclick = cycleZoom;
-        document.getElementById('mic-btn').onclick = toggleMic;
-        document.getElementById('caller-btn').onclick = toggleCaller;
-        document.getElementById('share-btn').onclick = shareInvite;
-        document.getElementById('spectate-btn').onclick = shareSpectator;
+        // Safe Button Assignments
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn) startBtn.addEventListener('click', initApp);
         
-        document.getElementById('undo-btn').onclick = undo;
+        document.getElementById('flip-btn')?.addEventListener('click', swapCam);
+        document.getElementById('zoom-btn')?.addEventListener('click', cycleZoom);
+        document.getElementById('mic-btn')?.addEventListener('click', toggleMic);
+        document.getElementById('caller-btn')?.addEventListener('click', toggleCaller);
+        document.getElementById('share-btn')?.addEventListener('click', shareInvite);
+        document.getElementById('spectate-btn')?.addEventListener('click', shareSpectator);
         
-        document.getElementById('atc-undo-btn').onclick = undo;
-        document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
-        document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
-        document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
-        document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
+        document.getElementById('undo-btn')?.addEventListener('click', undo);
+        document.getElementById('atc-undo-btn')?.addEventListener('click', undo);
+        
+        document.getElementById('atc-miss-btn')?.addEventListener('click', () => processAtcDart(0));
+        document.getElementById('atc-s-btn')?.addEventListener('click', () => processAtcDart(1));
+        document.getElementById('atc-d-btn')?.addEventListener('click', () => processAtcDart(2));
+        document.getElementById('atc-t-btn')?.addEventListener('click', () => processAtcDart(3));
 
-        document.getElementById('mode-toggle-btn').onclick = () => {
+        document.getElementById('mode-toggle-btn')?.addEventListener('click', () => {
             localInputMode = localInputMode === 'total' ? 'darts' : 'total';
             render();
-        };
+        });
 
-        document.getElementById('rematch-btn').onclick = triggerRematch;
+        document.getElementById('rematch-btn')?.addEventListener('click', triggerRematch);
+
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) {
+            quitBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                    window.location.href = window.location.pathname;
+                }
+            });
+        }
+
+        // Cache clear / Update buttons
+        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.innerText = "Clearing Cache & Updating...";
+                btn.style.color = "#4caf50";
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) { registration.unregister(); }
+                    });
+                }
+                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+            });
+        });
     });
 
     window.np = function(val) {
@@ -1344,16 +1352,16 @@
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') { toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true }); }
     }
 
-    function showFtStep2(mode) {
+    window.showFtStep2 = function(mode) {
         document.getElementById('ft-step-1').classList.add('hidden');
         document.getElementById('ft-step-2').classList.remove('hidden');
         document.getElementById('ft-p1-btn').innerText = state.p[0].name;
         document.getElementById('ft-p2-btn').innerText = state.p[1].name;
         if (mode === 'bull') { document.getElementById('ft-title').innerText = "Who was closest to Bull?"; } 
         else { document.getElementById('ft-title').innerText = "Who throws first?"; }
-    }
+    };
 
-    function setFirstPlayer(playerIndex) {
+    window.setFirstPlayer = function(playerIndex) {
         state.startingPlayer = playerIndex;
         state.turn = playerIndex;
         document.getElementById('first-throw-layer').classList.add('hidden');
@@ -1368,22 +1376,7 @@
 
         render();
         if (!isLocalMatch) broadcast(state);
-    }
-
-    // Creates an invisible video and audio stream to force WebRTC receivers open
-    function createDummyStream() {
-        try {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1; canvas.height = 1;
-            const vStream = canvas.captureStream(1);
-            
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const dest = audioCtx.createMediaStreamDestination();
-            const aStream = dest.stream;
-            
-            return new MediaStream([vStream.getVideoTracks()[0], aStream.getAudioTracks()[0]]);
-        } catch (e) { return null; }
-    }
+    };
 
     async function initApp() {
         requestWakeLock();
@@ -1900,103 +1893,129 @@
 
     function render() {
         state.p.forEach((p, i) => {
-            document.getElementById(`n-${i}`).innerText = p.name;
+            const nameEl = document.getElementById(`n-${i}`);
+            if (nameEl) nameEl.innerText = p.name;
             
             const avatarImg = document.getElementById(`avatar-${i}`);
-            if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
-            else { avatarImg.style.display = 'none'; }
+            if (avatarImg) {
+                if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
+                else { avatarImg.style.display = 'none'; }
+            }
             
             let coStatStr = p.coAtt > 0 ? Math.round((p.coHit / p.coAtt) * 100) + "%" : "0%";
 
             if (state.gameType === 'atc') {
-                document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
-                document.getElementById(`avg-${i}`).innerText = p.d;
-                document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
-                document.getElementById(`co-${i}`).innerText = "TARGET";
-                document.getElementById(`l-area-${i}`).style.display = 'none';
-                document.getElementById(`co-stat-${i}`).style.display = 'none';
-                document.getElementById(`miss-btn-${i}`).classList.add('hidden');
+                if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
+                if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d;
+                if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
+                if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = "TARGET";
+                if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'none';
+                if(document.getElementById(`co-stat-${i}`)) document.getElementById(`co-stat-${i}`).style.display = 'none';
+                if(document.getElementById(`miss-btn-${i}`)) document.getElementById(`miss-btn-${i}`).classList.add('hidden');
             } 
             else if (state.gameType === 'cricket') {
-                document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
-                document.getElementById(`avg-${i}`).innerText = p.d;
-                document.getElementById(`s-${i}`).innerText = p.s;
-                document.getElementById(`co-stat-${i}`).style.display = 'none';
-                document.getElementById(`miss-btn-${i}`).classList.add('hidden');
+                if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
+                if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d;
+                if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s;
+                if(document.getElementById(`co-stat-${i}`)) document.getElementById(`co-stat-${i}`).style.display = 'none';
+                if(document.getElementById(`miss-btn-${i}`)) document.getElementById(`miss-btn-${i}`).classList.add('hidden');
             }
             else if (state.gameType === '121' || state.gameType === '170') {
-                document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
-                if (state.gameType === '170') { document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`; } 
-                else { document.getElementById(`avg-${i}`).innerText = p.ld; }
-                document.getElementById(`s-${i}`).innerText = p.s;
-                document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
-                document.getElementById(`l-area-${i}`).style.display = 'block';
-                document.getElementById(`l-${i}`).innerText = p.l; 
-                document.getElementById(`co-${i}`).style.display = 'block';
+                if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
+                if (state.gameType === '170') { 
+                    if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`; 
+                } else { 
+                    if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.ld; 
+                }
+                if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s;
+                if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
+                if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'block';
+                if(document.getElementById(`l-${i}`)) document.getElementById(`l-${i}`).innerText = p.l; 
+                if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).style.display = 'block';
                 
-                document.getElementById(`co-stat-${i}`).style.display = 'block';
-                document.getElementById(`co-perc-${i}`).innerText = coStatStr;
+                if(document.getElementById(`co-stat-${i}`)) document.getElementById(`co-stat-${i}`).style.display = 'block';
+                if(document.getElementById(`co-perc-${i}`)) document.getElementById(`co-perc-${i}`).innerText = coStatStr;
                 
-                if(p.s <= 170 && checkouts[p.s] && state.turn === i) {
-                    document.getElementById(`miss-btn-${i}`).classList.remove('hidden');
-                } else { document.getElementById(`miss-btn-${i}`).classList.add('hidden'); }
+                const missBtn = document.getElementById(`miss-btn-${i}`);
+                if (missBtn) {
+                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) {
+                        missBtn.classList.remove('hidden');
+                    } else { 
+                        missBtn.classList.add('hidden'); 
+                    }
+                }
 
             } else {
-                document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
-                document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-                document.getElementById(`s-${i}`).innerText = p.s;
-                document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
-                document.getElementById(`l-area-${i}`).style.display = 'block';
-                document.getElementById(`l-${i}`).innerText = p.l;
-                document.getElementById(`co-${i}`).style.display = 'block';
+                if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
+                if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
+                if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s;
+                if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
+                if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'block';
+                if(document.getElementById(`l-${i}`)) document.getElementById(`l-${i}`).innerText = p.l;
+                if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).style.display = 'block';
 
-                document.getElementById(`co-stat-${i}`).style.display = 'block';
-                document.getElementById(`co-perc-${i}`).innerText = coStatStr;
+                if(document.getElementById(`co-stat-${i}`)) document.getElementById(`co-stat-${i}`).style.display = 'block';
+                if(document.getElementById(`co-perc-${i}`)) document.getElementById(`co-perc-${i}`).innerText = coStatStr;
 
-                if(p.s <= 170 && checkouts[p.s] && state.turn === i) {
-                    document.getElementById(`miss-btn-${i}`).classList.remove('hidden');
-                } else { document.getElementById(`miss-btn-${i}`).classList.add('hidden'); }
+                const missBtn = document.getElementById(`miss-btn-${i}`);
+                if (missBtn) {
+                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) {
+                        missBtn.classList.remove('hidden');
+                    } else { 
+                        missBtn.classList.add('hidden'); 
+                    }
+                }
             }
             
-            document.getElementById(`card-${i}`).className = (state.turn === i) ? "player-card active" : "player-card";
+            const cardEl = document.getElementById(`card-${i}`);
+            if (cardEl) cardEl.className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
         if (!spectateId) {
             
             if (state.gameType === 'atc') {
-                document.getElementById('cricket-center').classList.add('hidden');
-                document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
+                document.getElementById('cricket-center')?.classList.add('hidden');
+                if (document.getElementById('main-score-area')) {
+                    document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
+                }
                 [0, 1].forEach(i => {
                     if(document.getElementById(`srow-${i}`)) document.getElementById(`srow-${i}`).style.flexDirection = 'row';
-                    document.getElementById(`s-${i}`).style.fontSize = 'clamp(30px, 6dvh, 50px)';
+                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(30px, 6dvh, 50px)';
                 });
 
-                document.getElementById('standard-controls').style.display = 'none';
-                document.getElementById('atc-controls').style.display = 'grid';
-                document.getElementById('cricket-controls').style.display = 'none';
+                if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'none';
+                if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'grid';
+                if(document.getElementById('cricket-controls')) document.getElementById('cricket-controls').style.display = 'none';
                 
                 let target = state.p[state.turn].s;
                 if (target <= 20) {
-                    document.getElementById('atc-s-btn').innerText = "S" + target;
-                    document.getElementById('atc-d-btn').innerText = "D" + target;
-                    document.getElementById('atc-t-btn').innerText = "T" + target;
-                    document.getElementById('atc-d-btn').style.visibility = 'visible';
-                    document.getElementById('atc-t-btn').style.visibility = 'visible';
+                    if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').innerText = "S" + target;
+                    if(document.getElementById('atc-d-btn')) {
+                        document.getElementById('atc-d-btn').innerText = "D" + target;
+                        document.getElementById('atc-d-btn').style.visibility = 'visible';
+                    }
+                    if(document.getElementById('atc-t-btn')) {
+                        document.getElementById('atc-t-btn').innerText = "T" + target;
+                        document.getElementById('atc-t-btn').style.visibility = 'visible';
+                    }
                 } else if (target === 21) {
-                    document.getElementById('atc-s-btn').innerText = "25";
-                    document.getElementById('atc-d-btn').innerText = "BULL";
-                    document.getElementById('atc-t-btn').style.visibility = 'hidden'; 
+                    if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').innerText = "25";
+                    if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').innerText = "BULL";
+                    if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').style.visibility = 'hidden'; 
                 }
                 
                 let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
                 ['atc-miss-btn', 'atc-s-btn', 'atc-d-btn', 'atc-t-btn'].forEach(id => {
-                    document.getElementById(id).disabled = !isMyTurn;
-                    document.getElementById(id).style.opacity = isMyTurn ? 1 : 0.5;
+                    const btn = document.getElementById(id);
+                    if (btn) {
+                        btn.disabled = !isMyTurn;
+                        btn.style.opacity = isMyTurn ? 1 : 0.5;
+                    }
                 });
             } else if (state.gameType === 'cricket') {
                 
-                document.getElementById('cricket-center').classList.remove('hidden');
-                document.getElementById('main-score-area').style.flexDirection = 'row';
+                document.getElementById('cricket-center')?.classList.remove('hidden');
+                if(document.getElementById('main-score-area')) document.getElementById('main-score-area').style.flexDirection = 'row';
                 
                 let cricRowsHtml = '';
                 [20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 25].forEach(t => {
@@ -2018,7 +2037,7 @@
                         </div>
                     `;
                 });
-                document.getElementById('cric-board-rows').innerHTML = cricRowsHtml;
+                if(document.getElementById('cric-board-rows')) document.getElementById('cric-board-rows').innerHTML = cricRowsHtml;
                 
                 [0, 1].forEach(i => {
                     if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'none';
@@ -2028,12 +2047,12 @@
                         document.getElementById(`srow-${i}`).style.alignItems = 'center';
                         document.getElementById(`srow-${i}`).style.gap = '5px';
                     }
-                    document.getElementById(`s-${i}`).style.fontSize = '28px';
+                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = '28px';
                 });
 
-                document.getElementById('standard-controls').style.display = 'none';
-                document.getElementById('atc-controls').style.display = 'none';
-                document.getElementById('cricket-controls').style.display = 'block';
+                if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'none';
+                if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'none';
+                if(document.getElementById('cricket-controls')) document.getElementById('cricket-controls').style.display = 'block';
 
                 let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
                 document.querySelectorAll('.cric-num-btn, .cric-mult, .btn-undo').forEach(btn => {
@@ -2043,47 +2062,50 @@
 
             } else {
                 
-                document.getElementById('cricket-center').classList.add('hidden');
-                document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
+                document.getElementById('cricket-center')?.classList.add('hidden');
+                if(document.getElementById('main-score-area')) {
+                    document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
+                }
                 [0, 1].forEach(i => {
                     if(document.getElementById(`srow-${i}`)) {
                         document.getElementById(`srow-${i}`).style.flexDirection = 'row';
                         document.getElementById(`srow-${i}`).style.alignItems = 'center';
                     }
-                    document.getElementById(`s-${i}`).style.fontSize = 'clamp(30px, 6dvh, 50px)';
+                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(28px, 6dvh, 50px)';
                 });
 
-                document.getElementById('standard-controls').style.display = 'flex';
-                document.getElementById('atc-controls').style.display = 'none';
-                document.getElementById('cricket-controls').style.display = 'none';
+                if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'flex';
+                if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'none';
+                if(document.getElementById('cricket-controls')) document.getElementById('cricket-controls').style.display = 'none';
                 
                 if (localInputMode === 'darts') {
-                    document.getElementById('total-mode-ui').style.display = 'none';
-                    document.getElementById('darts-mode-ui').style.display = 'flex';
-                    document.getElementById('mode-toggle-btn').innerText = 'MODE: DART-BY-DART';
+                    if(document.getElementById('total-mode-ui')) document.getElementById('total-mode-ui').style.display = 'none';
+                    if(document.getElementById('darts-mode-ui')) document.getElementById('darts-mode-ui').style.display = 'flex';
+                    if(document.getElementById('mode-toggle-btn')) document.getElementById('mode-toggle-btn').innerText = 'MODE: DART-BY-DART';
                 } else {
-                    document.getElementById('total-mode-ui').style.display = 'flex';
-                    document.getElementById('darts-mode-ui').style.display = 'none';
-                    document.getElementById('mode-toggle-btn').innerText = 'MODE: TOTAL SCORE';
-                    document.getElementById('numpad-display').innerText = numpadVal || "0";
+                    if(document.getElementById('total-mode-ui')) document.getElementById('total-mode-ui').style.display = 'flex';
+                    if(document.getElementById('darts-mode-ui')) document.getElementById('darts-mode-ui').style.display = 'none';
+                    if(document.getElementById('mode-toggle-btn')) document.getElementById('mode-toggle-btn').innerText = 'MODE: TOTAL SCORE';
+                    if(document.getElementById('numpad-display')) document.getElementById('numpad-display').innerText = numpadVal || "0";
                 }
 
                 const isMyTurn = (state.mode === 'bot') ? (state.turn === 0) : (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
                 
                 document.querySelectorAll('.np-btn, .dbd-btn, .cric-mult').forEach(b => b.disabled = !isMyTurn);
-                document.getElementById('undo-btn').disabled = !isMyTurn;
+                if(document.getElementById('undo-btn')) document.getElementById('undo-btn').disabled = !isMyTurn;
             }
 
             if (!isLocalMatch && !document.body.classList.contains('bull-throw') && state.mode !== 'single') {
-                document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-                document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+                if(document.getElementById('box-me')) document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+                if(document.getElementById('box-peer')) document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
             }
         } else {
-            document.querySelector('#box-peer .cam-label').innerText = state.p[state.turn].name.toUpperCase();
+            const camLabel = document.querySelector('#box-peer .cam-label');
+            if (camLabel) camLabel.innerText = state.p[state.turn].name.toUpperCase();
         }
 
         if (myIndex === 0 && spectatorCalls.length > 0) {
-            const activeStream = (state.turn === 0 || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer').srcObject;
+            const activeStream = (state.turn === 0 || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer')?.srcObject;
             if (activeStream) {
                 const videoTrack = activeStream.getVideoTracks()[0];
                 const audioTrack = activeStream.getAudioTracks()[0];
@@ -2104,28 +2126,28 @@
             saveStatsToCloud();
 
             const w = state.p[state.winner];
-            document.getElementById('winner-name').innerText = w.name + " WINS!";
+            if(document.getElementById('winner-name')) document.getElementById('winner-name').innerText = w.name + " WINS!";
             for (let i = 0; i < 2; i++) {
                 let pStats = state.p[i];
-                document.getElementById(`ws-n${i}`).innerText = pStats.name;
+                if(document.getElementById(`ws-n${i}`)) document.getElementById(`ws-n${i}`).innerText = pStats.name;
                 
                 if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
-                    document.getElementById('ws-label-avg').innerText = "AVG (Darts)";
-                    document.getElementById(`ws-avg${i}`).innerText = pStats.d;
-                    document.getElementById(`ws-f9${i}`).innerText = "-";
+                    if(document.getElementById('ws-label-avg')) document.getElementById('ws-label-avg').innerText = "AVG (Darts)";
+                    if(document.getElementById(`ws-avg${i}`)) document.getElementById(`ws-avg${i}`).innerText = pStats.d;
+                    if(document.getElementById(`ws-f9${i}`)) document.getElementById(`ws-f9${i}`).innerText = "-";
                 } else {
-                    document.getElementById('ws-label-avg').innerText = "Match Avg";
-                    document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
-                    document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
+                    if(document.getElementById('ws-label-avg')) document.getElementById('ws-label-avg').innerText = "Match Avg";
+                    if(document.getElementById(`ws-avg${i}`)) document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
+                    if(document.getElementById(`ws-f9${i}`)) document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
                 }
                 
-                document.getElementById(`ws-hc${i}`).innerText = pStats.hc;
-                document.getElementById(`ws-140${i}`).innerText = pStats.n140;
-                document.getElementById(`ws-180${i}`).innerText = pStats.n180;
+                if(document.getElementById(`ws-hc${i}`)) document.getElementById(`ws-hc${i}`).innerText = pStats.hc;
+                if(document.getElementById(`ws-140${i}`)) document.getElementById(`ws-140${i}`).innerText = pStats.n140;
+                if(document.getElementById(`ws-180${i}`)) document.getElementById(`ws-180${i}`).innerText = pStats.n180;
             }
-            winnerLayer.classList.remove('hidden');
+            if(winnerLayer) winnerLayer.classList.remove('hidden');
         } else {
-            winnerLayer.classList.add('hidden');
+            if(winnerLayer) winnerLayer.classList.add('hidden');
         }
 
         if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined && !botTimeout) {
@@ -2148,10 +2170,4 @@
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
             if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
-        }
-    }
-
-</script>
-</body>
-</html>
+            else {
