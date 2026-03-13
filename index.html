@@ -671,8 +671,18 @@
 
     onAuthStateChanged(window.auth, async (user) => {
         if (user) {
-            loginLayer.style.display = 'none'; 
-            setupLayer.classList.remove('hidden');
+            // Existing logged in logic
+            const urlParams = new URLSearchParams(window.location.search);
+            const spectateId = urlParams.get('spectate');
+            
+            if (spectateId) {
+                loginLayer.style.display = 'none'; 
+                setupLayer.classList.remove('hidden');
+            } else {
+                loginLayer.style.display = 'none'; 
+                setupLayer.classList.remove('hidden');
+            }
+            
             document.getElementById('logout-btn').style.display = 'block'; 
             document.getElementById('open-profile-btn').style.display = 'block'; 
             
@@ -722,8 +732,15 @@
             });
 
         } else {
-            loginLayer.style.display = 'flex'; 
-            setupLayer.classList.add('hidden');
+            // STRICT SPECTATOR CHECK - bypasses login layer entirely if ?spectate= is in URL
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('spectate')) {
+                loginLayer.style.display = 'none'; 
+                setupLayer.classList.remove('hidden');
+            } else {
+                loginLayer.style.display = 'flex'; 
+                setupLayer.classList.add('hidden');
+            }
             document.getElementById('logout-btn').style.display = 'none'; 
             document.getElementById('open-profile-btn').style.display = 'none'; 
             window.currentUserDoc = null;
@@ -996,103 +1013,117 @@
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
     });
 
-    window.addEventListener('load', () => {
-        const quitBtn = document.getElementById('quit-btn');
-        if (quitBtn) {
-            quitBtn.onclick = () => {
-                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-                    window.location.href = window.location.pathname;
-                }
-            };
-        }
+    const quitBtn = document.getElementById('quit-btn');
+    if (quitBtn) {
+        quitBtn.onclick = () => {
+            if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                window.location.href = window.location.pathname;
+            }
+        };
+    }
 
-        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
-            btn.onclick = () => {
-                btn.innerText = "Clearing Cache & Updating...";
-                btn.style.color = "#4caf50";
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                        for(let registration of registrations) { registration.unregister(); }
-                    });
-                }
-                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
-                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
-            };
-        });
+    document.querySelectorAll('.cache-clear-btn').forEach(btn => {
+        btn.onclick = () => {
+            btn.innerText = "Clearing Cache & Updating...";
+            btn.style.color = "#4caf50";
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) { registration.unregister(); }
+                });
+            }
+            if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+            setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+        };
+    });
 
-        const modeInput = document.getElementById('mode-input');
-        const gameTypeInput = document.getElementById('game-type-input');
+    const modeInput = document.getElementById('mode-input');
+    const gameTypeInput = document.getElementById('game-type-input');
 
-        function updateMenuUI() {
-            if (!modeInput) return;
-            const mode = modeInput.value;
-            const gameType = gameTypeInput.value;
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinId = urlParams.get('join'); 
+    const spectateId = urlParams.get('spectate');
 
-            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
-            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
-            document.getElementById('game-type-group').style.display = 'block'; 
-            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
-            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
+    function updateMenuUI() {
+        if (!modeInput) return;
+        const mode = modeInput.value;
+        const gameType = gameTypeInput.value;
+
+        if (spectateId || joinId) {
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('game-type-group').style.display = 'none';
+            document.getElementById('legs-group').style.display = 'none';
+            document.getElementById('p2-name-group').style.display = 'none';
+            document.getElementById('bot-level-group').style.display = 'none';
+            document.getElementById('dart-limit-group').style.display = 'none';
             
             const p1Label = document.getElementById('p1-label');
             if (p1Label) {
-                if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
-                else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
-                else p1Label.innerText = 'Your Name';
+                if (spectateId) p1Label.innerText = "Your Name (Optional)";
+                else p1Label.innerText = "Your Name";
             }
-            
-            if (mode === 'bot') {
-                if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
-                    gameTypeInput.value = '501';
-                    alert("DartBot currently only supports standard 301-1001 games.");
-                }
+            return;
+        }
+
+        document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+        document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
+        document.getElementById('game-type-group').style.display = 'block'; 
+        document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
+        document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
+        
+        const p1Label = document.getElementById('p1-label');
+        if (p1Label) {
+            if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
+            else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
+            else p1Label.innerText = 'Your Name';
+        }
+        
+        if (mode === 'bot') {
+            if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
+                gameTypeInput.value = '501';
+                alert("DartBot currently only supports standard 301-1001 games.");
             }
         }
+    }
 
-        if (modeInput) modeInput.addEventListener('change', updateMenuUI);
-        if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
-        updateMenuUI();
+    if (modeInput) modeInput.addEventListener('change', updateMenuUI);
+    if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
+    updateMenuUI();
 
-        if (spectateId) {
-            document.body.classList.add('spectator-mode');
-            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
-            document.getElementById('name-input').placeholder = "Your Name (Optional)";
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('setup-layer').classList.remove('hidden');
-        } else if (joinId) {
-            document.getElementById('legs-group').style.display = 'none';
-            document.getElementById('start-btn').innerText = "JOIN MATCH";
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('setup-layer').classList.remove('hidden');
-        }
+    if (spectateId) {
+        document.body.classList.add('spectator-mode');
+        document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
+        document.getElementById('name-input').placeholder = "Your Name (Optional)";
+        document.getElementById('login-layer').style.display = 'none';
+        document.getElementById('setup-layer').classList.remove('hidden');
+    } else if (joinId) {
+        document.getElementById('start-btn').innerText = "JOIN MATCH";
+    }
 
-        document.getElementById('start-btn').onclick = initApp;
-        if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
-        if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
-        if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
-        if(document.getElementById('caller-btn')) document.getElementById('caller-btn').onclick = toggleCaller;
-        if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
-        if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
-        
-        if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
-        if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
-        
-        if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
-        if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
-        if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
-        if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
+    document.getElementById('start-btn').addEventListener('click', initApp);
+    if(document.getElementById('flip-btn')) document.getElementById('flip-btn').addEventListener('click', swapCam);
+    if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').addEventListener('click', cycleZoom);
+    if(document.getElementById('mic-btn')) document.getElementById('mic-btn').addEventListener('click', toggleMic);
+    if(document.getElementById('caller-btn')) document.getElementById('caller-btn').addEventListener('click', toggleCaller);
+    if(document.getElementById('share-btn')) document.getElementById('share-btn').addEventListener('click', shareInvite);
+    if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').addEventListener('click', shareSpectator);
+    
+    if(document.getElementById('undo-btn')) document.getElementById('undo-btn').addEventListener('click', undo);
+    if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').addEventListener('click', undo);
+    
+    if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').addEventListener('click', () => processAtcDart(0));
+    if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').addEventListener('click', () => processAtcDart(1));
+    if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').addEventListener('click', () => processAtcDart(2));
+    if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').addEventListener('click', () => processAtcDart(3));
 
-        if(document.getElementById('mode-toggle-btn')) {
-            document.getElementById('mode-toggle-btn').onclick = () => {
-                localInputMode = localInputMode === 'total' ? 'darts' : 'total';
-                render();
-            };
-        }
+    if(document.getElementById('mode-toggle-btn')) {
+        document.getElementById('mode-toggle-btn').addEventListener('click', () => {
+            localInputMode = localInputMode === 'total' ? 'darts' : 'total';
+            render();
+        });
+    }
 
-        if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
-    });
+    if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').addEventListener('click', triggerRematch);
+
 
     let statsSavedThisMatch = false;
     async function saveStatsToCloud() {
@@ -1214,9 +1245,6 @@
 
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user"; let currentCamIndex = 0;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join'); const spectateId = urlParams.get('spectate');
 
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
@@ -1467,7 +1495,7 @@
 
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
-        if (joinId || spectateId) state.mode = 'online'; // FORCE online when joining via link to bypass cached form state
+        if (joinId || spectateId) state.mode = 'online'; 
 
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
         state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
@@ -1538,11 +1566,19 @@
                         constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
                         currentFacingMode = "environment";
                     }
-                    stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async (err) => {
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    } catch (err) {
                         isMobile = false;
-                        return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                    });
-                    document.getElementById('me').srcObject = stream;
+                        try {
+                            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                        } catch (fallbackErr) {
+                            startBtn.disabled = false;
+                            startBtn.innerText = "START MATCH";
+                            throw new Error("Could not access camera/mic.");
+                        }
+                    }
+                    if(stream) document.getElementById('me').srcObject = stream;
                 }
             }
             
@@ -2245,53 +2281,3 @@
             for (let i = 0; i < 2; i++) {
                 let pStats = state.p[i];
                 if(document.getElementById(`ws-n${i}`)) document.getElementById(`ws-n${i}`).innerText = pStats.name;
-                
-                if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
-                    if(document.getElementById('ws-label-avg')) document.getElementById('ws-label-avg').innerText = "AVG (Darts)";
-                    if(document.getElementById(`ws-avg${i}`)) document.getElementById(`ws-avg${i}`).innerText = pStats.d;
-                    if(document.getElementById(`ws-f9${i}`)) document.getElementById(`ws-f9${i}`).innerText = "-";
-                } else {
-                    if(document.getElementById('ws-label-avg')) document.getElementById('ws-label-avg').innerText = "Match Avg";
-                    if(document.getElementById(`ws-avg${i}`)) document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
-                    if(document.getElementById(`ws-f9${i}`)) document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
-                }
-                
-                if(document.getElementById(`ws-hc${i}`)) document.getElementById(`ws-hc${i}`).innerText = pStats.hc;
-                if(document.getElementById(`ws-140${i}`)) document.getElementById(`ws-140${i}`).innerText = pStats.n140;
-                if(document.getElementById(`ws-180${i}`)) document.getElementById(`ws-180${i}`).innerText = pStats.n180;
-            }
-            if(winnerLayer) winnerLayer.classList.remove('hidden');
-        } else {
-            if(winnerLayer) winnerLayer.classList.add('hidden');
-        }
-
-        if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined && !botTimeout) {
-            playBotTurn();
-        } else if (state.mode === 'bot' && state.turn === 0 && botTimeout) {
-            clearTimeout(botTimeout);
-            botTimeout = null;
-        }
-    }
-
-    function shareInvite() {
-        if (peer && peer.id) {
-            const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
-        }
-    }
-
-    function shareSpectator() {
-        const hostId = state.p[0].peerId; // ALWAYS use Host ID for spectator links
-        if (hostId) {
-            const url = window.location.origin + window.location.pathname + "?spectate=" + hostId;
-            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
-        } else {
-            alert("Match not fully connected yet.");
-        }
-    }
-
-</script>
-</body>
-</html>
