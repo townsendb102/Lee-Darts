@@ -203,11 +203,6 @@
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
         
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: #ffeb3b; color: black; padding: 15px; border-radius: 10px; z-index: 30000; display: none; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; border: 2px solid #fbc02d; }
-        
-        /* MATCH DETAILS STYLES */
-        .md-row { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px 0; }
-        .md-label { color: #aaa; font-size: 14px; text-transform: uppercase; }
-        .md-val { color: white; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body class="theme-classic">
@@ -302,34 +297,20 @@
 </div>
 
 <div id="match-details-layer" class="hidden">
-    <div class="setup-card">
-        <h2 id="md-title" style="color: white; font-size: 20px;">Match Details</h2>
-        <p id="md-date" style="color: #888; font-size: 12px; margin-bottom: 15px; margin-top:-5px;"></p>
+    <div class="setup-card" style="width: 100%; max-width: 400px;">
+        <h2 id="md-title" style="color: white; font-size: 20px; line-height: 1.2; margin-bottom: 5px;">Match Details</h2>
+        <p id="md-date" style="color: #888; font-size: 12px; margin-bottom: 20px; margin-top: -5px;"></p>
         
-        <div style="text-align: left; margin-bottom: 15px;">
-            <div class="md-row">
-                <span class="md-label">Average</span>
-                <span class="md-val" id="md-avg">0.0</span>
-            </div>
-            <div class="md-row">
-                <span class="md-label">High Out</span>
-                <span class="md-val" id="md-hc">0</span>
-            </div>
-            <div class="md-row">
-                <span class="md-label">140+ Thrown</span>
-                <span class="md-val" id="md-140">0</span>
-            </div>
-            <div class="md-row">
-                <span class="md-label">180s Thrown</span>
-                <span class="md-val" id="md-180">0</span>
-            </div>
-            <div class="md-row" style="border-bottom: none;">
-                <span class="md-label">Checkout %</span>
-                <span class="md-val" id="md-co">0%</span>
-            </div>
-        </div>
+        <table class="stats-table">
+            <tr><th id="md-p1-name" style="color: var(--blue);">Me</th><th style="color: white;">STATS</th><th id="md-p2-name" style="color: white;">Opponent</th></tr>
+            <tr><td id="md-avg1" style="color: var(--blue);">0.0</td><td style="color: white;">Average</td><td id="md-avg2" style="color: white;">0.0</td></tr>
+            <tr><td id="md-hc1" style="color: var(--blue);">0</td><td style="color: white;">High Out</td><td id="md-hc2" style="color: white;">0</td></tr>
+            <tr><td id="md-1401" style="color: var(--blue);">0</td><td style="color: white;">140+</td><td id="md-1402" style="color: white;">0</td></tr>
+            <tr><td id="md-1801" style="color: var(--blue);">0</td><td style="color: white;">180s</td><td id="md-1802" style="color: white;">0</td></tr>
+            <tr><td id="md-co1" style="color: var(--blue);">0%</td><td style="color: white;">Checkout %</td><td id="md-co2" style="color: white;">0%</td></tr>
+        </table>
         
-        <button id="close-match-details-btn" class="btn-start" style="background: #444; color: white; margin-top: auto;">CLOSE</button>
+        <button id="close-match-details-btn" class="btn-start" style="background: #444; color: white; margin-top: 15px;">CLOSE</button>
     </div>
 </div>
 
@@ -858,13 +839,27 @@
 
         document.getElementById('md-title').innerText = match.desc;
         document.getElementById('md-date').innerText = match.date;
-        document.getElementById('md-avg').innerText = match.avg || "0.0";
-        document.getElementById('md-hc').innerText = match.hc || 0;
-        document.getElementById('md-140').innerText = match.n140 || 0;
-        document.getElementById('md-180').innerText = match.n180 || 0;
+
+        // Populate Me (Player 1) Column
+        document.getElementById('md-avg1').innerText = match.avg || "0.0";
+        document.getElementById('md-hc1').innerText = match.hc || 0;
+        document.getElementById('md-1401').innerText = match.n140 || 0;
+        document.getElementById('md-1801').innerText = match.n180 || 0;
+        let coPerc1 = (match.coAtt > 0) ? Math.round((match.coHit / match.coAtt) * 100) + "%" : "0%";
+        document.getElementById('md-co1').innerText = coPerc1;
+
+        // Populate Opponent (Player 2) Column
+        document.getElementById('md-p2-name').innerText = match.oppName || "Opponent";
+        document.getElementById('md-avg2').innerText = match.oppAvg || "-";
+        document.getElementById('md-hc2').innerText = match.oppHc !== undefined ? match.oppHc : "-";
+        document.getElementById('md-1402').innerText = match.opp140 !== undefined ? match.opp140 : "-";
+        document.getElementById('md-1802').innerText = match.opp180 !== undefined ? match.opp180 : "-";
         
-        let coPerc = (match.coAtt > 0) ? Math.round((match.coHit / match.coAtt) * 100) + "%" : "0%";
-        document.getElementById('md-co').innerText = coPerc;
+        let coPerc2 = "-";
+        if (match.oppCoAtt !== undefined) {
+            coPerc2 = (match.oppCoAtt > 0) ? Math.round((match.oppCoHit / match.oppCoAtt) * 100) + "%" : "0%";
+        }
+        document.getElementById('md-co2').innerText = coPerc2;
 
         document.getElementById('match-details-layer').classList.remove('hidden');
     }
@@ -1033,13 +1028,18 @@
         try {
             let myP = state.p[myIndex]; 
             if(state.mode === 'local') myP = state.p[0]; 
+            
+            let oppP = state.mode === 'local' ? state.p[1] : state.p[myIndex === 0 ? 1 : 0];
 
             let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
             let resultStr = isWin ? "WON" : "LOST";
-            let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
+            let oppName = oppP.name;
             let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
             let dateStr = new Date().toLocaleDateString();
+            
             let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
+            let oppAvg = oppP.d > 0 ? ((oppP.pts / oppP.d) * 3).toFixed(1) : "0.0";
+            
             let matchId = Date.now().toString();
 
             const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
@@ -1070,7 +1070,8 @@
                     totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
                     matchHistory: arrayUnion({ 
                         id: matchId, date: dateStr, desc: matchText, avg: finalAvg, pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
-                        hc: myP.hc || 0, n140: myP.n140 || 0, n180: myP.n180 || 0 
+                        hc: myP.hc || 0, n140: myP.n140 || 0, n180: myP.n180 || 0,
+                        oppName: oppName, oppAvg: oppAvg, oppHc: oppP.hc || 0, opp140: oppP.n140 || 0, opp180: oppP.n180 || 0, oppCoAtt: oppP.coAtt || 0, oppCoHit: oppP.coHit || 0
                     })
                 });
                 statsSavedThisMatch = true;
