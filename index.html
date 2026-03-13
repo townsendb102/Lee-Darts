@@ -1505,6 +1505,9 @@
                 } else if (joinId) {
                     document.getElementById('setup-layer').classList.add('hidden');
                     myIndex = 1;
+                    
+                    state.p[0].peerId = joinId; // ADD THIS LINE so P2 knows P1's ID
+                    
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     state.p[1].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
                     connectToMatch(joinId, false);
@@ -1592,8 +1595,10 @@
             state.mode = data.state.mode;
             state.gameType = data.state.gameType;
             state.limit170 = data.state.limit170 || 9;
+            
             state.p[0].name = data.state.p[0].name;
             state.p[0].avatar = data.state.p[0].avatar; 
+            state.p[0].peerId = data.state.p[0].peerId; // ADD THIS LINE
             
             state.p[1].name = data.state.p[1].name;
             state.p[1].avatar = data.state.p[1].avatar;
@@ -2181,10 +2186,13 @@
     }
 
     function shareSpectator() {
-        if (peer && peer.id) {
-            const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
+        const hostId = state.p[0].peerId; // ALWAYS use Host ID for spectator links
+        if (hostId) {
+            const url = window.location.origin + window.location.pathname + "?spectate=" + hostId;
             if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
             else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
+        } else {
+            alert("Match not fully connected yet.");
         }
     }
 
