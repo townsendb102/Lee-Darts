@@ -43,7 +43,7 @@
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 100% !important; height: 100% !important; left: 0 !important; border: none !important; }
         body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; display: block !important; }
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
-        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
+        body.spectator-mode .site-footer { fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
         
         /* GLASSMORPHISM TRANSPARENT CARDS */
@@ -762,7 +762,9 @@
         setupLayer.classList.remove('hidden');
         document.getElementById('mode-input').value = 'online';
         document.getElementById('mode-input').dispatchEvent(new Event('change'));
-        document.getElementById('start-btn').click();
+        
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn) startBtn.innerText = "SEND CHALLENGE";
     };
 
     document.getElementById('open-profile-btn').addEventListener('click', () => {
@@ -1584,7 +1586,7 @@
                     document.getElementById('setup-layer').classList.add('hidden');
                     myIndex = 1;
                     
-                    state.p[0].peerId = joinId; // ADD THIS LINE so P2 knows P1's ID
+                    state.p[0].peerId = joinId; 
                     
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     state.p[1].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
@@ -1601,7 +1603,7 @@
                 if (call.metadata && call.metadata.spectator) {
                     if (stream) { call.answer(stream); } else { call.answer(); }
                     spectatorCalls.push(call);
-                    limitVideoBitrate(call.peerConnection, 500); // Protect upload bandwidth when answering spectators
+                    limitVideoBitrate(call.peerConnection, 500); 
                     setTimeout(() => { render(); }, 1000);
                 } else {
                     if (stream) { call.answer(stream); } else { call.answer(); }
@@ -1718,7 +1720,6 @@
             const specCall2 = dummy ? peer.call(state.p[1].peerId, dummy, { metadata: { spectator: true } }) : peer.call(state.p[1].peerId, null, { metadata: { spectator: true } });
             specCall2.on('stream', s => { streamP2 = s; render(); });
 
-            // THIS IS THE FIX: Establish a direct Data Channel to P2 so the spectator receives SOUND events directly
             const c2 = peer.connect(state.p[1].peerId);
             conns.push(c2);
             c2.on('data', d => handleData(d));
@@ -2252,41 +2253,4 @@
                 }
                 
                 if(document.getElementById(`ws-hc${i}`)) document.getElementById(`ws-hc${i}`).innerText = pStats.hc;
-                if(document.getElementById(`ws-140${i}`)) document.getElementById(`ws-140${i}`).innerText = pStats.n140;
-                if(document.getElementById(`ws-180${i}`)) document.getElementById(`ws-180${i}`).innerText = pStats.n180;
-            }
-            if(winnerLayer) winnerLayer.classList.remove('hidden');
-        } else {
-            if(winnerLayer) winnerLayer.classList.add('hidden');
-        }
-
-        if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined && !botTimeout) {
-            playBotTurn();
-        } else if (state.mode === 'bot' && state.turn === 0 && botTimeout) {
-            clearTimeout(botTimeout);
-            botTimeout = null;
-        }
-    }
-
-    function shareInvite() {
-        if (peer && peer.id) {
-            const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
-        }
-    }
-
-    function shareSpectator() {
-        const hostId = state.p[0].peerId; // ALWAYS use Host ID for spectator links
-        if (hostId) {
-            const url = window.location.origin + window.location.pathname + "?spectate=" + hostId;
-            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
-        } else {
-            alert("Match not fully connected yet.");
-        }
-    }
-
-</script>
-</body>
-</html>
+                if(document.getElementById(`ws
