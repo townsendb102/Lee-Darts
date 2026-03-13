@@ -86,7 +86,7 @@
         body.local-mode header { justify-content: flex-end; }
         body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn { display: none !important; }
 
-        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer { 
+        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
             position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
             overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
@@ -97,6 +97,7 @@
         #login-layer { z-index: 20000; } 
         #profile-layer { z-index: 15000; background: rgba(2, 4, 8, 0.98); }
         #history-layer, #friends-layer { z-index: 16000; background: rgba(2, 4, 8, 0.98); }
+        #match-details-layer { z-index: 17000; background: rgba(2, 4, 8, 0.98); }
         
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
@@ -197,10 +198,16 @@
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
         
         .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
-        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
+        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center; cursor: pointer; transition: background 0.2s;}
+        .history-item:hover { background: rgba(255,255,255,0.1); }
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
         
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: #ffeb3b; color: black; padding: 15px; border-radius: 10px; z-index: 30000; display: none; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; border: 2px solid #fbc02d; }
+        
+        /* MATCH DETAILS STYLES */
+        .md-row { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px 0; }
+        .md-label { color: #aaa; font-size: 14px; text-transform: uppercase; }
+        .md-val { color: white; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body class="theme-classic">
@@ -291,6 +298,38 @@
         <h2 style="margin-bottom: 15px;">MATCH HISTORY</h2>
         <div id="history-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
         <button id="close-history-btn" class="btn-start" style="background: #444; color: white; margin-top: auto;">BACK</button>
+    </div>
+</div>
+
+<div id="match-details-layer" class="hidden">
+    <div class="setup-card">
+        <h2 id="md-title" style="color: white; font-size: 20px;">Match Details</h2>
+        <p id="md-date" style="color: #888; font-size: 12px; margin-bottom: 15px; margin-top:-5px;"></p>
+        
+        <div style="text-align: left; margin-bottom: 15px;">
+            <div class="md-row">
+                <span class="md-label">Average</span>
+                <span class="md-val" id="md-avg">0.0</span>
+            </div>
+            <div class="md-row">
+                <span class="md-label">High Out</span>
+                <span class="md-val" id="md-hc">0</span>
+            </div>
+            <div class="md-row">
+                <span class="md-label">140+ Thrown</span>
+                <span class="md-val" id="md-140">0</span>
+            </div>
+            <div class="md-row">
+                <span class="md-label">180s Thrown</span>
+                <span class="md-val" id="md-180">0</span>
+            </div>
+            <div class="md-row" style="border-bottom: none;">
+                <span class="md-label">Checkout %</span>
+                <span class="md-val" id="md-co">0%</span>
+            </div>
+        </div>
+        
+        <button id="close-match-details-btn" class="btn-start" style="background: #444; color: white; margin-top: auto;">CLOSE</button>
     </div>
 </div>
 
@@ -766,6 +805,10 @@
         profileLayer.classList.remove('hidden');
     });
 
+    document.getElementById('close-match-details-btn').addEventListener('click', () => {
+        document.getElementById('match-details-layer').classList.add('hidden');
+    });
+
     document.getElementById('open-friends-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         friendsLayer.classList.remove('hidden');
@@ -807,6 +850,24 @@
             await updateDoc(userRef, { matchHistory: newHistory, totalPts: newTotalPts, totalDarts: newTotalDarts, coAtt: newCoAtt, coHit: newCoHit });
         } catch(e) { alert("Error deleting match."); }
     };
+
+    window.showMatchDetails = function(matchId, matchDate, matchDesc) {
+        if(!window.currentUserDoc || !window.currentUserDoc.matchHistory) return;
+        const match = window.currentUserDoc.matchHistory.find(m => m.id === matchId) || window.currentUserDoc.matchHistory.find(m => m.date === matchDate && m.desc === matchDesc);
+        if(!match) return;
+
+        document.getElementById('md-title').innerText = match.desc;
+        document.getElementById('md-date').innerText = match.date;
+        document.getElementById('md-avg').innerText = match.avg || "0.0";
+        document.getElementById('md-hc').innerText = match.hc || 0;
+        document.getElementById('md-140').innerText = match.n140 || 0;
+        document.getElementById('md-180').innerText = match.n180 || 0;
+        
+        let coPerc = (match.coAtt > 0) ? Math.round((match.coHit / match.coAtt) * 100) + "%" : "0%";
+        document.getElementById('md-co').innerText = coPerc;
+
+        document.getElementById('match-details-layer').classList.remove('hidden');
+    }
 
     document.getElementById('save-name-btn').addEventListener('click', async () => {
         const newName = document.getElementById('edit-name-input').value.trim();
@@ -882,12 +943,12 @@
                 let safeDate = `'${h.date}'`;
                 let safeDesc = `'${h.desc}'`;
                 
-                histHtml += `<div class="history-item">
+                histHtml += `<div class="history-item" onclick="window.showMatchDetails(${safeId}, ${safeDate}, ${safeDesc})">
                     <div style="flex:1;">
                         <div style="color:${color}; font-weight:bold; line-height: 1.2;">${h.desc}</div>
                         <div style="color:#aaa; font-size:11px; margin-top:3px; line-height:1.4;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
                     </div>
-                    <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0}, ${h.coAtt || 0}, ${h.coHit || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
+                    <button onclick="event.stopPropagation(); window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0}, ${h.coAtt || 0}, ${h.coHit || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
                 </div>`;
             });
             histContainer.innerHTML = histHtml;
@@ -1007,7 +1068,10 @@
 
                 await updateDoc(userRef, { 
                     totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
-                    matchHistory: arrayUnion({ id: matchId, date: dateStr, desc: matchText, avg: finalAvg, pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit })
+                    matchHistory: arrayUnion({ 
+                        id: matchId, date: dateStr, desc: matchText, avg: finalAvg, pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
+                        hc: myP.hc || 0, n140: myP.n140 || 0, n180: myP.n180 || 0 
+                    })
                 });
                 statsSavedThisMatch = true;
             }
