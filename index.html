@@ -1224,7 +1224,6 @@
     document.body.addEventListener('click', unlockAudio, { once: true });
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
-    // Creates an invisible video AND audio stream to robustly force WebRTC receivers open
     function createDummyStream() {
         try {
             const canvas = document.createElement('canvas');
@@ -1718,6 +1717,11 @@
             const dummy = createDummyStream();
             const specCall2 = dummy ? peer.call(state.p[1].peerId, dummy, { metadata: { spectator: true } }) : peer.call(state.p[1].peerId, null, { metadata: { spectator: true } });
             specCall2.on('stream', s => { streamP2 = s; render(); });
+
+            // THIS IS THE FIX: Establish a direct Data Channel to P2 so the spectator receives SOUND events directly
+            const c2 = peer.connect(state.p[1].peerId);
+            conns.push(c2);
+            c2.on('data', d => handleData(d));
         }
 
         render();
