@@ -1159,12 +1159,26 @@
     document.body.addEventListener('click', unlockAudio, { once: true });
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
-    // Creates an invisible video and audio stream to force WebRTC receivers open on iOS Safari
+    // Creates an invisible video AND audio stream to robustly force WebRTC receivers open
     function createDummyStream() {
         try {
             const canvas = document.createElement('canvas');
-            canvas.width = 1; canvas.height = 1;
-            return canvas.captureStream(1); // 1 FPS is enough to trick WebRTC
+            canvas.width = 2; canvas.height = 2;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 2, 2);
+            const vStream = canvas.captureStream(15);
+
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const dest = audioCtx.createMediaStreamDestination();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0; 
+            osc.connect(gain);
+            gain.connect(dest);
+            osc.start();
+
+            return new MediaStream([vStream.getVideoTracks()[0], dest.stream.getAudioTracks()[0]]);
         } catch (e) { 
             return null; 
         }
@@ -1523,6 +1537,7 @@
                 if (call.metadata && call.metadata.spectator) {
                     if (stream) { call.answer(stream); } else { call.answer(); }
                     spectatorCalls.push(call);
+                    limitVideoBitrate(call.peerConnection, 500); // Protect upload bandwidth when answering spectators
                     setTimeout(() => { render(); }, 1000);
                 } else {
                     if (stream) { call.answer(stream); } else { call.answer(); }
@@ -1598,7 +1613,7 @@
             
             state.p[0].name = data.state.p[0].name;
             state.p[0].avatar = data.state.p[0].avatar; 
-            state.p[0].peerId = data.state.p[0].peerId; // ADD THIS LINE
+            state.p[0].peerId = data.state.p[0].peerId; 
             
             state.p[1].name = data.state.p[1].name;
             state.p[1].avatar = data.state.p[1].avatar;
@@ -2136,6 +2151,13 @@
             const peerVid = document.getElementById('peer');
             if (peerVid && activeS && peerVid.srcObject !== activeS) {
                 peerVid.srcObject = activeS;
+                
+                // Force play immediately to prevent Safari from freezing the swapped stream
+                const playPromise = peerVid.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {});
+                }
+                
                 peerVid.onloadedmetadata = () => { peerVid.play().catch(e => {}); };
             }
         }
