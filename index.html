@@ -870,7 +870,6 @@
         let coPerc = window.currentUserDoc.coAtt > 0 ? Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
-        // document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0; // Removed as element does not exist
         document.getElementById('prof-co').innerText = coPerc;
         
         const histContainer = document.getElementById('history-list-container');
@@ -1060,13 +1059,16 @@
     let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
     let isLocalMatch = false; let localInputMode = 'total'; let numpadVal = "";
     
+    // NEW SPECTATOR VARIABLES
+    let streamP1 = null; let streamP2 = null; let specConnectedToP2 = false; 
+    
     // NEW DART BY DART STATE
     let dbdMult = 1;
     let currentDarts = [];
 
     let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
-        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
-        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
+        { name: "P1", avatar: "", peerId: null, s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
+        { name: "P2", avatar: "", peerId: null, s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
     ]};
     let history = null;
 
@@ -1484,6 +1486,7 @@
             peer.on('open', async (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
+                state.p[0].peerId = id;
 
                 if(window.targetChallengeFriend && window.db) {
                     try {
@@ -1553,13 +1556,16 @@
     function connectToMatch(id, isSpectator = false) {
         const c = peer.connect(id);
         conns.push(c);
-        c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); });
+        
+        c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar, peerId: peer.id }); });
+        
         c.on('data', d => handleData(d));
         
         if (isSpectator) {
             const dummy = createDummyStream();
             const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
-            specCall.on('stream', s => { attachPeerVideo(s); render(); });
+            
+            specCall.on('stream', s => { streamP1 = s; render(); });
         } else {
             currentCall = peer.call(id, stream);
             limitVideoBitrate(currentCall.peerConnection, 500); 
@@ -1588,12 +1594,21 @@
             state.limit170 = data.state.limit170 || 9;
             state.p[0].name = data.state.p[0].name;
             state.p[0].avatar = data.state.p[0].avatar; 
+            
+            state.p[1].name = data.state.p[1].name;
+            state.p[1].avatar = data.state.p[1].avatar;
+            state.p[1].peerId = data.state.p[1].peerId;
+
             state.startingPlayer = data.state.startingPlayer || 0;
             if (state.mode === 'single') { document.body.classList.add('single-mode'); }
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
-            state.p[1].avatar = data.avatar; 
+            state.p[1].avatar = data.avatar;
+            state.p[1].peerId = data.peerId; 
+            
             document.getElementById('waiting-layer').classList.add('hidden');
+            if (myIndex === 0) { broadcast(state); } 
+            
             if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) {
                 showFirstThrowUI();
             }
@@ -1607,10 +1622,19 @@
                     player.coAtt = player.coAtt || 0; player.coHit = player.coHit || 0;
                     player.marks = player.marks || {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
                     if(data.p[i].avatar !== undefined) player.avatar = data.p[i].avatar; 
+                    if(data.p[i].peerId !== undefined) player.peerId = data.p[i].peerId;
                 });
             }
             state = data; 
         }
+
+        if (spectateId && state.p[1] && state.p[1].peerId && !specConnectedToP2) {
+            specConnectedToP2 = true;
+            const dummy = createDummyStream();
+            const specCall2 = dummy ? peer.call(state.p[1].peerId, dummy, { metadata: { spectator: true } }) : peer.call(state.p[1].peerId, null, { metadata: { spectator: true } });
+            specCall2.on('stream', s => { streamP2 = s; render(); });
+        }
+
         render();
     }
 
@@ -1746,7 +1770,6 @@
         if (!isLocalMatch) { broadcast(state); }
     }
 
-    // --- REVISED processHit WITH DART-BY-DART LOGIC ---
     function processHit(manualVal = null, dartsArr = null) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
@@ -2103,22 +2126,12 @@
         } else {
             const camLabel = document.querySelector('#box-peer .cam-label');
             if (camLabel) camLabel.innerText = state.p[state.turn].name.toUpperCase();
-        }
-
-        if (myIndex === 0 && spectatorCalls.length > 0) {
-            const activeStream = (state.turn === 0 || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer')?.srcObject;
-            if (activeStream) {
-                const videoTrack = activeStream.getVideoTracks()[0];
-                const audioTrack = activeStream.getAudioTracks()[0];
-                spectatorCalls.forEach(call => {
-                    if (call.peerConnection) {
-                        const senders = call.peerConnection.getSenders();
-                        const vSender = senders.find(s => s.track && s.track.kind === 'video');
-                        const aSender = senders.find(s => s.track && s.track.kind === 'audio');
-                        if (vSender && videoTrack && vSender.track !== videoTrack) { vSender.replaceTrack(videoTrack).catch(e => {}); }
-                        if (aSender && audioTrack && aSender.track !== audioTrack) { aSender.replaceTrack(audioTrack).catch(e => {}); }
-                    }
-                });
+            
+            const activeS = (state.turn === 0 || !streamP2) ? streamP1 : streamP2;
+            const peerVid = document.getElementById('peer');
+            if (peerVid && activeS && peerVid.srcObject !== activeS) {
+                peerVid.srcObject = activeS;
+                peerVid.onloadedmetadata = () => { peerVid.play().catch(e => {}); };
             }
         }
 
