@@ -996,27 +996,102 @@
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
     });
 
-    const quitBtn = document.getElementById('quit-btn');
-    if (quitBtn) {
-        quitBtn.addEventListener('click', () => {
-            if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-                window.location.href = window.location.pathname;
-            }
-        });
-    }
+    window.addEventListener('load', () => {
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) {
+            quitBtn.onclick = () => {
+                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                    window.location.href = window.location.pathname;
+                }
+            };
+        }
 
-    document.querySelectorAll('.cache-clear-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.innerText = "Clearing Cache & Updating...";
-            btn.style.color = "#4caf50";
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) { registration.unregister(); }
-                });
-            }
-            if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
-            setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
+            btn.onclick = () => {
+                btn.innerText = "Clearing Cache & Updating...";
+                btn.style.color = "#4caf50";
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) { registration.unregister(); }
+                    });
+                }
+                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+            };
         });
+
+        const modeInput = document.getElementById('mode-input');
+        const gameTypeInput = document.getElementById('game-type-input');
+
+        function updateMenuUI() {
+            if (!modeInput) return;
+            const mode = modeInput.value;
+            const gameType = gameTypeInput.value;
+
+            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
+            document.getElementById('game-type-group').style.display = 'block'; 
+            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
+            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
+            
+            const p1Label = document.getElementById('p1-label');
+            if (p1Label) {
+                if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
+                else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
+                else p1Label.innerText = 'Your Name';
+            }
+            
+            if (mode === 'bot') {
+                if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
+                    gameTypeInput.value = '501';
+                    alert("DartBot currently only supports standard 301-1001 games.");
+                }
+            }
+        }
+
+        if (modeInput) modeInput.addEventListener('change', updateMenuUI);
+        if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
+        updateMenuUI();
+
+        if (spectateId) {
+            document.body.classList.add('spectator-mode');
+            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
+            document.getElementById('name-input').placeholder = "Your Name (Optional)";
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('setup-layer').classList.remove('hidden');
+        } else if (joinId) {
+            document.getElementById('legs-group').style.display = 'none';
+            document.getElementById('start-btn').innerText = "JOIN MATCH";
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('setup-layer').classList.remove('hidden');
+        }
+
+        document.getElementById('start-btn').onclick = initApp;
+        if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
+        if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
+        if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
+        if(document.getElementById('caller-btn')) document.getElementById('caller-btn').onclick = toggleCaller;
+        if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
+        if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
+        
+        if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
+        if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
+        
+        if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
+        if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
+        if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
+        if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
+
+        if(document.getElementById('mode-toggle-btn')) {
+            document.getElementById('mode-toggle-btn').onclick = () => {
+                localInputMode = localInputMode === 'total' ? 'darts' : 'total';
+                render();
+            };
+        }
+
+        if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
     });
 
     let statsSavedThisMatch = false;
@@ -1247,81 +1322,6 @@
             return null; 
         }
     }
-
-    // IMMEDIATELY BIND EVENTS INSTEAD OF WAITING FOR LOAD
-    const modeInput = document.getElementById('mode-input');
-    const gameTypeInput = document.getElementById('game-type-input');
-
-    function updateMenuUI() {
-        if (!modeInput) return;
-        const mode = modeInput.value;
-        const gameType = gameTypeInput.value;
-
-        document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
-        document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
-        document.getElementById('game-type-group').style.display = 'block'; 
-        document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
-        document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
-        
-        const p1Label = document.getElementById('p1-label');
-        if (p1Label) {
-            if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
-            else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
-            else p1Label.innerText = 'Your Name';
-        }
-        
-        if (mode === 'bot') {
-            if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
-                gameTypeInput.value = '501';
-                alert("DartBot currently only supports standard 301-1001 games.");
-            }
-        }
-    }
-
-    if (modeInput) modeInput.addEventListener('change', updateMenuUI);
-    if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
-    updateMenuUI();
-
-    if (spectateId) {
-        document.body.classList.add('spectator-mode');
-        document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
-        document.getElementById('name-input').placeholder = "Your Name (Optional)";
-        document.getElementById('mode-group').style.display = 'none';
-        document.getElementById('login-layer').style.display = 'none';
-        document.getElementById('setup-layer').classList.remove('hidden');
-    } else if (joinId) {
-        document.getElementById('legs-group').style.display = 'none';
-        document.getElementById('start-btn').innerText = "JOIN MATCH";
-        document.getElementById('mode-group').style.display = 'none';
-        document.getElementById('login-layer').style.display = 'none';
-        document.getElementById('setup-layer').classList.remove('hidden');
-    }
-
-    document.getElementById('start-btn').addEventListener('click', initApp);
-    if(document.getElementById('flip-btn')) document.getElementById('flip-btn').addEventListener('click', swapCam);
-    if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').addEventListener('click', cycleZoom);
-    if(document.getElementById('mic-btn')) document.getElementById('mic-btn').addEventListener('click', toggleMic);
-    if(document.getElementById('caller-btn')) document.getElementById('caller-btn').addEventListener('click', toggleCaller);
-    if(document.getElementById('share-btn')) document.getElementById('share-btn').addEventListener('click', shareInvite);
-    if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').addEventListener('click', shareSpectator);
-    
-    if(document.getElementById('undo-btn')) document.getElementById('undo-btn').addEventListener('click', undo);
-    if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').addEventListener('click', undo);
-    
-    if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').addEventListener('click', () => processAtcDart(0));
-    if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').addEventListener('click', () => processAtcDart(1));
-    if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').addEventListener('click', () => processAtcDart(2));
-    if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').addEventListener('click', () => processAtcDart(3));
-
-    if(document.getElementById('mode-toggle-btn')) {
-        document.getElementById('mode-toggle-btn').addEventListener('click', () => {
-            localInputMode = localInputMode === 'total' ? 'darts' : 'total';
-            render();
-        });
-    }
-
-    if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').addEventListener('click', triggerRematch);
-
 
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
@@ -1575,6 +1575,7 @@
                         alert("Challenge sent! Waiting for them to accept...");
                     } catch(e) {}
                     window.targetChallengeFriend = null;
+                    document.getElementById('start-btn').innerText = "START MATCH"; 
                 }
                 
                 if (spectateId) { 
@@ -1620,12 +1621,17 @@
             });
 
             peer.on('error', err => {
-                if (state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
+                if (state.mode !== 'single') { 
+                    log.innerText = "Connection Error: " + err.type; 
+                    startBtn.disabled = false; 
+                    startBtn.innerText = "START MATCH"; 
+                }
             });
 
         } catch (e) {
             log.innerText = "Camera/Mic error. (" + e.message + ")";
             startBtn.disabled = false;
+            startBtn.innerText = "START MATCH"; 
         }
     }
 
@@ -2270,4 +2276,22 @@
     function shareInvite() {
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
-            if (navigator.
+            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
+        }
+    }
+
+    function shareSpectator() {
+        const hostId = state.p[0].peerId; // ALWAYS use Host ID for spectator links
+        if (hostId) {
+            const url = window.location.origin + window.location.pathname + "?spectate=" + hostId;
+            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
+        } else {
+            alert("Match not fully connected yet.");
+        }
+    }
+
+</script>
+</body>
+</html>
