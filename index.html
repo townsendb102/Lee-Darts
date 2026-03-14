@@ -28,7 +28,7 @@
             background: var(--dark);
             color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(25dvh, 40dvh) minmax(100px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
+            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(20dvh, 32dvh) minmax(100px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
             overflow: hidden; transition: background 0.3s ease;
         }
 
@@ -49,13 +49,22 @@
         
         /* GLASSMORPHISM TRANSPARENT CARDS */
         body.spectator-mode .player-card { 
-            flex: 0 0 auto; width: 125px; 
+            flex: 0 0 auto;
+            width: 125px; 
             background-color: rgba(13, 27, 42, 0.45) !important; 
             background-image: none !important; 
             border: 1px solid rgba(255, 255, 255, 0.2); 
-            justify-content: space-evenly; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: 15px; pointer-events: auto;
+            justify-content: space-evenly;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 15px;
+            pointer-events: auto;
         }
-        body.spectator-mode .player-card.active { background-color: rgba(22, 42, 63, 0.6) !important; border: 2px solid var(--blue); box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
+        body.spectator-mode .player-card.active { 
+            background-color: rgba(22, 42, 63, 0.6) !important;
+            border: 2px solid var(--blue); 
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
         
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
@@ -79,9 +88,11 @@
         body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn { display: none !important; }
 
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
-            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
+            position: fixed;
+            inset: 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-            overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+            overflow-y: auto; padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
         #winner-layer { background: rgba(2, 4, 8, 0.95); z-index: 10001; }
         #first-throw-layer { background: rgba(2, 4, 8, 0.98); z-index: 10002; }
@@ -325,7 +336,6 @@
         <h2>🎯 RAF DARTS SCORER 🎯</h2>
         
         <button id="install-btn" class="btn-start install-btn">📲 INSTALL APP</button>
-        <p id="ios-install-note" style="display: none; color: #aaa; font-size: 11px; margin-top: -5px; margin-bottom: 15px; line-height: 1.4; font-style: italic;">Apple users - To install app click share button on browser and select add to homepage</p>
         
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <button id="open-profile-btn" class="btn-update" style="display: none; color: var(--blue); margin-top: 0; text-decoration: none; border: 1px solid var(--blue); padding: 4px 8px; border-radius: 4px;">👤 My Profile & Friends</button>
@@ -639,6 +649,7 @@
         setupLayer.classList.remove('hidden');
         document.getElementById('name-input').value = "Guest";
     });
+
     document.getElementById('signup-btn').addEventListener('click', () => {
         const email = document.getElementById('email-input').value;
         const pass = document.getElementById('password-input').value;
@@ -651,17 +662,19 @@
             else err.innerText = error.message;
         });
     });
+
     document.getElementById('login-btn').addEventListener('click', () => {
         signInWithEmailAndPassword(window.auth, document.getElementById('email-input').value, document.getElementById('password-input').value)
             .catch((error) => { document.getElementById('auth-error').innerText = "Invalid Email or Password."; });
     });
+
     document.getElementById('logout-btn').addEventListener('click', () => {
         if(window.userUnsub) window.userUnsub();
         signOut(window.auth).then(() => { window.location.href = window.location.pathname; });
     });
+
     onAuthStateChanged(window.auth, async (user) => {
         if (user) {
-            // Existing logged in logic
             const urlParams = new URLSearchParams(window.location.search);
             const spectateId = urlParams.get('spectate');
             
@@ -721,7 +734,6 @@
                 }
             });
         } else {
-            // STRICT SPECTATOR CHECK - bypasses login layer entirely if ?spectate= is in URL
             const params = new URLSearchParams(window.location.search);
             if (params.get('spectate')) {
                 loginLayer.style.display = 'none';
@@ -744,6 +756,7 @@
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { theme: selectedTheme });
         }
     });
+
     function showChallengePopup(challenge) {
         const popup = document.getElementById('challenge-popup');
         document.getElementById('challenge-text').innerText = `⚔️ ${challenge.hostName} challenged you!`;
@@ -771,34 +784,42 @@
         const startBtn = document.getElementById('start-btn');
         if (startBtn) startBtn.innerText = "SEND CHALLENGE";
     };
+
     document.getElementById('open-profile-btn').addEventListener('click', () => {
         setupLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
         renderProfileMenu();
     });
+
     document.getElementById('close-profile-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         setupLayer.classList.remove('hidden');
     });
+
     document.getElementById('open-history-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         historyLayer.classList.remove('hidden');
     });
+
     document.getElementById('close-history-btn').addEventListener('click', () => {
         historyLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
     });
+
     document.getElementById('close-match-details-btn').addEventListener('click', () => {
         document.getElementById('match-details-layer').classList.add('hidden');
     });
+
     document.getElementById('open-friends-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         friendsLayer.classList.remove('hidden');
     });
+
     document.getElementById('close-friends-btn').addEventListener('click', () => {
         friendsLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
     });
+
     document.getElementById('reset-stats-btn').addEventListener('click', async () => {
         if(confirm("Are you sure you want to completely reset your Lifetime Stats? This clears your Average, Checkout %, High Out, and Match History.")) {
             try {
@@ -809,6 +830,7 @@
             } catch(e) { alert("Error resetting stats."); }
         }
     });
+
     window.deleteHistoryItem = async function(matchId, matchDate, matchDesc, pts, darts, coAtt, coHit) {
         if(!confirm("Delete this match? This will remove its points and darts from your Lifetime Stats.")) return;
         if(!window.auth.currentUser || !window.currentUserDoc) return;
@@ -825,6 +847,7 @@
             let newTotalDarts = Math.max(0, (window.currentUserDoc.totalDarts || 0) - (targetItem.darts || 0));
             let newCoAtt = Math.max(0, (window.currentUserDoc.coAtt || 0) - (targetItem.coAtt || 0));
             let newCoHit = Math.max(0, (window.currentUserDoc.coHit || 0) - (targetItem.coHit || 0));
+            
             await updateDoc(userRef, { matchHistory: newHistory, totalPts: newTotalPts, totalDarts: newTotalDarts, coAtt: newCoAtt, coHit: newCoHit });
         } catch(e) { alert("Error deleting match."); }
     };
@@ -833,6 +856,7 @@
         if(!window.currentUserDoc || !window.currentUserDoc.matchHistory) return;
         const match = window.currentUserDoc.matchHistory.find(m => m.id === matchId) || window.currentUserDoc.matchHistory.find(m => m.date === matchDate && m.desc === matchDesc);
         if(!match) return;
+        
         document.getElementById('md-title').innerText = match.desc;
         document.getElementById('md-date').innerText = match.date;
 
@@ -843,6 +867,7 @@
         document.getElementById('md-1801').innerText = match.n180 || 0;
         let coPerc1 = (match.coAtt > 0) ? Math.round((match.coHit / match.coAtt) * 100) + "%" : "0%";
         document.getElementById('md-co1').innerText = coPerc1;
+        
         // Populate Opponent (Player 2) Column
         document.getElementById('md-p2-name').innerText = match.oppName || "Opponent";
         document.getElementById('md-avg2').innerText = match.oppAvg || "-";
@@ -855,6 +880,7 @@
             coPerc2 = (match.oppCoAtt > 0) ? Math.round((match.oppCoHit / match.oppCoAtt) * 100) + "%" : "0%";
         }
         document.getElementById('md-co2').innerText = coPerc2;
+        
         document.getElementById('match-details-layer').classList.remove('hidden');
     }
 
@@ -866,6 +892,7 @@
             setTimeout(() => document.getElementById('save-name-btn').innerText = "SAVE", 2000);
         }
     });
+
     document.getElementById('prof-pic').addEventListener('click', () => { document.getElementById('pic-upload').click(); });
     document.getElementById('pic-upload').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -888,6 +915,7 @@
         }
         reader.readAsDataURL(file);
     });
+
     document.getElementById('add-friend-btn').addEventListener('click', async () => {
         const email = document.getElementById('friend-email').value.trim().toLowerCase();
         const err = document.getElementById('friend-error');
@@ -912,6 +940,7 @@
 
     async function renderProfileMenu() {
         if(!window.currentUserDoc) return;
+        
         document.getElementById('prof-email').innerText = window.auth.currentUser.email;
         if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
         
@@ -978,14 +1007,6 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
-    const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    
-    if (isIos() && !isStandalone) {
-        const iosNote = document.getElementById('ios-install-note');
-        if (iosNote) iosNote.style.display = 'block';
-    }
-
     let wakeLock = null;
     async function requestWakeLock() {
         try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
@@ -1096,6 +1117,7 @@
     if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').addEventListener('click', () => processAtcDart(1));
     if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').addEventListener('click', () => processAtcDart(2));
     if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').addEventListener('click', () => processAtcDart(3));
+
     if(document.getElementById('mode-toggle-btn')) {
         document.getElementById('mode-toggle-btn').addEventListener('click', () => {
             localInputMode = localInputMode === 'total' ? 'darts' : 'total';
@@ -1107,10 +1129,12 @@
 
 
     let statsSavedThisMatch = false;
+
     async function saveStatsToCloud() {
         if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
         const validGames = ["301", "501", "701", "1001", "170_race"];
         if(state.mode === 'single' || state.mode === 'bot') return;
+
         try {
             let myP = state.p[myIndex];
             if(state.mode === 'local') myP = state.p[0]; 
@@ -1205,6 +1229,8 @@
         }
     });
 
+    const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
+
     let stream, peer, currentCall, botTimeout;
     let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
     let isLocalMatch = false;
@@ -1220,11 +1246,13 @@
 
     let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", avatar: "", peerId: null, s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
-        { name: "P2", avatar: "", peerId: null, s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
+        { name: "P2", avatar: "", peerId: null, s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, 
+        n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
     ]};
     let history = null;
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user"; let currentCamIndex = 0;
+
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
         160:"T20 T20 D20",158:"T20 T20 D19",157:"T20 T19 D20",156:"T20 T20 D18",
@@ -1288,7 +1316,8 @@
         if (videoTrack) {
             const isHidden = document.visibilityState === 'hidden';
             videoTrack.enabled = !isHidden; 
-            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
+            if (!isLocalMatch) { 
+                broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
 
@@ -1331,13 +1360,17 @@
     }
 
     window.np = function(val) {
-        if(val === 'C') { numpadVal = ""; }
+        if(val === 'C') { numpadVal = "";
+        }
         else if(val === 'E') {
             let v = parseInt(numpadVal);
             if(!isNaN(v)) processHit(v);
         }
         else {
-            if(numpadVal.length < 3) numpadVal += val;
+            let newVal = numpadVal + val;
+            if(parseInt(newVal) <= 180) {
+                numpadVal = newVal;
+            }
         }
         let display = document.getElementById('numpad-display');
         if(display) display.innerText = numpadVal || "0";
@@ -1350,6 +1383,7 @@
         document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
     };
+
     window.hitDbd = function(val) {
         if(currentDarts.length >= 3) return;
         let label = "";
@@ -1381,10 +1415,12 @@
             else { slot.innerText = "-"; }
         }
     };
+
     window.dbdEnter = function() {
         if(currentDarts.length === 0) return;
         processHit(null, currentDarts);
     };
+
     window.logMissedDouble = function(pIndex) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
@@ -1498,7 +1534,7 @@
         state.p[1].s = startScore;
         state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
         state.p[1].coAtt = 0; state.p[1].coHit = 0;
-        
+
         if (state.mode === 'bot') {
             state.botLevel = parseInt(document.getElementById('bot-level-input').value) || 5;
             state.p[1].name = `DartBot Lvl ${state.botLevel}`;
@@ -1571,6 +1607,7 @@
                     ]
                 }
             });
+
             peer.on('open', async (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
@@ -1581,7 +1618,7 @@
                         const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
                         await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
                             activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
-                         });
+                        });
                         alert("Challenge sent! Waiting for them to accept...");
                     } catch(e) {}
                     window.targetChallengeFriend = null;
@@ -1620,7 +1657,7 @@
                     call.on('stream', s => { currentCall = call; if(s) { attachPeerVideo(s); } render(); });
                 }
             });
-            
+
             peer.on('connection', c => {
                 conns.push(c);
                 c.on('open', () => c.send({ type: 'SYNC', state }));
@@ -1629,7 +1666,7 @@
                     if (myIndex === 0 && d.type !== 'JOIN' && d.type !== 'ZOOM' && d.type !== 'BULL_PHASE' && d.type !== 'CAM_PAUSED') { broadcast(state); }
                 });
             });
-            
+
             peer.on('error', err => {
                 if (state.mode !== 'single') { 
                     log.innerText = "Connection Error: " + err.type; 
@@ -1637,6 +1674,7 @@
                     startBtn.innerText = "START MATCH"; 
                 }
             });
+
         } catch (e) {
             log.innerText = "Camera/Mic error. (" + e.message + ")";
             startBtn.disabled = false;
@@ -2018,13 +2056,13 @@
             
             const avatarImg = document.getElementById(`avatar-${i}`);
             if (avatarImg) {
-                if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
+                 if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
                 else { avatarImg.style.display = 'none'; }
             }
             
             let coStatStr = p.coAtt > 0 ? Math.round((p.coHit / p.coAtt) * 100) + "%" : "0%";
 
-            if (state.gameType === 'atc') {
+             if (state.gameType === 'atc') {
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
                 if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d;
                 if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
@@ -2220,7 +2258,6 @@
             const peerVid = document.getElementById('peer');
             if (peerVid && activeS && peerVid.srcObject !== activeS) {
                 peerVid.srcObject = activeS;
-                
                 // Force play immediately to prevent Safari from freezing the swapped stream
                 const playPromise = peerVid.play();
                 if (playPromise !== undefined) {
@@ -2245,24 +2282,14 @@
                 if(document.getElementById(`ws-140${i}`)) document.getElementById(`ws-140${i}`).innerText = pStats.n140;
                 if(document.getElementById(`ws-180${i}`)) document.getElementById(`ws-180${i}`).innerText = pStats.n180;
             }
-            winnerLayer.classList.remove('hidden');
+            if (winnerLayer) winnerLayer.classList.remove('hidden');
         } else {
-            winnerLayer.classList.add('hidden');
+            if (winnerLayer) winnerLayer.classList.add('hidden');
         }
-    }
 
-    function shareInvite() {
-        if (!peer || !peer.id) return;
-        const url = window.location.href.split('?')[0] + '?join=' + peer.id;
-        if (navigator.share) { navigator.share({ title: 'Join my RAF Darts Match!', url: url }).catch(e => {}); } 
-        else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied!")); }
-    }
-    
-    function shareSpectator() {
-        if (!peer || !peer.id) return;
-        const url = window.location.href.split('?')[0] + '?spectate=' + peer.id;
-        if (navigator.share) { navigator.share({ title: 'Spectate my RAF Darts Match!', url: url }).catch(e => {}); } 
-        else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied!")); }
+        if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined && !botTimeout) {
+            playBotTurn();
+        }
     }
 </script>
 </body>
