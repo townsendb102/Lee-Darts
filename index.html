@@ -1213,9 +1213,8 @@
     let isLocalMatch = false;
     let localInputMode = 'total'; let numpadVal = "";
     
-    // NEW SPECTATOR VARIABLES
-    let streamP1 = null;
-    let streamP2 = null; let specConnectedToP2 = false; 
+    // NEW SPECTATOR VARIABLES - DYNAMIC MAPPING
+    let spectatorStreams = {}; // This dictionary ties stream objects precisely to Peer IDs
     
     // NEW DART BY DART STATE
     let dbdMult = 1;
@@ -1655,9 +1654,10 @@
         c.on('data', d => handleData(d));
         
         if (isSpectator) {
+            spectatorStreams[id] = 'connecting'; // Mark this ID specifically as connecting
             const dummy = createDummyStream();
             const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
-            specCall.on('stream', s => { streamP1 = s; render(); });
+            specCall.on('stream', s => { spectatorStreams[id] = s; render(); });
         } else {
             currentCall = peer.call(id, stream);
             limitVideoBitrate(currentCall.peerConnection, 500); 
@@ -1721,15 +1721,29 @@
             state = data;
         }
 
-        if (spectateId && state.p[1] && state.p[1].peerId && !specConnectedToP2) {
-            specConnectedToP2 = true;
-            const dummy = createDummyStream();
-            const specCall2 = dummy ? peer.call(state.p[1].peerId, dummy, { metadata: { spectator: true } }) : peer.call(state.p[1].peerId, null, { metadata: { spectator: true } });
-            specCall2.on('stream', s => { streamP2 = s; render(); });
+        // NEW DYNAMIC SPECTATOR CONNECTION LOGIC
+        if (spectateId) {
+            [0, 1].forEach(i => {
+                let pid = state.p[i]?.peerId;
+                // If there is a peer ID for this player, and we haven't connected/started connecting yet
+                if (pid && !spectatorStreams[pid]) {
+                    spectatorStreams[pid] = 'connecting';
+                    const dummy = createDummyStream();
+                    const specCall = dummy ? peer.call(pid, dummy, { metadata: { spectator: true } }) : peer.call(pid, null, { metadata: { spectator: true } });
+                    
+                    specCall.on('stream', s => { 
+                        spectatorStreams[pid] = s; 
+                        render(); 
+                    });
 
-            const c2 = peer.connect(state.p[1].peerId);
-            conns.push(c2);
-            c2.on('data', d => handleData(d));
+                    // Ensure we also have a data channel to this peer if we don't already
+                    if (pid !== spectateId && !conns.some(conn => conn.peer === pid)) {
+                        const cOther = peer.connect(pid);
+                        conns.push(cOther);
+                        cOther.on('data', d => handleData(d));
+                    }
+                }
+            });
         }
 
         render();
@@ -2085,8 +2099,8 @@
             const cardEl = document.getElementById(`card-${i}`);
             if (cardEl) cardEl.className = (state.turn === i) ? "player-card active" : "player-card";
         });
+        
         if (!spectateId) {
-            
             if (state.gameType === 'atc') {
                 document.getElementById('cricket-center')?.classList.add('hidden');
                 if (document.getElementById('main-score-area')) {
@@ -2210,13 +2224,28 @@
                 if(document.getElementById('box-peer')) document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
             }
         } else {
+            // NEW DYNAMIC SPECTATOR CAMERA RENDERING
             const camLabel = document.querySelector('#box-peer .cam-label');
             if (camLabel) camLabel.innerText = state.p[state.turn].name.toUpperCase();
             
-            const activeS = (state.turn === 0 || !streamP2) ? streamP1 : streamP2;
+            // Get the specific peer ID of whoever is currently throwing
+            let currentTurnPeerId = state.p[state.turn].peerId;
+            let activeS = spectatorStreams[currentTurnPeerId];
+            
+            // If we are currently throwing but our camera isn't fully connected yet, fallback to the other player's camera to avoid a black screen
+            if (activeS === 'connecting' || !activeS) {
+                const otherPeerId = state.p[state.turn === 0 ? 1 : 0].peerId;
+                if (spectatorStreams[otherPeerId] && spectatorStreams[otherPeerId] !== 'connecting') {
+                    activeS = spectatorStreams[otherPeerId];
+                } else {
+                    activeS = null;
+                }
+            }
+
             const peerVid = document.getElementById('peer');
-            if (peerVid && activeS && peerVid.srcObject !== activeS) {
+            if (peerVid && activeS && activeS !== 'connecting' && peerVid.srcObject !== activeS) {
                 peerVid.srcObject = activeS;
+                
                 // Force play immediately to prevent Safari from freezing the swapped stream
                 const playPromise = peerVid.play();
                 if (playPromise !== undefined) {
@@ -2256,10 +2285,4 @@
     
     function shareSpectator() {
         if (!peer || !peer.id) return;
-        const url = window.location.href.split('?')[0] + '?spectate=' + peer.id;
-        if (navigator.share) { navigator.share({ title: 'Spectate my RAF Darts Match!', url: url }).catch(e => {}); } 
-        else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied!")); }
-    }
-</script>
-</body>
-</html>
+        const url = window.location.href.
