@@ -1805,6 +1805,7 @@
         else { btn.innerText = "VOICE ON"; btn.style.color = "#4caf50"; btn.style.borderColor = "#444"; }
     }
 
+    // --- FIX FOR SPECTATOR VIDEO FREEZING ON CAM SWAP ---
     async function swapCam() {
         if (!stream || state.mode === 'single') return;
         try {
@@ -1829,9 +1830,22 @@
             stream.addTrack(newVideoTrack);
             document.getElementById('me').srcObject = stream;
             
+            // 1. Update the stream for the main opponent
             if (currentCall && currentCall.peerConnection) {
                 const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
                 if (videoSender) { await videoSender.replaceTrack(newVideoTrack); }
+            }
+
+            // 2. Update the stream for ALL connected spectators so they don't freeze
+            if (spectatorCalls && spectatorCalls.length > 0) {
+                spectatorCalls.forEach(async (specCall) => {
+                    try {
+                        if (specCall && specCall.peerConnection) {
+                            const specSender = specCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                            if (specSender) { await specSender.replaceTrack(newVideoTrack); }
+                        }
+                    } catch (err) {} 
+                });
             }
         } catch (e) {}
     }
