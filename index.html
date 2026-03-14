@@ -23,22 +23,11 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* FIX: Break audio out of the CSS Grid without suspending iOS media pipelines */
-        audio { 
-            position: absolute; 
-            width: 0; 
-            height: 0; 
-            visibility: hidden; 
-            pointer-events: none; 
-        }
-
         /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
         body { 
             background: var(--dark);
             color: white; font-family: system-ui, sans-serif; 
-            height: 100dvh; /* Fallback for older browsers */
-            height: 100svh; /* FIX: iOS Safari small viewport height */
-            width: 100vw; display: grid;
+            height: 100dvh; width: 100vw; display: grid;
             grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(25dvh, 40dvh) minmax(100px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
             overflow: hidden; transition: background 0.3s ease;
         }
@@ -336,6 +325,7 @@
         <h2>🎯 RAF DARTS SCORER 🎯</h2>
         
         <button id="install-btn" class="btn-start install-btn">📲 INSTALL APP</button>
+        <p id="ios-install-note" style="display: none; color: #aaa; font-size: 11px; margin-top: -5px; margin-bottom: 15px; line-height: 1.4; font-style: italic;">Apple users - To install app click share button on browser and select add to homepage</p>
         
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <button id="open-profile-btn" class="btn-update" style="display: none; color: var(--blue); margin-top: 0; text-decoration: none; border: 1px solid var(--blue); padding: 4px 8px; border-radius: 4px;">👤 My Profile & Friends</button>
@@ -988,6 +978,14 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
+    const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    
+    if (isIos() && !isStandalone) {
+        const iosNote = document.getElementById('ios-install-note');
+        if (iosNote) iosNote.style.display = 'block';
+    }
+
     let wakeLock = null;
     async function requestWakeLock() {
         try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
@@ -1206,15 +1204,15 @@
             };
         }
     });
-    const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
 
     let stream, peer, currentCall, botTimeout;
     let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
     let isLocalMatch = false;
     let localInputMode = 'total'; let numpadVal = "";
     
-    // NEW SPECTATOR VARIABLES - DYNAMIC MAPPING
-    let spectatorStreams = {}; // This dictionary ties stream objects precisely to Peer IDs
+    // NEW SPECTATOR VARIABLES
+    let streamP1 = null;
+    let streamP2 = null; let specConnectedToP2 = false; 
     
     // NEW DART BY DART STATE
     let dbdMult = 1;
@@ -1270,6 +1268,7 @@
         7:"3 D2",6:"D3",5:"1 D2",4:"D2",
         3:"1 D1",2:"D1"
     };
+
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
         try {
@@ -1292,6 +1291,7 @@
             if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
+
     function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
 
     function unlockAudio() {
@@ -1460,6 +1460,7 @@
         render();
         if (!isLocalMatch) broadcast(state);
     };
+
     async function initApp() {
         requestWakeLock();
         statsSavedThisMatch = false; 
@@ -1497,6 +1498,7 @@
         state.p[1].s = startScore;
         state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
         state.p[1].coAtt = 0; state.p[1].coHit = 0;
+        
         if (state.mode === 'bot') {
             state.botLevel = parseInt(document.getElementById('bot-level-input').value) || 5;
             state.p[1].name = `DartBot Lvl ${state.botLevel}`;
@@ -1618,6 +1620,7 @@
                     call.on('stream', s => { currentCall = call; if(s) { attachPeerVideo(s); } render(); });
                 }
             });
+            
             peer.on('connection', c => {
                 conns.push(c);
                 c.on('open', () => c.send({ type: 'SYNC', state }));
@@ -1626,6 +1629,7 @@
                     if (myIndex === 0 && d.type !== 'JOIN' && d.type !== 'ZOOM' && d.type !== 'BULL_PHASE' && d.type !== 'CAM_PAUSED') { broadcast(state); }
                 });
             });
+            
             peer.on('error', err => {
                 if (state.mode !== 'single') { 
                     log.innerText = "Connection Error: " + err.type; 
@@ -1654,10 +1658,9 @@
         c.on('data', d => handleData(d));
         
         if (isSpectator) {
-            spectatorStreams[id] = 'connecting'; // Mark this ID specifically as connecting
             const dummy = createDummyStream();
             const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
-            specCall.on('stream', s => { spectatorStreams[id] = s; render(); });
+            specCall.on('stream', s => { streamP1 = s; render(); });
         } else {
             currentCall = peer.call(id, stream);
             limitVideoBitrate(currentCall.peerConnection, 500); 
@@ -1721,29 +1724,15 @@
             state = data;
         }
 
-        // NEW DYNAMIC SPECTATOR CONNECTION LOGIC
-        if (spectateId) {
-            [0, 1].forEach(i => {
-                let pid = state.p[i]?.peerId;
-                // If there is a peer ID for this player, and we haven't connected/started connecting yet
-                if (pid && !spectatorStreams[pid]) {
-                    spectatorStreams[pid] = 'connecting';
-                    const dummy = createDummyStream();
-                    const specCall = dummy ? peer.call(pid, dummy, { metadata: { spectator: true } }) : peer.call(pid, null, { metadata: { spectator: true } });
-                    
-                    specCall.on('stream', s => { 
-                        spectatorStreams[pid] = s; 
-                        render(); 
-                    });
+        if (spectateId && state.p[1] && state.p[1].peerId && !specConnectedToP2) {
+            specConnectedToP2 = true;
+            const dummy = createDummyStream();
+            const specCall2 = dummy ? peer.call(state.p[1].peerId, dummy, { metadata: { spectator: true } }) : peer.call(state.p[1].peerId, null, { metadata: { spectator: true } });
+            specCall2.on('stream', s => { streamP2 = s; render(); });
 
-                    // Ensure we also have a data channel to this peer if we don't already
-                    if (pid !== spectateId && !conns.some(conn => conn.peer === pid)) {
-                        const cOther = peer.connect(pid);
-                        conns.push(cOther);
-                        cOther.on('data', d => handleData(d));
-                    }
-                }
-            });
+            const c2 = peer.connect(state.p[1].peerId);
+            conns.push(c2);
+            c2.on('data', d => handleData(d));
         }
 
         render();
@@ -2099,8 +2088,8 @@
             const cardEl = document.getElementById(`card-${i}`);
             if (cardEl) cardEl.className = (state.turn === i) ? "player-card active" : "player-card";
         });
-        
         if (!spectateId) {
+            
             if (state.gameType === 'atc') {
                 document.getElementById('cricket-center')?.classList.add('hidden');
                 if (document.getElementById('main-score-area')) {
@@ -2224,26 +2213,12 @@
                 if(document.getElementById('box-peer')) document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
             }
         } else {
-            // NEW DYNAMIC SPECTATOR CAMERA RENDERING
             const camLabel = document.querySelector('#box-peer .cam-label');
             if (camLabel) camLabel.innerText = state.p[state.turn].name.toUpperCase();
             
-            // Get the specific peer ID of whoever is currently throwing
-            let currentTurnPeerId = state.p[state.turn].peerId;
-            let activeS = spectatorStreams[currentTurnPeerId];
-            
-            // If we are currently throwing but our camera isn't fully connected yet, fallback to the other player's camera to avoid a black screen
-            if (activeS === 'connecting' || !activeS) {
-                const otherPeerId = state.p[state.turn === 0 ? 1 : 0].peerId;
-                if (spectatorStreams[otherPeerId] && spectatorStreams[otherPeerId] !== 'connecting') {
-                    activeS = spectatorStreams[otherPeerId];
-                } else {
-                    activeS = null;
-                }
-            }
-
+            const activeS = (state.turn === 0 || !streamP2) ? streamP1 : streamP2;
             const peerVid = document.getElementById('peer');
-            if (peerVid && activeS && activeS !== 'connecting' && peerVid.srcObject !== activeS) {
+            if (peerVid && activeS && peerVid.srcObject !== activeS) {
                 peerVid.srcObject = activeS;
                 
                 // Force play immediately to prevent Safari from freezing the swapped stream
@@ -2285,4 +2260,10 @@
     
     function shareSpectator() {
         if (!peer || !peer.id) return;
-        const url = window.location.href.
+        const url = window.location.href.split('?')[0] + '?spectate=' + peer.id;
+        if (navigator.share) { navigator.share({ title: 'Spectate my RAF Darts Match!', url: url }).catch(e => {}); } 
+        else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied!")); }
+    }
+</script>
+</body>
+</html>
