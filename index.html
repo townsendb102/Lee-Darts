@@ -207,16 +207,12 @@
         /* --- IPHONE SAFE FIX (QUARANTINED) ---     */
         /* ========================================= */
         @supports (-webkit-touch-callout: none) {
-            /* 1. Constrain video max-height on iOS so it doesn't push bottom controls off-screen */
+            /* Constrain video max-height on iOS so it doesn't push bottom controls off-screen */
             body { 
-                grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(15dvh, 32dvh) minmax(80px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
+                grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(15dvh, 32dvh) minmax(80px, 1fr) auto calc(25px + env(safe-area-inset-bottom)) !important;
             }
             body.single-mode, body.local-mode { 
                 grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important;
-            }
-            /* 2. Add extra padding to Setup/Login layers so Start Match & Fix App buttons are always scrollable */
-            #setup-layer, #login-layer {
-                padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
             }
         }
     </style>
