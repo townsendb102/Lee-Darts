@@ -168,7 +168,7 @@
         .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 0; border: 1px solid rgba(255,255,255,0.1);}
         .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; border-color: transparent;}
 
-        /* IMPORTANT FIX: ADDED 24px BOTTOM PADDING TO STOP FOOTER OVERLAP ON IPHONE */
+        /* ADDED 24px BOTTOM PADDING TO STOP FOOTER OVERLAP ON IPHONE */
         .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 8px 24px 8px; }
         .controls { display: grid; gap: 8px; }
         
@@ -1536,7 +1536,7 @@
                 c.on('data', d => {
                     handleData(d);
                     
-                    // FIX: Both Host and Guest now correctly relay ALL events (including sound and video flips) to their spectators
+                    // FIX: Both Host and Guest correctly relay events to their spectators
                     conns.forEach(otherConn => {
                         if (otherConn !== c && otherConn.open && d.type !== 'JOIN') {
                             otherConn.send(d);
@@ -1563,7 +1563,17 @@
         const c = peer.connect(id);
         conns.push(c);
         c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); });
-        c.on('data', d => handleData(d));
+        c.on('data', d => {
+            handleData(d);
+            
+            // FIX: This enables the GUEST to relay sounds/flips from the host down to the guest's spectators!
+            conns.forEach(otherConn => {
+                if (otherConn !== c && otherConn.open && d.type !== 'JOIN') {
+                    otherConn.send(d);
+                }
+            });
+        });
+        
         if (isSpectator) {
             const dummy = createDummyStream();
             const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
