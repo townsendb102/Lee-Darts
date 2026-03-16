@@ -23,11 +23,14 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
+        /* NEW: Force strict boundaries for Android chrome nav bar */
+        html { height: 100%; overflow: hidden; }
+
         /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
-            height: 100dvh; width: 100vw; display: grid;
-            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(15dvh, 25dvh) minmax(80px, 1fr) auto calc(20px + env(safe-area-inset-bottom));
+            height: 100%; width: 100vw; display: grid;
+            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(20vh, 40vh) minmax(100px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
             overflow: hidden; transition: background 0.3s ease;
         }
 
@@ -41,7 +44,7 @@
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; display: none !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 100% !important; height: 100% !important; left: 0 !important; border: none !important; }
-        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; display: block !important; }
+        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100%; width: 100vw; z-index: 0; border: none; display: block !important; }
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
@@ -158,19 +161,19 @@
         .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 0; border: 1px solid rgba(255,255,255,0.1);}
         .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; border-color: transparent;}
 
-        .controls-wrapper { width: 100%; min-height: 80px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 5px 8px; }
+        .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px; }
         .controls { display: grid; gap: 8px; }
         
         #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
         /* CUSTOM NUMPAD STYLES */
-        #numpad-display { font-size: 24px; font-weight: bold; text-align: center; height: 30px; line-height: 30px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
-        .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex: 1;}
-        .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px 0;}
+        #numpad-display { font-size: 28px; font-weight: bold; text-align: center; height: 35px; line-height: 35px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
+        .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
+        .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px 0;}
         .np-btn:active { background: var(--blue); color: black; }
         .np-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .np-btn.enter { background: var(--blue); color: black; }
+        .np-btn.enter { background: var(--blue); color: black; } /* Fixed for iPhone */
         .np-btn.enter:disabled { background: #333; color: #666; }
         
         /* NEW DART-BY-DART GRID STYLES - Optimized for iPhone height */
