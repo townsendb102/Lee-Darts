@@ -23,14 +23,14 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* NEW: Force strict boundaries for Android chrome nav bar and iOS Safari */
-        html { height: 100%; width: 100%; overflow: hidden; position: fixed; top: 0; left: 0; }
+        /* Force strict boundaries for Android chrome nav bar */
+        html { height: 100%; overflow: hidden; }
 
         /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
-            height: 100%; width: 100%; position: fixed; display: grid;
-            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(20vh, 40vh) minmax(100px, 1fr) auto calc(30px + env(safe-area-inset-bottom));
+            height: 100%; width: 100vw; display: grid; margin: 0; padding: 0;
+            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(15vh, 40vh) minmax(90px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
             overflow: hidden; transition: background 0.3s ease;
         }
 
@@ -44,7 +44,7 @@
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; display: none !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 100% !important; height: 100% !important; left: 0 !important; border: none !important; }
-        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100%; width: 100vw; z-index: 0; border: none; display: block !important; }
+        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; display: block !important; }
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
@@ -161,7 +161,8 @@
         .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 0; border: 1px solid rgba(255,255,255,0.1);}
         .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; border-color: transparent;}
 
-        .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px; }
+        /* IMPORTANT FIX: ADDED 24px BOTTOM PADDING TO STOP FOOTER OVERLAP ON IPHONE */
+        .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 8px 24px 8px; }
         .controls { display: grid; gap: 8px; }
         
         #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
@@ -173,10 +174,10 @@
         .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px 0;}
         .np-btn:active { background: var(--blue); color: black; }
         .np-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .np-btn.enter { background: var(--blue); color: black; } /* Fixed for iPhone */
+        .np-btn.enter { background: var(--blue); color: black; }
         .np-btn.enter:disabled { background: #333; color: #666; }
         
-        /* NEW DART-BY-DART GRID STYLES - Optimized for iPhone height */
+        /* NEW DART-BY-DART GRID STYLES */
         .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
         .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 14px; font-weight: bold; border-radius: 6px; padding: 6px 0; cursor: pointer; text-align: center;}
         .dbd-btn:active { background: var(--blue); color: black; }
@@ -190,7 +191,7 @@
         .cric-num-btn { background: #111; border: 1px solid #333; border-radius: 6px; color: white; font-size: 16px; font-weight: bold; padding: 10px; cursor: pointer; }
         .cric-num-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: calc(5px + env(safe-area-inset-bottom)); }
+        .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
 
         /* PROFILE STYLES */
