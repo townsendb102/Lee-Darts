@@ -2143,4 +2143,11 @@
     function shareSpectator() {
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
-            if (navigator.share)
+            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
+        }
+    }
+
+</script>
+</body>
+</html>
