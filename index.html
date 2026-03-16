@@ -48,8 +48,7 @@
         
         /* GLASSMORPHISM TRANSPARENT CARDS */
         body.spectator-mode .player-card { 
-            flex: 0 0 auto;
-            width: 125px; 
+            flex: 0 0 auto; width: 125px; 
             background-color: rgba(13, 27, 42, 0.45) !important; 
             background-image: none !important; 
             border: 1px solid rgba(255, 255, 255, 0.2); 
@@ -129,19 +128,8 @@
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
-        .v-box { 
-            position: absolute;
-            inset: 0; 
-            opacity: 0; 
-            z-index: -1; 
-            pointer-events: none; 
-            transition: opacity 0.2s;
-        }
-        .v-box.visible { 
-            opacity: 1; 
-            z-index: 1; 
-            pointer-events: auto;
-        }
+        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
+        .v-box.visible { opacity: 1; z-index: 1; pointer-events: auto; }
 
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
@@ -182,7 +170,7 @@
         .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px 0;}
         .np-btn:active { background: var(--blue); color: black; }
         .np-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .np-btn.enter { background: var(--blue); color: black; grid-column: span 2; }
+        .np-btn.enter { background: var(--blue); color: black; }
         .np-btn.enter:disabled { background: #333; color: #666; }
         
         /* NEW DART-BY-DART GRID STYLES - Optimized for iPhone height */
@@ -792,7 +780,7 @@
             const userRef = doc(window.db, "users", window.auth.currentUser.uid);
             let historyArray = window.currentUserDoc.matchHistory || [];
             let targetItem = historyArray.find(h => h.id === matchId) ||
-            historyArray.find(h => h.date === matchDate && h.desc === matchDesc);
+                historyArray.find(h => h.date === matchDate && h.desc === matchDesc);
             
             if (!targetItem) return;
 
@@ -835,7 +823,6 @@
             }
             img.src = event.target.result;
         }
- 
         reader.readAsDataURL(file);
     });
     document.getElementById('add-friend-btn').addEventListener('click', async () => {
@@ -868,13 +855,12 @@
         if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
         
         let avg = window.currentUserDoc.totalDarts > 0 ?
-        ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
+            ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
         let coPerc = window.currentUserDoc.coAtt > 0 ?
-        Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
+            Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
         // document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0;
-        // Removed as element does not exist
         document.getElementById('prof-co').innerText = coPerc;
         const histContainer = document.getElementById('history-list-container');
         if(window.currentUserDoc.matchHistory && window.currentUserDoc.matchHistory.length > 0) {
@@ -1139,8 +1125,7 @@
         if (videoTrack) {
             const isHidden = document.visibilityState === 'hidden';
             videoTrack.enabled = !isHidden; 
-            if (!isLocalMatch) { 
-                broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
+            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
     function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
@@ -1501,7 +1486,7 @@
                     } catch(e) {}
                     window.targetChallengeFriend = null;
                 }
-                
+                 
                 if (spectateId) { 
                     document.getElementById('setup-layer').classList.add('hidden');
                     connectToMatch(spectateId, true);
@@ -1788,13 +1773,11 @@
         if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
             if (state.gameType === '121') { p.l = Math.max(0, p.l - 1); p.s = 121 + p.l; } 
             else { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; }
-            p.ld = 0;
-            soundToPlay = 0;
+            p.ld = 0; soundToPlay = 0;
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
         }
         else if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val;
-            p.pts += val; 
+            p.s -= val; p.pts += val; 
             if (p.ld <= 9) { p.f9pts += val; }
             if (val === 180) p.n180++;
             else if (val >= 140) p.n140++;
@@ -1827,8 +1810,7 @@
                 if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
                     if (state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; } 
                     else { p.s = 121 + p.l; }
-                    p.ld = 0;
-                    soundToPlay = 'bust'; 
+                    p.ld = 0; soundToPlay = 'bust'; 
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
                 } else if (state.mode !== 'single') {
                     state.turn = (state.turn === 0) ? 1 : 0; 
@@ -1897,7 +1879,7 @@
             
             const avatarImg = document.getElementById(`avatar-${i}`);
             if (avatarImg) {
-                 if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
+                if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
                 else { avatarImg.style.display = 'none'; }
             }
             
@@ -2004,6 +1986,7 @@
                     const btn = document.getElementById(id);
                     if (btn) {
                         btn.disabled = !isMyTurn;
+                        
                         btn.style.opacity = isMyTurn ? 1 : 0.5;
                     }
                 });
@@ -2160,11 +2143,4 @@
     function shareSpectator() {
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
-        }
-    }
-
-</script>
-</body>
-</html>
+            if (navigator.share)
