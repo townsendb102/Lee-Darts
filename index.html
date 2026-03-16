@@ -25,10 +25,9 @@
         
         /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
         body { 
-            background: var(--dark);
-            color: white; font-family: system-ui, sans-serif; 
+            background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             height: 100dvh; width: 100vw; display: grid;
-            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(20dvh, 32dvh) minmax(100px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
+            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(25dvh, 40dvh) minmax(100px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
             overflow: hidden; transition: background 0.3s ease;
         }
 
@@ -49,8 +48,7 @@
         
         /* GLASSMORPHISM TRANSPARENT CARDS */
         body.spectator-mode .player-card { 
-            flex: 0 0 auto;
-            width: 125px; 
+            flex: 0 0 auto; width: 125px; 
             background-color: rgba(13, 27, 42, 0.45) !important; 
             background-image: none !important; 
             border: 1px solid rgba(255, 255, 255, 0.2); 
@@ -88,11 +86,9 @@
         body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn { display: none !important; }
 
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
-            position: fixed;
-            inset: 0; background: var(--dark); z-index: 10000; 
+            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-            overflow-y: auto; padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
+            overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
         }
         #winner-layer { background: rgba(2, 4, 8, 0.95); z-index: 10001; }
         #first-throw-layer { background: rgba(2, 4, 8, 0.98); z-index: 10002; }
@@ -206,6 +202,23 @@
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
         
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: #ffeb3b; color: black; padding: 15px; border-radius: 10px; z-index: 30000; display: none; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; border: 2px solid #fbc02d; }
+        
+        /* ========================================= */
+        /* --- IPHONE SAFE FIX (QUARANTINED) ---     */
+        /* ========================================= */
+        @supports (-webkit-touch-callout: none) {
+            /* 1. Constrain video max-height on iOS so it doesn't push bottom controls off-screen */
+            body { 
+                grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(15dvh, 32dvh) minmax(80px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
+            }
+            body.single-mode, body.local-mode { 
+                grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important;
+            }
+            /* 2. Add extra padding to Setup/Login layers so Start Match & Fix App buttons are always scrollable */
+            #setup-layer, #login-layer {
+                padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+            }
+        }
     </style>
 </head>
 <body class="theme-classic">
@@ -233,7 +246,6 @@
         </div>
 
         <button id="login-btn" class="btn-start">LOG IN</button>
-       
         <button id="signup-btn" class="btn-start" style="background: #444; color: white; margin-top: 10px;">SIGN UP</button>
         
         <p id="auth-error" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
@@ -649,7 +661,6 @@
         setupLayer.classList.remove('hidden');
         document.getElementById('name-input').value = "Guest";
     });
-
     document.getElementById('signup-btn').addEventListener('click', () => {
         const email = document.getElementById('email-input').value;
         const pass = document.getElementById('password-input').value;
@@ -662,19 +673,17 @@
             else err.innerText = error.message;
         });
     });
-
     document.getElementById('login-btn').addEventListener('click', () => {
         signInWithEmailAndPassword(window.auth, document.getElementById('email-input').value, document.getElementById('password-input').value)
             .catch((error) => { document.getElementById('auth-error').innerText = "Invalid Email or Password."; });
     });
-
     document.getElementById('logout-btn').addEventListener('click', () => {
         if(window.userUnsub) window.userUnsub();
         signOut(window.auth).then(() => { window.location.href = window.location.pathname; });
     });
-
     onAuthStateChanged(window.auth, async (user) => {
         if (user) {
+            // Existing logged in logic
             const urlParams = new URLSearchParams(window.location.search);
             const spectateId = urlParams.get('spectate');
             
@@ -734,6 +743,7 @@
                 }
             });
         } else {
+            // STRICT SPECTATOR CHECK - bypasses login layer entirely if ?spectate= is in URL
             const params = new URLSearchParams(window.location.search);
             if (params.get('spectate')) {
                 loginLayer.style.display = 'none';
@@ -756,7 +766,6 @@
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { theme: selectedTheme });
         }
     });
-
     function showChallengePopup(challenge) {
         const popup = document.getElementById('challenge-popup');
         document.getElementById('challenge-text').innerText = `⚔️ ${challenge.hostName} challenged you!`;
@@ -784,42 +793,34 @@
         const startBtn = document.getElementById('start-btn');
         if (startBtn) startBtn.innerText = "SEND CHALLENGE";
     };
-
     document.getElementById('open-profile-btn').addEventListener('click', () => {
         setupLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
         renderProfileMenu();
     });
-
     document.getElementById('close-profile-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         setupLayer.classList.remove('hidden');
     });
-
     document.getElementById('open-history-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         historyLayer.classList.remove('hidden');
     });
-
     document.getElementById('close-history-btn').addEventListener('click', () => {
         historyLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
     });
-
     document.getElementById('close-match-details-btn').addEventListener('click', () => {
         document.getElementById('match-details-layer').classList.add('hidden');
     });
-
     document.getElementById('open-friends-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         friendsLayer.classList.remove('hidden');
     });
-
     document.getElementById('close-friends-btn').addEventListener('click', () => {
         friendsLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
     });
-
     document.getElementById('reset-stats-btn').addEventListener('click', async () => {
         if(confirm("Are you sure you want to completely reset your Lifetime Stats? This clears your Average, Checkout %, High Out, and Match History.")) {
             try {
@@ -830,7 +831,6 @@
             } catch(e) { alert("Error resetting stats."); }
         }
     });
-
     window.deleteHistoryItem = async function(matchId, matchDate, matchDesc, pts, darts, coAtt, coHit) {
         if(!confirm("Delete this match? This will remove its points and darts from your Lifetime Stats.")) return;
         if(!window.auth.currentUser || !window.currentUserDoc) return;
@@ -847,7 +847,6 @@
             let newTotalDarts = Math.max(0, (window.currentUserDoc.totalDarts || 0) - (targetItem.darts || 0));
             let newCoAtt = Math.max(0, (window.currentUserDoc.coAtt || 0) - (targetItem.coAtt || 0));
             let newCoHit = Math.max(0, (window.currentUserDoc.coHit || 0) - (targetItem.coHit || 0));
-            
             await updateDoc(userRef, { matchHistory: newHistory, totalPts: newTotalPts, totalDarts: newTotalDarts, coAtt: newCoAtt, coHit: newCoHit });
         } catch(e) { alert("Error deleting match."); }
     };
@@ -856,7 +855,6 @@
         if(!window.currentUserDoc || !window.currentUserDoc.matchHistory) return;
         const match = window.currentUserDoc.matchHistory.find(m => m.id === matchId) || window.currentUserDoc.matchHistory.find(m => m.date === matchDate && m.desc === matchDesc);
         if(!match) return;
-        
         document.getElementById('md-title').innerText = match.desc;
         document.getElementById('md-date').innerText = match.date;
 
@@ -867,7 +865,6 @@
         document.getElementById('md-1801').innerText = match.n180 || 0;
         let coPerc1 = (match.coAtt > 0) ? Math.round((match.coHit / match.coAtt) * 100) + "%" : "0%";
         document.getElementById('md-co1').innerText = coPerc1;
-        
         // Populate Opponent (Player 2) Column
         document.getElementById('md-p2-name').innerText = match.oppName || "Opponent";
         document.getElementById('md-avg2').innerText = match.oppAvg || "-";
@@ -880,7 +877,6 @@
             coPerc2 = (match.oppCoAtt > 0) ? Math.round((match.oppCoHit / match.oppCoAtt) * 100) + "%" : "0%";
         }
         document.getElementById('md-co2').innerText = coPerc2;
-        
         document.getElementById('match-details-layer').classList.remove('hidden');
     }
 
@@ -892,7 +888,6 @@
             setTimeout(() => document.getElementById('save-name-btn').innerText = "SAVE", 2000);
         }
     });
-
     document.getElementById('prof-pic').addEventListener('click', () => { document.getElementById('pic-upload').click(); });
     document.getElementById('pic-upload').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -915,7 +910,6 @@
         }
         reader.readAsDataURL(file);
     });
-
     document.getElementById('add-friend-btn').addEventListener('click', async () => {
         const email = document.getElementById('friend-email').value.trim().toLowerCase();
         const err = document.getElementById('friend-error');
@@ -940,7 +934,6 @@
 
     async function renderProfileMenu() {
         if(!window.currentUserDoc) return;
-        
         document.getElementById('prof-email').innerText = window.auth.currentUser.email;
         if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
         
@@ -981,7 +974,7 @@
             for(let uid of window.currentUserDoc.friends) {
                 const fSnap = await getDoc(doc(window.db, "users", uid));
                 if(fSnap.exists()) {
-                    let f = fSnap.data();
+                     let f = fSnap.data();
                     let fAvg = f.totalDarts > 0 ? ((f.totalPts / f.totalDarts) * 3).toFixed(1) : "0.0";
                     let fHc = f.highCheckout || 0;
                     let fImg = f.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=';
@@ -1117,7 +1110,6 @@
     if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').addEventListener('click', () => processAtcDart(1));
     if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').addEventListener('click', () => processAtcDart(2));
     if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').addEventListener('click', () => processAtcDart(3));
-
     if(document.getElementById('mode-toggle-btn')) {
         document.getElementById('mode-toggle-btn').addEventListener('click', () => {
             localInputMode = localInputMode === 'total' ? 'darts' : 'total';
@@ -1129,12 +1121,10 @@
 
 
     let statsSavedThisMatch = false;
-
     async function saveStatsToCloud() {
         if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
         const validGames = ["301", "501", "701", "1001", "170_race"];
         if(state.mode === 'single' || state.mode === 'bot') return;
-
         try {
             let myP = state.p[myIndex];
             if(state.mode === 'local') myP = state.p[0]; 
@@ -1228,7 +1218,6 @@
             };
         }
     });
-
     const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
 
     let stream, peer, currentCall, botTimeout;
@@ -1246,13 +1235,11 @@
 
     let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", avatar: "", peerId: null, s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
-        { name: "P2", avatar: "", peerId: null, s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, 
-        n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
+        { name: "P2", avatar: "", peerId: null, s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
     ]};
     let history = null;
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user"; let currentCamIndex = 0;
-
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
         160:"T20 T20 D20",158:"T20 T20 D19",157:"T20 T19 D20",156:"T20 T20 D18",
@@ -1296,7 +1283,6 @@
         7:"3 D2",6:"D3",5:"1 D2",4:"D2",
         3:"1 D1",2:"D1"
     };
-
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
         try {
@@ -1316,11 +1302,9 @@
         if (videoTrack) {
             const isHidden = document.visibilityState === 'hidden';
             videoTrack.enabled = !isHidden; 
-            if (!isLocalMatch) { 
-                broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
+            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
-
     function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
 
     function unlockAudio() {
@@ -1366,14 +1350,7 @@
             if(!isNaN(v)) processHit(v);
         }
         else {
-            let currentStr = numpadVal || "";
-            if (currentStr === "0") currentStr = "";
-            let newValStr = currentStr + val.toString();
-            let parsed = parseInt(newValStr);
-            
-            if(parsed <= 180) {
-                numpadVal = newValStr;
-            }
+            if(numpadVal.length < 3) numpadVal += val;
         }
         let display = document.getElementById('numpad-display');
         if(display) display.innerText = numpadVal || "0";
@@ -1386,7 +1363,6 @@
         document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
     };
-
     window.hitDbd = function(val) {
         if(currentDarts.length >= 3) return;
         let label = "";
@@ -1418,12 +1394,10 @@
             else { slot.innerText = "-"; }
         }
     };
-
     window.dbdEnter = function() {
         if(currentDarts.length === 0) return;
         processHit(null, currentDarts);
     };
-
     window.logMissedDouble = function(pIndex) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
@@ -1499,7 +1473,6 @@
         render();
         if (!isLocalMatch) broadcast(state);
     };
-
     async function initApp() {
         requestWakeLock();
         statsSavedThisMatch = false; 
@@ -1537,7 +1510,6 @@
         state.p[1].s = startScore;
         state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
         state.p[1].coAtt = 0; state.p[1].coHit = 0;
-
         if (state.mode === 'bot') {
             state.botLevel = parseInt(document.getElementById('bot-level-input').value) || 5;
             state.p[1].name = `DartBot Lvl ${state.botLevel}`;
@@ -1610,7 +1582,6 @@
                     ]
                 }
             });
-
             peer.on('open', async (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
@@ -1621,7 +1592,7 @@
                         const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
                         await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
                             activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
-                        });
+                         });
                         alert("Challenge sent! Waiting for them to accept...");
                     } catch(e) {}
                     window.targetChallengeFriend = null;
@@ -1660,7 +1631,6 @@
                     call.on('stream', s => { currentCall = call; if(s) { attachPeerVideo(s); } render(); });
                 }
             });
-
             peer.on('connection', c => {
                 conns.push(c);
                 c.on('open', () => c.send({ type: 'SYNC', state }));
@@ -1669,7 +1639,6 @@
                     if (myIndex === 0 && d.type !== 'JOIN' && d.type !== 'ZOOM' && d.type !== 'BULL_PHASE' && d.type !== 'CAM_PAUSED') { broadcast(state); }
                 });
             });
-
             peer.on('error', err => {
                 if (state.mode !== 'single') { 
                     log.innerText = "Connection Error: " + err.type; 
@@ -1677,7 +1646,6 @@
                     startBtn.innerText = "START MATCH"; 
                 }
             });
-
         } catch (e) {
             log.innerText = "Camera/Mic error. (" + e.message + ")";
             startBtn.disabled = false;
@@ -1805,7 +1773,6 @@
         else { btn.innerText = "VOICE ON"; btn.style.color = "#4caf50"; btn.style.borderColor = "#444"; }
     }
 
-    // --- FIX FOR SPECTATOR VIDEO FREEZING ON CAM SWAP ---
     async function swapCam() {
         if (!stream || state.mode === 'single') return;
         try {
@@ -1830,22 +1797,9 @@
             stream.addTrack(newVideoTrack);
             document.getElementById('me').srcObject = stream;
             
-            // 1. Update the stream for the main opponent
             if (currentCall && currentCall.peerConnection) {
                 const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
                 if (videoSender) { await videoSender.replaceTrack(newVideoTrack); }
-            }
-
-            // 2. Update the stream for ALL connected spectators so they don't freeze
-            if (spectatorCalls && spectatorCalls.length > 0) {
-                spectatorCalls.forEach(async (specCall) => {
-                    try {
-                        if (specCall && specCall.peerConnection) {
-                            const specSender = specCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-                            if (specSender) { await specSender.replaceTrack(newVideoTrack); }
-                        }
-                    } catch (err) {} 
-                });
             }
         } catch (e) {}
     }
@@ -1964,16 +1918,13 @@
         if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
             if (state.gameType === '121') { p.l = Math.max(0, p.l - 1); p.s = 121 + p.l; } 
             else { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; }
-            p.ld = 0;
-            soundToPlay = 0;
+            p.ld = 0; soundToPlay = 0;
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
         }
         else if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val;
-            p.pts += val; 
+            p.s -= val; p.pts += val; 
             if (p.ld <= 9) { p.f9pts += val; }
-            if (val === 180) p.n180++;
-            else if (val >= 140) p.n140++;
+            if (val === 180) p.n180++; else if (val >= 140) p.n140++;
 
             if (p.s === 0) { 
                 soundToPlay = 'gameshot';
@@ -2003,8 +1954,7 @@
                 if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
                     if (state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; } 
                     else { p.s = 121 + p.l; }
-                    p.ld = 0;
-                    soundToPlay = 'bust'; 
+                    p.ld = 0; soundToPlay = 'bust'; 
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
                 } else if (state.mode !== 'single') {
                     state.turn = (state.turn === 0) ? 1 : 0; 
@@ -2295,57 +2245,15 @@
                 if(document.getElementById(`ws-n${i}`)) document.getElementById(`ws-n${i}`).innerText = pStats.name;
                 if(document.getElementById(`ws-avg${i}`)) document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
                 if(document.getElementById(`ws-f9${i}`)) document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
-                if(document.getElementById(`ws-hc${i}`)) document.getElementById(`ws-hc${i}`).innerText = pStats.hc;
-                if(document.getElementById(`ws-140${i}`)) document.getElementById(`ws-140${i}`).innerText = pStats.n140;
-                if(document.getElementById(`ws-180${i}`)) document.getElementById(`ws-180${i}`).innerText = pStats.n180;
+                if(document.getElementById(`ws-hc${i}`)) document.getElementById(`ws-hc${i}`).innerText = pStats.hc || "-";
+                if(document.getElementById(`ws-140${i}`)) document.getElementById(`ws-140${i}`).innerText = pStats.n140 || 0;
+                if(document.getElementById(`ws-180${i}`)) document.getElementById(`ws-180${i}`).innerText = pStats.n180 || 0;
             }
-            if (winnerLayer) winnerLayer.classList.remove('hidden');
+            winnerLayer.classList.remove('hidden');
         } else {
-            if (winnerLayer) winnerLayer.classList.add('hidden');
-        }
-
-        if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined && !botTimeout) {
-            playBotTurn();
-        }
-    } // End of render()
-
-    // --- MISSING FUNCTIONS RESTORED PROPERLY ---
-    function shareInvite() {
-        if (!peer || !peer.id) return;
-        const url = window.location.href.split('?')[0] + '?join=' + peer.id;
-        
-        if (navigator.share) {
-            navigator.share({
-                title: 'RAF Darts',
-                text: 'Join my darts match!',
-                url: url
-            }).catch(err => console.log('Error sharing:', err));
-        } else {
-            navigator.clipboard.writeText(url).then(() => {
-                alert("Invite link copied to clipboard!");
-            });
+            winnerLayer.classList.add('hidden');
         }
     }
-    window.shareInvite = shareInvite;
-    
-    function shareSpectator() {
-        if (!peer || !peer.id) return;
-        const url = window.location.href.split('?')[0] + '?spectate=' + peer.id;
-        
-        if (navigator.share) {
-            navigator.share({
-                title: 'RAF Darts Spectator',
-                text: 'Watch my darts match live!',
-                url: url
-            }).catch(err => console.log('Error sharing:', err));
-        } else {
-            navigator.clipboard.writeText(url).then(() => {
-                alert("Spectator link copied to clipboard!");
-            });
-        }
-    }
-    window.shareSpectator = shareSpectator;
-
 </script>
 </body>
 </html>
