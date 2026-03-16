@@ -735,7 +735,6 @@
         setupLayer.classList.remove('hidden');
         document.getElementById('mode-input').value = 'online';
         document.getElementById('mode-input').dispatchEvent(new Event('change'));
-        document.getElementById('start-btn').click();
     };
     document.getElementById('open-profile-btn').addEventListener('click', () => {
         setupLayer.classList.add('hidden');
@@ -1371,6 +1370,11 @@
 
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
+        
+        if (state.mode !== 'online') {
+            window.targetChallengeFriend = null;
+        }
+
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
         state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
         isLocalMatch = (state.mode === 'local' || state.mode === 'bot');
