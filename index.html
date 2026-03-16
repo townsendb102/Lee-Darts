@@ -23,15 +23,22 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* Force strict boundaries for Android chrome nav bar */
-        html { height: 100%; overflow: hidden; }
+        /* Force strict boundaries for Android chrome nav bar and iOS Safari (No position fixed!) */
+        html, body { 
+            height: 100%; 
+            width: 100%; 
+            overflow: hidden; 
+            overscroll-behavior: none; /* Stops bounce scroll on mobile */
+            margin: 0; 
+            padding: 0; 
+        }
 
         /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
-            height: 100%; width: 100vw; display: grid; margin: 0; padding: 0;
-            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(15vh, 40vh) minmax(90px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
-            overflow: hidden; transition: background 0.3s ease;
+            display: grid;
+            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(20dvh, 40dvh) minmax(90px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
+            transition: background 0.3s ease;
         }
 
         .install-btn { background: #4caf50 !important; color: white !important; display: none; margin-bottom: 15px; border: 2px solid #81c784 !important; }
@@ -44,7 +51,7 @@
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; display: none !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 100% !important; height: 100% !important; left: 0 !important; border: none !important; }
-        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100dvh; width: 100vw; z-index: 0; border: none; display: block !important; }
+        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100%; width: 100vw; z-index: 0; border: none; display: block !important; }
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; }
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
@@ -1528,7 +1535,13 @@
                 c.on('open', () => c.send({ type: 'SYNC', state }));
                 c.on('data', d => {
                     handleData(d);
-                    if (myIndex === 0 && d.type !== 'JOIN' && d.type !== 'ZOOM' && d.type !== 'BULL_PHASE' && d.type !== 'CAM_PAUSED') { broadcast(state); }
+                    
+                    // FIX: Both Host and Guest now correctly relay ALL events (including sound and video flips) to their spectators
+                    conns.forEach(otherConn => {
+                        if (otherConn !== c && otherConn.open && d.type !== 'JOIN') {
+                            otherConn.send(d);
+                        }
+                    });
                 });
             });
             peer.on('error', err => {
@@ -2087,8 +2100,9 @@
             if (camLabel) camLabel.innerText = state.p[state.turn].name.toUpperCase();
         }
 
-        if (myIndex === 0 && spectatorCalls.length > 0) {
-            const activeStream = (state.turn === 0 || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer')?.srcObject;
+        // FIX: Allow BOTH players to forward the correctly swapped camera feed to their spectators
+        if (spectatorCalls.length > 0) {
+            const activeStream = (state.turn === myIndex || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer')?.srcObject;
             if (activeStream) {
                 const videoTrack = activeStream.getVideoTracks()[0];
                 const audioTrack = activeStream.getAudioTracks()[0];
