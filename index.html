@@ -86,7 +86,7 @@
         body.local-mode header { justify-content: flex-end; }
         body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn { display: none !important; }
 
-        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
+        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer { 
             position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
             overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
@@ -97,7 +97,6 @@
         #login-layer { z-index: 20000; } 
         #profile-layer { z-index: 15000; background: rgba(2, 4, 8, 0.98); }
         #history-layer, #friends-layer { z-index: 16000; background: rgba(2, 4, 8, 0.98); }
-        #match-details-layer { z-index: 17000; background: rgba(2, 4, 8, 0.98); }
         
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 1px solid var(--blue); }
@@ -198,8 +197,7 @@
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
         
         .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
-        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center; cursor: pointer; transition: background 0.2s;}
-        .history-item:hover { background: rgba(255,255,255,0.1); }
+        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--blue); display: none; }
         
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: #ffeb3b; color: black; padding: 15px; border-radius: 10px; z-index: 30000; display: none; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; border: 2px solid #fbc02d; }
@@ -293,24 +291,6 @@
         <h2 style="margin-bottom: 15px;">MATCH HISTORY</h2>
         <div id="history-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
         <button id="close-history-btn" class="btn-start" style="background: #444; color: white; margin-top: auto;">BACK</button>
-    </div>
-</div>
-
-<div id="match-details-layer" class="hidden">
-    <div class="setup-card" style="width: 100%; max-width: 400px;">
-        <h2 id="md-title" style="color: white; font-size: 20px; line-height: 1.2; margin-bottom: 5px;">Match Details</h2>
-        <p id="md-date" style="color: #888; font-size: 12px; margin-bottom: 20px; margin-top: -5px;"></p>
-        
-        <table class="stats-table">
-            <tr><th id="md-p1-name" style="color: var(--blue);">Me</th><th style="color: white;">STATS</th><th id="md-p2-name" style="color: white;">Opponent</th></tr>
-            <tr><td id="md-avg1" style="color: var(--blue);">0.0</td><td style="color: white;">Average</td><td id="md-avg2" style="color: white;">0.0</td></tr>
-            <tr><td id="md-hc1" style="color: var(--blue);">0</td><td style="color: white;">High Out</td><td id="md-hc2" style="color: white;">0</td></tr>
-            <tr><td id="md-1401" style="color: var(--blue);">0</td><td style="color: white;">140+</td><td id="md-1402" style="color: white;">0</td></tr>
-            <tr><td id="md-1801" style="color: var(--blue);">0</td><td style="color: white;">180s</td><td id="md-1802" style="color: white;">0</td></tr>
-            <tr><td id="md-co1" style="color: var(--blue);">0%</td><td style="color: white;">Checkout %</td><td id="md-co2" style="color: white;">0%</td></tr>
-        </table>
-        
-        <button id="close-match-details-btn" class="btn-start" style="background: #444; color: white; margin-top: 15px;">CLOSE</button>
     </div>
 </div>
 
@@ -671,18 +651,8 @@
 
     onAuthStateChanged(window.auth, async (user) => {
         if (user) {
-            // Existing logged in logic
-            const urlParams = new URLSearchParams(window.location.search);
-            const spectateId = urlParams.get('spectate');
-            
-            if (spectateId) {
-                loginLayer.style.display = 'none'; 
-                setupLayer.classList.remove('hidden');
-            } else {
-                loginLayer.style.display = 'none'; 
-                setupLayer.classList.remove('hidden');
-            }
-            
+            loginLayer.style.display = 'none'; 
+            setupLayer.classList.remove('hidden');
             document.getElementById('logout-btn').style.display = 'block'; 
             document.getElementById('open-profile-btn').style.display = 'block'; 
             
@@ -732,15 +702,8 @@
             });
 
         } else {
-            // STRICT SPECTATOR CHECK - bypasses login layer entirely if ?spectate= is in URL
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('spectate')) {
-                loginLayer.style.display = 'none'; 
-                setupLayer.classList.remove('hidden');
-            } else {
-                loginLayer.style.display = 'flex'; 
-                setupLayer.classList.add('hidden');
-            }
+            loginLayer.style.display = 'flex'; 
+            setupLayer.classList.add('hidden');
             document.getElementById('logout-btn').style.display = 'none'; 
             document.getElementById('open-profile-btn').style.display = 'none'; 
             window.currentUserDoc = null;
@@ -779,9 +742,7 @@
         setupLayer.classList.remove('hidden');
         document.getElementById('mode-input').value = 'online';
         document.getElementById('mode-input').dispatchEvent(new Event('change'));
-        
-        const startBtn = document.getElementById('start-btn');
-        if (startBtn) startBtn.innerText = "SEND CHALLENGE";
+        document.getElementById('start-btn').click();
     };
 
     document.getElementById('open-profile-btn').addEventListener('click', () => {
@@ -803,10 +764,6 @@
     document.getElementById('close-history-btn').addEventListener('click', () => {
         historyLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
-    });
-
-    document.getElementById('close-match-details-btn').addEventListener('click', () => {
-        document.getElementById('match-details-layer').classList.add('hidden');
     });
 
     document.getElementById('open-friends-btn').addEventListener('click', () => {
@@ -850,38 +807,6 @@
             await updateDoc(userRef, { matchHistory: newHistory, totalPts: newTotalPts, totalDarts: newTotalDarts, coAtt: newCoAtt, coHit: newCoHit });
         } catch(e) { alert("Error deleting match."); }
     };
-
-    window.showMatchDetails = function(matchId, matchDate, matchDesc) {
-        if(!window.currentUserDoc || !window.currentUserDoc.matchHistory) return;
-        const match = window.currentUserDoc.matchHistory.find(m => m.id === matchId) || window.currentUserDoc.matchHistory.find(m => m.date === matchDate && m.desc === matchDesc);
-        if(!match) return;
-
-        document.getElementById('md-title').innerText = match.desc;
-        document.getElementById('md-date').innerText = match.date;
-
-        // Populate Me (Player 1) Column
-        document.getElementById('md-avg1').innerText = match.avg || "0.0";
-        document.getElementById('md-hc1').innerText = match.hc || 0;
-        document.getElementById('md-1401').innerText = match.n140 || 0;
-        document.getElementById('md-1801').innerText = match.n180 || 0;
-        let coPerc1 = (match.coAtt > 0) ? Math.round((match.coHit / match.coAtt) * 100) + "%" : "0%";
-        document.getElementById('md-co1').innerText = coPerc1;
-
-        // Populate Opponent (Player 2) Column
-        document.getElementById('md-p2-name').innerText = match.oppName || "Opponent";
-        document.getElementById('md-avg2').innerText = match.oppAvg || "-";
-        document.getElementById('md-hc2').innerText = match.oppHc !== undefined ? match.oppHc : "-";
-        document.getElementById('md-1402').innerText = match.opp140 !== undefined ? match.opp140 : "-";
-        document.getElementById('md-1802').innerText = match.opp180 !== undefined ? match.opp180 : "-";
-        
-        let coPerc2 = "-";
-        if (match.oppCoAtt !== undefined) {
-            coPerc2 = (match.oppCoAtt > 0) ? Math.round((match.oppCoHit / match.oppCoAtt) * 100) + "%" : "0%";
-        }
-        document.getElementById('md-co2').innerText = coPerc2;
-
-        document.getElementById('match-details-layer').classList.remove('hidden');
-    }
 
     document.getElementById('save-name-btn').addEventListener('click', async () => {
         const newName = document.getElementById('edit-name-input').value.trim();
@@ -945,6 +870,7 @@
         let coPerc = window.currentUserDoc.coAtt > 0 ? Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
+        // document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0; // Removed as element does not exist
         document.getElementById('prof-co').innerText = coPerc;
         
         const histContainer = document.getElementById('history-list-container');
@@ -957,12 +883,12 @@
                 let safeDate = `'${h.date}'`;
                 let safeDesc = `'${h.desc}'`;
                 
-                histHtml += `<div class="history-item" onclick="window.showMatchDetails(${safeId}, ${safeDate}, ${safeDesc})">
+                histHtml += `<div class="history-item">
                     <div style="flex:1;">
                         <div style="color:${color}; font-weight:bold; line-height: 1.2;">${h.desc}</div>
                         <div style="color:#aaa; font-size:11px; margin-top:3px; line-height:1.4;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
                     </div>
-                    <button onclick="event.stopPropagation(); window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0}, ${h.coAtt || 0}, ${h.coHit || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
+                    <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0}, ${h.coAtt || 0}, ${h.coHit || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
                 </div>`;
             });
             histContainer.innerHTML = histHtml;
@@ -1013,17 +939,19 @@
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
     });
 
-    const quitBtn = document.getElementById('quit-btn');
-    if (quitBtn) {
-        quitBtn.onclick = () => {
-            if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-                window.location.href = window.location.pathname;
-            }
-        };
-    }
+    window.addEventListener('load', () => {
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) {
+            quitBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                    window.location.href = window.location.pathname;
+                }
+            });
+        }
+    });
 
     document.querySelectorAll('.cache-clear-btn').forEach(btn => {
-        btn.onclick = () => {
+        btn.addEventListener('click', () => {
             btn.innerText = "Clearing Cache & Updating...";
             btn.style.color = "#4caf50";
             if ('serviceWorker' in navigator) {
@@ -1033,97 +961,8 @@
             }
             if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
             setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
-        };
-    });
-
-    const modeInput = document.getElementById('mode-input');
-    const gameTypeInput = document.getElementById('game-type-input');
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join'); 
-    const spectateId = urlParams.get('spectate');
-
-    function updateMenuUI() {
-        if (!modeInput) return;
-        const mode = modeInput.value;
-        const gameType = gameTypeInput.value;
-
-        if (spectateId || joinId) {
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('game-type-group').style.display = 'none';
-            document.getElementById('legs-group').style.display = 'none';
-            document.getElementById('p2-name-group').style.display = 'none';
-            document.getElementById('bot-level-group').style.display = 'none';
-            document.getElementById('dart-limit-group').style.display = 'none';
-            
-            const p1Label = document.getElementById('p1-label');
-            if (p1Label) {
-                if (spectateId) p1Label.innerText = "Your Name (Optional)";
-                else p1Label.innerText = "Your Name";
-            }
-            return;
-        }
-
-        document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
-        document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
-        document.getElementById('game-type-group').style.display = 'block'; 
-        document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
-        document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
-        
-        const p1Label = document.getElementById('p1-label');
-        if (p1Label) {
-            if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
-            else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
-            else p1Label.innerText = 'Your Name';
-        }
-        
-        if (mode === 'bot') {
-            if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
-                gameTypeInput.value = '501';
-                alert("DartBot currently only supports standard 301-1001 games.");
-            }
-        }
-    }
-
-    if (modeInput) modeInput.addEventListener('change', updateMenuUI);
-    if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
-    updateMenuUI();
-
-    if (spectateId) {
-        document.body.classList.add('spectator-mode');
-        document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
-        document.getElementById('name-input').placeholder = "Your Name (Optional)";
-        document.getElementById('login-layer').style.display = 'none';
-        document.getElementById('setup-layer').classList.remove('hidden');
-    } else if (joinId) {
-        document.getElementById('start-btn').innerText = "JOIN MATCH";
-    }
-
-    document.getElementById('start-btn').addEventListener('click', initApp);
-    if(document.getElementById('flip-btn')) document.getElementById('flip-btn').addEventListener('click', swapCam);
-    if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').addEventListener('click', cycleZoom);
-    if(document.getElementById('mic-btn')) document.getElementById('mic-btn').addEventListener('click', toggleMic);
-    if(document.getElementById('caller-btn')) document.getElementById('caller-btn').addEventListener('click', toggleCaller);
-    if(document.getElementById('share-btn')) document.getElementById('share-btn').addEventListener('click', shareInvite);
-    if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').addEventListener('click', shareSpectator);
-    
-    if(document.getElementById('undo-btn')) document.getElementById('undo-btn').addEventListener('click', undo);
-    if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').addEventListener('click', undo);
-    
-    if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').addEventListener('click', () => processAtcDart(0));
-    if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').addEventListener('click', () => processAtcDart(1));
-    if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').addEventListener('click', () => processAtcDart(2));
-    if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').addEventListener('click', () => processAtcDart(3));
-
-    if(document.getElementById('mode-toggle-btn')) {
-        document.getElementById('mode-toggle-btn').addEventListener('click', () => {
-            localInputMode = localInputMode === 'total' ? 'darts' : 'total';
-            render();
         });
-    }
-
-    if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').addEventListener('click', triggerRematch);
-
+    });
 
     let statsSavedThisMatch = false;
     async function saveStatsToCloud() {
@@ -1134,18 +973,13 @@
         try {
             let myP = state.p[myIndex]; 
             if(state.mode === 'local') myP = state.p[0]; 
-            
-            let oppP = state.mode === 'local' ? state.p[1] : state.p[myIndex === 0 ? 1 : 0];
 
             let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
             let resultStr = isWin ? "WON" : "LOST";
-            let oppName = oppP.name;
+            let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
             let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
             let dateStr = new Date().toLocaleDateString();
-            
             let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
-            let oppAvg = oppP.d > 0 ? ((oppP.pts / oppP.d) * 3).toFixed(1) : "0.0";
-            
             let matchId = Date.now().toString();
 
             const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
@@ -1174,11 +1008,7 @@
 
                 await updateDoc(userRef, { 
                     totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
-                    matchHistory: arrayUnion({ 
-                        id: matchId, date: dateStr, desc: matchText, avg: finalAvg, pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
-                        hc: myP.hc || 0, n140: myP.n140 || 0, n180: myP.n180 || 0,
-                        oppName: oppName, oppAvg: oppAvg, oppHc: oppP.hc || 0, opp140: oppP.n140 || 0, opp180: oppP.n180 || 0, oppCoAtt: oppP.coAtt || 0, oppCoHit: oppP.coHit || 0
-                    })
+                    matchHistory: arrayUnion({ id: matchId, date: dateStr, desc: matchText, avg: finalAvg, pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit })
                 });
                 statsSavedThisMatch = true;
             }
@@ -1230,21 +1060,21 @@
     let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
     let isLocalMatch = false; let localInputMode = 'total'; let numpadVal = "";
     
-    // NEW SPECTATOR VARIABLES
-    let streamP1 = null; let streamP2 = null; let specConnectedToP2 = false; 
-    
     // NEW DART BY DART STATE
     let dbdMult = 1;
     let currentDarts = [];
 
     let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
-        { name: "P1", avatar: "", peerId: null, s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
-        { name: "P2", avatar: "", peerId: null, s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
+        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
+        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
     ]};
     let history = null;
 
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user"; let currentCamIndex = 0;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinId = urlParams.get('join'); const spectateId = urlParams.get('spectate');
 
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
@@ -1327,29 +1157,92 @@
     document.body.addEventListener('click', unlockAudio, { once: true });
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
+    // Creates an invisible video and audio stream to force WebRTC receivers open on iOS Safari
     function createDummyStream() {
         try {
             const canvas = document.createElement('canvas');
-            canvas.width = 2; canvas.height = 2;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, 2, 2);
-            const vStream = canvas.captureStream(15);
-
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const dest = audioCtx.createMediaStreamDestination();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            gain.gain.value = 0; 
-            osc.connect(gain);
-            gain.connect(dest);
-            osc.start();
-
-            return new MediaStream([vStream.getVideoTracks()[0], dest.stream.getAudioTracks()[0]]);
+            canvas.width = 1; canvas.height = 1;
+            return canvas.captureStream(1); // 1 FPS is enough to trick WebRTC
         } catch (e) { 
             return null; 
         }
     }
+
+    // Load buttons directly on window load exactly as they were before
+    window.addEventListener('load', () => {
+        const modeInput = document.getElementById('mode-input');
+        const gameTypeInput = document.getElementById('game-type-input');
+
+        function updateMenuUI() {
+            if (!modeInput) return;
+            const mode = modeInput.value;
+            const gameType = gameTypeInput.value;
+
+            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
+            document.getElementById('game-type-group').style.display = 'block'; 
+            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
+            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
+            
+            const p1Label = document.getElementById('p1-label');
+            if (p1Label) {
+                if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
+                else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
+                else p1Label.innerText = 'Your Name';
+            }
+            
+            if (mode === 'bot') {
+                if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
+                    gameTypeInput.value = '501';
+                    alert("DartBot currently only supports standard 301-1001 games.");
+                }
+            }
+        }
+
+        if (modeInput) modeInput.addEventListener('change', updateMenuUI);
+        if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
+        updateMenuUI();
+
+        if (spectateId) {
+            document.body.classList.add('spectator-mode');
+            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
+            document.getElementById('name-input').placeholder = "Your Name (Optional)";
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('setup-layer').classList.remove('hidden');
+        } else if (joinId) {
+            document.getElementById('legs-group').style.display = 'none';
+            document.getElementById('start-btn').innerText = "JOIN MATCH";
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('setup-layer').classList.remove('hidden');
+        }
+
+        document.getElementById('start-btn').onclick = initApp;
+        if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
+        if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
+        if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
+        if(document.getElementById('caller-btn')) document.getElementById('caller-btn').onclick = toggleCaller;
+        if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
+        if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
+        
+        if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
+        if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
+        
+        if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
+        if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
+        if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
+        if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
+
+        if(document.getElementById('mode-toggle-btn')) {
+            document.getElementById('mode-toggle-btn').onclick = () => {
+                localInputMode = localInputMode === 'total' ? 'darts' : 'total';
+                render();
+            };
+        }
+
+        if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
+    });
 
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
@@ -1495,8 +1388,6 @@
 
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
-        if (joinId || spectateId) state.mode = 'online'; 
-
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
         state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
         
@@ -1566,19 +1457,11 @@
                         constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
                         currentFacingMode = "environment";
                     }
-                    try {
-                        stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    } catch (err) {
+                    stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async (err) => {
                         isMobile = false;
-                        try {
-                            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                        } catch (fallbackErr) {
-                            startBtn.disabled = false;
-                            startBtn.innerText = "START MATCH";
-                            throw new Error("Could not access camera/mic.");
-                        }
-                    }
-                    if(stream) document.getElementById('me').srcObject = stream;
+                        return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    });
+                    document.getElementById('me').srcObject = stream;
                 }
             }
             
@@ -1600,7 +1483,6 @@
             peer.on('open', async (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
-                state.p[0].peerId = id;
 
                 if(window.targetChallengeFriend && window.db) {
                     try {
@@ -1611,7 +1493,6 @@
                         alert("Challenge sent! Waiting for them to accept...");
                     } catch(e) {}
                     window.targetChallengeFriend = null;
-                    document.getElementById('start-btn').innerText = "START MATCH"; 
                 }
                 
                 if (spectateId) { 
@@ -1620,9 +1501,6 @@
                 } else if (joinId) {
                     document.getElementById('setup-layer').classList.add('hidden');
                     myIndex = 1;
-                    
-                    state.p[0].peerId = joinId; 
-                    
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     state.p[1].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
                     connectToMatch(joinId, false);
@@ -1638,7 +1516,6 @@
                 if (call.metadata && call.metadata.spectator) {
                     if (stream) { call.answer(stream); } else { call.answer(); }
                     spectatorCalls.push(call);
-                    limitVideoBitrate(call.peerConnection, 500); 
                     setTimeout(() => { render(); }, 1000);
                 } else {
                     if (stream) { call.answer(stream); } else { call.answer(); }
@@ -1657,17 +1534,12 @@
             });
 
             peer.on('error', err => {
-                if (state.mode !== 'single') { 
-                    log.innerText = "Connection Error: " + err.type; 
-                    startBtn.disabled = false; 
-                    startBtn.innerText = "START MATCH"; 
-                }
+                if (state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
             });
 
         } catch (e) {
             log.innerText = "Camera/Mic error. (" + e.message + ")";
             startBtn.disabled = false;
-            startBtn.innerText = "START MATCH"; 
         }
     }
 
@@ -1680,16 +1552,13 @@
     function connectToMatch(id, isSpectator = false) {
         const c = peer.connect(id);
         conns.push(c);
-        
-        c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar, peerId: peer.id }); });
-        
+        c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); });
         c.on('data', d => handleData(d));
         
         if (isSpectator) {
             const dummy = createDummyStream();
             const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
-            
-            specCall.on('stream', s => { streamP1 = s; render(); });
+            specCall.on('stream', s => { attachPeerVideo(s); render(); });
         } else {
             currentCall = peer.call(id, stream);
             limitVideoBitrate(currentCall.peerConnection, 500); 
@@ -1716,25 +1585,14 @@
             state.mode = data.state.mode;
             state.gameType = data.state.gameType;
             state.limit170 = data.state.limit170 || 9;
-            
             state.p[0].name = data.state.p[0].name;
             state.p[0].avatar = data.state.p[0].avatar; 
-            state.p[0].peerId = data.state.p[0].peerId; 
-            
-            state.p[1].name = data.state.p[1].name;
-            state.p[1].avatar = data.state.p[1].avatar;
-            state.p[1].peerId = data.state.p[1].peerId;
-
             state.startingPlayer = data.state.startingPlayer || 0;
             if (state.mode === 'single') { document.body.classList.add('single-mode'); }
         } else if (data.type === 'JOIN') {
             state.p[1].name = data.name;
-            state.p[1].avatar = data.avatar;
-            state.p[1].peerId = data.peerId; 
-            
+            state.p[1].avatar = data.avatar; 
             document.getElementById('waiting-layer').classList.add('hidden');
-            if (myIndex === 0) { broadcast(state); } 
-            
             if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) {
                 showFirstThrowUI();
             }
@@ -1748,23 +1606,10 @@
                     player.coAtt = player.coAtt || 0; player.coHit = player.coHit || 0;
                     player.marks = player.marks || {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
                     if(data.p[i].avatar !== undefined) player.avatar = data.p[i].avatar; 
-                    if(data.p[i].peerId !== undefined) player.peerId = data.p[i].peerId;
                 });
             }
             state = data; 
         }
-
-        if (spectateId && state.p[1] && state.p[1].peerId && !specConnectedToP2) {
-            specConnectedToP2 = true;
-            const dummy = createDummyStream();
-            const specCall2 = dummy ? peer.call(state.p[1].peerId, dummy, { metadata: { spectator: true } }) : peer.call(state.p[1].peerId, null, { metadata: { spectator: true } });
-            specCall2.on('stream', s => { streamP2 = s; render(); });
-
-            const c2 = peer.connect(state.p[1].peerId);
-            conns.push(c2);
-            c2.on('data', d => handleData(d));
-        }
-
         render();
     }
 
@@ -1900,6 +1745,7 @@
         if (!isLocalMatch) { broadcast(state); }
     }
 
+    // --- REVISED processHit WITH DART-BY-DART LOGIC ---
     function processHit(manualVal = null, dartsArr = null) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
@@ -2256,19 +2102,22 @@
         } else {
             const camLabel = document.querySelector('#box-peer .cam-label');
             if (camLabel) camLabel.innerText = state.p[state.turn].name.toUpperCase();
-            
-            const activeS = (state.turn === 0 || !streamP2) ? streamP1 : streamP2;
-            const peerVid = document.getElementById('peer');
-            if (peerVid && activeS && peerVid.srcObject !== activeS) {
-                peerVid.srcObject = activeS;
-                
-                // Force play immediately to prevent Safari from freezing the swapped stream
-                const playPromise = peerVid.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(e => {});
-                }
-                
-                peerVid.onloadedmetadata = () => { peerVid.play().catch(e => {}); };
+        }
+
+        if (myIndex === 0 && spectatorCalls.length > 0) {
+            const activeStream = (state.turn === 0 || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer')?.srcObject;
+            if (activeStream) {
+                const videoTrack = activeStream.getVideoTracks()[0];
+                const audioTrack = activeStream.getAudioTracks()[0];
+                spectatorCalls.forEach(call => {
+                    if (call.peerConnection) {
+                        const senders = call.peerConnection.getSenders();
+                        const vSender = senders.find(s => s.track && s.track.kind === 'video');
+                        const aSender = senders.find(s => s.track && s.track.kind === 'audio');
+                        if (vSender && videoTrack && vSender.track !== videoTrack) { vSender.replaceTrack(videoTrack).catch(e => {}); }
+                        if (aSender && audioTrack && aSender.track !== audioTrack) { aSender.replaceTrack(audioTrack).catch(e => {}); }
+                    }
+                });
             }
         }
 
@@ -2281,3 +2130,50 @@
             for (let i = 0; i < 2; i++) {
                 let pStats = state.p[i];
                 if(document.getElementById(`ws-n${i}`)) document.getElementById(`ws-n${i}`).innerText = pStats.name;
+                
+                if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
+                    if(document.getElementById('ws-label-avg')) document.getElementById('ws-label-avg').innerText = "AVG (Darts)";
+                    if(document.getElementById(`ws-avg${i}`)) document.getElementById(`ws-avg${i}`).innerText = pStats.d;
+                    if(document.getElementById(`ws-f9${i}`)) document.getElementById(`ws-f9${i}`).innerText = "-";
+                } else {
+                    if(document.getElementById('ws-label-avg')) document.getElementById('ws-label-avg').innerText = "Match Avg";
+                    if(document.getElementById(`ws-avg${i}`)) document.getElementById(`ws-avg${i}`).innerText = pStats.d > 0 ? ((pStats.pts / pStats.d) * 3).toFixed(1) : "0.0";
+                    if(document.getElementById(`ws-f9${i}`)) document.getElementById(`ws-f9${i}`).innerText = pStats.f9d > 0 ? ((pStats.f9pts / pStats.f9d) * 3).toFixed(1) : "0.0";
+                }
+                
+                if(document.getElementById(`ws-hc${i}`)) document.getElementById(`ws-hc${i}`).innerText = pStats.hc;
+                if(document.getElementById(`ws-140${i}`)) document.getElementById(`ws-140${i}`).innerText = pStats.n140;
+                if(document.getElementById(`ws-180${i}`)) document.getElementById(`ws-180${i}`).innerText = pStats.n180;
+            }
+            if(winnerLayer) winnerLayer.classList.remove('hidden');
+        } else {
+            if(winnerLayer) winnerLayer.classList.add('hidden');
+        }
+
+        if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined && !botTimeout) {
+            playBotTurn();
+        } else if (state.mode === 'bot' && state.turn === 0 && botTimeout) {
+            clearTimeout(botTimeout);
+            botTimeout = null;
+        }
+    }
+
+    function shareInvite() {
+        if (peer && peer.id) {
+            const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
+            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
+        }
+    }
+
+    function shareSpectator() {
+        if (peer && peer.id) {
+            const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
+            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
+        }
+    }
+
+</script>
+</body>
+</html>
