@@ -26,9 +26,7 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* MAJOR LAYOUT FIX: 
-           Lock the viewport completely. No scrolling allowed. 
-        */
+        /* MAJOR LAYOUT FIX: Lock the viewport completely. No scrolling allowed. */
         html, body { 
             height: 100%; width: 100%; 
             overflow: hidden; 
@@ -37,9 +35,7 @@
             position: fixed; 
         }
 
-        /* FLEXBOX LAYOUT: 
-           Guarantees headers and footers never get pushed off screen 
-        */
+        /* FLEXBOX LAYOUT: Guarantees headers and footers never get pushed off screen */
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             display: flex;
@@ -2416,7 +2412,7 @@
             btn.innerText = "CALIBRATE";
             btn.style.background = "#222";
             
-            calibBanner.innerText = "🎯 BOARD MAPPED!\nThrow a dart!";
+            calibBanner.innerText = "🎯 BOARD MAPPED!\nThrow one dart at a time!";
             setTimeout(() => calibBanner.style.display = 'none', 3000);
             
             // Turn on the visual debug canvas
@@ -2445,8 +2441,8 @@
         
         cv.cvtColor(baselineMat, baselineMat, cv.COLOR_RGBA2GRAY, 0);
         
-        // MASSIVE BLUR applied to ignore wire movements and tiny lighting shifts
-        let ksize = new cv.Size(25, 25);
+        // Slightly reduced blur to keep the dart edges intact
+        let ksize = new cv.Size(21, 21);
         cv.GaussianBlur(baselineMat, baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
         
         if (!currentMat) currentMat = new cv.Mat();
@@ -2477,20 +2473,19 @@
         let tempMat = cv.imread(canvas);
         cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
         
-        // MATCHING MASSIVE BLUR for the current frame
-        let ksize = new cv.Size(25, 25);
+        let ksize = new cv.Size(21, 21);
         cv.GaussianBlur(currentMat, currentMat, ksize, 0, 0, cv.BORDER_DEFAULT);
 
         cv.absdiff(baselineMat, currentMat, diffMat);
         
         let threshMat = new cv.Mat();
-        // INCREASED threshold so it only sees very obvious new objects
-        cv.threshold(diffMat, threshMat, 60, 255, cv.THRESH_BINARY);
+        cv.threshold(diffMat, threshMat, 45, 255, cv.THRESH_BINARY);
 
-        // ERASION PASS: Destroys thin white lines caused by camera shaking
-        let M = cv.Mat.ones(7, 7, cv.CV_8U);
-        cv.erode(threshMat, threshMat, M);
-        cv.dilate(threshMat, threshMat, M);
+        // NEW LOGIC: Instead of eroding (destroying) thin lines, we DILATE (thicken) them!
+        // This ensures the thin dart shafts are seen as solid, scoreable blobs.
+        let M = cv.Mat.ones(5, 5, cv.CV_8U);
+        cv.dilate(threshMat, threshMat, M); // Thicken
+        cv.erode(threshMat, threshMat, M);  // Smooth the edges
         M.delete();
 
         // SHOW THE TERMINATOR VISION (Debugging)
@@ -2506,13 +2501,12 @@
         let maxArea = 0;
         let bestContourRect = null;
 
-        // Find the absolute largest object that entered the frame
         for (let i = 0; i < contours.size(); ++i) {
             let contour = contours.get(i);
             let area = cv.contourArea(contour);
             
-            // STRICT area limits: Ignored if smaller than 300px or larger than 15,000px
-            if (area > 300 && area < 15000) { 
+            // Lowered the size limit dramatically so it catches the tiny darts
+            if (area > 80 && area < 50000) { 
                 if (area > maxArea) {
                     maxArea = area;
                     bestContourRect = cv.boundingRect(contour);
