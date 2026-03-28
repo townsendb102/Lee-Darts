@@ -515,7 +515,7 @@
             <div class="legs-count" id="l-area-0"><span id="l-0">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-0"></div>
-        <button class="missed-db-btn hidden" id="miss-btn-0" onclick="logMissedDouble(0)">+ Missed Double</button>
+        <button class="missed-db-btn hidden" id="miss-btn-0" onclick="window.logMissedDouble(0)">+ Missed Double</button>
     </div>
     
     <div id="cricket-center" class="hidden">
@@ -534,7 +534,7 @@
             <div class="legs-count" id="l-area-1"><span id="l-1">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-1"></div>
-        <button class="missed-db-btn hidden" id="miss-btn-1" onclick="logMissedDouble(1)">+ Missed Double</button>
+        <button class="missed-db-btn hidden" id="miss-btn-1" onclick="window.logMissedDouble(1)">+ Missed Double</button>
     </div>
 </div>
 
@@ -548,18 +548,18 @@
         <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
             <div id="numpad-display">0</div>
             <div class="np-grid">
-                <button class="np-btn" onclick="np(1)">1</button>
-                <button class="np-btn" onclick="np(2)">2</button>
-                <button class="np-btn" onclick="np(3)">3</button>
-                <button class="np-btn" onclick="np(4)">4</button>
-                <button class="np-btn" onclick="np(5)">5</button>
-                <button class="np-btn" onclick="np(6)">6</button>
-                <button class="np-btn" onclick="np(7)">7</button>
-                <button class="np-btn" onclick="np(8)">8</button>
-                <button class="np-btn" onclick="np(9)">9</button>
-                <button class="np-btn" onclick="np('C')" style="color:#ff4d4d; font-size:16px;">DEL</button>
-                <button class="np-btn" onclick="np(0)">0</button>
-                <button class="np-btn enter" id="np-enter-btn" onclick="np('E')">ENTER</button>
+                <button class="np-btn" onclick="window.np(1)">1</button>
+                <button class="np-btn" onclick="window.np(2)">2</button>
+                <button class="np-btn" onclick="window.np(3)">3</button>
+                <button class="np-btn" onclick="window.np(4)">4</button>
+                <button class="np-btn" onclick="window.np(5)">5</button>
+                <button class="np-btn" onclick="window.np(6)">6</button>
+                <button class="np-btn" onclick="window.np(7)">7</button>
+                <button class="np-btn" onclick="window.np(8)">8</button>
+                <button class="np-btn" onclick="window.np(9)">9</button>
+                <button class="np-btn" onclick="window.np('C')" style="color:#ff4d4d; font-size:16px;">DEL</button>
+                <button class="np-btn" onclick="window.np(0)">0</button>
+                <button class="np-btn enter" id="np-enter-btn" onclick="window.np('E')">ENTER</button>
             </div>
         </div>
 
@@ -568,39 +568,39 @@
                 <div class="dbd-slot" id="dbd-slot-1">-</div>
                 <div class="dbd-slot" id="dbd-slot-2">-</div>
                 <div class="dbd-slot" id="dbd-slot-3">-</div>
-                <button class="dbd-btn" id="dbd-del-btn" style="background:#444; width:50px;" onclick="dbdDel()">⌫</button>
-                <button class="dbd-btn" id="dbd-enter-btn" style="background:var(--blue); color:black; width:60px; font-weight:bold;" onclick="dbdEnter()">OK</button>
+                <button class="dbd-btn" id="dbd-del-btn" style="background:#444; width:50px;" onclick="window.dbdDel()">⌫</button>
+                <button class="dbd-btn" id="dbd-enter-btn" style="background:var(--blue); color:black; width:60px; font-weight:bold;" onclick="window.dbdEnter()">OK</button>
             </div>
             <div style="display: flex; gap: 4px;">
-                <button class="cric-mult active" id="dbd-m-1" onclick="setDbdMult(1)">SINGLE</button>
-                <button class="cric-mult" id="dbd-m-2" onclick="setDbdMult(2)">DOUBLE</button>
-                <button class="cric-mult" id="dbd-m-3" onclick="setDbdMult(3)">TREBLE</button>
+                <button class="cric-mult active" id="dbd-m-1" onclick="window.setDbdMult(1)">SINGLE</button>
+                <button class="cric-mult" id="dbd-m-2" onclick="window.setDbdMult(2)">DOUBLE</button>
+                <button class="cric-mult" id="dbd-m-3" onclick="window.setDbdMult(3)">TREBLE</button>
             </div>
             <div class="dbd-grid">
-                <button class="dbd-btn" onclick="hitDbd(20)">20</button>
-                <button class="dbd-btn" onclick="hitDbd(19)">19</button>
-                <button class="dbd-btn" onclick="hitDbd(18)">18</button>
-                <button class="dbd-btn" onclick="hitDbd(17)">17</button>
-                <button class="dbd-btn" onclick="hitDbd(16)">16</button>
-                <button class="dbd-btn" onclick="hitDbd(15)">15</button>
-                <button class="dbd-btn" onclick="hitDbd(14)">14</button>
-                <button class="dbd-btn" onclick="hitDbd(13)">13</button>
-                <button class="dbd-btn" onclick="hitDbd(12)">12</button>
-                <button class="dbd-btn" onclick="hitDbd(11)">11</button>
-                <button class="dbd-btn" onclick="hitDbd(10)">10</button>
-                <button class="dbd-btn" onclick="hitDbd(9)">9</button>
-                <button class="dbd-btn" onclick="hitDbd(8)">8</button>
-                <button class="dbd-btn" onclick="hitDbd(7)">7</button>
-                <button class="dbd-btn" onclick="hitDbd(6)">6</button>
-                <button class="dbd-btn" onclick="hitDbd(5)">5</button>
-                <button class="dbd-btn" onclick="hitDbd(4)">4</button>
-                <button class="dbd-btn" onclick="hitDbd(3)">3</button>
-                <button class="dbd-btn" onclick="hitDbd(2)">2</button>
-                <button class="dbd-btn" onclick="hitDbd(1)">1</button>
+                <button class="dbd-btn" onclick="window.hitDbd(20)">20</button>
+                <button class="dbd-btn" onclick="window.hitDbd(19)">19</button>
+                <button class="dbd-btn" onclick="window.hitDbd(18)">18</button>
+                <button class="dbd-btn" onclick="window.hitDbd(17)">17</button>
+                <button class="dbd-btn" onclick="window.hitDbd(16)">16</button>
+                <button class="dbd-btn" onclick="window.hitDbd(15)">15</button>
+                <button class="dbd-btn" onclick="window.hitDbd(14)">14</button>
+                <button class="dbd-btn" onclick="window.hitDbd(13)">13</button>
+                <button class="dbd-btn" onclick="window.hitDbd(12)">12</button>
+                <button class="dbd-btn" onclick="window.hitDbd(11)">11</button>
+                <button class="dbd-btn" onclick="window.hitDbd(10)">10</button>
+                <button class="dbd-btn" onclick="window.hitDbd(9)">9</button>
+                <button class="dbd-btn" onclick="window.hitDbd(8)">8</button>
+                <button class="dbd-btn" onclick="window.hitDbd(7)">7</button>
+                <button class="dbd-btn" onclick="window.hitDbd(6)">6</button>
+                <button class="dbd-btn" onclick="window.hitDbd(5)">5</button>
+                <button class="dbd-btn" onclick="window.hitDbd(4)">4</button>
+                <button class="dbd-btn" onclick="window.hitDbd(3)">3</button>
+                <button class="dbd-btn" onclick="window.hitDbd(2)">2</button>
+                <button class="dbd-btn" onclick="window.hitDbd(1)">1</button>
             </div>
             <div style="display:flex; gap:4px;">
-                <button class="dbd-btn" style="flex:1;" onclick="hitDbd(25)">BULL</button>
-                <button class="dbd-btn" style="flex:1; background:#444;" onclick="hitDbd(0)">MISS</button>
+                <button class="dbd-btn" style="flex:1;" onclick="window.hitDbd(25)">BULL</button>
+                <button class="dbd-btn" style="flex:1; background:#444;" onclick="window.hitDbd(0)">MISS</button>
             </div>
         </div>
     </div>
@@ -615,27 +615,27 @@
 
     <div class="controls" id="cricket-controls" style="display: none;">
         <div style="display: flex; gap: 5px; margin-bottom: 5px;">
-            <button class="cric-mult active" id="cric-m-1" onclick="setCricMult(1)">SINGLE</button>
-            <button class="cric-mult" id="cric-m-2" onclick="setCricMult(2)">DOUBLE</button>
-            <button class="cric-mult" id="cric-m-3" onclick="setCricMult(3)">TREBLE</button>
+            <button class="cric-mult active" id="cric-m-1" onclick="window.setCricMult(1)">SINGLE</button>
+            <button class="cric-mult" id="cric-m-2" onclick="window.setCricMult(2)">DOUBLE</button>
+            <button class="cric-mult" id="cric-m-3" onclick="window.setCricMult(3)">TREBLE</button>
         </div>
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
-            <button class="cric-num-btn" onclick="hitCricket(20)">20</button>
-            <button class="cric-num-btn" onclick="hitCricket(19)">19</button>
-            <button class="cric-num-btn" onclick="hitCricket(18)">18</button>
-            <button class="cric-num-btn" onclick="hitCricket(17)">17</button>
-            <button class="cric-num-btn" onclick="hitCricket(16)">16</button>
-            <button class="cric-num-btn" onclick="hitCricket(15)">15</button>
-            <button class="cric-num-btn" onclick="hitCricket(14)">14</button>
-            <button class="cric-num-btn" onclick="hitCricket(13)">13</button>
-            <button class="cric-num-btn" onclick="hitCricket(12)">12</button>
-            <button class="cric-num-btn" onclick="hitCricket(11)">11</button>
-            <button class="cric-num-btn" onclick="hitCricket(10)">10</button>
-            <button class="cric-num-btn" onclick="hitCricket(25)">BULL</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(20)">20</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(19)">19</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(18)">18</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(17)">17</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(16)">16</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(15)">15</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(14)">14</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(13)">13</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(12)">12</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(11)">11</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(10)">10</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(25)">BULL</button>
         </div>
         <div style="display: flex; gap: 5px; margin-top: 5px;">
-            <button class="btn-undo" onclick="undo()" style="flex: 1; min-height: 40px; font-size: 14px;">⟲ UNDO</button>
-            <button class="cric-num-btn" onclick="hitCricket(0)" style="flex: 2; background: #444; color: white;">MISS</button>
+            <button class="btn-undo" onclick="window.undo()" style="flex: 1; min-height: 40px; font-size: 14px;">⟲ UNDO</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(0)" style="flex: 2; background: #444; color: white;">MISS</button>
         </div>
     </div>
 </div>
@@ -992,37 +992,36 @@
 
 <script>
     // --- GLOBALS & APP STATE ---
-    let wakeLock = null;
-    let statsSavedThisMatch = false;
-    let isMicMuted = false;
-    let isCallerMuted = false;
-    let deferredPrompt;
+    window.wakeLock = null;
+    window.statsSavedThisMatch = false;
+    window.isMicMuted = false;
+    window.isCallerMuted = false;
+    window.deferredPrompt = null;
     
-    let stream, peer, currentCall, botTimeout;
-    let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
-    let isLocalMatch = false;
-    let localInputMode = 'total'; let numpadVal = "";
+    window.stream = null; window.peer = null; window.currentCall = null; window.botTimeout = null;
+    window.conns = []; window.spectatorCalls = []; window.myIndex = 0; window.currentZoom = 1; 
+    window.isLocalMatch = false;
+    window.localInputMode = 'total'; window.numpadVal = "";
     
-    let dbdMult = 1;
-    let currentDarts = [];
+    window.dbdMult = 1;
+    window.currentDarts = [];
 
-    let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
+    window.state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
         { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
     ]};
-    let history = null;
+    window.historyLog = null;
 
-    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    let currentFacingMode = "user"; let currentCamIndex = 0;
+    window.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    window.currentFacingMode = "user"; window.currentCamIndex = 0;
 
-    const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
+    window.isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
 
-    // --- SCOPING FIX: Globals for URLs ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join');
-    const spectateId = urlParams.get('spectate');
+    window.urlParams = new URLSearchParams(window.location.search);
+    window.joinId = window.urlParams.get('join');
+    window.spectateId = window.urlParams.get('spectate');
 
-    const checkouts = {
+    window.checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
         160:"T20 T20 D20",158:"T20 T20 D19",157:"T20 T19 D20",156:"T20 T20 D18",
         155:"T20 T19 D19",154:"T20 T18 D20",153:"T20 T19 D18",152:"T20 T20 D16",
@@ -1067,7 +1066,8 @@
     };
 
     // --- APP STARTUP & EVENT LISTENERS ---
-    window.addEventListener('load', () => {
+    document.addEventListener('DOMContentLoaded', () => {
+        
         const qBtn = document.getElementById('quit-btn');
         if (qBtn) {
             qBtn.addEventListener('click', () => {
@@ -1124,14 +1124,14 @@
         if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
         updateMenuUI();
 
-        if (spectateId) {
+        if (window.spectateId) {
             document.body.classList.add('spectator-mode');
             document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
             document.getElementById('name-input').placeholder = "Your Name (Optional)";
             document.getElementById('mode-group').style.display = 'none';
             document.getElementById('login-layer').style.display = 'none';
             document.getElementById('setup-layer').classList.remove('hidden');
-        } else if (joinId) {
+        } else if (window.joinId) {
             document.getElementById('legs-group').style.display = 'none';
             document.getElementById('start-btn').innerText = "JOIN MATCH";
             document.getElementById('mode-group').style.display = 'none';
@@ -1139,231 +1139,76 @@
             document.getElementById('setup-layer').classList.remove('hidden');
         }
 
+        // --- SAFELY BIND ALL BUTTONS ---
+        const startBtn = document.getElementById('start-btn');
+        if(startBtn) startBtn.addEventListener('click', window.initApp);
+        
+        const flipBtn = document.getElementById('flip-btn');
+        if(flipBtn) flipBtn.addEventListener('click', window.swapCam);
+        
+        const zoomBtn = document.getElementById('zoom-btn');
+        if(zoomBtn) zoomBtn.addEventListener('click', window.cycleZoom);
+        
+        const micBtn = document.getElementById('mic-btn');
+        if(micBtn) micBtn.addEventListener('click', window.toggleMic);
+        
+        const callerBtn = document.getElementById('caller-btn');
+        if(callerBtn) callerBtn.addEventListener('click', window.toggleCaller);
+        
+        const shareBtn = document.getElementById('share-btn');
+        if(shareBtn) shareBtn.addEventListener('click', window.shareInvite);
+        
+        const spectateBtn = document.getElementById('spectate-btn');
+        if(spectateBtn) spectateBtn.addEventListener('click', window.shareSpectator);
+        
+        const undoBtn = document.getElementById('undo-btn');
+        if(undoBtn) undoBtn.addEventListener('click', window.undo);
+        
+        const atcUndoBtn = document.getElementById('atc-undo-btn');
+        if(atcUndoBtn) atcUndoBtn.addEventListener('click', window.undo);
+        
+        const rematchBtn = document.getElementById('rematch-btn');
+        if(rematchBtn) rematchBtn.addEventListener('click', window.triggerRematch);
+        
+        const atcMissBtn = document.getElementById('atc-miss-btn');
+        if(atcMissBtn) atcMissBtn.addEventListener('click', () => window.processAtcDart(0));
+        const atcSBtn = document.getElementById('atc-s-btn');
+        if(atcSBtn) atcSBtn.addEventListener('click', () => window.processAtcDart(1));
+        const atcDBtn = document.getElementById('atc-d-btn');
+        if(atcDBtn) atcDBtn.addEventListener('click', () => window.processAtcDart(2));
+        const atcTBtn = document.getElementById('atc-t-btn');
+        if(atcTBtn) atcTBtn.addEventListener('click', () => window.processAtcDart(3));
+
+        const modeToggleBtn = document.getElementById('mode-toggle-btn');
+        if(modeToggleBtn) {
+            modeToggleBtn.addEventListener('click', () => {
+                window.localInputMode = window.localInputMode === 'total' ? 'darts' : 'total';
+                window.render();
+            });
+        }
+        
         // PWA Install Button Handler
-        const installBtn = document.getElementById('install-btn');
-        if (installBtn && deferredPrompt) {
-            installBtn.style.display = 'block';
-            installBtn.onclick = async () => {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') { installBtn.style.display = 'none'; }
-                deferredPrompt = null;
-            };
-        }
-
-        document.getElementById('start-btn').onclick = initApp;
-        if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
-        if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
-        if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
-        if(document.getElementById('caller-btn')) document.getElementById('caller-btn').onclick = toggleCaller;
-        if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
-        if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
-        
-        if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
-        if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
-        
-        if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
-        if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
-        if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
-        if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
-        if(document.getElementById('mode-toggle-btn')) {
-            document.getElementById('mode-toggle-btn').onclick = () => {
-                localInputMode = localInputMode === 'total' ? 'darts' : 'total';
-                render();
-            };
-        }
-
-        if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); 
+            window.deferredPrompt = e;
+            const installBtn = document.getElementById('install-btn');
+            if (installBtn) {
+                installBtn.style.display = 'block';
+                installBtn.onclick = async () => {
+                    if (window.deferredPrompt) {
+                        window.deferredPrompt.prompt();
+                        const { outcome } = await window.deferredPrompt.userChoice;
+                        if (outcome === 'accepted') { installBtn.style.display = 'none'; }
+                        window.deferredPrompt = null;
+                    }
+                };
+            }
+        });
     });
 
     // --- ALL GAME LOGIC ---
 
-    async function initApp() {
-        requestWakeLock();
-        statsSavedThisMatch = false; 
-        
-        const log = document.getElementById('error-log');
-        const startBtn = document.getElementById('start-btn');
-        startBtn.disabled = true;
-
-        const modeSelect = document.getElementById('mode-input');
-        state.mode = modeSelect ? modeSelect.value : 'online';
-        if (state.mode !== 'online') {
-            window.targetChallengeFriend = null;
-        }
-
-        state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
-        state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
-        isLocalMatch = (state.mode === 'local' || state.mode === 'bot');
-
-        let startScore = 501;
-        if (state.gameType === '301') startScore = 301;
-        if (state.gameType === '701') startScore = 701;
-        if (state.gameType === '1001') startScore = 1001;
-        if (state.gameType === '121') startScore = 121;
-        if (state.gameType === 'atc') startScore = 1;
-        if (state.gameType === 'cricket') startScore = 0; 
-        if (state.gameType === '170') startScore = 170;
-        if (state.gameType === '170_race') startScore = 170;
-
-        state.p[0].name = document.getElementById('name-input').value || "Player 1";
-        state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
-        state.p[0].target170 = 170;
-        state.p[0].s = startScore;
-        state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
-        state.p[0].coAtt = 0; state.p[0].coHit = 0;
-
-        state.p[1].target170 = 170;
-        state.p[1].s = startScore;
-        state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
-        state.p[1].coAtt = 0; state.p[1].coHit = 0;
-
-        if (state.mode === 'bot') {
-            state.botLevel = parseInt(document.getElementById('bot-level-input').value) || 5;
-            state.p[1].name = `DartBot Lvl ${state.botLevel}`;
-            state.p[1].avatar = "";
-            state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-            document.getElementById('setup-layer').classList.add('hidden');
-            document.body.classList.add('local-mode');
-            showFirstThrowUI();
-            return;
-        }
-
-        if (state.mode === 'local') {
-            state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
-            state.p[1].avatar = ""; 
-            state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-            document.getElementById('setup-layer').classList.add('hidden');
-            document.body.classList.add('local-mode');
-            if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') { 
-                playDartSound('gameon');
-                render(); 
-            } else { showFirstThrowUI(); }
-            return;
-        }
-
-        if (state.mode === 'single') {
-            document.body.classList.add('single-mode');
-            document.getElementById('setup-layer').classList.add('hidden');
-            playDartSound('gameon');
-            render();
-        } else {
-            state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-        }
-
-        try {
-            if (!spectateId) {
-                if (state.mode === 'single') { stream = null; } 
-                else {
-                    log.innerText = "Accessing Camera...";
-                    let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
-                    if (isMobile) {
-                        constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
-                        currentFacingMode = "environment";
-                    }
-                    try {
-                        stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    } catch (err) {
-                        isMobile = false;
-                        try {
-                            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                        } catch (fallbackErr) {
-                            startBtn.disabled = false;
-                            startBtn.innerText = "START MATCH";
-                            throw new Error("Could not access camera/mic.");
-                        }
-                    }
-                    if (stream) {
-                        const meVid = document.getElementById('me');
-                        meVid.srcObject = stream;
-                        meVid.onloadedmetadata = () => { meVid.play().catch(e => console.log(e)); };
-                    }
-                }
-            }
-            
-            if (state.mode !== 'single') log.innerText = "Connecting to server...";
-            peer = new Peer({
-                config: {
-                    'iceServers': [
-                        { urls: "stun:stun.l.google.com:19302" }, 
-                        { urls: "stun:stun.relay.metered.ca:80" },
-                        { urls: "turn:standard.relay.metered.ca:80", username: "96fbcfd878d6ee247cf2a732", credential: "9GrKtA0VqFiIkfbI" },
-                        { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "96fbcfd878d6ee247cf2a732", credential: "9GrKtA0VqFiIkfbI" },
-                        { urls: "turn:standard.relay.metered.ca:443", username: "96fbcfd878d6ee247cf2a732", credential: "9GrKtA0VqFiIkfbI" },
-                        { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "96fbcfd878d6ee247cf2a732", credential: "9GrKtA0VqFiIkfbI" }
-                    ]
-                }
-            });
-
-            peer.on('open', async (id) => {
-                document.getElementById('display-id').innerText = id;
-                document.getElementById('wait-id').innerText = id;
-
-                if(window.targetChallengeFriend && window.db) {
-                    try {
-                        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-                        await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
-                            activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
-                        });
-                        alert("Challenge sent! Waiting for them to accept...");
-                    } catch(e) {}
-                    window.targetChallengeFriend = null;
-                }
-                
-                if (spectateId) { 
-                    document.getElementById('setup-layer').classList.add('hidden');
-                    connectToMatch(spectateId, true);
-                } else if (joinId) {
-                    document.getElementById('setup-layer').classList.add('hidden');
-                    myIndex = 1;
-                    state.p[1].name = document.getElementById('name-input').value || "Guest";
-                    state.p[1].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
-                    connectToMatch(joinId, false);
-                } else if (state.mode !== 'single') {
-                    document.getElementById('setup-layer').classList.add('hidden');
-                    document.getElementById('waiting-layer').classList.remove('hidden');
-                }
-                
-                if (joinId || spectateId) render();
-            });
-
-            peer.on('call', call => {
-                if (call.metadata && call.metadata.spectator) {
-                    if (stream) { call.answer(stream); } else { call.answer(); }
-                    spectatorCalls.push(call);
-                    setTimeout(() => { render(); }, 1000);
-                } else {
-                    if (stream) { call.answer(stream); } else { call.answer(); }
-                    limitVideoBitrate(call.peerConnection, 500);
-                    call.on('stream', s => { currentCall = call; if(s) { attachPeerVideo(s); } render(); });
-                }
-            });
-
-            peer.on('connection', c => {
-                conns.push(c);
-                c.on('open', () => c.send({ type: 'SYNC', state }));
-                c.on('data', d => {
-                    handleData(d);
-                    
-                    conns.forEach(otherConn => {
-                        if (otherConn !== c && otherConn.open && d.type !== 'JOIN') {
-                            otherConn.send(d);
-                        }
-                    });
-                });
-            });
-
-            peer.on('error', err => {
-                if (state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
-            });
-
-        } catch (e) {
-            log.innerText = "Camera/Mic error. (" + e.message + ")";
-            startBtn.disabled = false;
-        }
-    }
-
-    async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
+    window.async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
         try {
             const senders = peerConnection.getSenders();
@@ -1376,9 +1221,9 @@
         } catch (e) {}
     }
 
-    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
+    window.broadcast = function(data) { if (!window.isLocalMatch) window.conns.forEach(c => { if (c && c.open) c.send(data); }); }
 
-    function unlockAudio() {
+    window.unlockAudio = function() {
         const peerVideo = document.getElementById('peer');
         if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
         
@@ -1391,10 +1236,10 @@
             dartAudio.play().catch(e => {});
         }
     }
-    document.body.addEventListener('click', unlockAudio, { once: true });
-    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+    document.body.addEventListener('click', window.unlockAudio, { once: true });
+    document.body.addEventListener('touchstart', window.unlockAudio, { once: true });
 
-    function createDummyStream() {
+    window.createDummyStream = function() {
         try {
             const canvas = document.createElement('canvas');
             canvas.width = 1; canvas.height = 1;
@@ -1405,78 +1250,78 @@
     }
 
     window.np = function(val) {
-        if(val === 'C') { numpadVal = ""; }
+        if(val === 'C') { window.numpadVal = ""; }
         else if(val === 'E') {
-            let v = numpadVal === "" ? 0 : parseInt(numpadVal);
-            if(!isNaN(v)) processHit(v);
+            let v = window.numpadVal === "" ? 0 : parseInt(window.numpadVal);
+            if(!isNaN(v)) window.processHit(v);
         }
         else {
-            if(numpadVal.length < 3) numpadVal += val;
+            if(window.numpadVal.length < 3) window.numpadVal += val;
         }
         let display = document.getElementById('numpad-display');
-        if(display) display.innerText = numpadVal || "0";
+        if(display) display.innerText = window.numpadVal || "0";
     }
 
     window.setDbdMult = function(m) {
-        dbdMult = m;
+        window.dbdMult = m;
         document.getElementById('dbd-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
     };
 
     window.hitDbd = function(val) {
-        if(currentDarts.length >= 3) return;
+        if(window.currentDarts.length >= 3) return;
         let label = "";
         let pts = 0;
         
-        if (val === 0) { label = "MISS"; pts = 0; dbdMult = 1; } 
+        if (val === 0) { label = "MISS"; pts = 0; window.dbdMult = 1; } 
         else if (val === 25) {
-            if (dbdMult === 3) { alert("Cannot hit Treble Bull."); return; }
-            label = dbdMult === 2 ? "DB" : "B";
-            pts = val * dbdMult;
+            if (window.dbdMult === 3) { alert("Cannot hit Treble Bull."); return; }
+            label = window.dbdMult === 2 ? "DB" : "B";
+            pts = val * window.dbdMult;
         } else {
-            label = (dbdMult === 3 ? "T" : dbdMult === 2 ? "D" : "") + val;
-            pts = val * dbdMult;
+            label = (window.dbdMult === 3 ? "T" : window.dbdMult === 2 ? "D" : "") + val;
+            pts = val * window.dbdMult;
         }
         
-        currentDarts.push({ val: val, mult: val===0?1:dbdMult, pts: pts, label: label });
-        setDbdMult(1);
-        updateDbdDisplay();
+        window.currentDarts.push({ val: val, mult: val===0?1:window.dbdMult, pts: pts, label: label });
+        window.setDbdMult(1);
+        window.updateDbdDisplay();
     };
 
     window.dbdDel = function() {
-        if(currentDarts.length > 0) { currentDarts.pop(); updateDbdDisplay(); }
+        if(window.currentDarts.length > 0) { window.currentDarts.pop(); window.updateDbdDisplay(); }
     };
 
     window.updateDbdDisplay = function() {
         for(let i=0; i<3; i++) {
             let slot = document.getElementById(`dbd-slot-${i+1}`);
-            if(currentDarts[i]) { slot.innerText = currentDarts[i].label; } 
+            if(window.currentDarts[i]) { slot.innerText = window.currentDarts[i].label; } 
             else { slot.innerText = "-"; }
         }
     };
 
     window.dbdEnter = function() {
-        if(currentDarts.length === 0) return;
-        processHit(null, currentDarts);
+        if(window.currentDarts.length === 0) return;
+        window.processHit(null, window.currentDarts);
     };
 
     window.logMissedDouble = function(pIndex) {
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
-        state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
-        render();
-        if (!isLocalMatch) broadcast(state);
+        if (!window.isLocalMatch && window.state.mode !== 'single' && window.state.mode !== 'bot' && window.state.turn !== window.myIndex) return;
+        window.state.p[pIndex].coAtt = (window.state.p[pIndex].coAtt || 0) + 1;
+        window.render();
+        if (!window.isLocalMatch) window.broadcast(window.state);
     }
 
-    function playBotTurn() {
-        if(state.winner !== undefined || state.turn !== 1 || state.mode !== 'bot') return;
-        let level = state.botLevel || 5;
+    window.playBotTurn = function() {
+        if(window.state.winner !== undefined || window.state.turn !== 1 || window.state.mode !== 'bot') return;
+        let level = window.state.botLevel || 5;
         let targetAvg = 25 + (level * 10);
-        let p = state.p[1];
+        let p = window.state.p[1];
         let s = p.s;
         let val = 0;
 
-        if (s > 170 || !checkouts[s]) {
+        if (s > 170 || !window.checkouts[s]) {
             let variance = 20;
             val = Math.floor(targetAvg + (Math.random() * variance * 2) - variance);
             val = Math.max(0, Math.min(180, val));
@@ -1492,13 +1337,13 @@
         }
 
         document.getElementById('numpad-display').innerText = val;
-        botTimeout = setTimeout(() => {
+        window.botTimeout = setTimeout(() => {
             document.getElementById('numpad-display').innerText = "0";
-            processHit(val);
+            window.processHit(val);
         }, 1500);
     }
 
-    function toggleBullPhase(isActive) {
+    window.toggleBullPhase = function(isActive) {
         if (isActive) { document.body.classList.add('bull-throw'); } 
         else { document.body.classList.remove('bull-throw'); }
     }
@@ -1506,51 +1351,236 @@
     window.showFtStep2 = function(mode) {
         document.getElementById('ft-step-1').classList.add('hidden');
         document.getElementById('ft-step-2').classList.remove('hidden');
-        document.getElementById('ft-p1-btn').innerText = state.p[0].name;
-        document.getElementById('ft-p2-btn').innerText = state.p[1].name;
+        document.getElementById('ft-p1-btn').innerText = window.state.p[0].name;
+        document.getElementById('ft-p2-btn').innerText = window.state.p[1].name;
         if (mode === 'bull') { document.getElementById('ft-title').innerText = "Who was closest to Bull?"; } 
         else { document.getElementById('ft-title').innerText = "Who throws first?"; }
     };
 
     window.setFirstPlayer = function(playerIndex) {
-        state.startingPlayer = playerIndex;
-        state.turn = playerIndex;
+        window.state.startingPlayer = playerIndex;
+        window.state.turn = playerIndex;
         document.getElementById('first-throw-layer').classList.add('hidden');
         
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
-            toggleBullPhase(false);
-            broadcast({ type: 'BULL_PHASE', active: false });
+        if (!window.isLocalMatch && window.state.mode !== 'single' && window.state.mode !== 'bot') {
+            window.toggleBullPhase(false);
+            window.broadcast({ type: 'BULL_PHASE', active: false });
         }
         
-        playDartSound('gameon');
-        if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
+        window.playDartSound('gameon');
+        if (!window.isLocalMatch) window.broadcast({ type: 'SOUND', sound: 'gameon' });
 
-        render();
-        if (!isLocalMatch) broadcast(state);
+        window.render();
+        if (!window.isLocalMatch) window.broadcast(window.state);
     };
 
-    function showFirstThrowUI() {
+    window.showFirstThrowUI = function() {
         document.getElementById('first-throw-layer').classList.remove('hidden');
         document.getElementById('ft-step-1').classList.remove('hidden');
         document.getElementById('ft-step-2').classList.add('hidden');
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') { toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true }); }
+        if (!window.isLocalMatch && window.state.mode !== 'single' && window.state.mode !== 'bot') { window.toggleBullPhase(true); window.broadcast({ type: 'BULL_PHASE', active: true }); }
     }
 
-    function attachPeerVideo(s) {
+    window.initApp = async function() {
+        try {
+            requestWakeLock();
+            window.statsSavedThisMatch = false; 
+            
+            const log = document.getElementById('error-log');
+            const startBtn = document.getElementById('start-btn');
+            startBtn.disabled = true;
+    
+            const modeSelect = document.getElementById('mode-input');
+            window.state.mode = modeSelect ? modeSelect.value : 'online';
+            if (window.state.mode !== 'online') {
+                window.targetChallengeFriend = null;
+            }
+    
+            window.state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
+            window.state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
+            window.isLocalMatch = (window.state.mode === 'local' || window.state.mode === 'bot');
+    
+            let startScore = 501;
+            if (window.state.gameType === '301') startScore = 301;
+            if (window.state.gameType === '701') startScore = 701;
+            if (window.state.gameType === '1001') startScore = 1001;
+            if (window.state.gameType === '121') startScore = 121;
+            if (window.state.gameType === 'atc') startScore = 1;
+            if (window.state.gameType === 'cricket') startScore = 0; 
+            if (window.state.gameType === '170') startScore = 170;
+            if (window.state.gameType === '170_race') startScore = 170;
+    
+            window.state.p[0].name = document.getElementById('name-input').value || "Player 1";
+            window.state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
+            window.state.p[0].target170 = 170;
+            window.state.p[0].s = startScore;
+            window.state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
+            window.state.p[0].coAtt = 0; window.state.p[0].coHit = 0;
+    
+            window.state.p[1].target170 = 170;
+            window.state.p[1].s = startScore;
+            window.state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
+            window.state.p[1].coAtt = 0; window.state.p[1].coHit = 0;
+    
+            if (window.state.mode === 'bot') {
+                window.state.botLevel = parseInt(document.getElementById('bot-level-input').value) || 5;
+                window.state.p[1].name = `DartBot Lvl ${window.state.botLevel}`;
+                window.state.p[1].avatar = "";
+                window.state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+                document.getElementById('setup-layer').classList.add('hidden');
+                document.body.classList.add('local-mode');
+                window.showFirstThrowUI();
+                return;
+            }
+    
+            if (window.state.mode === 'local') {
+                window.state.p[1].name = document.getElementById('p2-name-input').value || "Player 2";
+                window.state.p[1].avatar = ""; 
+                window.state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+                document.getElementById('setup-layer').classList.add('hidden');
+                document.body.classList.add('local-mode');
+                if (window.state.gameType === 'atc' || window.state.gameType === '121' || window.state.gameType === '170' || window.state.gameType === 'cricket') { 
+                    window.playDartSound('gameon');
+                    window.render(); 
+                } else { window.showFirstThrowUI(); }
+                return;
+            }
+    
+            if (window.state.mode === 'single') {
+                document.body.classList.add('single-mode');
+                document.getElementById('setup-layer').classList.add('hidden');
+                window.playDartSound('gameon');
+                window.render();
+            } else {
+                window.state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
+            }
+
+            if (!window.spectateId) {
+                if (window.state.mode === 'single') { window.stream = null; } 
+                else {
+                    log.innerText = "Accessing Camera...";
+                    let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
+                    if (window.isMobile) {
+                        constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
+                        window.currentFacingMode = "environment";
+                    }
+                    try {
+                        window.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    } catch (err) {
+                        window.isMobile = false;
+                        try {
+                            window.stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                        } catch (fallbackErr) {
+                            startBtn.disabled = false;
+                            startBtn.innerText = "START MATCH";
+                            log.innerText = "Camera/Mic error. Please allow access.";
+                            return;
+                        }
+                    }
+                    if (window.stream) {
+                        const meVid = document.getElementById('me');
+                        meVid.srcObject = window.stream;
+                        meVid.onloadedmetadata = () => { meVid.play().catch(e => console.log(e)); };
+                    }
+                }
+            }
+            
+            if (window.state.mode !== 'single') log.innerText = "Connecting to server...";
+            window.peer = new Peer({
+                config: {
+                    'iceServers': [
+                        { urls: "stun:stun.l.google.com:19302" }, 
+                        { urls: "stun:stun.relay.metered.ca:80" },
+                        { urls: "turn:standard.relay.metered.ca:80", username: "96fbcfd878d6ee247cf2a732", credential: "9GrKtA0VqFiIkfbI" },
+                        { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "96fbcfd878d6ee247cf2a732", credential: "9GrKtA0VqFiIkfbI" },
+                        { urls: "turn:standard.relay.metered.ca:443", username: "96fbcfd878d6ee247cf2a732", credential: "9GrKtA0VqFiIkfbI" },
+                        { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "96fbcfd878d6ee247cf2a732", credential: "9GrKtA0VqFiIkfbI" }
+                    ]
+                }
+            });
+
+            window.peer.on('open', async (id) => {
+                document.getElementById('display-id').innerText = id;
+                document.getElementById('wait-id').innerText = id;
+
+                if(window.targetChallengeFriend && window.db) {
+                    try {
+                        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+                        await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
+                            activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
+                        });
+                        alert("Challenge sent! Waiting for them to accept...");
+                    } catch(e) {}
+                    window.targetChallengeFriend = null;
+                }
+                
+                if (window.spectateId) { 
+                    document.getElementById('setup-layer').classList.add('hidden');
+                    window.connectToMatch(window.spectateId, true);
+                } else if (window.joinId) {
+                    document.getElementById('setup-layer').classList.add('hidden');
+                    window.myIndex = 1;
+                    window.state.p[1].name = document.getElementById('name-input').value || "Guest";
+                    window.state.p[1].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
+                    window.connectToMatch(window.joinId, false);
+                } else if (window.state.mode !== 'single') {
+                    document.getElementById('setup-layer').classList.add('hidden');
+                    document.getElementById('waiting-layer').classList.remove('hidden');
+                }
+                
+                if (window.joinId || window.spectateId) window.render();
+            });
+
+            window.peer.on('call', call => {
+                if (call.metadata && call.metadata.spectator) {
+                    if (window.stream) { call.answer(window.stream); } else { call.answer(); }
+                    window.spectatorCalls.push(call);
+                    setTimeout(() => { window.render(); }, 1000);
+                } else {
+                    if (window.stream) { call.answer(window.stream); } else { call.answer(); }
+                    window.limitVideoBitrate(call.peerConnection, 500);
+                    call.on('stream', s => { window.currentCall = call; if(s) { window.attachPeerVideo(s); } window.render(); });
+                }
+            });
+
+            window.peer.on('connection', c => {
+                window.conns.push(c);
+                c.on('open', () => c.send({ type: 'SYNC', state: window.state }));
+                c.on('data', d => {
+                    window.handleData(d);
+                    window.conns.forEach(otherConn => {
+                        if (otherConn !== c && otherConn.open && d.type !== 'JOIN') {
+                            otherConn.send(d);
+                        }
+                    });
+                });
+            });
+
+            window.peer.on('error', err => {
+                if (window.state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
+            });
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById('error-log').innerText = "Error starting match. Check permissions.";
+            document.getElementById('start-btn').disabled = false;
+        }
+    }
+
+    window.attachPeerVideo = function(s) {
         const peerVideo = document.getElementById('peer');
         peerVideo.srcObject = s;
         peerVideo.onloadedmetadata = () => { peerVideo.play().catch(e => {}); };
     }
 
-    function connectToMatch(id, isSpectator = false) {
-        const c = peer.connect(id);
-        conns.push(c);
-        c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); });
+    window.connectToMatch = function(id, isSpectator = false) {
+        const c = window.peer.connect(id);
+        window.conns.push(c);
+        c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: window.state.p[1].name, avatar: window.state.p[1].avatar }); });
         
         c.on('data', d => {
-            handleData(d);
-            
-            conns.forEach(otherConn => {
+            window.handleData(d);
+            window.conns.forEach(otherConn => {
                 if (otherConn !== c && otherConn.open && d.type !== 'JOIN') {
                     otherConn.send(d);
                 }
@@ -1558,24 +1588,24 @@
         });
 
         if (isSpectator) {
-            const dummy = createDummyStream();
-            const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
-            specCall.on('stream', s => { attachPeerVideo(s); render(); });
+            const dummy = window.createDummyStream();
+            const specCall = dummy ? window.peer.call(id, dummy, { metadata: { spectator: true } }) : window.peer.call(id, null, { metadata: { spectator: true } });
+            specCall.on('stream', s => { window.attachPeerVideo(s); window.render(); });
         } else {
-            currentCall = peer.call(id, stream);
-            limitVideoBitrate(currentCall.peerConnection, 500); 
-            currentCall.on('stream', s => { attachPeerVideo(s); render(); });
+            window.currentCall = window.peer.call(id, window.stream);
+            window.limitVideoBitrate(window.currentCall.peerConnection, 500); 
+            window.currentCall.on('stream', s => { window.attachPeerVideo(s); window.render(); });
         }
     }
 
-    function handleData(data) {
-        if (data.type === 'SOUND') { playDartSound(data.sound); return; }
+    window.handleData = function(data) {
+        if (data.type === 'SOUND') { window.playDartSound(data.sound); return; }
         if (data.type === 'CAM_PAUSED') {
             const overlay = document.getElementById('peer-paused-msg');
             if (overlay) { data.paused ? overlay.classList.add('visible') : overlay.classList.remove('visible'); }
             return;
         }
-        if (data.type === 'BULL_PHASE') { toggleBullPhase(data.active); return; }
+        if (data.type === 'BULL_PHASE') { window.toggleBullPhase(data.active); return; }
         if (data.type === 'ZOOM') {
             const peerVid = document.getElementById('peer');
             if (peerVid) peerVid.style.transform = `scale(${data.level})`;
@@ -1583,20 +1613,20 @@
         }
 
         if (data.type === 'SYNC') {
-            state.bestOf = data.state.bestOf;
-            state.mode = data.state.mode;
-            state.gameType = data.state.gameType;
-            state.limit170 = data.state.limit170 || 9;
-            state.p[0].name = data.state.p[0].name;
-            state.p[0].avatar = data.state.p[0].avatar;
-            state.startingPlayer = data.state.startingPlayer || 0;
-            if (state.mode === 'single') { document.body.classList.add('single-mode'); }
+            window.state.bestOf = data.state.bestOf;
+            window.state.mode = data.state.mode;
+            window.state.gameType = data.state.gameType;
+            window.state.limit170 = data.state.limit170 || 9;
+            window.state.p[0].name = data.state.p[0].name;
+            window.state.p[0].avatar = data.state.p[0].avatar;
+            window.state.startingPlayer = data.state.startingPlayer || 0;
+            if (window.state.mode === 'single') { document.body.classList.add('single-mode'); }
         } else if (data.type === 'JOIN') {
-            state.p[1].name = data.name;
-            state.p[1].avatar = data.avatar; 
+            window.state.p[1].name = data.name;
+            window.state.p[1].avatar = data.avatar; 
             document.getElementById('waiting-layer').classList.add('hidden');
-            if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) {
-                showFirstThrowUI();
+            if (window.myIndex === 0 && !window.isLocalMatch && window.state.p[0].pts === 0 && window.state.p[1].pts === 0 && window.state.p[0].l === 0 && window.state.p[1].l === 0) {
+                window.showFirstThrowUI();
             }
         } else {
             if (data.p) {
@@ -1610,101 +1640,116 @@
                     if(data.p[i].avatar !== undefined) player.avatar = data.p[i].avatar; 
                 });
             }
-            state = data;
+            window.state = data;
         }
-        render();
+        window.render();
     }
 
-    function cycleZoom() {
-        if (!stream) return;
-        currentZoom = currentZoom === 1 ? 1.5 : (currentZoom === 1.5 ? 2 : 1);
+    window.cycleZoom = function() {
+        if (!window.stream) return;
+        window.currentZoom = window.currentZoom === 1 ? 1.5 : (window.currentZoom === 1.5 ? 2 : 1);
         const btn = document.getElementById('zoom-btn');
-        if (btn) btn.innerText = currentZoom === 1 ? "ZOOM" : `ZOOM ${currentZoom}x`;
-        document.getElementById('me').style.transform = `scale(${currentZoom})`;
-        if (!isLocalMatch) { broadcast({ type: 'ZOOM', level: currentZoom }); }
+        if (btn) btn.innerText = window.currentZoom === 1 ? "ZOOM" : `ZOOM ${window.currentZoom}x`;
+        document.getElementById('me').style.transform = `scale(${window.currentZoom})`;
+        if (!window.isLocalMatch) { window.broadcast({ type: 'ZOOM', level: window.currentZoom }); }
     }
 
-    function toggleMic() {
-        isMicMuted = !isMicMuted;
-        if (stream && stream.getAudioTracks().length > 0) { stream.getAudioTracks()[0].enabled = !isMicMuted; }
+    window.toggleMic = function() {
+        window.isMicMuted = !window.isMicMuted;
+        if (window.stream && window.stream.getAudioTracks().length > 0) { window.stream.getAudioTracks()[0].enabled = !window.isMicMuted; }
         const peerVideo = document.getElementById('peer');
-        if (peerVideo) peerVideo.muted = isMicMuted;
+        if (peerVideo) peerVideo.muted = window.isMicMuted;
         const btn = document.getElementById('mic-btn');
-        if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
+        if (window.isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
         else { btn.innerText = "MIC ON"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
     }
 
-    function toggleCaller() {
-        isCallerMuted = !isCallerMuted;
+    window.toggleCaller = function() {
+        window.isCallerMuted = !window.isCallerMuted;
         const btn = document.getElementById('caller-btn');
-        if (isCallerMuted) { btn.innerText = "VOICE OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
+        if (window.isCallerMuted) { btn.innerText = "VOICE OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
         else { btn.innerText = "VOICE ON"; btn.style.color = "#4caf50"; btn.style.borderColor = "#444"; }
     }
 
-    async function swapCam() {
-        if (!stream || state.mode === 'single') return;
+    window.swapCam = async function() {
+        if (!window.stream || window.state.mode === 'single') return;
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const videoCameras = devices.filter(d => d.kind === 'videoinput');
             if (videoCameras.length <= 1) { alert("Only one camera found on this device."); return; }
 
-            const oldVideoTrack = stream.getVideoTracks()[0];
+            const oldVideoTrack = window.stream.getVideoTracks()[0];
             oldVideoTrack.stop();
             let newStream;
-            if (isMobile) {
-                currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-                try { newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch (e) { isMobile = false; }
+            if (window.isMobile) {
+                window.currentFacingMode = (window.currentFacingMode === "user") ? "environment" : "user";
+                try { newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: window.currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch (e) { window.isMobile = false; }
             }
-            if (!isMobile) {
-                currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
-                newStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+            if (!window.isMobile) {
+                window.currentCamIndex = (window.currentCamIndex + 1) % videoCameras.length;
+                newStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: videoCameras[window.currentCamIndex].deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } });
             }
 
             const newVideoTrack = newStream.getVideoTracks()[0];
-            stream.removeTrack(oldVideoTrack);
-            stream.addTrack(newVideoTrack);
-            document.getElementById('me').srcObject = stream;
+            window.stream.removeTrack(oldVideoTrack);
+            window.stream.addTrack(newVideoTrack);
+            document.getElementById('me').srcObject = window.stream;
             
-            if (currentCall && currentCall.peerConnection) {
-                const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+            if (window.currentCall && window.currentCall.peerConnection) {
+                const videoSender = window.currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
                 if (videoSender) { await videoSender.replaceTrack(newVideoTrack); }
             }
         } catch (e) {}
     }
 
-    function processAtcDart(multiplier) {
-        if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
-        if(botTimeout) clearTimeout(botTimeout);
-        history = JSON.parse(JSON.stringify(state));
-        let p = state.p[state.turn];
+    window.processAtcDart = function(multiplier) {
+        if (!window.isLocalMatch && window.state.mode !== 'single' && window.state.turn !== window.myIndex) return;
+        if(window.botTimeout) clearTimeout(window.botTimeout);
+        window.historyLog = JSON.parse(JSON.stringify(window.state));
+        let p = window.state.p[window.state.turn];
 
         p.d++; 
         if (multiplier > 0) { p.s += multiplier; } 
         
         if (p.s > 21) {
-            state.winner = state.turn;
-        } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
-            state.turn = (state.turn === 0) ? 1 : 0;
+            window.state.winner = window.state.turn;
+        } else if (window.state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
+            window.state.turn = (window.state.turn === 0) ? 1 : 0;
         }
-        render(); 
-        if (!isLocalMatch) { broadcast(state); }
+        window.render(); 
+        if (!window.isLocalMatch) { window.broadcast(window.state); }
+    }
+
+    window.setCricMult = function(m) {
+        window.cricketMult = m;
+        document.getElementById('cric-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('cric-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('cric-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
+    };
+
+    window.checkCricketWin = function(pIndex) {
+        let p = window.state.p[pIndex];
+        let opp = window.state.p[pIndex === 0 ? 1 : 0];
+        let targets = [10,11,12,13,14,15,16,17,18,19,20,25];
+        for (let t of targets) { if ((p.marks[t] || 0) < 3) return false; }
+        return p.s >= opp.s;
     }
 
     window.hitCricket = function(val) {
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
-        if (val === 25 && cricketMult === 3) { alert("Invalid Dart: Cannot throw a Treble Bull."); return; }
-        if(botTimeout) clearTimeout(botTimeout);
+        if (!window.isLocalMatch && window.state.mode !== 'single' && window.state.mode !== 'bot' && window.state.turn !== window.myIndex) return;
+        if (val === 25 && window.cricketMult === 3) { alert("Invalid Dart: Cannot throw a Treble Bull."); return; }
+        if(window.botTimeout) clearTimeout(window.botTimeout);
         
-        history = JSON.parse(JSON.stringify(state));
-        let p = state.p[state.turn];
-        let opp = state.p[state.turn === 0 ? 1 : 0];
+        window.historyLog = JSON.parse(JSON.stringify(window.state));
+        let p = window.state.p[window.state.turn];
+        let opp = window.state.p[window.state.turn === 0 ? 1 : 0];
 
         p.d++;
         if (val > 0) {
             let currentMarks = p.marks[val] || 0;
             let oppMarks = opp.marks[val] || 0;
             
-            let marksToAdd = cricketMult;
+            let marksToAdd = window.cricketMult;
             let spaceLeft = 3 - currentMarks;
             let marksApplied = Math.min(spaceLeft, marksToAdd);
             let excess = marksToAdd - marksApplied;
@@ -1715,23 +1760,23 @@
             }
         }
         
-        setCricMult(1);
-        if (checkCricketWin(state.turn)) {
-            state.winner = state.turn;
-        } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
-            state.turn = state.turn === 0 ? 1 : 0;
+        window.setCricMult(1);
+        if (window.checkCricketWin(window.state.turn)) {
+            window.state.winner = window.state.turn;
+        } else if (window.state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
+            window.state.turn = window.state.turn === 0 ? 1 : 0;
         }
         
-        render();
-        if (!isLocalMatch) { broadcast(state); }
+        window.render();
+        if (!window.isLocalMatch) { window.broadcast(window.state); }
     }
 
-    function processHit(manualVal = null, dartsArr = null) {
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
-        if(botTimeout) clearTimeout(botTimeout);
+    window.processHit = function(manualVal = null, dartsArr = null) {
+        if (!window.isLocalMatch && window.state.mode !== 'single' && window.state.mode !== 'bot' && window.state.turn !== window.myIndex) return;
+        if(window.botTimeout) clearTimeout(window.botTimeout);
         
-        history = JSON.parse(JSON.stringify(state));
-        let p = state.p[state.turn];
+        window.historyLog = JSON.parse(JSON.stringify(window.state));
+        let p = window.state.p[window.state.turn];
 
         p.ld = p.ld ?? 0; p.f9pts = p.f9pts ?? 0;
         p.f9d = p.f9d ?? 0; p.hc = p.hc ?? 0; p.n140 = p.n140 ?? 0; p.n180 = p.n180 ?? 0;
@@ -1740,18 +1785,18 @@
         let val = 0;
         if (manualVal !== null) {
             val = manualVal;
-        } else if (localInputMode === 'darts' && dartsArr !== null) {
+        } else if (window.localInputMode === 'darts' && dartsArr !== null) {
             val = dartsArr.reduce((sum, d) => sum + d.pts, 0);
             let tempS = p.s;
             for (let d of dartsArr) {
-                if (tempS <= 170 && checkouts[tempS]) {
+                if (tempS <= 170 && window.checkouts[tempS]) {
                     if (d.mult === 2 || (d.val === 25 && d.label === 'DB')) { p.coAtt++; }
                 }
                 tempS -= d.pts;
                 if (tempS <= 1 && tempS !== 0) break; // Bust
             }
         } else {
-            val = numpadVal === '' ? 0 : parseInt(numpadVal);
+            val = window.numpadVal === '' ? 0 : parseInt(window.numpadVal);
             if (isNaN(val) || val < 0 || val > 180) return;
         }
         
@@ -1759,20 +1804,20 @@
         p.d += 3; p.ld += 3;
 
         let startScore = 501;
-        if (state.gameType === '301') startScore = 301;
-        if (state.gameType === '701') startScore = 701;
-        if (state.gameType === '1001') startScore = 1001;
-        if (state.gameType === '121') startScore = 121 + p.l;
-        if (state.gameType === '170') startScore = 170;
-        if (state.gameType === '170_race') startScore = 170;
+        if (window.state.gameType === '301') startScore = 301;
+        if (window.state.gameType === '701') startScore = 701;
+        if (window.state.gameType === '1001') startScore = 1001;
+        if (window.state.gameType === '121') startScore = 121 + p.l;
+        if (window.state.gameType === '170') startScore = 170;
+        if (window.state.gameType === '170_race') startScore = 170;
 
         let soundToPlay = val;
-        if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
-            if (state.gameType === '121') { p.l = Math.max(0, p.l - 1); p.s = 121 + p.l; } 
+        if (val === 0 && (window.state.gameType === '121' || window.state.gameType === '170')) {
+            if (window.state.gameType === '121') { p.l = Math.max(0, p.l - 1); p.s = 121 + p.l; } 
             else { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; }
             p.ld = 0;
             soundToPlay = 0;
-            if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
+            if (window.state.mode !== 'single') window.state.turn = (window.state.turn === 0) ? 1 : 0;
         }
         else if (p.s - val >= 0 && p.s - val !== 1) {
             p.s -= val;
@@ -1785,94 +1830,94 @@
                 soundToPlay = 'gameshot';
                 if (val > p.hc) p.hc = val; 
                 p.l++; p.coHit++; 
-                if (localInputMode !== 'darts') p.coAtt++;
-                if (state.gameType === '170') { p.target170 = Math.min(170, (p.target170 || 170) + 1); }
+                if (window.localInputMode !== 'darts') p.coAtt++;
+                if (window.state.gameType === '170') { p.target170 = Math.min(170, (p.target170 || 170) + 1); }
                 
-                if (state.mode === 'single') {
-                    state.p[0].s = state.gameType === '121' ? 121 + p.l : (state.gameType === '170' ? p.target170 : startScore);
-                    state.p[0].ld = 0; state.turn = 0;
+                if (window.state.mode === 'single') {
+                    window.state.p[0].s = window.state.gameType === '121' ? 121 + p.l : (window.state.gameType === '170' ? p.target170 : startScore);
+                    window.state.p[0].ld = 0; window.state.turn = 0;
                 } else {
-                    if (state.gameType !== '121' && state.gameType !== '170') {
-                        const legsRequiredToWin = Math.ceil(state.bestOf / 2);
-                        if (p.l >= legsRequiredToWin) { state.winner = state.turn; } 
+                    if (window.state.gameType !== '121' && window.state.gameType !== '170') {
+                        const legsRequiredToWin = Math.ceil(window.state.bestOf / 2);
+                        if (p.l >= legsRequiredToWin) { window.state.winner = window.state.turn; } 
                         else {
-                            state.p.forEach(x => { x.s = startScore; x.ld = 0; });
-                            state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
-                            state.turn = state.startingPlayer;
+                            window.state.p.forEach(x => { x.s = startScore; x.ld = 0; });
+                            window.state.startingPlayer = (window.state.startingPlayer === 0) ? 1 : 0;
+                            window.state.turn = window.state.startingPlayer;
                         }
                     } else {
-                        p.s = state.gameType === '121' ? 121 + p.l : p.target170;
-                        p.ld = 0; state.turn = (state.turn === 0) ? 1 : 0;
+                        p.s = window.state.gameType === '121' ? 121 + p.l : p.target170;
+                        p.ld = 0; window.state.turn = (window.state.turn === 0) ? 1 : 0;
                     }
                 }
             } else { 
-                if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
-                    if (state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; } 
+                if ((window.state.gameType === '121' && p.ld >= 9) || (window.state.gameType === '170' && p.ld >= window.state.limit170)) {
+                    if (window.state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; } 
                     else { p.s = 121 + p.l; }
                     p.ld = 0;
                     soundToPlay = 'bust'; 
-                    if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
-                } else if (state.mode !== 'single') {
-                    state.turn = (state.turn === 0) ? 1 : 0; 
+                    if (window.state.mode !== 'single') window.state.turn = (window.state.turn === 0) ? 1 : 0;
+                } else if (window.state.mode !== 'single') {
+                    window.state.turn = (window.state.turn === 0) ? 1 : 0; 
                 }
             }
         } else { 
             soundToPlay = 'bust';
-            if (state.gameType === '121' && p.ld >= 9) { p.s = 121 + p.l; p.ld = 0; } 
-            else if (state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; p.ld = 0; }
-            if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
+            if (window.state.gameType === '121' && p.ld >= 9) { p.s = 121 + p.l; p.ld = 0; } 
+            else if (window.state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; p.ld = 0; }
+            if (window.state.mode !== 'single') window.state.turn = (window.state.turn === 0) ? 1 : 0; 
         }
         
-        playDartSound(soundToPlay);
-        numpadVal = "";
-        currentDarts = [];
-        updateDbdDisplay();
+        window.playDartSound(soundToPlay);
+        window.numpadVal = "";
+        window.currentDarts = [];
+        window.updateDbdDisplay();
 
-        render();
-        if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
+        window.render();
+        if (!window.isLocalMatch) { window.broadcast(window.state); window.broadcast({ type: 'SOUND', sound: soundToPlay }); }
     }
 
-    function undo() {
-        if(botTimeout) clearTimeout(botTimeout);
-        numpadVal = ""; currentDarts = []; updateDbdDisplay();
-        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state); }
+    window.undo = function() {
+        if(window.botTimeout) clearTimeout(window.botTimeout);
+        window.numpadVal = ""; window.currentDarts = []; window.updateDbdDisplay();
+        if (window.historyLog) { window.state = JSON.parse(JSON.stringify(window.historyLog)); window.historyLog = null; window.render(); if (!window.isLocalMatch) window.broadcast(window.state); }
     }
 
-    function triggerRematch() {
+    window.triggerRematch = function() {
         let startScore = 501;
-        if (state.gameType === '301') startScore = 301;
-        if (state.gameType === '701') startScore = 701;
-        if (state.gameType === '1001') startScore = 1001;
-        if (state.gameType === '121') startScore = 121;
-        if (state.gameType === 'atc') startScore = 1;
-        if (state.gameType === 'cricket') startScore = 0;
-        if (state.gameType === '170') startScore = 170;
-        if (state.gameType === '170_race') startScore = 170;
+        if (window.state.gameType === '301') startScore = 301;
+        if (window.state.gameType === '701') startScore = 701;
+        if (window.state.gameType === '1001') startScore = 1001;
+        if (window.state.gameType === '121') startScore = 121;
+        if (window.state.gameType === 'atc') startScore = 1;
+        if (window.state.gameType === 'cricket') startScore = 0;
+        if (window.state.gameType === '170') startScore = 170;
+        if (window.state.gameType === '170_race') startScore = 170;
 
-        statsSavedThisMatch = false;
-        state.p.forEach(x => { 
+        window.statsSavedThisMatch = false;
+        window.state.p.forEach(x => { 
             x.target170 = 170;
-            x.s = state.gameType === '170' ? 170 : startScore; 
+            x.s = window.state.gameType === '170' ? 170 : startScore; 
             x.l = 0; x.pts = 0; x.d = 0; x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
             x.coAtt = 0; x.coHit = 0;
             x.marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
         });
-        delete state.winner;
-        history = null;
+        delete window.state.winner;
+        window.historyLog = null;
         document.getElementById('winner-layer').classList.add('hidden');
-        if (!isLocalMatch) broadcast(state);
+        if (!window.isLocalMatch) window.broadcast(window.state);
 
-        if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') { 
-            playDartSound('gameon');
-            if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
-            render(); 
+        if (window.state.mode === 'single' || window.state.gameType === 'atc' || window.state.gameType === '121' || window.state.gameType === '170' || window.state.gameType === 'cricket') { 
+            window.playDartSound('gameon');
+            if (!window.isLocalMatch) window.broadcast({ type: 'SOUND', sound: 'gameon' });
+            window.render(); 
         } 
-        else if (isLocalMatch || myIndex === 0) { showFirstThrowUI(); } 
-        else { render(); }
+        else if (window.isLocalMatch || window.myIndex === 0) { window.showFirstThrowUI(); } 
+        else { window.render(); }
     }
 
-    function render() {
-        state.p.forEach((p, i) => {
+    window.render = function() {
+        window.state.p.forEach((p, i) => {
             const nameEl = document.getElementById(`n-${i}`);
             if (nameEl) nameEl.innerText = p.name;
             
@@ -1884,7 +1929,7 @@
             
             let coStatStr = p.coAtt > 0 ? Math.round((p.coHit / p.coAtt) * 100) + "%" : "0%";
 
-             if (state.gameType === 'atc') {
+             if (window.state.gameType === 'atc') {
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
                 if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d;
                 if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
@@ -1893,22 +1938,22 @@
                 if(document.getElementById(`co-stat-${i}`)) document.getElementById(`co-stat-${i}`).style.display = 'none';
                 if(document.getElementById(`miss-btn-${i}`)) document.getElementById(`miss-btn-${i}`).classList.add('hidden');
             } 
-            else if (state.gameType === 'cricket') {
+            else if (window.state.gameType === 'cricket') {
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
                 if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d;
                 if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s;
                 if(document.getElementById(`co-stat-${i}`)) document.getElementById(`co-stat-${i}`).style.display = 'none';
                 if(document.getElementById(`miss-btn-${i}`)) document.getElementById(`miss-btn-${i}`).classList.add('hidden');
             }
-            else if (state.gameType === '121' || state.gameType === '170') {
+            else if (window.state.gameType === '121' || window.state.gameType === '170') {
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
-                if (state.gameType === '170') { 
-                    if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${state.limit170}`;
+                if (window.state.gameType === '170') { 
+                    if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = `${p.ld} / ${window.state.limit170}`;
                 } else { 
                     if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.ld;
                 }
                 if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s;
-                if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
+                if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = window.checkouts[p.s] || "";
                 if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'block';
                 if(document.getElementById(`l-${i}`)) document.getElementById(`l-${i}`).innerText = p.l; 
                 if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).style.display = 'block';
@@ -1917,7 +1962,7 @@
                 
                 const missBtn = document.getElementById(`miss-btn-${i}`);
                 if (missBtn) {
-                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) {
+                    if(p.s <= 170 && window.checkouts[p.s] && window.state.turn === i) {
                         missBtn.classList.remove('hidden');
                     } else { 
                         missBtn.classList.add('hidden');
@@ -1928,7 +1973,7 @@
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                 if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
                 if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s;
-                if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
+                if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = window.checkouts[p.s] || "";
                 if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'block';
                 if(document.getElementById(`l-${i}`)) document.getElementById(`l-${i}`).innerText = p.l;
                 if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).style.display = 'block';
@@ -1937,7 +1982,7 @@
 
                 const missBtn = document.getElementById(`miss-btn-${i}`);
                 if (missBtn) {
-                    if(p.s <= 170 && checkouts[p.s] && state.turn === i) {
+                    if(p.s <= 170 && window.checkouts[p.s] && window.state.turn === i) {
                         missBtn.classList.remove('hidden');
                     } else { 
                         missBtn.classList.add('hidden');
@@ -1946,14 +1991,14 @@
             }
             
             const cardEl = document.getElementById(`card-${i}`);
-            if (cardEl) cardEl.className = (state.turn === i) ? "player-card active" : "player-card";
+            if (cardEl) cardEl.className = (window.state.turn === i) ? "player-card active" : "player-card";
         });
-        if (!spectateId) {
+        if (!window.spectateId) {
             
-            if (state.gameType === 'atc') {
+            if (window.state.gameType === 'atc') {
                 document.getElementById('cricket-center')?.classList.add('hidden');
                 if (document.getElementById('main-score-area')) {
-                    document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
+                    document.getElementById('main-score-area').style.flexDirection = (window.state.mode === 'single' || window.state.mode === 'local' || window.state.mode === 'bot') ? 'column' : 'row';
                 }
                 [0, 1].forEach(i => {
                     if(document.getElementById(`srow-${i}`)) document.getElementById(`srow-${i}`).style.flexDirection = 'row';
@@ -1963,7 +2008,7 @@
                 if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'grid';
                 if(document.getElementById('cricket-controls')) document.getElementById('cricket-controls').style.display = 'none';
                 
-                let target = state.p[state.turn].s;
+                let target = window.state.p[window.state.turn].s;
                 if (target <= 20) {
                     if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').innerText = "S" + target;
                     if(document.getElementById('atc-d-btn')) {
@@ -1980,29 +2025,28 @@
                     if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').style.visibility = 'hidden'; 
                 }
                 
-                let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
+                let isMyTurn = (window.isLocalMatch || window.state.mode === 'single' || window.state.turn === window.myIndex);
                 ['atc-miss-btn', 'atc-s-btn', 'atc-d-btn', 'atc-t-btn'].forEach(id => {
                     const btn = document.getElementById(id);
                     if (btn) {
                         btn.disabled = !isMyTurn;
-                        
                         btn.style.opacity = isMyTurn ? 1 : 0.5;
                     }
                 });
-            } else if (state.gameType === 'cricket') {
+            } else if (window.state.gameType === 'cricket') {
                 
                 document.getElementById('cricket-center')?.classList.remove('hidden');
                 if(document.getElementById('main-score-area')) document.getElementById('main-score-area').style.flexDirection = 'row';
                 
                 let cricRowsHtml = '';
                 [20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 25].forEach(t => {
-                    let m0 = state.p[0].marks[t] || 0;
-                    let m1 = state.p[1] ? (state.p[1].marks[t] || 0) : 0;
+                    let m0 = window.state.p[0].marks[t] || 0;
+                    let m1 = window.state.p[1] ? (window.state.p[1].marks[t] || 0) : 0;
                     
                     let sym0 = m0 === 0 ? '' : (m0 === 1 ? '╱' : (m0 === 2 ? 'X' : '⊗'));
                     let sym1 = m1 === 0 ? '' : (m1 === 1 ? '╱' : (m1 === 2 ? 'X' : '⊗'));
                     
-                    let isClosed = (state.mode === 'single') ? (m0 >= 3) : (m0 >= 3 && m1 >= 3);
+                    let isClosed = (window.state.mode === 'single') ? (m0 >= 3) : (m0 >= 3 && m1 >= 3);
                     let numClass = isClosed ? 'cric-num closed' : 'cric-num';
                     let label = t === 25 ? 'B' : t;
          
@@ -2010,7 +2054,7 @@
                         <div class="cric-row">
                             <div class="cric-mark">${sym0}</div>
                             <div class="${numClass}">${label}</div>
-                            <div class="cric-mark">${state.mode === 'single' ? '' : sym1}</div>
+                            <div class="cric-mark">${window.state.mode === 'single' ? '' : sym1}</div>
                         </div>
                     `;
                 });
@@ -2032,7 +2076,7 @@
                 if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'none';
                 if(document.getElementById('cricket-controls')) document.getElementById('cricket-controls').style.display = 'block';
 
-                let isMyTurn = (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
+                let isMyTurn = (window.isLocalMatch || window.state.mode === 'single' || window.state.turn === window.myIndex);
                 document.querySelectorAll('.cric-num-btn, .cric-mult, .btn-undo').forEach(btn => {
                     btn.disabled = !isMyTurn;
                     btn.style.opacity = isMyTurn ? 1 : 0.5;
@@ -2041,7 +2085,7 @@
                 
                 document.getElementById('cricket-center')?.classList.add('hidden');
                 if(document.getElementById('main-score-area')) {
-                    document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
+                    document.getElementById('main-score-area').style.flexDirection = (window.state.mode === 'single' || window.state.mode === 'local' || window.state.mode === 'bot') ? 'column' : 'row';
                 }
                 [0, 1].forEach(i => {
                     if(document.getElementById(`srow-${i}`)) {
@@ -2054,7 +2098,8 @@
                 if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'flex';
                 if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'none';
                 if(document.getElementById('cricket-controls')) document.getElementById('cricket-controls').style.display = 'none';
-                if (localInputMode === 'darts') {
+                
+                if (window.localInputMode === 'darts') {
                     if(document.getElementById('total-mode-ui')) document.getElementById('total-mode-ui').style.display = 'none';
                     if(document.getElementById('darts-mode-ui')) document.getElementById('darts-mode-ui').style.display = 'flex';
                     if(document.getElementById('mode-toggle-btn')) document.getElementById('mode-toggle-btn').innerText = 'MODE: DART-BY-DART';
@@ -2062,30 +2107,30 @@
                     if(document.getElementById('total-mode-ui')) document.getElementById('total-mode-ui').style.display = 'flex';
                     if(document.getElementById('darts-mode-ui')) document.getElementById('darts-mode-ui').style.display = 'none';
                     if(document.getElementById('mode-toggle-btn')) document.getElementById('mode-toggle-btn').innerText = 'MODE: TOTAL SCORE';
-                    if(document.getElementById('numpad-display')) document.getElementById('numpad-display').innerText = numpadVal || "0";
+                    if(document.getElementById('numpad-display')) document.getElementById('numpad-display').innerText = window.numpadVal || "0";
                 }
 
-                const isMyTurn = (state.mode === 'bot') ? (state.turn === 0) : (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
+                const isMyTurn = (window.state.mode === 'bot') ? (window.state.turn === 0) : (window.isLocalMatch || window.state.mode === 'single' || window.state.turn === window.myIndex);
                 
                 document.querySelectorAll('.np-btn, .dbd-btn, .cric-mult').forEach(b => b.disabled = !isMyTurn);
                 if(document.getElementById('undo-btn')) document.getElementById('undo-btn').disabled = !isMyTurn;
             }
 
-            if (!isLocalMatch && !document.body.classList.contains('bull-throw') && state.mode !== 'single') {
-                if(document.getElementById('box-me')) document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-                if(document.getElementById('box-peer')) document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+            if (!window.isLocalMatch && !document.body.classList.contains('bull-throw') && window.state.mode !== 'single') {
+                if(document.getElementById('box-me')) document.getElementById('box-me').className = (window.state.turn === window.myIndex) ? "v-box visible" : "v-box";
+                if(document.getElementById('box-peer')) document.getElementById('box-peer').className = (window.state.turn !== window.myIndex) ? "v-box visible" : "v-box";
             }
         } else {
             const camLabel = document.querySelector('#box-peer .cam-label');
-            if (camLabel) camLabel.innerText = state.p[state.turn].name.toUpperCase();
+            if (camLabel) camLabel.innerText = window.state.p[window.state.turn].name.toUpperCase();
         }
 
-        if (spectatorCalls.length > 0) {
-            const activeStream = (state.turn === myIndex || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer')?.srcObject;
+        if (window.spectatorCalls.length > 0) {
+            const activeStream = (window.state.turn === window.myIndex || window.state.mode === 'single' || window.state.mode === 'bot') ? window.stream : document.getElementById('peer')?.srcObject;
             if (activeStream) {
                 const videoTrack = activeStream.getVideoTracks()[0];
                 const audioTrack = activeStream.getAudioTracks()[0];
-                spectatorCalls.forEach(call => {
+                window.spectatorCalls.forEach(call => {
                     if (call.peerConnection) {
                         const senders = call.peerConnection.getSenders();
                         const vSender = senders.find(s => s.track && s.track.kind === 'video');
@@ -2100,15 +2145,15 @@
         }
 
         const winnerLayer = document.getElementById('winner-layer');
-        if (state.winner !== undefined) {
+        if (window.state.winner !== undefined) {
             saveStatsToCloud();
-            const w = state.p[state.winner];
+            const w = window.state.p[window.state.winner];
             if(document.getElementById('winner-name')) document.getElementById('winner-name').innerText = w.name + " WINS!";
             for (let i = 0; i < 2; i++) {
-                let pStats = state.p[i];
+                let pStats = window.state.p[i];
                 if(document.getElementById(`ws-n${i}`)) document.getElementById(`ws-n${i}`).innerText = pStats.name;
                 
-                if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') {
+                if (window.state.gameType === 'atc' || window.state.gameType === '121' || window.state.gameType === '170' || window.state.gameType === 'cricket') {
                     if(document.getElementById('ws-label-avg')) document.getElementById('ws-label-avg').innerText = "AVG (Darts)";
                     if(document.getElementById(`ws-avg${i}`)) document.getElementById(`ws-avg${i}`).innerText = pStats.d;
                     if(document.getElementById(`ws-f9${i}`)) document.getElementById(`ws-f9${i}`).innerText = "-";
@@ -2127,11 +2172,11 @@
             if(winnerLayer) winnerLayer.classList.add('hidden');
         }
 
-        if (state.mode === 'bot' && state.turn === 1 && state.winner === undefined && !botTimeout) {
-            playBotTurn();
-        } else if (state.mode === 'bot' && state.turn === 0 && botTimeout) {
-            clearTimeout(botTimeout);
-            botTimeout = null;
+        if (window.state.mode === 'bot' && window.state.turn === 1 && window.state.winner === undefined && !window.botTimeout) {
+            window.playBotTurn();
+        } else if (window.state.mode === 'bot' && window.state.turn === 0 && window.botTimeout) {
+            clearTimeout(window.botTimeout);
+            window.botTimeout = null;
         }
     }
 
@@ -2139,135 +2184,133 @@
     // 🎯 EXPERIMENTAL AUTO-SCORING ENGINE 🎯
     // ==========================================
 
-    let cvReady = false;
-    let baselineMat = null;
-    let currentMat = null;
-    let diffMat = null;
-    let detectionInterval = null;
+    window.cvReady = false;
+    window.baselineMat = null;
+    window.currentMat = null;
+    window.diffMat = null;
+    window.detectionInterval = null;
     
-    // Auto-scoring Variables
-    let boardCenter = null;
-    let boardD20 = null;
-    let calibrationStep = 0; 
-    let isProcessingDart = false;
+    window.boardCenter = null;
+    window.boardD20 = null;
+    window.calibrationStep = 0; 
+    window.isProcessingDart = false;
     
-    // Auto-Clear Variables
-    let isPlayerInFrame = false;
-    let framesSincePlayerLeft = 0;
+    window.isPlayerInFrame = false;
+    window.framesSincePlayerLeft = 0;
 
     window.onOpenCvReady = function() {
-        cvReady = true;
+        window.cvReady = true;
         console.log("OpenCV Engine Loaded.");
         const calBtn = document.getElementById('calibrate-btn');
         if(calBtn) calBtn.style.display = 'block';
     };
 
-    let calibBanner = document.createElement('div');
-    calibBanner.style.cssText = "position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #00d4ff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: bold; text-align: center; z-index: 30; display: none; pointer-events: none; border: 2px solid #00d4ff; width: 85%; line-height: 1.4;";
-    
-    let dot1 = document.createElement('div');
-    dot1.style.cssText = "position: fixed; width: 16px; height: 16px; background: red; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 9999; display: none; pointer-events: none;";
-    
-    let dot2 = document.createElement('div');
-    dot2.style.cssText = "position: fixed; width: 16px; height: 16px; background: #00d4ff; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 9999; display: none; pointer-events: none;";
-    
     window.addEventListener('load', () => {
-        document.body.appendChild(dot1);
-        document.body.appendChild(dot2);
-        document.getElementById('box-me').appendChild(calibBanner);
-    });
-
-    document.getElementById('calibrate-btn').addEventListener('click', (e) => {
-        if (calibrationStep === 0) {
-            calibrationStep = 1;
-            calibBanner.innerText = "STEP 1: \nTap the EXACT Center of the Bullseye";
-            calibBanner.style.display = 'block';
-            e.target.innerText = "CANCEL SETUP";
-            e.target.style.background = "#ff4d4d";
-            dot1.style.display = 'none';
-            dot2.style.display = 'none';
-            if (document.getElementById('vision-debug')) document.getElementById('vision-debug').style.display = 'none';
-            if (document.getElementById('debug-canvas')) document.getElementById('debug-canvas').style.display = 'none';
-        } else {
-            calibrationStep = 0;
-            e.target.innerText = "CALIBRATE";
-            e.target.style.background = "#222";
-            boardCenter = null;
-            boardD20 = null;
-            calibBanner.style.display = 'none';
-            dot1.style.display = 'none';
-            dot2.style.display = 'none';
-            if (document.getElementById('debug-canvas')) document.getElementById('debug-canvas').style.display = 'none';
-        }
-    });
-
-    document.getElementById('box-me').addEventListener('pointerdown', (e) => {
-        if (calibrationStep === 0) return;
+        window.calibBanner = document.createElement('div');
+        window.calibBanner.style.cssText = "position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #00d4ff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: bold; text-align: center; z-index: 30; display: none; pointer-events: none; border: 2px solid #00d4ff; width: 85%; line-height: 1.4;";
         
-        const video = document.getElementById('me');
-        if (!video || !video.videoWidth) return;
-
-        const clientX = e.clientX;
-        const clientY = e.clientY;
-        const rect = video.getBoundingClientRect();
+        window.dot1 = document.createElement('div');
+        window.dot1.style.cssText = "position: fixed; width: 16px; height: 16px; background: red; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 9999; display: none; pointer-events: none;";
         
-        const videoRatio = video.videoWidth / video.videoHeight;
-        const boxRatio = rect.width / rect.height;
-        let renderWidth = rect.width;
-        let renderHeight = rect.height;
-        let offsetX = 0;
-        let offsetY = 0;
+        window.dot2 = document.createElement('div');
+        window.dot2.style.cssText = "position: fixed; width: 16px; height: 16px; background: #00d4ff; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 9999; display: none; pointer-events: none;";
+        
+        document.body.appendChild(window.dot1);
+        document.body.appendChild(window.dot2);
+        document.getElementById('box-me').appendChild(window.calibBanner);
 
-        if (videoRatio > boxRatio) {
-            renderHeight = rect.width / videoRatio;
-            offsetY = (rect.height - renderHeight) / 2;
-        } else {
-            renderWidth = rect.height * videoRatio;
-            offsetX = (rect.width - renderWidth) / 2;
-        }
-
-        const clickX = clientX - rect.left - offsetX;
-        const clickY = clientY - rect.top - offsetY;
-
-        if (clickX < 0 || clickX > renderWidth || clickY < 0 || clickY > renderHeight) return;
-
-        const trueX = (clickX / renderWidth) * video.videoWidth;
-        const trueY = (clickY / renderHeight) * video.videoHeight;
-
-        if (calibrationStep === 1) {
-            boardCenter = { x: trueX, y: trueY };
-            dot1.style.left = clientX + 'px';
-            dot1.style.top = clientY + 'px';
-            dot1.style.display = 'block';
-            
-            calibrationStep = 2;
-            calibBanner.innerText = "STEP 2: \nTap the VERY TOP outer edge of Double 20";
-            
-        } else if (calibrationStep === 2) {
-            boardD20 = { x: trueX, y: trueY };
-            dot2.style.left = clientX + 'px';
-            dot2.style.top = clientY + 'px';
-            dot2.style.display = 'block';
-            
-            calibrationStep = 0;
-            let btn = document.getElementById('calibrate-btn');
-            btn.innerText = "CALIBRATE";
-            btn.style.background = "#222";
-            
-            calibBanner.innerText = "🎯 BOARD MAPPED!\nThrow ONE dart at a time!";
-            setTimeout(() => calibBanner.style.display = 'none', 3000);
-            
-            document.getElementById('debug-canvas').style.display = 'block';
-            
-            captureBaseline();
-            if (!detectionInterval) {
-                detectionInterval = setInterval(detectDarts, 1000);
+        document.getElementById('calibrate-btn').addEventListener('click', (e) => {
+            if (window.calibrationStep === 0) {
+                window.calibrationStep = 1;
+                window.calibBanner.innerText = "STEP 1: \nTap the EXACT Center of the Bullseye";
+                window.calibBanner.style.display = 'block';
+                e.target.innerText = "CANCEL SETUP";
+                e.target.style.background = "#ff4d4d";
+                window.dot1.style.display = 'none';
+                window.dot2.style.display = 'none';
+                if (document.getElementById('vision-debug')) document.getElementById('vision-debug').style.display = 'none';
+                if (document.getElementById('debug-canvas')) document.getElementById('debug-canvas').style.display = 'none';
+            } else {
+                window.calibrationStep = 0;
+                e.target.innerText = "CALIBRATE";
+                e.target.style.background = "#222";
+                window.boardCenter = null;
+                window.boardD20 = null;
+                window.calibBanner.style.display = 'none';
+                window.dot1.style.display = 'none';
+                window.dot2.style.display = 'none';
+                if (document.getElementById('debug-canvas')) document.getElementById('debug-canvas').style.display = 'none';
             }
-        }
+        });
+
+        document.getElementById('box-me').addEventListener('pointerdown', (e) => {
+            if (window.calibrationStep === 0) return;
+            
+            const video = document.getElementById('me');
+            if (!video || !video.videoWidth) return;
+
+            const clientX = e.clientX;
+            const clientY = e.clientY;
+            const rect = video.getBoundingClientRect();
+            
+            const videoRatio = video.videoWidth / video.videoHeight;
+            const boxRatio = rect.width / rect.height;
+            let renderWidth = rect.width;
+            let renderHeight = rect.height;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            if (videoRatio > boxRatio) {
+                renderHeight = rect.width / videoRatio;
+                offsetY = (rect.height - renderHeight) / 2;
+            } else {
+                renderWidth = rect.height * videoRatio;
+                offsetX = (rect.width - renderWidth) / 2;
+            }
+
+            const clickX = clientX - rect.left - offsetX;
+            const clickY = clientY - rect.top - offsetY;
+
+            if (clickX < 0 || clickX > renderWidth || clickY < 0 || clickY > renderHeight) return;
+
+            const trueX = (clickX / renderWidth) * video.videoWidth;
+            const trueY = (clickY / renderHeight) * video.videoHeight;
+
+            if (window.calibrationStep === 1) {
+                window.boardCenter = { x: trueX, y: trueY };
+                window.dot1.style.left = clientX + 'px';
+                window.dot1.style.top = clientY + 'px';
+                window.dot1.style.display = 'block';
+                
+                window.calibrationStep = 2;
+                window.calibBanner.innerText = "STEP 2: \nTap the VERY TOP outer edge of Double 20";
+                
+            } else if (window.calibrationStep === 2) {
+                window.boardD20 = { x: trueX, y: trueY };
+                window.dot2.style.left = clientX + 'px';
+                window.dot2.style.top = clientY + 'px';
+                window.dot2.style.display = 'block';
+                
+                window.calibrationStep = 0;
+                let btn = document.getElementById('calibrate-btn');
+                btn.innerText = "CALIBRATE";
+                btn.style.background = "#222";
+                
+                window.calibBanner.innerText = "🎯 BOARD MAPPED!\nThrow ONE dart at a time!";
+                setTimeout(() => window.calibBanner.style.display = 'none', 3000);
+                
+                document.getElementById('debug-canvas').style.display = 'block';
+                
+                window.captureBaseline();
+                if (!window.detectionInterval) {
+                    window.detectionInterval = setInterval(window.detectDarts, 1000);
+                }
+            }
+        });
     });
 
-    function captureBaseline() {
-        if (!cvReady) return;
+    window.captureBaseline = function() {
+        if (!window.cvReady) return;
         const video = document.getElementById('me');
         if (!video || !video.videoWidth) return;
 
@@ -2277,20 +2320,20 @@
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        if (baselineMat) baselineMat.delete();
-        baselineMat = cv.imread(canvas);
+        if (window.baselineMat) window.baselineMat.delete();
+        window.baselineMat = cv.imread(canvas);
         
-        cv.cvtColor(baselineMat, baselineMat, cv.COLOR_RGBA2GRAY, 0);
+        cv.cvtColor(window.baselineMat, window.baselineMat, cv.COLOR_RGBA2GRAY, 0);
         
         let ksize = new cv.Size(15, 15);
-        cv.GaussianBlur(baselineMat, baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
+        cv.GaussianBlur(window.baselineMat, window.baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
         
-        if (!currentMat) currentMat = new cv.Mat();
-        if (!diffMat) diffMat = new cv.Mat();
+        if (!window.currentMat) window.currentMat = new cv.Mat();
+        if (!window.diffMat) window.diffMat = new cv.Mat();
     }
 
-    function detectDarts() {
-        if (!baselineMat || !cvReady || isProcessingDart) return;
+    window.detectDarts = function() {
+        if (!window.baselineMat || !window.cvReady || window.isProcessingDart) return;
         
         const video = document.getElementById('me');
         if (video.paused || video.ended) return;
@@ -2310,15 +2353,15 @@
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         let tempMat = cv.imread(canvas);
-        cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
+        cv.cvtColor(tempMat, window.currentMat, cv.COLOR_RGBA2GRAY, 0);
         
         let ksize = new cv.Size(15, 15);
-        cv.GaussianBlur(currentMat, currentMat, ksize, 0, 0, cv.BORDER_DEFAULT);
+        cv.GaussianBlur(window.currentMat, window.currentMat, ksize, 0, 0, cv.BORDER_DEFAULT);
 
-        cv.absdiff(baselineMat, currentMat, diffMat);
+        cv.absdiff(window.baselineMat, window.currentMat, window.diffMat);
         
         let threshMat = new cv.Mat();
-        cv.threshold(diffMat, threshMat, 25, 255, cv.THRESH_BINARY);
+        cv.threshold(window.diffMat, threshMat, 25, 255, cv.THRESH_BINARY);
 
         let M = cv.Mat.ones(7, 7, cv.CV_8U);
         cv.dilate(threshMat, threshMat, M); 
@@ -2344,27 +2387,27 @@
             let area = cv.contourArea(contour);
             if (area > maxArea) {
                 maxArea = area;
-                if (area > 20 && area < (totalPixels * 0.25)) { 
+                if (area > 20 && area < (totalPixels * 0.15)) { 
                     bestContourRect = cv.boundingRect(contour);
                 }
             }
         }
 
-        if (maxArea >= (totalPixels * 0.25)) { 
-            isPlayerInFrame = true;
-            framesSincePlayerLeft = 0;
+        if (maxArea >= (totalPixels * 0.15)) { 
+            window.isPlayerInFrame = true;
+            window.framesSincePlayerLeft = 0;
             debugLabel.innerText = "🚶 PLAYER DETECTED - PAUSED";
             debugLabel.style.display = 'block';
             debugLabel.style.background = "rgba(255, 165, 0, 0.9)";
         } 
-        else if (isPlayerInFrame) {
-            framesSincePlayerLeft++;
-            if (framesSincePlayerLeft >= 2) {
-                isPlayerInFrame = false;
-                captureBaseline(); 
+        else if (window.isPlayerInFrame) {
+            window.framesSincePlayerLeft++;
+            if (window.framesSincePlayerLeft >= 2) {
+                window.isPlayerInFrame = false;
+                window.captureBaseline(); 
                 debugLabel.innerText = "✅ BOARD CLEARED";
                 debugLabel.style.background = "rgba(76, 175, 80, 0.9)"; 
-                setTimeout(() => { if (!isPlayerInFrame && !isProcessingDart) debugLabel.style.display = 'none'; }, 2000);
+                setTimeout(() => { if (!window.isPlayerInFrame && !window.isProcessingDart) debugLabel.style.display = 'none'; }, 2000);
             }
         } 
         else {
@@ -2381,16 +2424,16 @@
                 cv.circle(debugMat, new cv.Point(detectedX, detectedY), 5, [0, 255, 0, 255], -1);
             }
 
-            if (dartDetected && boardCenter && boardD20) {
-                isProcessingDart = true; 
+            if (dartDetected && window.boardCenter && window.boardD20) {
+                window.isProcessingDart = true; 
 
                 try {
-                    let radius_max = Math.hypot(boardD20.x - boardCenter.x, boardD20.y - boardCenter.y);
-                    let dart_dist = Math.hypot(detectedX - boardCenter.x, detectedY - boardCenter.y);
+                    let radius_max = Math.hypot(window.boardD20.x - window.boardCenter.x, window.boardD20.y - window.boardCenter.y);
+                    let dart_dist = Math.hypot(detectedX - window.boardCenter.x, detectedY - window.boardCenter.y);
                     let perc = dart_dist / radius_max;
                     
-                    let base_angle = Math.atan2(boardD20.y - boardCenter.y, boardD20.x - boardCenter.x);
-                    let dart_angle = Math.atan2(detectedY - boardCenter.y, detectedX - boardCenter.x);
+                    let base_angle = Math.atan2(window.boardD20.y - window.boardCenter.y, window.boardD20.x - window.boardCenter.x);
+                    let dart_angle = Math.atan2(detectedY - window.boardCenter.y, detectedX - window.boardCenter.x);
                     let diff_angle = dart_angle - base_angle;
                     
                     while (diff_angle < 0) diff_angle += 2 * Math.PI;
@@ -2398,28 +2441,29 @@
                     
                     let deg = diff_angle * (180 / Math.PI);
                     deg = (deg + 9) % 360; 
-                    let segment_index = Math.floor(deg / 18);
+                    let segment_index = Math.floor(deg / 18) % 20;
                     
                     const segments = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
                     let hit_number = segments[segment_index];
                     
                     let finalScore = 0;
                     let label = "";
+                    let multiplier = 1;
                     
                     if (perc <= 0.04) { 
-                        finalScore = 50; label = "DB"; 
+                        finalScore = 50; label = "DB"; hit_number = 25; multiplier = 2;
                     } else if (perc <= 0.09) {
-                        finalScore = 25; label = "BULL"; 
+                        finalScore = 25; label = "BULL"; hit_number = 25; multiplier = 1;
                     } else if (perc > 1.05) { 
-                        finalScore = 0; label = "MISS"; 
+                        finalScore = 0; label = "MISS"; hit_number = 0; multiplier = 1;
                     } else {
                         finalScore = hit_number;
                         if (perc >= 0.48 && perc <= 0.62) { 
-                            finalScore *= 3; label = "T" + hit_number; 
+                            finalScore *= 3; label = "T" + hit_number; multiplier = 3;
                         } else if (perc >= 0.88 && perc <= 1.05) { 
-                            finalScore *= 2; label = "D" + hit_number; 
+                            finalScore *= 2; label = "D" + hit_number; multiplier = 2;
                         } else {
-                            label = hit_number.toString(); 
+                            label = hit_number.toString(); multiplier = 1;
                         }
                     }
 
@@ -2428,20 +2472,34 @@
 
                     document.getElementById('me').style.border = "5px solid #4caf50";
 
-                    // FORCE THE SCORE INTO THE APP
-                    processHit(finalScore);
+                    // FORCE THE APP INTO DART-BY-DART MODE AND RECORD THE HIT
+                    if (window.state.gameType !== 'atc' && window.state.gameType !== 'cricket') {
+                        window.localInputMode = 'darts';
+                        window.render();
+                        window.setDbdMult(multiplier);
+                        window.hitDbd(hit_number);
+                        
+                        if (window.currentDarts.length >= 3) {
+                            setTimeout(() => { window.dbdEnter(); }, 1500);
+                        }
+                    } else if (window.state.gameType === 'atc') {
+                        window.processAtcDart(multiplier);
+                    } else if (window.state.gameType === 'cricket') {
+                        window.setCricMult(multiplier);
+                        window.hitCricket(hit_number);
+                    }
 
                     setTimeout(() => {
-                        if (!isPlayerInFrame) captureBaseline();
+                        if (!window.isPlayerInFrame) window.captureBaseline();
                         debugLabel.style.display = 'none';
                         document.getElementById('me').style.border = "none";
-                        isProcessingDart = false;
+                        window.isProcessingDart = false;
                     }, 3500);
 
                 } catch (err) {
                     debugLabel.innerText = `⚠️ SCORE ERROR: ${err.message}`;
                     debugLabel.style.background = "rgba(255,0,0,0.9)";
-                    isProcessingDart = false; 
+                    window.isProcessingDart = false; 
                 }
             }
         }
