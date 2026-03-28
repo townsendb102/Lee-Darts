@@ -1068,7 +1068,29 @@
 
     // --- APP STARTUP & EVENT LISTENERS ---
     window.addEventListener('load', () => {
-        // ... ALL UI bindings
+        const qBtn = document.getElementById('quit-btn');
+        if (qBtn) {
+            qBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                    window.location.href = window.location.pathname;
+                }
+            });
+        }
+
+        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.innerText = "Clearing Cache & Updating...";
+                btn.style.color = "#4caf50";
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) { registration.unregister(); }
+                    });
+                }
+                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+            });
+        });
+
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
 
@@ -1154,179 +1176,7 @@
         if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
     });
 
-
     // --- ALL GAME LOGIC ---
-
-    async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
-        if (!peerConnection) return;
-        try {
-            const senders = peerConnection.getSenders();
-            const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
-            if (!videoSender || !videoSender.getParameters) return;
-            const parameters = videoSender.getParameters();
-            if (!parameters.encodings || parameters.encodings.length === 0) { parameters.encodings = [{}]; }
-            parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
-            await videoSender.setParameters(parameters);
-        } catch (e) {}
-    }
-
-    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
-
-    function unlockAudio() {
-        const peerVideo = document.getElementById('peer');
-        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
-        
-        const meVideo = document.getElementById('me');
-        if (meVideo && meVideo.paused && meVideo.srcObject) { meVideo.play().catch(e => {}); }
-
-        const dartAudio = document.getElementById('dart-audio');
-        if (dartAudio && dartAudio.src === "") {
-            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-            dartAudio.play().catch(e => {});
-        }
-    }
-
-    function createDummyStream() {
-        try {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1; canvas.height = 1;
-            return canvas.captureStream(1); 
-        } catch (e) { 
-            return null;
-        }
-    }
-
-    window.np = function(val) {
-        if(val === 'C') { numpadVal = ""; }
-        else if(val === 'E') {
-            let v = numpadVal === "" ? 0 : parseInt(numpadVal);
-            if(!isNaN(v)) processHit(v);
-        }
-        else {
-            if(numpadVal.length < 3) numpadVal += val;
-        }
-        let display = document.getElementById('numpad-display');
-        if(display) display.innerText = numpadVal || "0";
-    }
-
-    window.setDbdMult = function(m) {
-        dbdMult = m;
-        document.getElementById('dbd-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
-        document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
-        document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
-    };
-
-    window.hitDbd = function(val) {
-        if(currentDarts.length >= 3) return;
-        let label = "";
-        let pts = 0;
-        
-        if (val === 0) { label = "MISS"; pts = 0; dbdMult = 1; } 
-        else if (val === 25) {
-            if (dbdMult === 3) { alert("Cannot hit Treble Bull."); return; }
-            label = dbdMult === 2 ? "DB" : "B";
-            pts = val * dbdMult;
-        } else {
-            label = (dbdMult === 3 ? "T" : dbdMult === 2 ? "D" : "") + val;
-            pts = val * dbdMult;
-        }
-        
-        currentDarts.push({ val: val, mult: val===0?1:dbdMult, pts: pts, label: label });
-        setDbdMult(1);
-        updateDbdDisplay();
-    };
-
-    window.dbdDel = function() {
-        if(currentDarts.length > 0) { currentDarts.pop(); updateDbdDisplay(); }
-    };
-
-    window.updateDbdDisplay = function() {
-        for(let i=0; i<3; i++) {
-            let slot = document.getElementById(`dbd-slot-${i+1}`);
-            if(currentDarts[i]) { slot.innerText = currentDarts[i].label; } 
-            else { slot.innerText = "-"; }
-        }
-    };
-
-    window.dbdEnter = function() {
-        if(currentDarts.length === 0) return;
-        processHit(null, currentDarts);
-    };
-
-    window.logMissedDouble = function(pIndex) {
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
-        state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
-        render();
-        if (!isLocalMatch) broadcast(state);
-    }
-
-    function playBotTurn() {
-        if(state.winner !== undefined || state.turn !== 1 || state.mode !== 'bot') return;
-        let level = state.botLevel || 5;
-        let targetAvg = 25 + (level * 10);
-        let p = state.p[1];
-        let s = p.s;
-        let val = 0;
-
-        if (s > 170 || !checkouts[s]) {
-            let variance = 20;
-            val = Math.floor(targetAvg + (Math.random() * variance * 2) - variance);
-            val = Math.max(0, Math.min(180, val));
-            if (s - val <= 1 && s - val !== 0) val = s - 2;
-        } else {
-            let hitChance = level * 0.08;
-            if (Math.random() < hitChance) { val = s; } 
-            else {
-                val = Math.floor(s / 2);
-                if (val % 2 !== 0) val -= 1;
-                if (val < 0) val = 0;
-            }
-        }
-
-        document.getElementById('numpad-display').innerText = val;
-        botTimeout = setTimeout(() => {
-            document.getElementById('numpad-display').innerText = "0";
-            processHit(val);
-        }, 1500);
-    }
-
-    function toggleBullPhase(isActive) {
-        if (isActive) { document.body.classList.add('bull-throw'); } 
-        else { document.body.classList.remove('bull-throw'); }
-    }
-
-    window.showFtStep2 = function(mode) {
-        document.getElementById('ft-step-1').classList.add('hidden');
-        document.getElementById('ft-step-2').classList.remove('hidden');
-        document.getElementById('ft-p1-btn').innerText = state.p[0].name;
-        document.getElementById('ft-p2-btn').innerText = state.p[1].name;
-        if (mode === 'bull') { document.getElementById('ft-title').innerText = "Who was closest to Bull?"; } 
-        else { document.getElementById('ft-title').innerText = "Who throws first?"; }
-    };
-
-    window.setFirstPlayer = function(playerIndex) {
-        state.startingPlayer = playerIndex;
-        state.turn = playerIndex;
-        document.getElementById('first-throw-layer').classList.add('hidden');
-        
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
-            toggleBullPhase(false);
-            broadcast({ type: 'BULL_PHASE', active: false });
-        }
-        
-        playDartSound('gameon');
-        if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
-
-        render();
-        if (!isLocalMatch) broadcast(state);
-    };
-
-    function showFirstThrowUI() {
-        document.getElementById('first-throw-layer').classList.remove('hidden');
-        document.getElementById('ft-step-1').classList.remove('hidden');
-        document.getElementById('ft-step-2').classList.add('hidden');
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') { toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true }); }
-    }
 
     async function initApp() {
         requestWakeLock();
@@ -1511,6 +1361,179 @@
             log.innerText = "Camera/Mic error. (" + e.message + ")";
             startBtn.disabled = false;
         }
+    }
+
+    async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
+        if (!peerConnection) return;
+        try {
+            const senders = peerConnection.getSenders();
+            const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
+            if (!videoSender || !videoSender.getParameters) return;
+            const parameters = videoSender.getParameters();
+            if (!parameters.encodings || parameters.encodings.length === 0) { parameters.encodings = [{}]; }
+            parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
+            await videoSender.setParameters(parameters);
+        } catch (e) {}
+    }
+
+    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
+
+    function unlockAudio() {
+        const peerVideo = document.getElementById('peer');
+        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
+        
+        const meVideo = document.getElementById('me');
+        if (meVideo && meVideo.paused && meVideo.srcObject) { meVideo.play().catch(e => {}); }
+
+        const dartAudio = document.getElementById('dart-audio');
+        if (dartAudio && dartAudio.src === "") {
+            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            dartAudio.play().catch(e => {});
+        }
+    }
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+
+    function createDummyStream() {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1; canvas.height = 1;
+            return canvas.captureStream(1); 
+        } catch (e) { 
+            return null;
+        }
+    }
+
+    window.np = function(val) {
+        if(val === 'C') { numpadVal = ""; }
+        else if(val === 'E') {
+            let v = numpadVal === "" ? 0 : parseInt(numpadVal);
+            if(!isNaN(v)) processHit(v);
+        }
+        else {
+            if(numpadVal.length < 3) numpadVal += val;
+        }
+        let display = document.getElementById('numpad-display');
+        if(display) display.innerText = numpadVal || "0";
+    }
+
+    window.setDbdMult = function(m) {
+        dbdMult = m;
+        document.getElementById('dbd-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
+    };
+
+    window.hitDbd = function(val) {
+        if(currentDarts.length >= 3) return;
+        let label = "";
+        let pts = 0;
+        
+        if (val === 0) { label = "MISS"; pts = 0; dbdMult = 1; } 
+        else if (val === 25) {
+            if (dbdMult === 3) { alert("Cannot hit Treble Bull."); return; }
+            label = dbdMult === 2 ? "DB" : "B";
+            pts = val * dbdMult;
+        } else {
+            label = (dbdMult === 3 ? "T" : dbdMult === 2 ? "D" : "") + val;
+            pts = val * dbdMult;
+        }
+        
+        currentDarts.push({ val: val, mult: val===0?1:dbdMult, pts: pts, label: label });
+        setDbdMult(1);
+        updateDbdDisplay();
+    };
+
+    window.dbdDel = function() {
+        if(currentDarts.length > 0) { currentDarts.pop(); updateDbdDisplay(); }
+    };
+
+    window.updateDbdDisplay = function() {
+        for(let i=0; i<3; i++) {
+            let slot = document.getElementById(`dbd-slot-${i+1}`);
+            if(currentDarts[i]) { slot.innerText = currentDarts[i].label; } 
+            else { slot.innerText = "-"; }
+        }
+    };
+
+    window.dbdEnter = function() {
+        if(currentDarts.length === 0) return;
+        processHit(null, currentDarts);
+    };
+
+    window.logMissedDouble = function(pIndex) {
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
+        state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
+        render();
+        if (!isLocalMatch) broadcast(state);
+    }
+
+    function playBotTurn() {
+        if(state.winner !== undefined || state.turn !== 1 || state.mode !== 'bot') return;
+        let level = state.botLevel || 5;
+        let targetAvg = 25 + (level * 10);
+        let p = state.p[1];
+        let s = p.s;
+        let val = 0;
+
+        if (s > 170 || !checkouts[s]) {
+            let variance = 20;
+            val = Math.floor(targetAvg + (Math.random() * variance * 2) - variance);
+            val = Math.max(0, Math.min(180, val));
+            if (s - val <= 1 && s - val !== 0) val = s - 2;
+        } else {
+            let hitChance = level * 0.08;
+            if (Math.random() < hitChance) { val = s; } 
+            else {
+                val = Math.floor(s / 2);
+                if (val % 2 !== 0) val -= 1;
+                if (val < 0) val = 0;
+            }
+        }
+
+        document.getElementById('numpad-display').innerText = val;
+        botTimeout = setTimeout(() => {
+            document.getElementById('numpad-display').innerText = "0";
+            processHit(val);
+        }, 1500);
+    }
+
+    function toggleBullPhase(isActive) {
+        if (isActive) { document.body.classList.add('bull-throw'); } 
+        else { document.body.classList.remove('bull-throw'); }
+    }
+
+    window.showFtStep2 = function(mode) {
+        document.getElementById('ft-step-1').classList.add('hidden');
+        document.getElementById('ft-step-2').classList.remove('hidden');
+        document.getElementById('ft-p1-btn').innerText = state.p[0].name;
+        document.getElementById('ft-p2-btn').innerText = state.p[1].name;
+        if (mode === 'bull') { document.getElementById('ft-title').innerText = "Who was closest to Bull?"; } 
+        else { document.getElementById('ft-title').innerText = "Who throws first?"; }
+    };
+
+    window.setFirstPlayer = function(playerIndex) {
+        state.startingPlayer = playerIndex;
+        state.turn = playerIndex;
+        document.getElementById('first-throw-layer').classList.add('hidden');
+        
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
+            toggleBullPhase(false);
+            broadcast({ type: 'BULL_PHASE', active: false });
+        }
+        
+        playDartSound('gameon');
+        if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
+
+        render();
+        if (!isLocalMatch) broadcast(state);
+    };
+
+    function showFirstThrowUI() {
+        document.getElementById('first-throw-layer').classList.remove('hidden');
+        document.getElementById('ft-step-1').classList.remove('hidden');
+        document.getElementById('ft-step-2').classList.add('hidden');
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') { toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true }); }
     }
 
     function attachPeerVideo(s) {
