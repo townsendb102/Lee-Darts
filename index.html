@@ -2292,7 +2292,7 @@
     let diffMat = null;
     let detectionInterval = null;
     
-    // Auto-scoring Variables
+    // Auto-scoring Map Variables
     let boardCenter = null;
     let boardD20 = null;
     let calibrationStep = 0; 
@@ -2430,7 +2430,8 @@
         
         cv.cvtColor(baselineMat, baselineMat, cv.COLOR_RGBA2GRAY, 0);
         
-        let ksize = new cv.Size(21, 21);
+        // FIXED BLUR: Tiny 5x5 blur to remove static, but preserve thin darts!
+        let ksize = new cv.Size(5, 5);
         cv.GaussianBlur(baselineMat, baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
         
         if (!currentMat) currentMat = new cv.Mat();
@@ -2461,17 +2462,19 @@
         let tempMat = cv.imread(canvas);
         cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
         
-        let ksize = new cv.Size(21, 21);
+        // MATCHING FIXED BLUR
+        let ksize = new cv.Size(5, 5);
         cv.GaussianBlur(currentMat, currentMat, ksize, 0, 0, cv.BORDER_DEFAULT);
 
         cv.absdiff(baselineMat, currentMat, diffMat);
         
         let threshMat = new cv.Mat();
-        cv.threshold(diffMat, threshMat, 45, 255, cv.THRESH_BINARY);
+        // HIGH SENSITIVITY: 25 catches almost any change in pixels
+        cv.threshold(diffMat, threshMat, 25, 255, cv.THRESH_BINARY);
 
-        let M = cv.Mat.ones(9, 9, cv.CV_8U);
+        // FAT DILATION: Take the thin dart pixels and pump them up into huge white blobs
+        let M = cv.Mat.ones(7, 7, cv.CV_8U);
         cv.dilate(threshMat, threshMat, M); 
-        cv.erode(threshMat, threshMat, M);  
         M.delete();
 
         let debugMat = new cv.Mat();
@@ -2492,35 +2495,34 @@
             let area = cv.contourArea(contour);
             if (area > maxArea) {
                 maxArea = area;
-                if (area > 15 && area < 35000) { 
+                // EXTREME LIMITS: Anything larger than 100 pixels but smaller than 35,000
+                if (area > 100 && area < 35000) { 
                     bestContourRect = cv.boundingRect(contour);
                 }
             }
         }
 
-        // --- NEW: AUTO-CLEAR LOGIC ---
-        // If a massive object (> 35,000 pixels) blocks the board, it's a person pulling darts!
+        // --- AUTO-CLEAR LOGIC ---
         if (maxArea >= 35000) { 
             isPlayerInFrame = true;
             framesSincePlayerLeft = 0;
             debugLabel.innerText = "🚶 PLAYER DETECTED - PAUSED";
             debugLabel.style.display = 'block';
-            debugLabel.style.background = "rgba(255, 165, 0, 0.9)"; // Orange warning
+            debugLabel.style.background = "rgba(255, 165, 0, 0.9)";
         } 
         else if (isPlayerInFrame) {
-            // The player left the frame, wait 2 seconds to make sure they are gone
             framesSincePlayerLeft++;
             if (framesSincePlayerLeft >= 2) {
                 isPlayerInFrame = false;
-                captureBaseline(); // 📸 SNAP A FRESH EMPTY BOARD
+                captureBaseline(); 
                 debugLabel.innerText = "✅ BOARD CLEARED";
-                debugLabel.style.background = "rgba(76, 175, 80, 0.9)"; // Green confirmation
+                debugLabel.style.background = "rgba(76, 175, 80, 0.9)"; 
                 setTimeout(() => { if (!isPlayerInFrame && !isProcessingDart) debugLabel.style.display = 'none'; }, 2000);
             }
         } 
         else {
-            // NORMAL DART DETECTION (Player is not in frame)
-            debugLabel.style.background = "rgba(255, 0, 0, 0.8)"; // Red background for standard dart hits
+            // NORMAL DART DETECTION
+            debugLabel.style.background = "rgba(255, 0, 0, 0.8)"; 
             
             if (bestContourRect) {
                 detectedX = bestContourRect.x + (bestContourRect.width / 2);
@@ -2563,46 +2565,4 @@
                     } else if (perc <= 0.08) {
                         finalScore = 25; label = "BULL"; 
                     } else if (perc > 1.05) { 
-                        finalScore = 0; label = "MISS"; 
-                    } else {
-                        finalScore = hit_number;
-                        if (perc >= 0.48 && perc <= 0.62) { 
-                            finalScore *= 3; label = "T" + hit_number; 
-                        } else if (perc >= 0.88 && perc <= 1.05) { 
-                            finalScore *= 2; label = "D" + hit_number; 
-                        } else {
-                            label = hit_number.toString(); 
-                        }
-                    }
-
-                    debugLabel.innerText = `🎯 HIT: ${label} (${finalScore})`;
-                    debugLabel.style.display = 'block';
-
-                    document.getElementById('me').style.border = "5px solid #4caf50";
-
-                    processHit(finalScore);
-
-                    setTimeout(() => {
-                        if (!isPlayerInFrame) captureBaseline();
-                        debugLabel.style.display = 'none';
-                        document.getElementById('me').style.border = "none";
-                        isProcessingDart = false;
-                    }, 3500);
-
-                } catch (err) {
-                    console.log("Scoring error:", err);
-                    isProcessingDart = false; 
-                }
-            }
-        }
-
-        cv.imshow('debug-canvas', debugMat);
-        debugMat.delete();
-        tempMat.delete();
-        threshMat.delete();
-        contours.delete();
-        hierarchy.delete();
-    }
-</script>
-</body>
-</html>
+                        finalScore = 0; label = "MISS
