@@ -135,9 +135,42 @@
 
         .btn-update { background: transparent; border: none; color: #888; font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
 
-        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 10px 10px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; background: #000; }
-        .header-controls { display: flex; gap: 5px; align-items: center; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;}
+        /* --- UPDATED SCROLLABLE HEADER CSS --- */
+        header { 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: env(safe-area-inset-top) 10px 10px 10px 10px; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            font-size: 11px; background: #000; 
+            overflow: hidden; 
+        }
+        
+        /* Fixes the long ID from wrapping and breaking the layout */
+        header > div:first-child {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 0;
+            max-width: 30%; 
+            margin-right: 10px;
+        }
+        
+        /* Turns the buttons into a swipeable horizontal row */
+        .header-controls { 
+            display: flex; gap: 6px; align-items: center; 
+            overflow-x: auto; 
+            scrollbar-width: none; /* Hides scrollbar in Firefox */
+            -ms-overflow-style: none; /* Hides scrollbar in IE/Edge */
+        }
+        .header-controls::-webkit-scrollbar { display: none; /* Hides scrollbar in Chrome/Safari */ }
+        
+        /* Stops buttons from squishing and makes them slightly easier to tap */
+        .header-btn { 
+            background: #222; border: 1px solid #444; color: white; 
+            padding: 6px 10px; border-radius: 4px; font-size: 9px; cursor: pointer;
+            flex-shrink: 0; 
+            white-space: nowrap; 
+        }
+        /* ------------------------------------- */
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
         .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
@@ -2316,12 +2349,23 @@
         if (!diffMat) diffMat = new cv.Mat();
     }
 
-    // 3. The Detection Loop
+    // 3. The Detection Loop (Updated with visual feedback!)
     function detectDarts() {
         if (!baselineMat || !cvReady) return;
         
         const video = document.getElementById('me');
         if (video.paused || video.ended) return;
+
+        // --- Create our on-screen debugger if it doesn't exist yet ---
+        let debugLabel = document.getElementById('vision-debug');
+        if (!debugLabel) {
+            debugLabel = document.createElement('div');
+            debugLabel.id = 'vision-debug';
+            // Styling it exactly like your "YOU" camera label, but red and lower down
+            debugLabel.style.cssText = "position: absolute; top: 40px; left: 12px; background: rgba(255,0,0,0.8); color: white; padding: 4px 12px; font-size: 11px; border-radius: 20px; font-weight: bold; z-index: 10; display: none;";
+            document.getElementById('box-me').appendChild(debugLabel);
+        }
+        // -------------------------------------------------------------
 
         const canvas = document.getElementById('current-canvas');
         canvas.width = video.videoWidth;
@@ -2348,6 +2392,8 @@
         cv.findContours(threshMat, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROCH_SIMPLE);
 
         let dartDetected = false;
+        let detectedX = 0;
+        let detectedY = 0;
 
         // Loop through everything the camera thinks is new
         for (let i = 0; i < contours.size(); ++i) {
@@ -2358,19 +2404,22 @@
             if (area > 50 && area < 3000) { 
                 let rect = cv.boundingRect(contour);
                 // The tip of the dart is usually the lowest Y point of the object
-                let tipX = rect.x + (rect.width / 2);
-                let tipY = rect.y + rect.height; 
+                detectedX = rect.x + (rect.width / 2);
+                detectedY = rect.y + rect.height; 
 
-                console.log(`Dart detected at pixel coordinates: X:${tipX}, Y:${tipY}`);
+                console.log(`Dart detected at pixel coordinates: X:${detectedX}, Y:${detectedY}`);
                 dartDetected = true;
             }
         }
 
+        // --- Update the on-screen label based on what it sees ---
         if (dartDetected) {
-            console.log("Waiting for darts to settle...");
-            // Optionally, update baseline here so we don't count this dart twice
-            // captureBaseline(); 
+            debugLabel.innerText = `🎯 SEEN AT X:${Math.round(detectedX)} Y:${Math.round(detectedY)}`;
+            debugLabel.style.display = 'block'; // Show the red label
+        } else {
+            debugLabel.style.display = 'none'; // Hide it if the board is empty
         }
+        // --------------------------------------------------------
 
         // Clean up temporary memory
         tempMat.delete();
