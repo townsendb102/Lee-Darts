@@ -2292,11 +2292,15 @@
     let diffMat = null;
     let detectionInterval = null;
     
-    // Auto-scoring Map Variables
+    // Auto-scoring Variables
     let boardCenter = null;
     let boardD20 = null;
-    let calibrationStep = 0; // 0 = none, 1 = wait for bull, 2 = wait for D20
+    let calibrationStep = 0; 
     let isProcessingDart = false;
+    
+    // Auto-Clear Variables
+    let isPlayerInFrame = false;
+    let framesSincePlayerLeft = 0;
 
     // 1. Initialize OpenCV
     window.onOpenCvReady = function() {
@@ -2306,7 +2310,6 @@
         if(calBtn) calBtn.style.display = 'block';
     };
 
-    // 2. Setting up the on-screen UI for the Tap-To-Map
     let calibBanner = document.createElement('div');
     calibBanner.style.cssText = "position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #00d4ff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: bold; text-align: center; z-index: 30; display: none; pointer-events: none; border: 2px solid #00d4ff; width: 85%; line-height: 1.4;";
     
@@ -2331,12 +2334,8 @@
             e.target.style.background = "#ff4d4d";
             dot1.style.display = 'none';
             dot2.style.display = 'none';
-            if (document.getElementById('vision-debug')) {
-                 document.getElementById('vision-debug').style.display = 'none';
-            }
-            if (document.getElementById('debug-canvas')) {
-                 document.getElementById('debug-canvas').style.display = 'none';
-            }
+            if (document.getElementById('vision-debug')) document.getElementById('vision-debug').style.display = 'none';
+            if (document.getElementById('debug-canvas')) document.getElementById('debug-canvas').style.display = 'none';
         } else {
             calibrationStep = 0;
             e.target.innerText = "CALIBRATE";
@@ -2346,25 +2345,20 @@
             calibBanner.style.display = 'none';
             dot1.style.display = 'none';
             dot2.style.display = 'none';
-            if (document.getElementById('debug-canvas')) {
-                 document.getElementById('debug-canvas').style.display = 'none';
-            }
+            if (document.getElementById('debug-canvas')) document.getElementById('debug-canvas').style.display = 'none';
         }
     });
 
-    // Use pointerdown to ensure touches register on top of the video
     document.getElementById('box-me').addEventListener('pointerdown', (e) => {
         if (calibrationStep === 0) return;
         
         const video = document.getElementById('me');
         if (!video || !video.videoWidth) return;
 
-        // Where the user tapped on the screen
         const clientX = e.clientX;
         const clientY = e.clientY;
         const rect = video.getBoundingClientRect();
         
-        // Match the tap to the actual video feed resolution
         const videoRatio = video.videoWidth / video.videoHeight;
         const boxRatio = rect.width / rect.height;
         let renderWidth = rect.width;
@@ -2383,7 +2377,6 @@
         const clickX = clientX - rect.left - offsetX;
         const clickY = clientY - rect.top - offsetY;
 
-        // Ignore taps outside the video bounds
         if (clickX < 0 || clickX > renderWidth || clickY < 0 || clickY > renderHeight) return;
 
         const trueX = (clickX / renderWidth) * video.videoWidth;
@@ -2391,8 +2384,6 @@
 
         if (calibrationStep === 1) {
             boardCenter = { x: trueX, y: trueY };
-            
-            // Fixed position dot places exactly under finger
             dot1.style.left = clientX + 'px';
             dot1.style.top = clientY + 'px';
             dot1.style.display = 'block';
@@ -2402,7 +2393,6 @@
             
         } else if (calibrationStep === 2) {
             boardD20 = { x: trueX, y: trueY };
-            
             dot2.style.left = clientX + 'px';
             dot2.style.top = clientY + 'px';
             dot2.style.display = 'block';
@@ -2415,7 +2405,6 @@
             calibBanner.innerText = "🎯 BOARD MAPPED!\nThrow ONE dart at a time!";
             setTimeout(() => calibBanner.style.display = 'none', 3000);
             
-            // Turn on the visual debug canvas
             document.getElementById('debug-canvas').style.display = 'block';
             
             captureBaseline();
@@ -2441,8 +2430,7 @@
         
         cv.cvtColor(baselineMat, baselineMat, cv.COLOR_RGBA2GRAY, 0);
         
-        // REDUCED BLUR: Stop blurring the darts out of existence!
-        let ksize = new cv.Size(11, 11);
+        let ksize = new cv.Size(21, 21);
         cv.GaussianBlur(baselineMat, baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
         
         if (!currentMat) currentMat = new cv.Mat();
@@ -2473,23 +2461,19 @@
         let tempMat = cv.imread(canvas);
         cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
         
-        // MATCHING REDUCED BLUR
-        let ksize = new cv.Size(11, 11);
+        let ksize = new cv.Size(21, 21);
         cv.GaussianBlur(currentMat, currentMat, ksize, 0, 0, cv.BORDER_DEFAULT);
 
         cv.absdiff(baselineMat, currentMat, diffMat);
         
         let threshMat = new cv.Mat();
-        // LOWERED THRESHOLD: More sensitive to darts
-        cv.threshold(diffMat, threshMat, 30, 255, cv.THRESH_BINARY);
+        cv.threshold(diffMat, threshMat, 45, 255, cv.THRESH_BINARY);
 
-        // NEW LOGIC: Massive dilation! Thickens the thin dart shafts into fat, solid blobs.
         let M = cv.Mat.ones(9, 9, cv.CV_8U);
-        cv.dilate(threshMat, threshMat, M); // Fatten
-        cv.erode(threshMat, threshMat, M);  // Smooth
+        cv.dilate(threshMat, threshMat, M); 
+        cv.erode(threshMat, threshMat, M);  
         M.delete();
 
-        // Convert the mask to color so we can draw red targeting boxes on it
         let debugMat = new cv.Mat();
         cv.cvtColor(threshMat, debugMat, cv.COLOR_GRAY2RGB);
 
@@ -2506,98 +2490,114 @@
         for (let i = 0; i < contours.size(); ++i) {
             let contour = contours.get(i);
             let area = cv.contourArea(contour);
-            
-            // WIDENED LIMITS: Catch tiny darts AND high-res blobs
-            if (area > 15 && area < 80000) { 
-                if (area > maxArea) {
-                    maxArea = area;
+            if (area > maxArea) {
+                maxArea = area;
+                if (area > 15 && area < 35000) { 
                     bestContourRect = cv.boundingRect(contour);
                 }
             }
         }
 
-        if (bestContourRect) {
-            detectedX = bestContourRect.x + (bestContourRect.width / 2);
-            detectedY = bestContourRect.y + bestContourRect.height; 
-            dartDetected = true;
+        // --- NEW: AUTO-CLEAR LOGIC ---
+        // If a massive object (> 35,000 pixels) blocks the board, it's a person pulling darts!
+        if (maxArea >= 35000) { 
+            isPlayerInFrame = true;
+            framesSincePlayerLeft = 0;
+            debugLabel.innerText = "🚶 PLAYER DETECTED - PAUSED";
+            debugLabel.style.display = 'block';
+            debugLabel.style.background = "rgba(255, 165, 0, 0.9)"; // Orange warning
+        } 
+        else if (isPlayerInFrame) {
+            // The player left the frame, wait 2 seconds to make sure they are gone
+            framesSincePlayerLeft++;
+            if (framesSincePlayerLeft >= 2) {
+                isPlayerInFrame = false;
+                captureBaseline(); // 📸 SNAP A FRESH EMPTY BOARD
+                debugLabel.innerText = "✅ BOARD CLEARED";
+                debugLabel.style.background = "rgba(76, 175, 80, 0.9)"; // Green confirmation
+                setTimeout(() => { if (!isPlayerInFrame && !isProcessingDart) debugLabel.style.display = 'none'; }, 2000);
+            }
+        } 
+        else {
+            // NORMAL DART DETECTION (Player is not in frame)
+            debugLabel.style.background = "rgba(255, 0, 0, 0.8)"; // Red background for standard dart hits
             
-            // DRAW A RED BOX around what the computer thinks is the dart
-            let pt1 = new cv.Point(bestContourRect.x, bestContourRect.y);
-            let pt2 = new cv.Point(bestContourRect.x + bestContourRect.width, bestContourRect.y + bestContourRect.height);
-            cv.rectangle(debugMat, pt1, pt2, [255, 0, 0, 255], 3);
-            // Draw a green dot exactly at the calculated tip
-            cv.circle(debugMat, new cv.Point(detectedX, detectedY), 5, [0, 255, 0, 255], -1);
-        }
+            if (bestContourRect) {
+                detectedX = bestContourRect.x + (bestContourRect.width / 2);
+                detectedY = bestContourRect.y + bestContourRect.height; 
+                dartDetected = true;
+                
+                let pt1 = new cv.Point(bestContourRect.x, bestContourRect.y);
+                let pt2 = new cv.Point(bestContourRect.x + bestContourRect.width, bestContourRect.y + bestContourRect.height);
+                cv.rectangle(debugMat, pt1, pt2, [255, 0, 0, 255], 3);
+                cv.circle(debugMat, new cv.Point(detectedX, detectedY), 5, [0, 255, 0, 255], -1);
+            }
 
-        // SHOW THE TERMINATOR VISION with red targeting lines
-        cv.imshow('debug-canvas', debugMat);
-        debugMat.delete();
+            if (dartDetected && boardCenter && boardD20) {
+                isProcessingDart = true; 
 
-        // TRIGONOMETRY ENGINE
-        if (dartDetected && boardCenter && boardD20) {
-            isProcessingDart = true; 
-
-            try {
-                let radius_max = Math.hypot(boardD20.x - boardCenter.x, boardD20.y - boardCenter.y);
-                let dart_dist = Math.hypot(detectedX - boardCenter.x, detectedY - boardCenter.y);
-                let perc = dart_dist / radius_max;
-                
-                let base_angle = Math.atan2(boardD20.y - boardCenter.y, boardD20.x - boardCenter.x);
-                let dart_angle = Math.atan2(detectedY - boardCenter.y, detectedX - boardCenter.x);
-                let diff_angle = dart_angle - base_angle;
-                
-                while (diff_angle < 0) diff_angle += 2 * Math.PI;
-                while (diff_angle >= 2 * Math.PI) diff_angle -= 2 * Math.PI;
-                
-                let deg = diff_angle * (180 / Math.PI);
-                deg = (deg + 9) % 360; 
-                let segment_index = Math.floor(deg / 18);
-                
-                const segments = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
-                let hit_number = segments[segment_index];
-                
-                let finalScore = 0;
-                let label = "";
-                
-                if (perc <= 0.035) { 
-                    finalScore = 50; label = "DB"; 
-                } else if (perc <= 0.08) {
-                    finalScore = 25; label = "BULL"; 
-                } else if (perc > 1.05) { 
-                    finalScore = 0; label = "MISS"; 
-                } else {
-                    finalScore = hit_number;
-                    if (perc >= 0.48 && perc <= 0.62) { 
-                        finalScore *= 3; label = "T" + hit_number; 
-                    } else if (perc >= 0.88 && perc <= 1.05) { 
-                        finalScore *= 2; label = "D" + hit_number; 
+                try {
+                    let radius_max = Math.hypot(boardD20.x - boardCenter.x, boardD20.y - boardCenter.y);
+                    let dart_dist = Math.hypot(detectedX - boardCenter.x, detectedY - boardCenter.y);
+                    let perc = dart_dist / radius_max;
+                    
+                    let base_angle = Math.atan2(boardD20.y - boardCenter.y, boardD20.x - boardCenter.x);
+                    let dart_angle = Math.atan2(detectedY - boardCenter.y, detectedX - boardCenter.x);
+                    let diff_angle = dart_angle - base_angle;
+                    
+                    while (diff_angle < 0) diff_angle += 2 * Math.PI;
+                    while (diff_angle >= 2 * Math.PI) diff_angle -= 2 * Math.PI;
+                    
+                    let deg = diff_angle * (180 / Math.PI);
+                    deg = (deg + 9) % 360; 
+                    let segment_index = Math.floor(deg / 18);
+                    
+                    const segments = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+                    let hit_number = segments[segment_index];
+                    
+                    let finalScore = 0;
+                    let label = "";
+                    
+                    if (perc <= 0.035) { 
+                        finalScore = 50; label = "DB"; 
+                    } else if (perc <= 0.08) {
+                        finalScore = 25; label = "BULL"; 
+                    } else if (perc > 1.05) { 
+                        finalScore = 0; label = "MISS"; 
                     } else {
-                        label = hit_number.toString(); 
+                        finalScore = hit_number;
+                        if (perc >= 0.48 && perc <= 0.62) { 
+                            finalScore *= 3; label = "T" + hit_number; 
+                        } else if (perc >= 0.88 && perc <= 1.05) { 
+                            finalScore *= 2; label = "D" + hit_number; 
+                        } else {
+                            label = hit_number.toString(); 
+                        }
                     }
+
+                    debugLabel.innerText = `🎯 HIT: ${label} (${finalScore})`;
+                    debugLabel.style.display = 'block';
+
+                    document.getElementById('me').style.border = "5px solid #4caf50";
+
+                    processHit(finalScore);
+
+                    setTimeout(() => {
+                        if (!isPlayerInFrame) captureBaseline();
+                        debugLabel.style.display = 'none';
+                        document.getElementById('me').style.border = "none";
+                        isProcessingDart = false;
+                    }, 3500);
+
+                } catch (err) {
+                    console.log("Scoring error:", err);
+                    isProcessingDart = false; 
                 }
-
-                debugLabel.innerText = `🎯 HIT: ${label} (${finalScore})`;
-                debugLabel.style.display = 'block';
-
-                // Flash the camera view green to confirm a hit!
-                document.getElementById('me').style.border = "5px solid #4caf50";
-
-                processHit(finalScore);
-
-                // Wait 3.5 seconds before capturing the new baseline so it doesn't double-count
-                setTimeout(() => {
-                    captureBaseline();
-                    debugLabel.style.display = 'none';
-                    document.getElementById('me').style.border = "none";
-                    isProcessingDart = false;
-                }, 3500);
-
-            } catch (err) {
-                console.log("Scoring error:", err);
-                isProcessingDart = false; // Prevents the engine from getting permanently stuck
             }
         }
 
+        cv.imshow('debug-canvas', debugMat);
+        debugMat.delete();
         tempMat.delete();
         threshMat.delete();
         contours.delete();
