@@ -2412,7 +2412,7 @@
             btn.innerText = "CALIBRATE";
             btn.style.background = "#222";
             
-            calibBanner.innerText = "🎯 BOARD MAPPED!\nThrow one dart at a time!";
+            calibBanner.innerText = "🎯 BOARD MAPPED!\nThrow ONE dart at a time!";
             setTimeout(() => calibBanner.style.display = 'none', 3000);
             
             // Turn on the visual debug canvas
@@ -2441,8 +2441,8 @@
         
         cv.cvtColor(baselineMat, baselineMat, cv.COLOR_RGBA2GRAY, 0);
         
-        // Slightly reduced blur to keep the dart edges intact
-        let ksize = new cv.Size(21, 21);
+        // REDUCED BLUR: Stop blurring the darts out of existence!
+        let ksize = new cv.Size(11, 11);
         cv.GaussianBlur(baselineMat, baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
         
         if (!currentMat) currentMat = new cv.Mat();
@@ -2473,23 +2473,25 @@
         let tempMat = cv.imread(canvas);
         cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
         
-        let ksize = new cv.Size(21, 21);
+        // MATCHING REDUCED BLUR
+        let ksize = new cv.Size(11, 11);
         cv.GaussianBlur(currentMat, currentMat, ksize, 0, 0, cv.BORDER_DEFAULT);
 
         cv.absdiff(baselineMat, currentMat, diffMat);
         
         let threshMat = new cv.Mat();
-        cv.threshold(diffMat, threshMat, 45, 255, cv.THRESH_BINARY);
+        // LOWERED THRESHOLD: More sensitive to darts
+        cv.threshold(diffMat, threshMat, 30, 255, cv.THRESH_BINARY);
 
-        // NEW LOGIC: Instead of eroding (destroying) thin lines, we DILATE (thicken) them!
-        // This ensures the thin dart shafts are seen as solid, scoreable blobs.
-        let M = cv.Mat.ones(5, 5, cv.CV_8U);
-        cv.dilate(threshMat, threshMat, M); // Thicken
-        cv.erode(threshMat, threshMat, M);  // Smooth the edges
+        // NEW LOGIC: Massive dilation! Thickens the thin dart shafts into fat, solid blobs.
+        let M = cv.Mat.ones(9, 9, cv.CV_8U);
+        cv.dilate(threshMat, threshMat, M); // Fatten
+        cv.erode(threshMat, threshMat, M);  // Smooth
         M.delete();
 
-        // SHOW THE TERMINATOR VISION (Debugging)
-        cv.imshow('debug-canvas', threshMat);
+        // Convert the mask to color so we can draw red targeting boxes on it
+        let debugMat = new cv.Mat();
+        cv.cvtColor(threshMat, debugMat, cv.COLOR_GRAY2RGB);
 
         let contours = new cv.MatVector();
         let hierarchy = new cv.Mat();
@@ -2505,8 +2507,8 @@
             let contour = contours.get(i);
             let area = cv.contourArea(contour);
             
-            // Lowered the size limit dramatically so it catches the tiny darts
-            if (area > 80 && area < 50000) { 
+            // WIDENED LIMITS: Catch tiny darts AND high-res blobs
+            if (area > 15 && area < 80000) { 
                 if (area > maxArea) {
                     maxArea = area;
                     bestContourRect = cv.boundingRect(contour);
@@ -2518,61 +2520,82 @@
             detectedX = bestContourRect.x + (bestContourRect.width / 2);
             detectedY = bestContourRect.y + bestContourRect.height; 
             dartDetected = true;
+            
+            // DRAW A RED BOX around what the computer thinks is the dart
+            let pt1 = new cv.Point(bestContourRect.x, bestContourRect.y);
+            let pt2 = new cv.Point(bestContourRect.x + bestContourRect.width, bestContourRect.y + bestContourRect.height);
+            cv.rectangle(debugMat, pt1, pt2, [255, 0, 0, 255], 3);
+            // Draw a green dot exactly at the calculated tip
+            cv.circle(debugMat, new cv.Point(detectedX, detectedY), 5, [0, 255, 0, 255], -1);
         }
+
+        // SHOW THE TERMINATOR VISION with red targeting lines
+        cv.imshow('debug-canvas', debugMat);
+        debugMat.delete();
 
         // TRIGONOMETRY ENGINE
         if (dartDetected && boardCenter && boardD20) {
-            isProcessingDart = true; // Pause detection while we score this
+            isProcessingDart = true; 
 
-            let radius_max = Math.hypot(boardD20.x - boardCenter.x, boardD20.y - boardCenter.y);
-            let dart_dist = Math.hypot(detectedX - boardCenter.x, detectedY - boardCenter.y);
-            let perc = dart_dist / radius_max;
-            
-            let base_angle = Math.atan2(boardD20.y - boardCenter.y, boardD20.x - boardCenter.x);
-            let dart_angle = Math.atan2(detectedY - boardCenter.y, detectedX - boardCenter.x);
-            let diff_angle = dart_angle - base_angle;
-            
-            while (diff_angle < 0) diff_angle += 2 * Math.PI;
-            while (diff_angle >= 2 * Math.PI) diff_angle -= 2 * Math.PI;
-            
-            let deg = diff_angle * (180 / Math.PI);
-            deg = (deg + 9) % 360; 
-            let segment_index = Math.floor(deg / 18);
-            
-            const segments = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
-            let hit_number = segments[segment_index];
-            
-            let finalScore = 0;
-            let label = "";
-            
-            if (perc <= 0.035) { 
-                finalScore = 50; label = "DB"; 
-            } else if (perc <= 0.08) {
-                finalScore = 25; label = "BULL"; 
-            } else if (perc > 1.05) { 
-                finalScore = 0; label = "MISS"; 
-            } else {
-                finalScore = hit_number;
-                if (perc >= 0.48 && perc <= 0.62) { 
-                    finalScore *= 3; label = "T" + hit_number; 
-                } else if (perc >= 0.88 && perc <= 1.05) { 
-                    finalScore *= 2; label = "D" + hit_number; 
+            try {
+                let radius_max = Math.hypot(boardD20.x - boardCenter.x, boardD20.y - boardCenter.y);
+                let dart_dist = Math.hypot(detectedX - boardCenter.x, detectedY - boardCenter.y);
+                let perc = dart_dist / radius_max;
+                
+                let base_angle = Math.atan2(boardD20.y - boardCenter.y, boardD20.x - boardCenter.x);
+                let dart_angle = Math.atan2(detectedY - boardCenter.y, detectedX - boardCenter.x);
+                let diff_angle = dart_angle - base_angle;
+                
+                while (diff_angle < 0) diff_angle += 2 * Math.PI;
+                while (diff_angle >= 2 * Math.PI) diff_angle -= 2 * Math.PI;
+                
+                let deg = diff_angle * (180 / Math.PI);
+                deg = (deg + 9) % 360; 
+                let segment_index = Math.floor(deg / 18);
+                
+                const segments = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+                let hit_number = segments[segment_index];
+                
+                let finalScore = 0;
+                let label = "";
+                
+                if (perc <= 0.035) { 
+                    finalScore = 50; label = "DB"; 
+                } else if (perc <= 0.08) {
+                    finalScore = 25; label = "BULL"; 
+                } else if (perc > 1.05) { 
+                    finalScore = 0; label = "MISS"; 
                 } else {
-                    label = hit_number.toString(); 
+                    finalScore = hit_number;
+                    if (perc >= 0.48 && perc <= 0.62) { 
+                        finalScore *= 3; label = "T" + hit_number; 
+                    } else if (perc >= 0.88 && perc <= 1.05) { 
+                        finalScore *= 2; label = "D" + hit_number; 
+                    } else {
+                        label = hit_number.toString(); 
+                    }
                 }
+
+                debugLabel.innerText = `🎯 HIT: ${label} (${finalScore})`;
+                debugLabel.style.display = 'block';
+
+                // Flash the camera view green to confirm a hit!
+                document.getElementById('me').style.border = "5px solid #4caf50";
+
+                processHit(finalScore);
+
+                // Wait 3.5 seconds before capturing the new baseline so it doesn't double-count
+                setTimeout(() => {
+                    captureBaseline();
+                    debugLabel.style.display = 'none';
+                    document.getElementById('me').style.border = "none";
+                    isProcessingDart = false;
+                }, 3500);
+
+            } catch (err) {
+                console.log("Scoring error:", err);
+                isProcessingDart = false; // Prevents the engine from getting permanently stuck
             }
-
-            debugLabel.innerText = `🎯 HIT: ${label} (${finalScore})`;
-            debugLabel.style.display = 'block';
-
-            processHit(finalScore);
-
-            // Wait 3 seconds for dart to stop moving
-            setTimeout(() => {
-                captureBaseline();
-                debugLabel.style.display = 'none';
-                isProcessingDart = false;
-            }, 3000);
         }
 
         tempMat.delete();
