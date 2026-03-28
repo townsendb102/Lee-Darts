@@ -26,20 +26,24 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* Force strict boundaries for Android chrome nav bar and iOS Safari */
+        /* MAJOR LAYOUT FIX: 
+           Lock the viewport completely. No scrolling allowed. 
+        */
         html, body { 
-            height: 100dvh; /* iOS FIX: Dynamic Viewport Height */
-            width: 100%; 
+            height: 100%; width: 100%; 
             overflow: hidden; 
-            overscroll-behavior: none; /* Stops bounce scroll on mobile */
+            overscroll-behavior: none; 
             margin: 0; padding: 0; 
+            position: fixed; 
         }
 
-        /* RESPONSIVE GRID FIXED TO ALLOW AUTO-EXPANDING HEADER */
+        /* FLEXBOX LAYOUT: 
+           Guarantees headers and footers never get pushed off screen 
+        */
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
-            display: grid;
-            grid-template-rows: auto minmax(20dvh, 40dvh) minmax(90px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
+            display: flex;
+            flex-direction: column;
             transition: background 0.3s ease;
         }
 
@@ -82,7 +86,6 @@
         body.spectator-mode .legs-count { text-align: center; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
         
-        body.single-mode { grid-template-rows: auto 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
         body.single-mode .v-container { display: none !important; }
         body.single-mode #card-1 { display: none !important; }
         body.single-mode .score-area { flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -91,7 +94,6 @@
         body.single-mode.spectator-mode #card-0 { width: 150px; }
         body.single-mode #mic-btn, body.single-mode #zoom-btn, body.single-mode #flip-btn { display: none !important; }
 
-        body.local-mode { grid-template-rows: auto 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
         body.local-mode .v-container { display: none !important; }
         body.local-mode header > div:first-child { display: none; }
         body.local-mode header { justify-content: flex-end; }
@@ -136,14 +138,14 @@
 
         .btn-update { background: transparent; border: none; color: #888; font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
 
-        /* --- UPDATED HEADER CSS --- */
+        /* --- HEADER CSS --- */
         header { 
+            flex: 0 0 auto; /* Forces header to never shrink */
             display: flex; flex-wrap: wrap; align-items: center; justify-content: center; 
             padding: env(safe-area-inset-top) 5px 5px 5px; 
             border-bottom: 1px solid rgba(255,255,255,0.1); 
             font-size: 11px; background: #000; gap: 5px;
         }
-        /* Hide the ID text on mobile so buttons have more room */
         @media (max-width: 600px) {
             header > div:first-child { display: none; }
         }
@@ -155,9 +157,13 @@
             padding: 8px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; 
             flex: 1 1 auto; text-align: center; white-space: nowrap; font-weight: bold;
         }
-        /* ------------------------------------- */
 
-        .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+        /* --- VIDEO CONTAINER --- */
+        .v-container { 
+            flex: 1; /* Automatically shrinks/grows to fill available middle space */
+            min-height: 0; /* Crucial for preventing overflow */
+            position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; 
+        }
         .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; transition: opacity 0.2s; }
         .v-box.visible { opacity: 1; z-index: 1; pointer-events: auto; }
 
@@ -167,7 +173,8 @@
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
 
-        .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
+        /* --- SCORE AREA & CARDS --- */
+        .score-area { flex: 0 0 auto; display: flex; flex-direction: column; padding: 8px; gap: 6px; }
         .player-card { flex: 1; background-color: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; transition: background 0.3s; }
         .player-card.active { border-color: var(--blue); background-color: var(--active); }
         
@@ -178,46 +185,42 @@
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
         
-        /* MISSED DOUBLE BUTTON */
         .missed-db-btn { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; cursor: pointer; }
 
-        /* CRICKET CENTER BOARD STYLES */
         #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--card); border-radius: 8px; padding: 4px; border: 1px solid rgba(255,255,255,0.1); justify-content: space-evenly; margin: 0 5px; }
         .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
         .cric-mark { flex: 1; text-align: center; font-size: 14px; font-weight: bold; color: var(--blue); }
         .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 0; border: 1px solid rgba(255,255,255,0.1);}
         .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; border-color: transparent;}
 
-        .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 8px 10px 8px; }
+        /* --- BOTTOM CONTROLS --- */
+        .controls-wrapper { flex: 0 0 auto; width: 100%; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 8px 10px 8px; }
         .controls { display: grid; gap: 8px; }
         
-        #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
+        #standard-controls { display: flex; flex-direction: column; gap: 8px; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
-        /* CUSTOM NUMPAD STYLES */
         #numpad-display { font-size: 28px; font-weight: bold; text-align: center; height: 35px; line-height: 35px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
-        .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
+        .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
         .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px 0;}
         .np-btn:active { background: var(--blue); color: black; }
         .np-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .np-btn.enter { background: var(--blue); color: black; }
         .np-btn.enter:disabled { background: #333; color: #666; }
         
-        /* NEW DART-BY-DART GRID STYLES */
         .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
         .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 14px; font-weight: bold; border-radius: 6px; padding: 6px 0; cursor: pointer; text-align: center;}
         .dbd-btn:active { background: var(--blue); color: black; }
         .dbd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 32px; font-size: 16px; font-weight: bold; border-radius: 6px; height: 32px; }
 
-        /* CRICKET CUSTOM KEYPAD STYLES */
         .cric-mult { flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;}
         .cric-mult.active { background: var(--blue); color: black; border-color: var(--blue); }
         .cric-mult:disabled { opacity: 0.5; cursor: not-allowed; }
         .cric-num-btn { background: #111; border: 1px solid #333; border-radius: 6px; color: white; font-size: 16px; font-weight: bold; padding: 10px; cursor: pointer; }
         .cric-num-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
+        .site-footer { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); padding-top: 4px;}
         .hidden { display: none !important; }
 
         /* PROFILE STYLES */
@@ -2443,7 +2446,7 @@
         cv.cvtColor(baselineMat, baselineMat, cv.COLOR_RGBA2GRAY, 0);
         
         // MASSIVE BLUR applied to ignore wire movements and tiny lighting shifts
-        let ksize = new cv.Size(15, 15);
+        let ksize = new cv.Size(25, 25);
         cv.GaussianBlur(baselineMat, baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
         
         if (!currentMat) currentMat = new cv.Mat();
@@ -2475,14 +2478,20 @@
         cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
         
         // MATCHING MASSIVE BLUR for the current frame
-        let ksize = new cv.Size(15, 15);
+        let ksize = new cv.Size(25, 25);
         cv.GaussianBlur(currentMat, currentMat, ksize, 0, 0, cv.BORDER_DEFAULT);
 
         cv.absdiff(baselineMat, currentMat, diffMat);
         
         let threshMat = new cv.Mat();
-        // INCREASED threshold to 50 so it only sees very obvious new objects
-        cv.threshold(diffMat, threshMat, 50, 255, cv.THRESH_BINARY);
+        // INCREASED threshold so it only sees very obvious new objects
+        cv.threshold(diffMat, threshMat, 60, 255, cv.THRESH_BINARY);
+
+        // ERASION PASS: Destroys thin white lines caused by camera shaking
+        let M = cv.Mat.ones(7, 7, cv.CV_8U);
+        cv.erode(threshMat, threshMat, M);
+        cv.dilate(threshMat, threshMat, M);
+        M.delete();
 
         // SHOW THE TERMINATOR VISION (Debugging)
         cv.imshow('debug-canvas', threshMat);
@@ -2502,8 +2511,8 @@
             let contour = contours.get(i);
             let area = cv.contourArea(contour);
             
-            // Expanded area limits to accommodate high-res iPhone cameras
-            if (area > 150 && area < 50000) { 
+            // STRICT area limits: Ignored if smaller than 300px or larger than 15,000px
+            if (area > 300 && area < 15000) { 
                 if (area > maxArea) {
                     maxArea = area;
                     bestContourRect = cv.boundingRect(contour);
