@@ -493,6 +493,7 @@
 <div class="v-container">
     <div id="box-me" class="v-box visible">
         <div class="cam-label" id="cam-label-me">YOU</div>
+        <canvas id="debug-canvas" style="position: absolute; top: 40px; right: 10px; width: 100px; height: 150px; z-index: 20; border: 2px solid var(--blue); background: black; display: none; pointer-events: none;"></canvas>
         <video id="me" autoplay playsinline webkit-playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
@@ -2311,15 +2312,15 @@
     calibBanner.style.cssText = "position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #00d4ff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: bold; text-align: center; z-index: 30; display: none; pointer-events: none; border: 2px solid #00d4ff; width: 85%; line-height: 1.4;";
     
     let dot1 = document.createElement('div');
-    dot1.style.cssText = "position: absolute; width: 12px; height: 12px; background: red; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 30; display: none; pointer-events: none;";
+    dot1.style.cssText = "position: fixed; width: 16px; height: 16px; background: red; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 9999; display: none; pointer-events: none;";
     
     let dot2 = document.createElement('div');
-    dot2.style.cssText = "position: absolute; width: 12px; height: 12px; background: #00d4ff; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 30; display: none; pointer-events: none;";
+    dot2.style.cssText = "position: fixed; width: 16px; height: 16px; background: #00d4ff; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 9999; display: none; pointer-events: none;";
     
     window.addEventListener('load', () => {
+        document.body.appendChild(dot1);
+        document.body.appendChild(dot2);
         document.getElementById('box-me').appendChild(calibBanner);
-        document.getElementById('box-me').appendChild(dot1);
-        document.getElementById('box-me').appendChild(dot2);
     });
 
     document.getElementById('calibrate-btn').addEventListener('click', (e) => {
@@ -2334,6 +2335,9 @@
             if (document.getElementById('vision-debug')) {
                  document.getElementById('vision-debug').style.display = 'none';
             }
+            if (document.getElementById('debug-canvas')) {
+                 document.getElementById('debug-canvas').style.display = 'none';
+            }
         } else {
             calibrationStep = 0;
             e.target.innerText = "CALIBRATE";
@@ -2343,23 +2347,25 @@
             calibBanner.style.display = 'none';
             dot1.style.display = 'none';
             dot2.style.display = 'none';
+            if (document.getElementById('debug-canvas')) {
+                 document.getElementById('debug-canvas').style.display = 'none';
+            }
         }
     });
 
-    // We use pointerdown instead of click because mobile browsers often block pure clicks on videos
+    // Use pointerdown to ensure touches register on top of the video
     document.getElementById('box-me').addEventListener('pointerdown', (e) => {
         if (calibrationStep === 0) return;
-        e.preventDefault(); // Prevents the browser from accidentally scrolling or double-firing
         
         const video = document.getElementById('me');
         if (!video || !video.videoWidth) return;
 
-        // Calculate true video pixel coordinates from the screen touch
-        const rect = video.getBoundingClientRect();
-        
+        // Where the user tapped on the screen
         const clientX = e.clientX;
         const clientY = e.clientY;
+        const rect = video.getBoundingClientRect();
         
+        // Match the tap to the actual video feed resolution
         const videoRatio = video.videoWidth / video.videoHeight;
         const boxRatio = rect.width / rect.height;
         let renderWidth = rect.width;
@@ -2378,7 +2384,7 @@
         const clickX = clientX - rect.left - offsetX;
         const clickY = clientY - rect.top - offsetY;
 
-        // Ignore taps outside the actual video area
+        // Ignore taps outside the video bounds
         if (clickX < 0 || clickX > renderWidth || clickY < 0 || clickY > renderHeight) return;
 
         const trueX = (clickX / renderWidth) * video.videoWidth;
@@ -2386,9 +2392,10 @@
 
         if (calibrationStep === 1) {
             boardCenter = { x: trueX, y: trueY };
-            // Draw a red dot exactly where they tapped
-            dot1.style.left = (clientX - rect.left) + 'px';
-            dot1.style.top = (clientY - rect.top) + 'px';
+            
+            // Fixed position dot places exactly under finger
+            dot1.style.left = clientX + 'px';
+            dot1.style.top = clientY + 'px';
             dot1.style.display = 'block';
             
             calibrationStep = 2;
@@ -2396,9 +2403,9 @@
             
         } else if (calibrationStep === 2) {
             boardD20 = { x: trueX, y: trueY };
-            // Draw a blue dot exactly where they tapped
-            dot2.style.left = (clientX - rect.left) + 'px';
-            dot2.style.top = (clientY - rect.top) + 'px';
+            
+            dot2.style.left = clientX + 'px';
+            dot2.style.top = clientY + 'px';
             dot2.style.display = 'block';
             
             calibrationStep = 0;
@@ -2409,7 +2416,9 @@
             calibBanner.innerText = "🎯 BOARD MAPPED!\nThrow a dart!";
             setTimeout(() => calibBanner.style.display = 'none', 3000);
             
-            // We have the map! Now take the empty board snapshot.
+            // Turn on the visual debug canvas
+            document.getElementById('debug-canvas').style.display = 'block';
+            
             captureBaseline();
             if (!detectionInterval) {
                 detectionInterval = setInterval(detectDarts, 1000);
@@ -2466,8 +2475,13 @@
         cv.GaussianBlur(currentMat, currentMat, ksize, 0, 0, cv.BORDER_DEFAULT);
 
         cv.absdiff(baselineMat, currentMat, diffMat);
+        
         let threshMat = new cv.Mat();
-        cv.threshold(diffMat, threshMat, 40, 255, cv.THRESH_BINARY);
+        // Lowered threshold to 30 for better sensitivity
+        cv.threshold(diffMat, threshMat, 30, 255, cv.THRESH_BINARY);
+
+        // SHOW THE TERMINATOR VISION (Debugging)
+        cv.imshow('debug-canvas', threshMat);
 
         let contours = new cv.MatVector();
         let hierarchy = new cv.Mat();
@@ -2481,7 +2495,8 @@
             let contour = contours.get(i);
             let area = cv.contourArea(contour);
             
-            if (area > 50 && area < 3000) { 
+            // VASTLY expanded max area limit (90,000) for high-res mobile cameras
+            if (area > 20 && area < 90000) { 
                 let rect = cv.boundingRect(contour);
                 detectedX = rect.x + (rect.width / 2);
                 detectedY = rect.y + rect.height; 
@@ -2493,12 +2508,10 @@
         if (dartDetected && boardCenter && boardD20) {
             isProcessingDart = true; // Pause detection while we score this
 
-            // Calculate exact sizes in pixels based on your taps
             let radius_max = Math.hypot(boardD20.x - boardCenter.x, boardD20.y - boardCenter.y);
             let dart_dist = Math.hypot(detectedX - boardCenter.x, detectedY - boardCenter.y);
             let perc = dart_dist / radius_max;
             
-            // Calculate exact angle to figure out which number you hit
             let base_angle = Math.atan2(boardD20.y - boardCenter.y, boardD20.x - boardCenter.x);
             let dart_angle = Math.atan2(detectedY - boardCenter.y, detectedX - boardCenter.x);
             let diff_angle = dart_angle - base_angle;
@@ -2507,17 +2520,15 @@
             while (diff_angle >= 2 * Math.PI) diff_angle -= 2 * Math.PI;
             
             let deg = diff_angle * (180 / Math.PI);
-            deg = (deg + 9) % 360; // Shift by 9 degrees to center the '20' segment
+            deg = (deg + 9) % 360; 
             let segment_index = Math.floor(deg / 18);
             
-            // The standard dartboard layout
             const segments = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
             let hit_number = segments[segment_index];
             
             let finalScore = 0;
             let label = "";
             
-            // Convert distance percentage into Bull, Treble, or Double
             if (perc <= 0.035) { 
                 finalScore = 50; label = "DB"; 
             } else if (perc <= 0.08) {
@@ -2538,11 +2549,9 @@
             debugLabel.innerText = `🎯 HIT: ${label} (${finalScore})`;
             debugLabel.style.display = 'block';
 
-            // TRIGGER THE ACTUAL SCORING IN YOUR APP
             processHit(finalScore);
 
-            // Wait 3 seconds for the dart to stop wobbling, then update the baseline
-            // so we don't count the same dart again.
+            // Wait 3 seconds for dart to stop moving
             setTimeout(() => {
                 captureBaseline();
                 debugLabel.style.display = 'none';
