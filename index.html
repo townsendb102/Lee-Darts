@@ -1139,7 +1139,6 @@
             document.getElementById('setup-layer').classList.remove('hidden');
         }
 
-        // --- SAFELY BIND ALL BUTTONS ---
         const startBtn = document.getElementById('start-btn');
         if(startBtn) startBtn.addEventListener('click', initApp);
         
@@ -1188,7 +1187,6 @@
         }
     });
 
-    // PWA Install Button Handler
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault(); 
         deferredPrompt = e;
@@ -1205,7 +1203,6 @@
             };
         }
     });
-
 
     // --- ALL GAME LOGIC ---
 
@@ -1262,7 +1259,6 @@
         let display = document.getElementById('numpad-display');
         if(display) display.innerText = numpadVal || "0";
     }
-    window.np = np;
 
     function setDbdMult(m) {
         dbdMult = m;
@@ -1270,7 +1266,6 @@
         document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
     }
-    window.setDbdMult = setDbdMult;
 
     function hitDbd(val) {
         if(currentDarts.length >= 3) return;
@@ -1291,12 +1286,10 @@
         setDbdMult(1);
         updateDbdDisplay();
     }
-    window.hitDbd = hitDbd;
 
     function dbdDel() {
         if(currentDarts.length > 0) { currentDarts.pop(); updateDbdDisplay(); }
     }
-    window.dbdDel = dbdDel;
 
     function updateDbdDisplay() {
         for(let i=0; i<3; i++) {
@@ -1310,7 +1303,6 @@
         if(currentDarts.length === 0) return;
         processHit(null, currentDarts);
     }
-    window.dbdEnter = dbdEnter;
 
     function logMissedDouble(pIndex) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
@@ -1318,7 +1310,6 @@
         render();
         if (!isLocalMatch) broadcast(state);
     }
-    window.logMissedDouble = logMissedDouble;
 
     function playBotTurn() {
         if(state.winner !== undefined || state.turn !== 1 || state.mode !== 'bot') return;
@@ -1363,7 +1354,6 @@
         if (mode === 'bull') { document.getElementById('ft-title').innerText = "Who was closest to Bull?"; } 
         else { document.getElementById('ft-title').innerText = "Who throws first?"; }
     }
-    window.showFtStep2 = showFtStep2;
 
     function setFirstPlayer(playerIndex) {
         state.startingPlayer = playerIndex;
@@ -1381,7 +1371,6 @@
         render();
         if (!isLocalMatch) broadcast(state);
     }
-    window.setFirstPlayer = setFirstPlayer;
 
     function showFirstThrowUI() {
         document.getElementById('first-throw-layer').classList.remove('hidden');
@@ -1575,7 +1564,6 @@
             document.getElementById('start-btn').disabled = false;
         }
     }
-    window.initApp = initApp;
 
     function attachPeerVideo(s) {
         const peerVideo = document.getElementById('peer');
@@ -1729,7 +1717,6 @@
         render(); 
         if (!isLocalMatch) { broadcast(state); }
     }
-    window.processAtcDart = processAtcDart;
 
     function setCricMult(m) {
         cricketMult = m;
@@ -1737,7 +1724,6 @@
         document.getElementById('cric-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('cric-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
     }
-    window.setCricMult = setCricMult;
 
     function checkCricketWin(pIndex) {
         let p = state.p[pIndex];
@@ -1782,7 +1768,6 @@
         render();
         if (!isLocalMatch) { broadcast(state); }
     }
-    window.hitCricket = hitCricket;
 
     function processHit(manualVal = null, dartsArr = null) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
@@ -1889,14 +1874,12 @@
         render();
         if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
     }
-    window.processHit = processHit;
 
     function undo() {
         if(botTimeout) clearTimeout(botTimeout);
         numpadVal = ""; currentDarts = []; updateDbdDisplay();
         if (historyLog) { state = JSON.parse(JSON.stringify(historyLog)); historyLog = null; render(); if (!isLocalMatch) broadcast(state); }
     }
-    window.undo = undo;
 
     function triggerRematch() {
         let startScore = 501;
@@ -1930,7 +1913,6 @@
         else if (isLocalMatch || myIndex === 0) { showFirstThrowUI(); } 
         else { render(); }
     }
-    window.triggerRematch = triggerRematch;
 
     function render() {
         state.p.forEach((p, i) => {
@@ -2195,29 +2177,20 @@
             botTimeout = null;
         }
     }
-    window.render = render;
-
     function shareInvite() {
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {});
-            } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!"));
-            }
+            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
         }
     }
-    window.shareInvite = shareInvite;
-
     function shareSpectator() {
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {});
-            } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!"));
-            }
+            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
         }
     }
-    window.shareSpectator = shareSpectator;
 
     // ==========================================
     // 🎯 EXPERIMENTAL AUTO-SCORING ENGINE 🎯
@@ -2372,7 +2345,6 @@
         if (!currentMat) currentMat = new cv.Mat();
         if (!diffMat) diffMat = new cv.Mat();
     }
-    window.captureBaseline = captureBaseline;
 
     function detectDarts() {
         if (!baselineMat || !cvReady || isProcessingDart) return;
@@ -2514,7 +2486,7 @@
 
                     document.getElementById('me').style.border = "5px solid #4caf50";
 
-                    // FORCE THE APP INTO DART-BY-DART MODE AND RECORD THE HIT
+                    // Switch UI to Dart-By-Dart mode and submit the camera's hit
                     if (state.gameType !== 'atc' && state.gameType !== 'cricket') {
                         localInputMode = 'darts';
                         render();
@@ -2526,4 +2498,33 @@
                         }
                     } else if (state.gameType === 'atc') {
                         processAtcDart(multiplier);
-                    } else if (
+                    } else if (state.gameType === 'cricket') {
+                        setCricMult(multiplier);
+                        hitCricket(hit_number);
+                    }
+
+                    setTimeout(() => {
+                        if (!isPlayerInFrame) captureBaseline();
+                        debugLabel.style.display = 'none';
+                        document.getElementById('me').style.border = "none";
+                        isProcessingDart = false;
+                    }, 3500);
+
+                } catch (err) {
+                    debugLabel.innerText = `⚠️ SCORE ERROR: ${err.message}`;
+                    debugLabel.style.background = "rgba(255,0,0,0.9)";
+                    isProcessingDart = false; 
+                }
+            }
+        }
+
+        cv.imshow('debug-canvas', debugMat);
+        debugMat.delete();
+        tempMat.delete();
+        threshMat.delete();
+        contours.delete();
+        hierarchy.delete();
+    }
+</script>
+</body>
+</html>
