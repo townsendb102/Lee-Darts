@@ -136,7 +136,7 @@
 
         /* --- HEADER CSS --- */
         header { 
-            flex: 0 0 auto; 
+            flex: 0 0 auto; /* Forces header to never shrink */
             display: flex; flex-wrap: wrap; align-items: center; justify-content: center; 
             padding: env(safe-area-inset-top) 5px 5px 5px; 
             border-bottom: 1px solid rgba(255,255,255,0.1); 
@@ -156,8 +156,8 @@
 
         /* --- VIDEO CONTAINER --- */
         .v-container { 
-            flex: 1; 
-            min-height: 0; 
+            flex: 1; /* Automatically shrinks/grows to fill available middle space */
+            min-height: 0; /* Crucial for preventing overflow */
             position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; 
         }
         .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; transition: opacity 0.2s; }
@@ -994,6 +994,27 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
+    // --- PWA INSTALL LOGIC ---
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault(); 
+        deferredPrompt = e;
+        const installBtn = document.getElementById('install-btn');
+        if (installBtn) {
+            installBtn.style.display = 'block';
+            installBtn.onclick = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installBtn.style.display = 'none';
+                    }
+                    deferredPrompt = null;
+                }
+            };
+        }
+    });
+
     // ==========================================
     // ALL APP BUTTON BINDS & LOGIC (NO WAITING FOR OPENCV TO LOAD)
     // ==========================================
@@ -1191,25 +1212,6 @@
         }
     }
 
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault(); 
-        deferredPrompt = e;
-        const installBtn = document.getElementById('install-btn');
-        if (installBtn) {
-            installBtn.style.display = 'block';
-            installBtn.onclick = async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') {
-                        installBtn.style.display = 'none';
-                    }
-                    deferredPrompt = null;
-                }
-            };
-        }
-    });
     const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
 
     let stream, peer, currentCall, botTimeout;
@@ -1682,7 +1684,7 @@
             }
         } catch (e) {}
     }
-    
+
     function processAtcDart(multiplier) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
@@ -2298,7 +2300,6 @@
         if (!diffMat) diffMat = new cv.Mat();
     }
 
-    // 3. The Detection & Math Loop
     function detectDarts() {
         if (!baselineMat || !cvReady || isProcessingDart) return;
         
@@ -2347,7 +2348,6 @@
         let maxArea = 0;
         let bestContourRect = null;
         
-        // Calculate the total pixels in the video feed
         const totalPixels = video.videoWidth * video.videoHeight;
 
         for (let i = 0; i < contours.size(); ++i) {
@@ -2355,14 +2355,12 @@
             let area = cv.contourArea(contour);
             if (area > maxArea) {
                 maxArea = area;
-                // DYNAMIC LIMITS: A dart must be larger than 20 pixels, but smaller than 25% of the screen.
                 if (area > 20 && area < (totalPixels * 0.25)) { 
                     bestContourRect = cv.boundingRect(contour);
                 }
             }
         }
 
-        // Player blocks the board (takes up more than 25% of the screen)
         if (maxArea >= (totalPixels * 0.25)) { 
             isPlayerInFrame = true;
             framesSincePlayerLeft = 0;
@@ -2430,43 +2428,4 @@
                         if (perc >= 0.48 && perc <= 0.62) { 
                             finalScore *= 3; label = "T" + hit_number; 
                         } else if (perc >= 0.88 && perc <= 1.05) { 
-                            finalScore *= 2; label = "D" + hit_number; 
-                        } else {
-                            label = hit_number.toString(); 
-                        }
-                    }
-
-                    debugLabel.innerText = `🎯 HIT: ${label} (${finalScore})`;
-                    debugLabel.style.display = 'block';
-
-                    document.getElementById('me').style.border = "5px solid #4caf50";
-
-                    // FORCE THE SCORE INTO THE APP
-                    processHit(finalScore);
-
-                    setTimeout(() => {
-                        if (!isPlayerInFrame) captureBaseline();
-                        debugLabel.style.display = 'none';
-                        document.getElementById('me').style.border = "none";
-                        isProcessingDart = false;
-                    }, 3500);
-
-                } catch (err) {
-                    debugLabel.innerText = `⚠️ SCORE ERROR: ${err.message}`;
-                    debugLabel.style.background = "rgba(255,0,0,0.9)";
-                    isProcessingDart = false; 
-                }
-            }
-        }
-
-        cv.imshow('debug-canvas', debugMat);
-        debugMat.delete();
-        tempMat.delete();
-        threshMat.delete();
-        contours.delete();
-        hierarchy.delete();
-    }
-</script>
-</body>
-</html>
-
+                            finalScore *= 2;
