@@ -26,9 +26,10 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* Force strict boundaries for Android chrome nav bar and iOS Safari (No position fixed!) */
+        /* Force strict boundaries for Android chrome nav bar and iOS Safari */
         html, body { 
-            height: 100%; width: 100%; 
+            height: 100dvh; /* iOS FIX: Dynamic Viewport Height */
+            width: 100%; 
             overflow: hidden; 
             overscroll-behavior: none; /* Stops bounce scroll on mobile */
             margin: 0; padding: 0; 
@@ -135,7 +136,7 @@
 
         .btn-update { background: transparent; border: none; color: #888; font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
 
-        /* --- UPDATED HEADER CSS (Stacking Buttons Fix) --- */
+        /* --- UPDATED HEADER CSS --- */
         header { 
             display: flex; flex-wrap: wrap; align-items: center; justify-content: center; 
             padding: env(safe-area-inset-top) 5px 5px 5px; 
@@ -187,8 +188,7 @@
         .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 0; border: 1px solid rgba(255,255,255,0.1);}
         .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; border-color: transparent;}
 
-        /* ADDED 24px BOTTOM PADDING TO STOP FOOTER OVERLAP ON IPHONE */
-        .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 8px 24px 8px; }
+        .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 8px 10px 8px; }
         .controls { display: grid; gap: 8px; }
         
         #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
@@ -2441,7 +2441,9 @@
         baselineMat = cv.imread(canvas);
         
         cv.cvtColor(baselineMat, baselineMat, cv.COLOR_RGBA2GRAY, 0);
-        let ksize = new cv.Size(5, 5);
+        
+        // MASSIVE BLUR applied to ignore wire movements and tiny lighting shifts
+        let ksize = new cv.Size(15, 15);
         cv.GaussianBlur(baselineMat, baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
         
         if (!currentMat) currentMat = new cv.Mat();
@@ -2471,14 +2473,16 @@
 
         let tempMat = cv.imread(canvas);
         cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
-        let ksize = new cv.Size(5, 5);
+        
+        // MATCHING MASSIVE BLUR for the current frame
+        let ksize = new cv.Size(15, 15);
         cv.GaussianBlur(currentMat, currentMat, ksize, 0, 0, cv.BORDER_DEFAULT);
 
         cv.absdiff(baselineMat, currentMat, diffMat);
         
         let threshMat = new cv.Mat();
-        // Lowered threshold to 30 for better sensitivity
-        cv.threshold(diffMat, threshMat, 30, 255, cv.THRESH_BINARY);
+        // INCREASED threshold to 50 so it only sees very obvious new objects
+        cv.threshold(diffMat, threshMat, 50, 255, cv.THRESH_BINARY);
 
         // SHOW THE TERMINATOR VISION (Debugging)
         cv.imshow('debug-canvas', threshMat);
@@ -2490,18 +2494,27 @@
         let dartDetected = false;
         let detectedX = 0;
         let detectedY = 0;
+        let maxArea = 0;
+        let bestContourRect = null;
 
+        // Find the absolute largest object that entered the frame
         for (let i = 0; i < contours.size(); ++i) {
             let contour = contours.get(i);
             let area = cv.contourArea(contour);
             
-            // VASTLY expanded max area limit (90,000) for high-res mobile cameras
-            if (area > 20 && area < 90000) { 
-                let rect = cv.boundingRect(contour);
-                detectedX = rect.x + (rect.width / 2);
-                detectedY = rect.y + rect.height; 
-                dartDetected = true;
+            // Expanded area limits to accommodate high-res iPhone cameras
+            if (area > 150 && area < 50000) { 
+                if (area > maxArea) {
+                    maxArea = area;
+                    bestContourRect = cv.boundingRect(contour);
+                }
             }
+        }
+
+        if (bestContourRect) {
+            detectedX = bestContourRect.x + (bestContourRect.width / 2);
+            detectedY = bestContourRect.y + bestContourRect.height; 
+            dartDetected = true;
         }
 
         // TRIGONOMETRY ENGINE
