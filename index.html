@@ -15,6 +15,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>🎯 RAF Darts Scorer 🎯</title>
+    
+    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+
     <style>
         /* --- THEME VARIABLES --- */
         body.theme-classic { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
@@ -25,12 +28,10 @@
         
         /* Force strict boundaries for Android chrome nav bar and iOS Safari (No position fixed!) */
         html, body { 
-            height: 100%; 
-            width: 100%; 
+            height: 100%; width: 100%; 
             overflow: hidden; 
             overscroll-behavior: none; /* Stops bounce scroll on mobile */
-            margin: 0; 
-            padding: 0; 
+            margin: 0; padding: 0; 
         }
 
         /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
@@ -239,7 +240,6 @@
         </div>
 
         <button id="login-btn" class="btn-start">LOG IN</button>
-       
          <button id="signup-btn" class="btn-start" style="background: #444; color: white; margin-top: 10px;">SIGN UP</button>
         
         <p id="auth-error" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
@@ -466,6 +466,7 @@
         <button class="header-btn" id="caller-btn" style="color: #4caf50;">VOICE ON</button>
         <button class="header-btn" id="zoom-btn" style="color: #ffeb3b;">ZOOM</button>
         <button class="header-btn" id="flip-btn">FLIP</button>
+        <button class="header-btn" id="calibrate-btn" style="color: var(--blue); display: none;">CALIBRATE</button>
         <button class="header-btn" id="spectate-btn" style="color: var(--blue);">SPECTATE</button>
         <button class="header-btn" id="share-btn">INVITE</button>
         <button class="header-btn" id="quit-btn" style="color: #ff4d4d; font-weight: bold;">QUIT</button>
@@ -621,6 +622,9 @@
         </div>
     </div>
 </div>
+
+<canvas id="baseline-canvas" style="display: none;"></canvas>
+<canvas id="current-canvas" style="display: none;"></canvas>
 
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
 
@@ -803,14 +807,12 @@
             } catch(e) { alert("Error resetting stats."); }
         }
     });
-
     window.showMatchDetails = function(matchId) {
         if (!matchId) {
             alert("Detailed stats are not available for this legacy match.");
             return;
         }
         if(!window.currentUserDoc || !window.currentUserDoc.matchHistory) return;
-        
         let h = window.currentUserDoc.matchHistory.find(x => x.id === matchId);
         if (!h) return;
         
@@ -827,7 +829,6 @@
         document.getElementById('md-1401').innerText = h.p2140 || "0";
         document.getElementById('md-1800').innerText = h.p1180 || "0";
         document.getElementById('md-1801').innerText = h.p2180 || "0";
-        
         document.getElementById('history-layer').classList.add('hidden');
         document.getElementById('match-details-layer').classList.remove('hidden');
     };
@@ -840,7 +841,7 @@
             const userRef = doc(window.db, "users", window.auth.currentUser.uid);
             let historyArray = window.currentUserDoc.matchHistory || [];
             let targetItem = historyArray.find(h => h.id === matchId) ||
-                historyArray.find(h => h.date === matchDate && h.desc === matchDesc);
+            historyArray.find(h => h.date === matchDate && h.desc === matchDesc);
             
             if (!targetItem) return;
 
@@ -870,7 +871,6 @@
         reader.onload = (event) => {
             const img = new Image();
             img.onload = async () => {
-               
                 const canvas = document.createElement('canvas');
                 const MAX_WIDTH = 200;
                 const scaleSize = MAX_WIDTH / img.width;
@@ -900,7 +900,6 @@
             if(window.currentUserDoc.friends && window.currentUserDoc.friends.includes(friendId)) { err.innerText = "Already friends!"; return; }
             
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { friends: arrayUnion(friendId) });
-          
             document.getElementById('friend-email').value = "";
             err.style.color = "#4caf50";
             err.innerText = "Friend Added!";
@@ -915,12 +914,11 @@
         if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
         
         let avg = window.currentUserDoc.totalDarts > 0 ?
-            ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
+        ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
         let coPerc = window.currentUserDoc.coAtt > 0 ?
-            Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
+        Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
-        // document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0;
         document.getElementById('prof-co').innerText = coPerc;
         const histContainer = document.getElementById('history-list-container');
         if(window.currentUserDoc.matchHistory && window.currentUserDoc.matchHistory.length > 0) {
@@ -931,7 +929,6 @@
                 let safeId = h.id ? `'${h.id}'` : `null`;
                 let safeDate = `'${h.date}'`;
                 let safeDesc = `'${h.desc}'`;
-          
                 
                 histHtml += `<div class="history-item">
                     <div style="flex:1; cursor:pointer;" onclick="window.showMatchDetails(${safeId})">
@@ -1069,7 +1066,6 @@
                     p1140: state.p[0].n140, p2140: state.p[1].n140,
                     p1180: state.p[0].n180, p2180: state.p[1].n180
                 };
-
                 await updateDoc(userRef, { 
                     totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
                     matchHistory: arrayUnion(newHistObj)
@@ -1184,6 +1180,7 @@
         7:"3 D2",6:"D3",5:"1 D2",4:"D2",
         3:"1 D1",2:"D1"
     };
+
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
         try {
@@ -1206,6 +1203,7 @@
             if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
+
     function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
 
     function unlockAudio() {
@@ -1309,7 +1307,7 @@
 
         if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
     });
-    
+
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
         else if(val === 'E') {
@@ -1331,6 +1329,7 @@
         document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
     };
+
     window.hitDbd = function(val) {
         if(currentDarts.length >= 3) return;
         let label = "";
@@ -1362,10 +1361,12 @@
             else { slot.innerText = "-"; }
         }
     };
+
     window.dbdEnter = function() {
         if(currentDarts.length === 0) return;
         processHit(null, currentDarts);
     };
+
     window.logMissedDouble = function(pIndex) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
@@ -1441,6 +1442,7 @@
         render();
         if (!isLocalMatch) broadcast(state);
     };
+
     async function initApp() {
         requestWakeLock();
         statsSavedThisMatch = false; 
@@ -1451,7 +1453,6 @@
 
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
-        
         if (state.mode !== 'online') {
             window.targetChallengeFriend = null;
         }
@@ -1481,6 +1482,7 @@
         state.p[1].s = startScore;
         state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
         state.p[1].coAtt = 0; state.p[1].coHit = 0;
+
         if (state.mode === 'bot') {
             state.botLevel = parseInt(document.getElementById('bot-level-input').value) || 5;
             state.p[1].name = `DartBot Lvl ${state.botLevel}`;
@@ -1557,6 +1559,7 @@
                     ]
                 }
             });
+
             peer.on('open', async (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
@@ -1571,7 +1574,7 @@
                     } catch(e) {}
                     window.targetChallengeFriend = null;
                 }
-                 
+                
                 if (spectateId) { 
                     document.getElementById('setup-layer').classList.add('hidden');
                     connectToMatch(spectateId, true);
@@ -1600,6 +1603,7 @@
                     call.on('stream', s => { currentCall = call; if(s) { attachPeerVideo(s); } render(); });
                 }
             });
+
             peer.on('connection', c => {
                 conns.push(c);
                 c.on('open', () => c.send({ type: 'SYNC', state }));
@@ -1613,9 +1617,11 @@
                     });
                 });
             });
+
             peer.on('error', err => {
                 if (state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
             });
+
         } catch (e) {
             log.innerText = "Camera/Mic error. (" + e.message + ")";
             startBtn.disabled = false;
@@ -1632,6 +1638,7 @@
         const c = peer.connect(id);
         conns.push(c);
         c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); });
+        
         c.on('data', d => {
             handleData(d);
             
@@ -1641,7 +1648,7 @@
                 }
             });
         });
-        
+
         if (isSpectator) {
             const dummy = createDummyStream();
             const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
@@ -1872,11 +1879,13 @@
         if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
             if (state.gameType === '121') { p.l = Math.max(0, p.l - 1); p.s = 121 + p.l; } 
             else { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; }
-            p.ld = 0; soundToPlay = 0;
+            p.ld = 0;
+            soundToPlay = 0;
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
         }
         else if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.pts += val; 
+            p.s -= val;
+            p.pts += val; 
             if (p.ld <= 9) { p.f9pts += val; }
             if (val === 180) p.n180++;
             else if (val >= 140) p.n140++;
@@ -1909,7 +1918,8 @@
                 if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
                     if (state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; } 
                     else { p.s = 121 + p.l; }
-                    p.ld = 0; soundToPlay = 'bust'; 
+                    p.ld = 0;
+                    soundToPlay = 'bust'; 
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
                 } else if (state.mode !== 'single') {
                     state.turn = (state.turn === 0) ? 1 : 0; 
@@ -1978,13 +1988,13 @@
             
             const avatarImg = document.getElementById(`avatar-${i}`);
             if (avatarImg) {
-                if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
+                 if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
                 else { avatarImg.style.display = 'none'; }
             }
             
             let coStatStr = p.coAtt > 0 ? Math.round((p.coHit / p.coAtt) * 100) + "%" : "0%";
 
-            if (state.gameType === 'atc') {
+             if (state.gameType === 'atc') {
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "DARTS: ";
                 if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d;
                 if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s <= 20 ? p.s : (p.s === 21 ? "BULL" : "DONE");
@@ -2125,6 +2135,7 @@
                         document.getElementById(`srow-${i}`).style.gap = '5px';
                     }
                     if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = '28px';
+    
                 });
 
                 if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'none';
@@ -2146,6 +2157,7 @@
                     if(document.getElementById(`srow-${i}`)) {
                         document.getElementById(`srow-${i}`).style.flexDirection = 'row';
                         document.getElementById(`srow-${i}`).style.alignItems = 'center';
+     
                     }
                     if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(28px, 6dvh, 50px)';
                 });
@@ -2187,10 +2199,12 @@
                     if (call.peerConnection) {
                         const senders = call.peerConnection.getSenders();
                         const vSender = senders.find(s => s.track && s.track.kind === 'video');
+            
                         const aSender = senders.find(s => s.track && s.track.kind === 'audio');
                         if (vSender && videoTrack && vSender.track !== videoTrack) { vSender.replaceTrack(videoTrack).catch(e => {}); }
                         if (aSender && audioTrack && aSender.track !== audioTrack) { aSender.replaceTrack(audioTrack).catch(e => {}); }
-                    }
+       
+                     }
                 });
             }
         }
@@ -2234,19 +2248,136 @@
     function shareInvite() {
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
+            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {});
+            } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!"));
+            }
         }
     }
 
     function shareSpectator() {
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
+            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {});
+            } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!"));
+            }
         }
     }
 
+    // ==========================================
+    // 🎯 EXPERIMENTAL AUTO-SCORING ENGINE 🎯
+    // ==========================================
+
+    let cvReady = false;
+    let baselineMat = null;
+    let currentMat = null;
+    let diffMat = null;
+    let detectionInterval = null;
+
+    // 1. Initialize OpenCV
+    window.onOpenCvReady = function() {
+        cvReady = true;
+        console.log("OpenCV Engine Loaded.");
+        const calBtn = document.getElementById('calibrate-btn');
+        if(calBtn) calBtn.style.display = 'block';
+    };
+
+    document.getElementById('calibrate-btn').addEventListener('click', () => {
+        captureBaseline();
+        // Start watching the board every 1000ms (1 second) after calibration
+        if (!detectionInterval) {
+            detectionInterval = setInterval(detectDarts, 1000);
+            alert("🎯 Baseline Captured! The camera is now watching for darts.");
+        }
+    });
+
+    // 2. Capture the Empty Board
+    function captureBaseline() {
+        if (!cvReady) return;
+        const video = document.getElementById('me');
+        if (!video || !video.videoWidth) return;
+
+        const canvas = document.getElementById('baseline-canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        if (baselineMat) baselineMat.delete();
+        baselineMat = cv.imread(canvas);
+        
+        cv.cvtColor(baselineMat, baselineMat, cv.COLOR_RGBA2GRAY, 0);
+        let ksize = new cv.Size(5, 5);
+        cv.GaussianBlur(baselineMat, baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
+        
+        // Prepare reusable matrices for the loop to save RAM
+        if (!currentMat) currentMat = new cv.Mat();
+        if (!diffMat) diffMat = new cv.Mat();
+    }
+
+    // 3. The Detection Loop
+    function detectDarts() {
+        if (!baselineMat || !cvReady) return;
+        
+        const video = document.getElementById('me');
+        if (video.paused || video.ended) return;
+
+        const canvas = document.getElementById('current-canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Read the new frame
+        let tempMat = cv.imread(canvas);
+        cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
+        let ksize = new cv.Size(5, 5);
+        cv.GaussianBlur(currentMat, currentMat, ksize, 0, 0, cv.BORDER_DEFAULT);
+
+        // Compare new frame to baseline
+        cv.absdiff(baselineMat, currentMat, diffMat);
+
+        // Turn differences into pure black and white (thresholding)
+        let threshMat = new cv.Mat();
+        cv.threshold(diffMat, threshMat, 40, 255, cv.THRESH_BINARY);
+
+        // Find the shapes (contours) of the new objects
+        let contours = new cv.MatVector();
+        let hierarchy = new cv.Mat();
+        cv.findContours(threshMat, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROCH_SIMPLE);
+
+        let dartDetected = false;
+
+        // Loop through everything the camera thinks is new
+        for (let i = 0; i < contours.size(); ++i) {
+            let contour = contours.get(i);
+            let area = cv.contourArea(contour);
+            
+            // If the object is too small (camera noise) or too big (a player's hand), ignore it
+            if (area > 50 && area < 3000) { 
+                let rect = cv.boundingRect(contour);
+                // The tip of the dart is usually the lowest Y point of the object
+                let tipX = rect.x + (rect.width / 2);
+                let tipY = rect.y + rect.height; 
+
+                console.log(`Dart detected at pixel coordinates: X:${tipX}, Y:${tipY}`);
+                dartDetected = true;
+            }
+        }
+
+        if (dartDetected) {
+            console.log("Waiting for darts to settle...");
+            // Optionally, update baseline here so we don't count this dart twice
+            // captureBaseline(); 
+        }
+
+        // Clean up temporary memory
+        tempMat.delete();
+        threshMat.delete();
+        contours.delete();
+        hierarchy.delete();
+    }
 </script>
 </body>
 </html>
