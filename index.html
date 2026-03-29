@@ -26,7 +26,6 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* Force strict boundaries for Android chrome nav bar and iOS Safari */
         html, body { 
             height: 100%; width: 100%; 
             overflow: hidden; 
@@ -136,7 +135,7 @@
         .header-controls { 
             display: flex; gap: 5px; align-items: center; 
             overflow-x: auto; white-space: nowrap; 
-            padding-bottom: 10px; margin-bottom: -10px; /* Hide scrollbar horizontally */
+            padding-bottom: 10px; margin-bottom: -10px; 
             -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
         .header-controls::-webkit-scrollbar { display: none; }
@@ -161,7 +160,7 @@
             z-index: 20;
             display: none;
             box-sizing: border-box;
-            box-shadow: 0 0 0 9999px rgba(0,0,0,0.4); /* Darkens everything outside the circle */
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.4); 
         }
         .calibration-guide::before, .calibration-guide::after {
             content: ''; position: absolute; background: rgba(255, 0, 0, 0.6);
@@ -169,8 +168,10 @@
         .calibration-guide::before { top: 0; bottom: 0; left: 50%; width: 1px; transform: translateX(-50%); }
         .calibration-guide::after { left: 0; right: 0; top: 50%; height: 1px; transform: translateY(-50%); }
 
-        .cal-btn { background: #333; color: white; border: 1px solid #555; border-radius: 8px; font-size: 18px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .cal-btn:active { background: var(--blue); color: black; }
+        /* SLIDER STYLES */
+        .slider-group { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
+        .slider-group label { color: white; font-size: 11px; font-weight: bold; width: 40px; }
+        .slider-group input[type=range] { flex: 1; accent-color: var(--blue); }
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
@@ -497,21 +498,15 @@
         <div id="calib-guide" class="calibration-guide"></div>
         <video id="me" autoplay playsinline webkit-playsinline muted></video>
         
-        <div id="calibration-controls" style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 15px; border-radius: 12px; z-index: 30; width: 90%; max-width: 320px; border: 1px solid rgba(255,255,255,0.2);">
-            <div style="color: #ffcc00; font-size: 11px; text-align: center; margin-bottom: 10px; font-weight: bold; text-transform: uppercase;">1. Align red circle to the outer double ring<br>2. Step back and hit SET</div>
+        <div id="calibration-controls" style="display: none; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 15px; border-radius: 12px; z-index: 30; width: 90%; max-width: 320px; border: 1px solid rgba(255,255,255,0.2);">
+            <div style="color: #ffcc00; font-size: 11px; text-align: center; margin-bottom: 10px; font-weight: bold; text-transform: uppercase;">Stretch the oval to fit the double ring perfectly.<br>This corrects camera angles!</div>
             
-            <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
-                <button class="cal-btn" onclick="adjGuide('s', -2)">➖</button>
-                <div style="display: grid; grid-template-columns: repeat(3, 40px); gap: 5px;">
-                    <div></div><button class="cal-btn" onclick="adjGuide('y', -2)">⬆️</button><div></div>
-                    <button class="cal-btn" onclick="adjGuide('x', -2)">⬅️</button><div></div><button class="cal-btn" onclick="adjGuide('x', 2)">➡️</button>
-                    <div></div><button class="cal-btn" onclick="adjGuide('y', 2)">⬇️</button><div></div>
-                </div>
-                <button class="cal-btn" onclick="adjGuide('s', 2)">➕</button>
-            </div>
+            <div class="slider-group"><label>X Pos</label><input type="range" id="cal-x" min="0" max="100" value="50" oninput="updateCal()"></div>
+            <div class="slider-group"><label>Y Pos</label><input type="range" id="cal-y" min="0" max="100" value="50" oninput="updateCal()"></div>
+            <div class="slider-group"><label>Width</label><input type="range" id="cal-w" min="10" max="150" value="80" oninput="updateCal()"></div>
+            <div class="slider-group"><label>Height</label><input type="range" id="cal-h" min="10" max="150" value="80" oninput="updateCal()"></div>
             
-            <button onclick="autoFindBoard()" style="width:100%; padding: 10px; background: var(--blue); color:black; font-weight:bold; border:none; border-radius:8px; font-size: 14px; margin-top: 10px;">🔍 AUTO-FIND BOARD</button>
-            <button onclick="finishCalibration()" style="width:100%; padding: 12px; background: #4caf50; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px; margin-top: 5px;">✅ SET & START DETECTING</button>
+            <button onclick="finishCalibration()" style="width:100%; padding: 12px; background: #4caf50; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px; margin-top: 10px;">✅ SET & START DETECTING</button>
         </div>
     </div>
     <div id="box-peer" class="v-box">
@@ -1176,7 +1171,6 @@
     let isLocalMatch = false;
     let localInputMode = 'total'; let numpadVal = "";
     
-    // NEW DART BY DART STATE
     let dbdMult = 1;
     let currentDarts = [];
 
@@ -2308,20 +2302,26 @@
     }
 
     // ==========================================
-    // 🎯 ADVANCED OPEN-CV ENGINE (MOG2 & HOUGH) 🎯
+    // 🎯 ADVANCED OPEN-CV ENGINE (STATE MACHINE) 🎯
     // ==========================================
 
     let cvReady = false;
-    let bgSubtractor = null;
-    let fgMask = null;
+    let baselineMat = null;
+    let currentMat = null;
+    let diffMat = null;
+    let threshMat = null;
     let detectionInterval = null;
     let autoScoreEnabled = false;
+    
+    // State machine variables
+    let playerInFrame = false;
     let settleTimer = 0;
 
     // Calibration Guide State
     let guideX = 50; 
     let guideY = 50; 
-    let guideSize = 80; 
+    let guideW = 80; // vmin width
+    let guideH = 80; // vmin height
 
     window.addEventListener('load', () => {
         const autoBtn = document.getElementById('auto-toggle-btn');
@@ -2358,78 +2358,52 @@
         console.log("OpenCV Engine Loaded.");
     };
 
-    window.adjGuide = function(axis, amount) {
-        if(axis === 'x') guideX += amount;
-        if(axis === 'y') guideY += amount;
-        if(axis === 's') guideSize += amount;
+    // UI Slider Updater
+    window.updateCal = function() {
+        guideX = document.getElementById('cal-x').value;
+        guideY = document.getElementById('cal-y').value;
+        guideW = document.getElementById('cal-w').value;
+        guideH = document.getElementById('cal-h').value;
         
         const g = document.getElementById('calib-guide');
         g.style.left = guideX + '%';
         g.style.top = guideY + '%';
-        g.style.width = guideSize + 'vmin';
-        g.style.height = guideSize + 'vmin';
+        g.style.width = guideW + 'vmin';
+        g.style.height = guideH + 'vmin';
     }
 
-    // 🎯 AUTO-DETECT BOARD USING MATH (HOUGH CIRCLES)
-    window.autoFindBoard = function() {
+    window.finishCalibration = function() {
+        document.getElementById('calibration-controls').style.display = "none";
+        captureBaseline();
+        if (!detectionInterval) {
+            detectionInterval = setInterval(detectDarts, 500); // Check every 500ms
+        }
+    }
+
+    function captureBaseline() {
         if (!cvReady) return;
         const video = document.getElementById('me');
         if (!video || !video.videoWidth) return;
 
-        const canvas = document.createElement('canvas');
+        const canvas = document.getElementById('baseline-canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        let src = cv.imread(canvas);
-        let gray = new cv.Mat();
-        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
-        cv.medianBlur(gray, gray, 5);
+        if (baselineMat) baselineMat.delete();
+        baselineMat = cv.imread(canvas);
         
-        let circles = new cv.Mat();
-        // Math to find circles: Adjust param1 and param2 if it struggles on your specific camera
-        cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, gray.rows/4, 100, 50, gray.rows/4, gray.rows);
+        cv.cvtColor(baselineMat, baselineMat, cv.COLOR_RGBA2GRAY, 0);
+        let ksize = new cv.Size(5, 5);
+        cv.GaussianBlur(baselineMat, baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
 
-        if (circles.cols > 0) {
-            // Take the strongest circle found
-            let x = circles.data32F[0];
-            let y = circles.data32F[1];
-            let radius = circles.data32F[2];
-
-            // Convert video pixel coordinates to percentage for the CSS UI
-            guideX = (x / video.videoWidth) * 100;
-            guideY = (y / video.videoHeight) * 100;
-            
-            // Convert radius to vmin for the CSS UI
-            let vminPx = Math.min(window.innerWidth, window.innerHeight);
-            let radiusPercentageOfVmin = ((radius * 2) / vminPx) * 100;
-            guideSize = radiusPercentageOfVmin;
-
-            window.adjGuide('x', 0); // trigger UI update
-            alert("Board detected! Adjust slightly if necessary.");
-        } else {
-            alert("Could not clearly see the board outline. Ensure good lighting and try again, or manually align.");
-        }
-
-        src.delete(); gray.delete(); circles.delete();
+        if (!currentMat) currentMat = new cv.Mat();
+        if (!diffMat) diffMat = new cv.Mat();
+        if (!threshMat) threshMat = new cv.Mat();
     }
 
-    window.finishCalibration = function() {
-        document.getElementById('calibration-controls').style.display = "none";
-        
-        if (!bgSubtractor) {
-            // MOG2 automatically learns lighting changes over time (history=500 frames, threshold=16, detectShadows=false)
-            bgSubtractor = new cv.BackgroundSubtractorMOG2(500, 16, false);
-            fgMask = new cv.Mat();
-        }
-
-        if (!detectionInterval) {
-            detectionInterval = setInterval(detectDarts, 1000); // Check every second
-            alert("🎯 AI Background Learning Started. Please step out of frame.");
-        }
-    }
-
+    // Ellipse correction math! Maps skewed angle coordinates to a perfect circle
     function calculateDartScore(tipX, tipY) {
         const video = document.getElementById('me');
         const guide = document.getElementById('calib-guide');
@@ -2457,12 +2431,16 @@
 
         const centerX = gRect.left + (gRect.width / 2);
         const centerY = gRect.top + (gRect.height / 2);
+        
+        // This is the magic. It stretches the Y distance so the math treats the oval as a circle
+        const scaleY = gRect.width / gRect.height; 
+        
+        const dx = domTipX - centerX;
+        const dy = (domTipY - centerY) * scaleY; 
+        
+        const distance = Math.sqrt(dx*dx + dy*dy);
         const maxRadius = gRect.width / 2; 
 
-        const dx = domTipX - centerX;
-        const dy = domTipY - centerY;
-        const distance = Math.sqrt(dx*dx + dy*dy);
-        
         let angle = Math.atan2(dy, dx) * (180 / Math.PI);
         angle = (angle + 360 + 9) % 360; 
         
@@ -2482,7 +2460,7 @@
     }
 
     function detectDarts() {
-        if (!bgSubtractor || !cvReady || !autoScoreEnabled) return;
+        if (!baselineMat || !cvReady || !autoScoreEnabled) return;
         const video = document.getElementById('me');
         if (video.paused || video.ended) return;
 
@@ -2492,48 +2470,51 @@
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        let currentMat = cv.imread(canvas);
-        
-        // Feed the new frame into the MOG2 AI. It outputs a mask of ONLY new objects.
-        // The '0' learning rate means we don't absorb new objects into the background immediately.
-        bgSubtractor.apply(currentMat, fgMask, 0); 
-        
-        // Clean up camera noise
-        let kernel = cv.Mat.ones(5, 5, cv.CV_8U);
-        cv.morphologyEx(fgMask, fgMask, cv.MORPH_OPEN, kernel);
+        let tempMat = cv.imread(canvas);
+        cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
+        cv.GaussianBlur(currentMat, currentMat, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+
+        // State Machine Step 1: Find differences
+        cv.absdiff(baselineMat, currentMat, diffMat);
+        cv.threshold(diffMat, threshMat, 30, 255, cv.THRESH_BINARY); // Lowered threshold for small darts
 
         let contours = new cv.MatVector();
         let hierarchy = new cv.Mat();
-        cv.findContours(fgMask, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROCH_SIMPLE);
+        cv.findContours(threshMat, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROCH_SIMPLE);
 
         let maxArea = 0;
-        let validDarts = [];
+        let dartContours = [];
 
         for (let i = 0; i < contours.size(); ++i) {
             let area = cv.contourArea(contours.get(i));
             if (area > maxArea) maxArea = area;
             
-            // Size filter for a dart barrel/flight
-            if (area > 200 && area < 5000) { 
-                validDarts.push(contours.get(i));
+            // Size filter for a dart (lowered minimum area significantly for distant cameras)
+            if (area > 15 && area < 4000) { 
+                dartContours.push(contours.get(i));
             }
         }
 
-        // SAFETY: If a massive blob is detected (>10000 px), the player's arm is in frame.
-        if (maxArea > 10000) {
-            console.log("Player in frame. Waiting...");
+        // State Machine Logic
+        if (maxArea > 8000) {
+            console.log("Player walking to board.");
+            playerInFrame = true;
             settleTimer = 0;
-            // Force the AI to aggressively learn the hand as background so it quickly disappears when they move
-            bgSubtractor.apply(currentMat, fgMask, -1); 
         } 
-        // SCORE: Board is clear, and we see dart-sized objects
-        else if (validDarts.length > 0) {
+        else if (playerInFrame && maxArea < 1000) {
+            console.log("Player left board. Resetting clear baseline.");
+            captureBaseline(); // They pulled darts. We grab a clean slate.
+            playerInFrame = false;
+            settleTimer = 0;
+        }
+        else if (!playerInFrame && dartContours.length > 0) {
             settleTimer++;
-            // Wait 2 seconds for the dart to stop wobbling before scoring
-            if (settleTimer === 2) {
-                let rect = cv.boundingRect(validDarts[0]);
+            console.log("Dart moving... wait " + settleTimer);
+            if (settleTimer >= 2) { // Waited 1 second (two 500ms intervals) for dart to stop wobbling
+                let bestDart = dartContours[0];
+                let rect = cv.boundingRect(bestDart);
                 let tipX = rect.x + (rect.width / 2);
-                let tipY = rect.y + rect.height; // Bottom edge is the tip
+                let tipY = rect.y + rect.height; // approximate tip
 
                 let dartData = calculateDartScore(tipX, tipY);
                 console.log("Scored: ", dartData);
@@ -2541,17 +2522,15 @@
                 window.setDbdMult(dartData.mult);
                 window.hitDbd(dartData.val);
                 
-                // Force the AI to learn this newly scored dart as the "new normal background" 
-                // so it doesn't score it again on the next loop
-                bgSubtractor.apply(currentMat, fgMask, 1); 
+                // Immediately embed this scored dart into the background so we don't count it again!
+                captureBaseline(); 
                 settleTimer = 0;
             }
         } else {
             settleTimer = 0;
         }
 
-        currentMat.delete();
-        kernel.delete();
+        tempMat.delete();
         contours.delete();
         hierarchy.delete();
     }
