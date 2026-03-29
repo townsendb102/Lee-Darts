@@ -15,8 +15,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>🎯 RAF Darts Scorer 🎯</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/roboflow@0.2.26/roboflow.js"></script>
 
     <style>
         /* --- THEME VARIABLES --- */
@@ -463,6 +461,7 @@
     <div id="box-me" class="v-box visible">
         <div class="cam-label" id="cam-label-me">YOU</div>
         <canvas id="overlay-canvas"></canvas>
+        <canvas id="current-canvas" style="display: none;"></canvas>
         <video id="me" autoplay playsinline webkit-playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
@@ -2267,40 +2266,29 @@
     }
 
     // ==========================================
-    // 🎯 AI-POWERED ENGINE (ROBOFLOW YOLO) 🎯
+    // 🎯 CLOUD AI ENGINE (ROBOFLOW HOSTED API) 🎯
     // ==========================================
 
-    let rfModel = null;
     let autoScoreEnabled = false;
-    let detectionLoop = null;
+    let detectionTimeout = null;
     
-    // State machine variables
     let previousDartsCount = 0;
     let settleFrames = 0;
     
     let ringScale = 1.0; 
 
-    window.addEventListener('load', async () => {
+    // EXACT ROBOFLOW DETAILS
+    const API_KEY = "rf_29awkTXGorYWZp81ZLPa8tH67fr1";
+    const MODEL_ENDPOINT = "dartboarddetection-bvwb1/1";
+    const API_URL = `https://detect.roboflow.com/${MODEL_ENDPOINT}?api_key=${API_KEY}`;
+
+    window.addEventListener('load', () => {
         const autoBtn = document.getElementById('auto-toggle-btn');
         const calibControls = document.getElementById('calibration-controls');
         const overlay = document.getElementById('overlay-canvas');
         
-        try {
-            console.log("Loading AI Model from Roboflow...");
-            rfModel = await window.roboflow.auth({
-                publishable_key: "rf_29awkTXGorYWZp81ZLPa8tH67fr1"
-            }).load({
-                model: "dartboarddetection-bvwb1",
-                version: "1"
-            });
-            console.log("✅ AI Model Loaded Successfully!");
-            if(autoBtn) autoBtn.style.display = 'block'; // Show button when ready
-        } catch (e) {
-            console.error("Error loading AI:", e);
-            alert("Failed to load AI model. Please check the API key and Model name.");
-        }
-
         if(autoBtn) {
+            autoBtn.style.display = 'block'; 
             autoBtn.addEventListener('click', () => {
                 autoScoreEnabled = !autoScoreEnabled;
                 if(autoScoreEnabled) {
@@ -2314,13 +2302,13 @@
                         render();
                     }
                     
-                    // Draw the static center ring immediately
                     requestAnimationFrame(drawStaticRing);
                 } else {
                     autoBtn.innerText = "AUTO: OFF";
                     autoBtn.style.color = "#ffcc00";
                     overlay.style.display = "none";
                     calibControls.style.display = "none";
+                    if (detectionTimeout) clearTimeout(detectionTimeout);
                     autoScoreEnabled = false;
                 }
             });
@@ -2374,9 +2362,9 @@
         oCtx.strokeStyle = 'red';
         oCtx.stroke();
         
-        // Start the AI detection loop
         if (autoScoreEnabled) {
-            detectDartsAI();
+            console.log("Starting Cloud AI Detection...");
+            detectDartsAI(); 
         }
     }
 
@@ -2413,55 +2401,68 @@
     }
 
     async function detectDartsAI() {
-        if (!rfModel || !autoScoreEnabled) return;
+        if (!autoScoreEnabled) return;
         
         const video = document.getElementById('me');
-        if (video.paused || video.ended) {
-            requestAnimationFrame(detectDartsAI);
+        if (!video || video.paused || video.ended) {
+            detectionTimeout = setTimeout(detectDartsAI, 500);
             return;
         }
 
+        const canvas = document.getElementById('current-canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert the image to base64, removing the header
+        const base64Image = canvas.toDataURL("image/jpeg", 0.8).split(',')[1];
+
         try {
-            // Pass the video frame directly into Roboflow's AI model
-            const predictions = await rfModel.detect(video);
+            // Ping the Hosted API directly
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: base64Image
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
             
             let dartTips = [];
             let playerInFrame = false;
 
-            // Parse what the AI sees
-            predictions.forEach(pred => {
-                const className = pred.class.toLowerCase();
-                
-                // Track darts
-                if (className.includes("dart")) {
-                    // The prediction returns x,y as the center of the bounding box.
-                    dartTips.push({ x: pred.x, y: pred.y });
-                }
-                
-                // Track humans (Roboflow models often label hands/people)
-                if (className.includes("player") || className.includes("hand") || className.includes("person") || className.includes("human")) {
-                    playerInFrame = true;
-                }
-            });
+            if (data.predictions) {
+                data.predictions.forEach(pred => {
+                    const className = pred.class.toLowerCase();
+                    
+                    if (className.includes("dart")) {
+                        dartTips.push({ x: pred.x, y: pred.y });
+                    }
+                    
+                    if (className.includes("player") || className.includes("hand") || className.includes("person") || className.includes("human")) {
+                        playerInFrame = true;
+                    }
+                });
+            }
 
             // STATE MACHINE LOGIC
             if (playerInFrame) {
-                // The player is retrieving darts. Lock in the score!
                 if (currentDarts.length > 0) {
                     console.log("Player detected! Locking in score...");
                     window.dbdEnter();
                 }
-                previousDartsCount = 0; // Reset for next throw
+                previousDartsCount = 0; 
                 settleFrames = 0;
             } else {
-                // No human in frame. Check for new darts.
                 if (dartTips.length > previousDartsCount) {
                     settleFrames++;
-                    // Wait a few frames to ensure the dart has stopped wobbling
                     if (settleFrames >= 2) {
                         console.log("New Dart Detected!");
                         
-                        // We score the newest dart we found
                         let newDart = dartTips[dartTips.length - 1]; 
                         let dartScore = calculateDartScore(newDart.x, newDart.y);
                         
@@ -2474,11 +2475,9 @@
                         settleFrames = 0;
                     }
                 } else if (dartTips.length < previousDartsCount) {
-                    // A dart bounced out or the player pulled them out quickly
                     previousDartsCount = dartTips.length;
                     settleFrames = 0;
                 } else {
-                    // Dart count is stable, nothing new to score
                     settleFrames = 0;
                 }
             }
@@ -2487,9 +2486,9 @@
             console.error("AI Detection Error:", error);
         }
 
-        // Loop continuously at high speed
+        // Loop twice a second
         if (autoScoreEnabled) {
-            requestAnimationFrame(detectDartsAI);
+            detectionTimeout = setTimeout(detectDartsAI, 500);
         }
     }
 </script>
