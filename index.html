@@ -24,15 +24,13 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        /* Force strict boundaries for Android chrome nav bar and iOS Safari (No position fixed!) */
         html, body { 
             height: 100%; width: 100%; 
             overflow: hidden; 
-            overscroll-behavior: none; /* Stops bounce scroll on mobile */
+            overscroll-behavior: none; 
             margin: 0; padding: 0; 
         }
 
-        /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             display: grid;
@@ -52,7 +50,6 @@
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
         
-        /* GLASSMORPHISM TRANSPARENT CARDS */
         body.spectator-mode .player-card { 
             flex: 0 0 auto; width: 125px; 
             background-color: rgba(13, 27, 42, 0.45) !important; 
@@ -64,12 +61,7 @@
             border-radius: 15px;
             pointer-events: auto;
         }
-        body.spectator-mode .player-card.active { 
-            background-color: rgba(22, 42, 63, 0.6) !important;
-            border: 2px solid var(--blue); 
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-        }
-        
+        body.spectator-mode .player-card.active { background-color: rgba(22, 42, 63, 0.6) !important; border: 2px solid var(--blue); box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
         body.spectator-mode .score-val { font-size: 40px; }
@@ -130,20 +122,22 @@
 
         .btn-update { background: transparent; border: none; color: #888; font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
 
-        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 10px 10px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; background: #000; }
-        .header-controls { display: flex; gap: 5px; align-items: center; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;}
+        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; background: #000; overflow: hidden; gap: 10px; }
+        header > div:first-child { flex: 0 0 auto; white-space: nowrap; }
+        .header-controls { display: flex; gap: 5px; align-items: center; overflow-x: auto; white-space: nowrap; padding-bottom: 10px; margin-bottom: -10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .header-controls::-webkit-scrollbar { display: none; }
+        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; flex: 0 0 auto;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
-        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
+        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; transition: opacity 0.2s; }
         .v-box.visible { opacity: 1; z-index: 1; pointer-events: auto; }
 
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; position: absolute; inset: 0; z-index: 1; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 30; pointer-events: none;}
 
-        /* OVERLAY CANVAS FOR CATCHING CLICKS & DEBUGGING AI */
-        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: none; cursor: crosshair; touch-action: none; }
-        #debug-canvas { position: absolute; bottom: 10px; right: 10px; width: 100px; height: 100px; border: 2px solid var(--blue); border-radius: 8px; z-index: 30; display: none; background: black; pointer-events: none; box-shadow: 0px 4px 10px rgba(0,0,0,0.8); }
+        /* AI OVERLAYS - POINTER EVENTS NONE SO CLICKS PASS THROUGH */
+        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; cursor: crosshair; pointer-events: none; }
+        #debug-canvas { position: absolute; bottom: 10px; right: 10px; width: 100px; height: 100px; border: 2px solid var(--blue); border-radius: 8px; z-index: 30; display: none; background: black; pointer-events: none; box-shadow: 0px 4px 10px rgba(0,0,0,0.8);}
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
@@ -158,25 +152,20 @@
         .legs-count { font-size: 11px; color: #888; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
-        
-        /* MISSED DOUBLE BUTTON */
         .missed-db-btn { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; cursor: pointer; }
 
-        /* CRICKET CENTER BOARD STYLES */
         #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--card); border-radius: 8px; padding: 4px; border: 1px solid rgba(255,255,255,0.1); justify-content: space-evenly; margin: 0 5px; }
         .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
         .cric-mark { flex: 1; text-align: center; font-size: 14px; font-weight: bold; color: var(--blue); }
         .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 0; border: 1px solid rgba(255,255,255,0.1);}
         .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; border-color: transparent;}
 
-        /* ADDED 24px BOTTOM PADDING TO STOP FOOTER OVERLAP ON IPHONE */
         .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 8px 24px 8px; }
         .controls { display: grid; gap: 8px; }
         
         #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
-        /* CUSTOM NUMPAD STYLES */
         #numpad-display { font-size: 28px; font-weight: bold; text-align: center; height: 35px; line-height: 35px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
         .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
         .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px 0;}
@@ -185,14 +174,12 @@
         .np-btn.enter { background: var(--blue); color: black; }
         .np-btn.enter:disabled { background: #333; color: #666; }
         
-        /* NEW DART-BY-DART GRID STYLES */
         .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
         .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 14px; font-weight: bold; border-radius: 6px; padding: 6px 0; cursor: pointer; text-align: center;}
         .dbd-btn:active { background: var(--blue); color: black; }
         .dbd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 32px; font-size: 16px; font-weight: bold; border-radius: 6px; height: 32px; }
 
-        /* CRICKET CUSTOM KEYPAD STYLES */
         .cric-mult { flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;}
         .cric-mult.active { background: var(--blue); color: black; border-color: var(--blue); }
         .cric-mult:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -202,7 +189,6 @@
         .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
 
-        /* PROFILE STYLES */
         .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 2px solid var(--blue); cursor: pointer; margin: 0 auto 10px auto; display: block; background: #111; }
         .stat-box { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; flex: 1; border: 1px solid rgba(255,255,255,0.1); }
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
@@ -994,80 +980,11 @@
             list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>No friends added yet.</p>";
         }
     }
-    
-    // Safely expose required cloud funcs for the main logic to call
-    window.saveStatsToCloudModule = async function(myP, state, isWin, matchId) {
-        if(!window.db || !window.auth || !window.auth.currentUser) return;
-        const validGames = ["301", "501", "701", "1001", "170_race"];
-        try {
-            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
-            const userSnap = await getDoc(userRef);
-            if(userSnap.exists()) {
-                let dbData = userSnap.data();
-                let newPts = dbData.totalPts || 0;
-                let newDarts = dbData.totalDarts || 0;
-                let newHc = dbData.highCheckout || 0;
-                let newCoAtt = dbData.coAtt || 0;
-                let newCoHit = dbData.coHit || 0;
-                
-                let matchPts = 0; let matchDarts = 0;
-                let matchCoAtt = 0; let matchCoHit = 0;
-                
-                if(validGames.includes(state.gameType)) {
-                    matchPts = myP.pts;
-                    matchDarts = myP.d;
-                    matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
-                    
-                    newPts += matchPts; newDarts += matchDarts;
-                    newCoAtt += matchCoAtt; newCoHit += matchCoHit;
-                    newHc = Math.max(newHc, myP.hc);
-                }
-
-                let p1Avg = state.p[0].d > 0 ? ((state.p[0].pts / state.p[0].d) * 3).toFixed(1) : "0.0";
-                let p2Avg = state.p[1].d > 0 ? ((state.p[1].pts / state.p[1].d) * 3).toFixed(1) : "0.0";
-                let p1F9 = state.p[0].f9d > 0 ? ((state.p[0].f9pts / state.p[0].f9d) * 3).toFixed(1) : "0.0";
-                let p2F9 = state.p[1].f9d > 0 ? ((state.p[1].f9pts / state.p[1].f9d) * 3).toFixed(1) : "0.0";
-
-                let resultStr = isWin ? "WON" : "LOST";
-                let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
-                let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
-                let dateStr = new Date().toLocaleDateString();
-                let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
-
-                let newHistObj = { 
-                    id: matchId, date: dateStr, desc: matchText, avg: finalAvg, 
-                    pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
-                    p1Name: state.p[0].name, p2Name: state.p[1].name,
-                    p1Avg: p1Avg, p2Avg: p2Avg,
-                    p1F9: p1F9, p2F9: p2F9,
-                    p1Hc: state.p[0].hc, p2Hc: state.p[1].hc,
-                    p1140: state.p[0].n140, p2140: state.p[1].n140,
-                    p1180: state.p[0].n180, p2180: state.p[1].n180
-                };
-                
-                await updateDoc(userRef, { 
-                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
-                    matchHistory: arrayUnion(newHistObj)
-                });
-            }
-        } catch(e) {}
-    };
-
-    window.sendChallengeToCloud = async function(friendUid, matchId) {
-        if (!window.db || !window.currentUserDoc) return;
-        try {
-            await updateDoc(doc(window.db, "users", friendUid), {
-                activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: matchId, time: Date.now() }
-            });
-            alert("Challenge sent! Waiting for them to accept...");
-        } catch(e) {}
-    };
 </script>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
-    // --- MAIN APP SCRIPT ---
     let wakeLock = null;
     let stream = null;
     let peer = null;
@@ -1185,8 +1102,7 @@
             });
         });
 
-        // SAFELY ATTACH ALL DOM EVENTS
-        document.getElementById('start-btn').onclick = window.initApp;
+        document.getElementById('start-btn').onclick = initApp;
         if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
         if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
         if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
@@ -1219,11 +1135,11 @@
             const mode = modeInput.value;
             const gameType = gameTypeInput.value;
 
-            if(document.getElementById('p2-name-group')) document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
-            if(document.getElementById('bot-level-group')) document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
-            if(document.getElementById('game-type-group')) document.getElementById('game-type-group').style.display = 'block'; 
-            if(document.getElementById('dart-limit-group')) document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
-            if(document.getElementById('legs-group')) document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
+            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
+            document.getElementById('game-type-group').style.display = 'block'; 
+            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
+            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
             
             const p1Label = document.getElementById('p1-label');
             if (p1Label) {
@@ -1246,17 +1162,17 @@
 
         if (spectateId) {
             document.body.classList.add('spectator-mode');
-            if(document.getElementById('start-btn')) document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
-            if(document.getElementById('name-input')) document.getElementById('name-input').placeholder = "Your Name (Optional)";
-            if(document.getElementById('mode-group')) document.getElementById('mode-group').style.display = 'none';
-            if(document.getElementById('login-layer')) document.getElementById('login-layer').style.display = 'none';
-            if(document.getElementById('setup-layer')) document.getElementById('setup-layer').classList.remove('hidden');
+            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
+            document.getElementById('name-input').placeholder = "Your Name (Optional)";
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('setup-layer').classList.remove('hidden');
         } else if (joinId) {
-            if(document.getElementById('legs-group')) document.getElementById('legs-group').style.display = 'none';
-            if(document.getElementById('start-btn')) document.getElementById('start-btn').innerText = "JOIN MATCH";
-            if(document.getElementById('mode-group')) document.getElementById('mode-group').style.display = 'none';
-            if(document.getElementById('login-layer')) document.getElementById('login-layer').style.display = 'none';
-            if(document.getElementById('setup-layer')) document.getElementById('setup-layer').classList.remove('hidden');
+            document.getElementById('legs-group').style.display = 'none';
+            document.getElementById('start-btn').innerText = "JOIN MATCH";
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('setup-layer').classList.remove('hidden');
         }
 
         // ==========================================
@@ -1356,19 +1272,71 @@
         }
     }); // END WINDOW LOAD EVENT
 
+    let statsSavedThisMatch = false;
     async function saveStatsToCloud() {
-        if(statsSavedThisMatch) return;
+        if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
+        const validGames = ["301", "501", "701", "1001", "170_race"];
         if(state.mode === 'single' || state.mode === 'bot') return;
-        
-        let myP = state.p[myIndex];
-        if(state.mode === 'local') myP = state.p[0]; 
-        let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
-        let matchId = Date.now().toString();
+        try {
+            let myP = state.p[myIndex];
+            if(state.mode === 'local') myP = state.p[0]; 
 
-        if (window.saveStatsToCloudModule) {
-            window.saveStatsToCloudModule(myP, state, isWin, matchId);
-        }
-        statsSavedThisMatch = true;
+            let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
+            let resultStr = isWin ? "WON" : "LOST";
+            let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
+            let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
+            let dateStr = new Date().toLocaleDateString();
+            let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
+            let matchId = Date.now().toString();
+
+            const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
+            const userSnap = await getDoc(userRef);
+            
+            if(userSnap.exists()) {
+                let dbData = userSnap.data();
+                let newPts = dbData.totalPts || 0;
+                let newDarts = dbData.totalDarts || 0;
+                let newHc = dbData.highCheckout || 0;
+                let newCoAtt = dbData.coAtt || 0;
+                let newCoHit = dbData.coHit || 0;
+                
+                let matchPts = 0; let matchDarts = 0;
+                let matchCoAtt = 0; let matchCoHit = 0;
+                
+                if(validGames.includes(state.gameType)) {
+                    matchPts = myP.pts;
+                    matchDarts = myP.d;
+                    matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
+                    
+                    newPts += matchPts; newDarts += matchDarts;
+                    newCoAtt += matchCoAtt; newCoHit += matchCoHit;
+                    newHc = Math.max(newHc, myP.hc);
+                }
+
+                let p1Avg = state.p[0].d > 0 ? ((state.p[0].pts / state.p[0].d) * 3).toFixed(1) : "0.0";
+                let p2Avg = state.p[1].d > 0 ? ((state.p[1].pts / state.p[1].d) * 3).toFixed(1) : "0.0";
+                let p1F9 = state.p[0].f9d > 0 ? ((state.p[0].f9pts / state.p[0].f9d) * 3).toFixed(1) : "0.0";
+                let p2F9 = state.p[1].f9d > 0 ? ((state.p[1].f9pts / state.p[1].f9d) * 3).toFixed(1) : "0.0";
+
+                let newHistObj = { 
+                    id: matchId, date: dateStr, desc: matchText, avg: finalAvg, 
+                    pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
+                    p1Name: state.p[0].name, p2Name: state.p[1].name,
+                    p1Avg: p1Avg, p2Avg: p2Avg,
+                    p1F9: p1F9, p2F9: p2F9,
+                    p1Hc: state.p[0].hc, p2Hc: state.p[1].hc,
+                    p1140: state.p[0].n140, p2140: state.p[1].n140,
+                    p1180: state.p[0].n180, p2180: state.p[1].n180
+                };
+                
+                await updateDoc(userRef, { 
+                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
+                    matchHistory: arrayUnion(newHistObj)
+                });
+                statsSavedThisMatch = true;
+            }
+        } catch(e) {}
     }
 
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
@@ -1557,20 +1525,22 @@
         if (!isLocalMatch) broadcast(state);
     };
 
-    // FIX: Explictly attached to window so Start Match button finds it
-    window.initApp = async function() {
+    async function initApp() {
         requestWakeLock();
         statsSavedThisMatch = false; 
         
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
-        if(startBtn) startBtn.disabled = true;
+        startBtn.disabled = true;
 
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
+        if (state.mode !== 'online') {
+            window.targetChallengeFriend = null;
+        }
 
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
-        state.limit170 = parseInt(document.getElementById('dart-limit-input') ? document.getElementById('dart-limit-input').value : 9) || 9;
+        state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
         isLocalMatch = (state.mode === 'local' || state.mode === 'bot');
 
         let startScore = 501;
@@ -1583,7 +1553,7 @@
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
-        state.p[0].name = document.getElementById('name-input') ? document.getElementById('name-input').value : "Player 1";
+        state.p[0].name = document.getElementById('name-input').value || "Player 1";
         state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
         state.p[0].target170 = 170;
         state.p[0].s = startScore;
@@ -1632,7 +1602,7 @@
             if (!spectateId) {
                 if (state.mode === 'single') { stream = null; } 
                 else {
-                    if(log) log.innerText = "Accessing Camera...";
+                    log.innerText = "Accessing Camera...";
                     let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
                     if (isMobile) {
                         constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
@@ -1645,7 +1615,8 @@
                         try {
                             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                         } catch (fallbackErr) {
-                            if(startBtn) { startBtn.disabled = false; startBtn.innerText = "START MATCH"; }
+                            startBtn.disabled = false;
+                            startBtn.innerText = "START MATCH";
                             throw new Error("Could not access camera/mic.");
                         }
                     }
@@ -1657,10 +1628,7 @@
                 }
             }
             
-            if (state.mode !== 'single') {
-                if(log) log.innerText = "Connecting to server...";
-            }
-            
+            if (state.mode !== 'single') log.innerText = "Connecting to server...";
             peer = new Peer({
                 config: {
                     'iceServers': [
@@ -1675,11 +1643,18 @@
             });
 
             peer.on('open', async (id) => {
-                if(document.getElementById('display-id')) document.getElementById('display-id').innerText = id;
-                if(document.getElementById('wait-id')) document.getElementById('wait-id').innerText = id;
+                document.getElementById('display-id').innerText = id;
+                document.getElementById('wait-id').innerText = id;
 
-                if(window.targetChallengeFriend && window.sendChallengeToCloud) {
-                    window.sendChallengeToCloud(window.targetChallengeFriend, id);
+                // THIS IS THE ORIGINAL FIREBASE CALL FOR CHALLENGING FRIENDS
+                if(window.targetChallengeFriend && window.db) {
+                    try {
+                        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+                        await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
+                            activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
+                        });
+                        alert("Challenge sent! Waiting for them to accept...");
+                    } catch(e) {}
                     window.targetChallengeFriend = null;
                 }
                 
@@ -1726,17 +1701,14 @@
             });
 
             peer.on('error', err => {
-                if (state.mode !== 'single') { 
-                    if(log) log.innerText = "Connection Error: " + err.type; 
-                    if(startBtn) startBtn.disabled = false; 
-                }
+                if (state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
             });
 
         } catch (e) {
-            if(log) log.innerText = "Camera/Mic error. (" + e.message + ")";
-            if(startBtn) startBtn.disabled = false;
+            log.innerText = "Camera/Mic error. (" + e.message + ")";
+            startBtn.disabled = false;
         }
-    };
+    }
 
     function attachPeerVideo(s) {
         const peerVideo = document.getElementById('peer');
@@ -1831,7 +1803,7 @@
             if (stream && stream.getAudioTracks().length > 0) { 
                 stream.getAudioTracks()[0].enabled = !isMicMuted; 
             }
-        } catch(e) {}
+        } catch(e) { console.warn("Mic Error:", e); }
         
         const btn = document.getElementById('mic-btn');
         if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
@@ -2344,10 +2316,9 @@
             botTimeout = null;
         }
     }
+</script>
 
-    // ==========================================
-    // 🎯 PURE JS MATH ENGINE (NO OPENCV REQUIRED) 🎯
-    // ==========================================
+<script>
     function gauss(A) {
         let n = A.length;
         for (let i = 0; i < n; i++) {
@@ -2365,20 +2336,14 @@
             for (let k = i + 1; k < n; k++) {
                 let c = -A[k][i] / A[i][i];
                 for (let j = i; j < n + 1; j++) {
-                    if (i === j) {
-                        A[k][j] = 0;
-                    } else {
-                        A[k][j] += c * A[i][j];
-                    }
+                    if (i === j) { A[k][j] = 0; } else { A[k][j] += c * A[i][j]; }
                 }
             }
         }
         let x = new Array(n);
         for (let i = n - 1; i >= 0; i--) {
             x[i] = A[i][n] / A[i][i];
-            for (let k = i - 1; k >= 0; k--) {
-                A[k][n] -= A[k][i] * x[i];
-            }
+            for (let k = i - 1; k >= 0; k--) { A[k][n] -= A[k][i] * x[i]; }
         }
         return x;
     }
@@ -2399,11 +2364,9 @@
             y: (h[3] * x + h[4] * y + h[5]) / denom
         };
     }
+</script>
 
-    // ==========================================
-    // 🎯 CLOUD AI ENGINE (ROBOFLOW API + 4-POINT CALIBRATION) 🎯
-    // ==========================================
-
+<script>
     let autoScoreEnabled = false;
     let detectionTimeout = null;
     let previousDartsCount = 0;
@@ -2638,7 +2601,7 @@
             }
 
             if (playerInFrame) {
-                if (typeof currentDarts !== 'undefined' && currentDarts.length > 0) {
+                if (typeof window.currentDarts !== 'undefined' && window.currentDarts.length > 0) {
                     console.log("Player detected! Locking in score...");
                     if(typeof window.dbdEnter === 'function') window.dbdEnter();
                 }
