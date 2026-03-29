@@ -137,6 +137,7 @@
 
         /* OVERLAY CANVAS FOR PRECISE DRAWING & DEBUGGING */
         #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: none; cursor: crosshair; }
+        #debug-canvas { position: absolute; bottom: 10px; right: 10px; width: 100px; height: 100px; border: 2px solid var(--blue); border-radius: 8px; z-index: 30; display: none; background: black; pointer-events: none; box-shadow: 0px 4px 10px rgba(0,0,0,0.8);}
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 50; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 50; }
@@ -300,7 +301,7 @@
             <tr><td id="md-f90" style="color: white;">0.0</td><td style="color: white;">First 9 Avg</td><td id="md-f91" style="color: white;">0.0</td></tr>
             <tr><td id="md-hc0" style="color: white;">-</td><td style="color: white;">High Out</td><td id="md-hc1" style="color: white;">-</td></tr>
             <tr><td id="md-1400" style="color: white;">0</td><td style="color: white;">140+</td><td id="md-1401" style="color: white;">0</td></tr>
-            <tr><td id="md-1800" style="color: white;">0</td><td style="color: white;">180s</td><td id="ws-1801" style="color: white;">0</td></tr>
+            <tr><td id="md-1800" style="color: white;">0</td><td style="color: white;">180s</td><td id="md-1801" style="color: white;">0</td></tr>
         </table>
         <button id="close-md-btn" class="btn-start" style="background: #444; color: white; margin-top: auto;">BACK</button>
     </div>
@@ -461,6 +462,7 @@
     <div id="box-me" class="v-box visible">
         <div class="cam-label" id="cam-label-me">YOU</div>
         <canvas id="overlay-canvas"></canvas>
+        <canvas id="debug-canvas"></canvas>
         <video id="me" autoplay playsinline webkit-playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
@@ -1170,9 +1172,10 @@
                     autoBtn.innerText = "AUTO: ON";
                     autoBtn.style.color = "#4caf50";
                     overlay.style.display = "block"; 
-                    overlay.style.pointerEvents = "auto"; 
+                    overlay.style.pointerEvents = "auto"; // CRITICAL: Allow touch events for calibration
                     calibControls.style.display = "block";
                     
+                    // Force 1:1 pixel resolution to prevent stretching
                     overlay.width = overlay.offsetWidth;
                     overlay.height = overlay.offsetHeight;
                     
@@ -1237,13 +1240,19 @@
                 updateCalibMsg();
                 
                 if (clickPoints.length === 4) {
+                    const dstPoints = [
+                        {x: targetSize/2, y: 0},                 // Top
+                        {x: targetSize, y: targetSize/2},        // Right
+                        {x: targetSize/2, y: targetSize},        // Bottom
+                        {x: 0, y: targetSize/2}                  // Left
+                    ];
                     hMatrix = getHomography(clickPoints, dstPoints);
                     document.getElementById('set-baseline-btn').style.display = 'block';
-                    overlay.style.pointerEvents = "none"; // Stop blocking touches
+                    overlay.style.pointerEvents = "none"; // Disable blocking touches
                 }
             });
         }
-    });
+    }); // END WINDOW LOAD EVENT
 
     async function requestWakeLock() {
         try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
@@ -1483,7 +1492,7 @@
                     if (stream) {
                         const meVid = document.getElementById('me');
                         meVid.srcObject = stream;
-                        // Important for iOS WebRTC compatibility
+                        // Important for iOS compatibility
                         meVid.onloadedmetadata = () => { meVid.play().catch(e => console.log(e)); };
                     }
                 }
@@ -2367,8 +2376,10 @@
         document.getElementById('set-baseline-btn').style.display = 'none';
         
         const debugCanvas = document.getElementById('debug-canvas');
-        const debugCtx = debugCanvas.getContext('2d');
-        debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
+        if (debugCanvas) {
+            const debugCtx = debugCanvas.getContext('2d');
+            debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
+        }
     }
 
     window.finishCalibration = function() {
@@ -2455,29 +2466,4 @@
         
         const video = document.getElementById('me');
         if (!video || video.paused || video.ended) {
-            detectionTimeout = setTimeout(detectDartsAI, 500);
-            return;
-        }
-
-        // CRITICAL FIX: Shrink the video to 640x640 to prevent iPhone RAM crash
-        const aiResolution = 640;
-        const canvas = document.createElement('canvas');
-        canvas.width = aiResolution;
-        canvas.height = aiResolution;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Calculate scaling factors so we can map AI data back to the original video size
-        const scaleX = video.videoWidth / aiResolution;
-        const scaleY = video.videoHeight / aiResolution;
-
-        const base64Image = canvas.toDataURL("image/jpeg", 0.6).split(',')[1];
-
-        try {
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: base64Image
-            });
-
-            if (!response
+            detectionTimeout =
