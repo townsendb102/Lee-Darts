@@ -148,24 +148,14 @@
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
-        /* --- FIXED CALIBRATION OVERLAY --- */
-        .fixed-calibration-guide {
+        /* OVERLAY CANVAS FOR PRECISE DRAWING */
+        #overlay-canvas {
             position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90vmin; height: 90vmin;
-            border: 4px solid rgba(255, 0, 0, 0.8);
-            border-radius: 50%;
-            box-shadow: 0 0 0 9999px rgba(0,0,0,0.6); 
+            top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             z-index: 20;
             display: none;
         }
-        .fixed-calibration-guide::after, .fixed-calibration-guide::before {
-            content: ''; position: absolute; background: rgba(255, 0, 0, 0.5);
-        }
-        .fixed-calibration-guide::before { top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); }
-        .fixed-calibration-guide::after { left: 0; right: 0; top: 50%; height: 2px; transform: translateY(-50%); }
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
@@ -489,17 +479,18 @@
 <div class="v-container">
     <div id="box-me" class="v-box visible">
         <div class="cam-label" id="cam-label-me">YOU</div>
-        <div id="calib-guide" class="fixed-calibration-guide"></div>
+        <canvas id="overlay-canvas"></canvas>
         <video id="me" autoplay playsinline webkit-playsinline muted></video>
         
-        <div id="calibration-controls" style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 15px; border-radius: 12px; z-index: 30; width: 90%; max-width: 320px; border: 1px solid rgba(255,255,255,0.2); text-align: center;">
-            <div style="color: #ffcc00; font-size: 13px; margin-bottom: 10px; font-weight: bold; text-transform: uppercase;">
-                1. Physically move your phone.<br>
-                2. Align the red ring with the Double Ring.<br>
-                3. Step away and hit SET.
+        <div id="calibration-controls" style="display: none; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 15px; border-radius: 12px; z-index: 30; width: 90%; max-width: 320px; border: 1px solid rgba(255,255,255,0.2);">
+            <div id="calib-msg" style="color: #ffcc00; font-size: 13px; text-align: center; margin-bottom: 10px; font-weight: bold;">🔍 Auto-detecting board...</div>
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;">
+                <label style="color: white; font-size: 11px; font-weight: bold; white-space: nowrap;">Ring Size</label>
+                <input type="range" id="cal-size" min="0.8" max="1.2" step="0.01" value="1" style="flex: 1; accent-color: var(--blue);">
             </div>
             
-            <button onclick="finishCalibration()" style="width:100%; padding: 12px; background: #4caf50; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 16px; margin-top: 5px;">✅ SET BASELINE</button>
+            <button onclick="finishCalibration()" style="width:100%; padding: 12px; background: #4caf50; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px;">✅ SET BASELINE</button>
         </div>
     </div>
     <div id="box-peer" class="v-box">
@@ -2305,16 +2296,19 @@
     let diffMat = null;
     let threshMat = null;
     let detectionInterval = null;
+    let autoDetectInterval = null;
     let autoScoreEnabled = false;
+    let boardEllipse = null; 
     
-    // State machine variables
     let playerInFrame = false;
     let settleFrames = 0;
+    
+    let sizeAdjust = 1.0; 
 
     window.addEventListener('load', () => {
         const autoBtn = document.getElementById('auto-toggle-btn');
-        const calibGuide = document.getElementById('calib-guide');
         const calibControls = document.getElementById('calibration-controls');
+        const overlay = document.getElementById('overlay-canvas');
         
         if(autoBtn) {
             autoBtn.addEventListener('click', () => {
@@ -2322,23 +2316,38 @@
                 if(autoScoreEnabled) {
                     autoBtn.innerText = "AUTO: ON";
                     autoBtn.style.color = "#4caf50";
-                    calibGuide.style.display = "block"; 
+                    overlay.style.display = "block"; 
                     calibControls.style.display = "block";
                     
                     if(localInputMode !== 'darts') {
                         localInputMode = 'darts';
                         render();
                     }
+                    
+                    if (cvReady) {
+                        boardEllipse = null;
+                        document.getElementById('calib-msg').innerText = "🔍 Auto-detecting board...";
+                        document.getElementById('calib-msg').style.color = "#ffcc00";
+                        autoDetectInterval = setInterval(autoFindBoard, 500);
+                    }
                 } else {
                     autoBtn.innerText = "AUTO: OFF";
                     autoBtn.style.color = "#ffcc00";
-                    calibGuide.style.display = "none";
+                    overlay.style.display = "none";
                     calibControls.style.display = "none";
+                    if (autoDetectInterval) clearInterval(autoDetectInterval);
                     if (detectionInterval) clearInterval(detectionInterval);
+                    autoDetectInterval = null;
                     detectionInterval = null;
+                    boardEllipse = null;
                 }
             });
         }
+
+        document.getElementById('cal-size').addEventListener('input', (e) => {
+            sizeAdjust = parseFloat(e.target.value);
+            drawBoardEllipse();
+        });
     });
 
     window.onOpenCvReady = function() {
@@ -2346,11 +2355,110 @@
         console.log("OpenCV Engine Loaded.");
     };
 
+    function autoFindBoard() {
+        if (!cvReady || !autoScoreEnabled) return;
+        const video = document.getElementById('me');
+        if (!video || video.paused || !video.videoWidth) return;
+
+        const overlayCanvas = document.getElementById('overlay-canvas');
+        overlayCanvas.width = video.videoWidth;
+        overlayCanvas.height = video.videoHeight;
+        
+        const ctx = document.createElement('canvas').getContext('2d');
+        ctx.canvas.width = video.videoWidth;
+        ctx.canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        let src = cv.imread(ctx.canvas);
+        let gray = new cv.Mat();
+        let edges = new cv.Mat();
+        
+        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+        cv.Canny(gray, edges, 50, 150);
+        
+        let kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+        cv.dilate(edges, edges, kernel);
+
+        let contours = new cv.MatVector();
+        let hierarchy = new cv.Mat();
+        cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROCH_SIMPLE);
+
+        let bestEllipse = null;
+        let maxArea = 0;
+        let totalArea = src.cols * src.rows;
+
+        for (let i = 0; i < contours.size(); ++i) {
+            let cnt = contours.get(i);
+            if (cnt.rows >= 5) {
+                let ellipse = cv.fitEllipse(cnt);
+                let area = Math.PI * (ellipse.size.width / 2) * (ellipse.size.height / 2);
+                
+                if (area > totalArea * 0.15 && area < totalArea * 0.8) {
+                    if (area > maxArea) {
+                        maxArea = area;
+                        bestEllipse = ellipse;
+                    }
+                }
+            }
+        }
+
+        if (bestEllipse) {
+            boardEllipse = bestEllipse;
+            let ratio = Math.min(boardEllipse.size.width, boardEllipse.size.height) / Math.max(boardEllipse.size.width, boardEllipse.size.height);
+            const msgEl = document.getElementById('calib-msg');
+
+            if (ratio < 0.85) {
+                overlayCanvas.dataset.color = 'yellow';
+                msgEl.innerText = "⚠️ Angle too sharp! Move camera Left/Right.";
+                msgEl.style.color = "yellow";
+            } else {
+                overlayCanvas.dataset.color = '#4caf50';
+                msgEl.innerText = "✅ Perfect! Use slider to fit the Double Ring.";
+                msgEl.style.color = "#4caf50";
+            }
+            drawBoardEllipse();
+        }
+
+        src.delete(); gray.delete(); edges.delete(); kernel.delete(); contours.delete(); hierarchy.delete();
+    }
+
+    function drawBoardEllipse() {
+        if (!boardEllipse) return;
+        const overlayCanvas = document.getElementById('overlay-canvas');
+        const oCtx = overlayCanvas.getContext('2d');
+        oCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        
+        oCtx.beginPath();
+        oCtx.ellipse(
+            boardEllipse.center.x, 
+            boardEllipse.center.y, 
+            (boardEllipse.size.width / 2) * sizeAdjust, 
+            (boardEllipse.size.height / 2) * sizeAdjust, 
+            boardEllipse.angle * Math.PI / 180, 0, 2 * Math.PI
+        );
+        oCtx.lineWidth = 4;
+        oCtx.strokeStyle = overlayCanvas.dataset.color || 'green';
+        oCtx.stroke();
+    }
+
     window.finishCalibration = function() {
+        if (!boardEllipse) {
+            alert("Board not detected yet! Please wait or move camera.");
+            return;
+        }
+        
+        clearInterval(autoDetectInterval);
+        autoDetectInterval = null;
+        
         document.getElementById('calibration-controls').style.display = "none";
+        
+        const overlayCanvas = document.getElementById('overlay-canvas');
+        overlayCanvas.dataset.color = 'red';
+        drawBoardEllipse();
+        
         captureBaseline();
         if (!detectionInterval) {
-            detectionInterval = setInterval(detectDarts, 500); // Check twice a second
+            detectionInterval = setInterval(detectDarts, 500); 
         }
     }
 
@@ -2378,60 +2486,48 @@
     }
 
     function calculateDartScore(tipX, tipY) {
-        const video = document.getElementById('me');
-        const vRect = video.getBoundingClientRect();
-        
-        // Calculate the exact size of the video element inside the container
-        const vidRatio = video.videoWidth / video.videoHeight;
-        const domRatio = vRect.width / vRect.height;
-        
-        let renderedW = vRect.width;
-        let renderedH = vRect.height;
+        if (!boardEllipse) return { val: 0, mult: 1, label: "MISS" };
 
-        if (vidRatio > domRatio) {
-            renderedH = vRect.width / vidRatio;
-        } else {
-            renderedW = vRect.height * vidRatio;
-        }
-
-        // The DOM Calibration ring is 90vmin
-        const vmin = Math.min(window.innerWidth, window.innerHeight);
-        const guideDomDiameter = vmin * 0.9;
+        const centerX = boardEllipse.center.x;
+        const centerY = boardEllipse.center.y;
         
-        // Scale DOM guide size up to actual Video Pixel coordinates
-        const scale = video.videoWidth / renderedW;
-        const videoRadius = (guideDomDiameter * scale) / 2;
-        
-        // Because object-fit: contain centers the video perfectly, the center of the 
-        // guide is exactly the center of the video feed itself!
-        const centerX = video.videoWidth / 2;
-        const centerY = video.videoHeight / 2;
+        const radiusX = (boardEllipse.size.width / 2) * sizeAdjust;
+        const radiusY = (boardEllipse.size.height / 2) * sizeAdjust;
 
         const dx = tipX - centerX;
         const dy = tipY - centerY;
-        const distance = Math.sqrt(dx*dx + dy*dy);
+
+        const angleRad = boardEllipse.angle * (Math.PI / 180);
+        const cosA = Math.cos(-angleRad);
+        const sinA = Math.sin(-angleRad);
+        const rotX = dx * cosA - dy * sinA;
+        const rotY = dx * sinA + dy * cosA;
+
+        const normX = rotX / radiusX;
+        const normY = rotY / radiusY;
+
+        const distance = Math.sqrt(normX*normX + normY*normY);
         
-        let angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        angle = (angle + 360 + 9) % 360; 
+        let dartAngle = Math.atan2(normY, normX) * (180 / Math.PI);
+        dartAngle = (dartAngle + 360 + 9) % 360; 
         
         const boardSegments = [6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5, 20, 1, 18, 4, 13];
-        const segmentIndex = Math.floor(angle / 18);
+        const segmentIndex = Math.floor(dartAngle / 18);
         const segmentScore = boardSegments[segmentIndex];
         
         let multiplier = 1;
         
-        // Exact mathematical bounds for standard tournament dartboards
-        if (distance < videoRadius * 0.04) return { val: 25, mult: 2, label: "DB" };
-        if (distance < videoRadius * 0.095) return { val: 25, mult: 1, label: "B" };
-        if (distance > videoRadius * 0.58 && distance < videoRadius * 0.63) multiplier = 3;
-        if (distance > videoRadius * 0.94 && distance <= videoRadius * 1.02) multiplier = 2; // Allow slight tip overlap
-        if (distance > videoRadius * 1.02) return { val: 0, mult: 1, label: "MISS" }; 
+        if (distance < 0.037) return { val: 25, mult: 2, label: "DB" };
+        if (distance < 0.094) return { val: 25, mult: 1, label: "B" };
+        if (distance > 0.58 && distance <= 0.63) multiplier = 3;
+        if (distance > 0.95 && distance <= 1.05) multiplier = 2; 
+        if (distance > 1.05) return { val: 0, mult: 1, label: "MISS" }; 
         
         return { val: segmentScore, mult: multiplier, label: (multiplier===3?"T":multiplier===2?"D":"") + segmentScore };
     }
 
     function detectDarts() {
-        if (!baselineMat || !cvReady || !autoScoreEnabled) return;
+        if (!baselineMat || !cvReady || !autoScoreEnabled || !boardEllipse) return;
         const video = document.getElementById('me');
         if (video.paused || video.ended) return;
 
@@ -2445,9 +2541,8 @@
         cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
         cv.GaussianBlur(currentMat, currentMat, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
 
-        // Compare against baseline
         cv.absdiff(baselineMat, currentMat, diffMat);
-        cv.threshold(diffMat, threshMat, 30, 255, cv.THRESH_BINARY);
+        cv.threshold(diffMat, threshMat, 20, 255, cv.THRESH_BINARY); // Lowered to 20 for distance sensitivity
 
         let contours = new cv.MatVector();
         let hierarchy = new cv.Mat();
@@ -2469,7 +2564,6 @@
             // 1. A human is walking up to the board
             if (!playerInFrame) {
                 console.log("Player entered frame.");
-                // AUTO-ENTER: If they threw darts and walked up to the board, end their turn!
                 if (currentDarts.length > 0) {
                     window.dbdEnter();
                 }
@@ -2487,13 +2581,12 @@
                 settleFrames = 0;
             }
         }
-        else if (!playerInFrame && maxArea > 50 && maxArea < 5000) {
+        else if (!playerInFrame && maxArea > 20 && maxArea < 4000) {
             // 3. A dart was thrown!
             settleFrames++;
             console.log("Dart tracking...");
             if (settleFrames >= 2) { 
                 let rect = cv.boundingRect(bestContour);
-                // Center of the dart blob is extremely reliable for tip entry on flat alignments
                 let tipX = rect.x + (rect.width / 2);
                 let tipY = rect.y + (rect.height / 2); 
 
@@ -2503,12 +2596,10 @@
                 window.setDbdMult(dart.mult);
                 window.hitDbd(dart.val);
                 
-                // Immeditely capture a new baseline so we don't double-score this dart
                 captureBaseline(); 
                 settleFrames = 0;
             }
         } else {
-            // Board is quiet
             settleFrames = 0; 
         }
 
