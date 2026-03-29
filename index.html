@@ -135,8 +135,8 @@
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; position: absolute; inset: 0; z-index: 1; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 30; pointer-events: none;}
 
-        /* AI OVERLAYS - POINTER EVENTS NONE SO CLICKS PASS THROUGH */
-        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; cursor: crosshair; pointer-events: none; }
+        /* AI OVERLAYS - INVISIBLE BY DEFAULT */
+        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; cursor: crosshair; touch-action: none; pointer-events: none;}
         #debug-canvas { position: absolute; bottom: 10px; right: 10px; width: 100px; height: 100px; border: 2px solid var(--blue); border-radius: 8px; z-index: 30; display: none; background: black; pointer-events: none; box-shadow: 0px 4px 10px rgba(0,0,0,0.8);}
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
@@ -985,6 +985,7 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
+    // --- MAIN APP SCRIPT ---
     let wakeLock = null;
     let stream = null;
     let peer = null;
@@ -1059,50 +1060,8 @@
     };
 
     window.addEventListener('load', () => {
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); 
-            deferredPrompt = e;
-            const installBtn = document.getElementById('install-btn');
-            if (installBtn) {
-                installBtn.style.display = 'block';
-                installBtn.onclick = async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        if (outcome === 'accepted') {
-                            installBtn.style.display = 'none';
-                        }
-                        deferredPrompt = null;
-                    }
-                };
-            }
-        });
-
-        const quitBtn = document.getElementById('quit-btn');
-        if (quitBtn) {
-            quitBtn.addEventListener('click', () => {
-                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-                    window.location.href = window.location.pathname;
-                }
-            });
-        }
-        
-        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.innerText = "Clearing Cache & Updating...";
-                btn.style.color = "#4caf50";
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                        for(let registration of registrations) { registration.unregister(); }
-                    });
-                }
-                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
-                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
-            });
-        });
-
-        document.getElementById('start-btn').onclick = initApp;
+        // Essential DOM listeners
+        if(document.getElementById('start-btn')) document.getElementById('start-btn').onclick = initApp;
         if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
         if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
         if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
@@ -1135,11 +1094,11 @@
             const mode = modeInput.value;
             const gameType = gameTypeInput.value;
 
-            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
-            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
-            document.getElementById('game-type-group').style.display = 'block'; 
-            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
-            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
+            if(document.getElementById('p2-name-group')) document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+            if(document.getElementById('bot-level-group')) document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
+            if(document.getElementById('game-type-group')) document.getElementById('game-type-group').style.display = 'block'; 
+            if(document.getElementById('dart-limit-group')) document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
+            if(document.getElementById('legs-group')) document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
             
             const p1Label = document.getElementById('p1-label');
             if (p1Label) {
@@ -1162,17 +1121,17 @@
 
         if (spectateId) {
             document.body.classList.add('spectator-mode');
-            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
-            document.getElementById('name-input').placeholder = "Your Name (Optional)";
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('setup-layer').classList.remove('hidden');
+            if(document.getElementById('start-btn')) document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
+            if(document.getElementById('name-input')) document.getElementById('name-input').placeholder = "Your Name (Optional)";
+            if(document.getElementById('mode-group')) document.getElementById('mode-group').style.display = 'none';
+            if(document.getElementById('login-layer')) document.getElementById('login-layer').style.display = 'none';
+            if(document.getElementById('setup-layer')) document.getElementById('setup-layer').classList.remove('hidden');
         } else if (joinId) {
-            document.getElementById('legs-group').style.display = 'none';
-            document.getElementById('start-btn').innerText = "JOIN MATCH";
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('setup-layer').classList.remove('hidden');
+            if(document.getElementById('legs-group')) document.getElementById('legs-group').style.display = 'none';
+            if(document.getElementById('start-btn')) document.getElementById('start-btn').innerText = "JOIN MATCH";
+            if(document.getElementById('mode-group')) document.getElementById('mode-group').style.display = 'none';
+            if(document.getElementById('login-layer')) document.getElementById('login-layer').style.display = 'none';
+            if(document.getElementById('setup-layer')) document.getElementById('setup-layer').classList.remove('hidden');
         }
 
         // ==========================================
@@ -1271,73 +1230,6 @@
             });
         }
     }); // END WINDOW LOAD EVENT
-
-    let statsSavedThisMatch = false;
-    async function saveStatsToCloud() {
-        if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
-        const validGames = ["301", "501", "701", "1001", "170_race"];
-        if(state.mode === 'single' || state.mode === 'bot') return;
-        try {
-            let myP = state.p[myIndex];
-            if(state.mode === 'local') myP = state.p[0]; 
-
-            let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
-            let resultStr = isWin ? "WON" : "LOST";
-            let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
-            let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
-            let dateStr = new Date().toLocaleDateString();
-            let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
-            let matchId = Date.now().toString();
-
-            const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
-            const userSnap = await getDoc(userRef);
-            
-            if(userSnap.exists()) {
-                let dbData = userSnap.data();
-                let newPts = dbData.totalPts || 0;
-                let newDarts = dbData.totalDarts || 0;
-                let newHc = dbData.highCheckout || 0;
-                let newCoAtt = dbData.coAtt || 0;
-                let newCoHit = dbData.coHit || 0;
-                
-                let matchPts = 0; let matchDarts = 0;
-                let matchCoAtt = 0; let matchCoHit = 0;
-                
-                if(validGames.includes(state.gameType)) {
-                    matchPts = myP.pts;
-                    matchDarts = myP.d;
-                    matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
-                    
-                    newPts += matchPts; newDarts += matchDarts;
-                    newCoAtt += matchCoAtt; newCoHit += matchCoHit;
-                    newHc = Math.max(newHc, myP.hc);
-                }
-
-                let p1Avg = state.p[0].d > 0 ? ((state.p[0].pts / state.p[0].d) * 3).toFixed(1) : "0.0";
-                let p2Avg = state.p[1].d > 0 ? ((state.p[1].pts / state.p[1].d) * 3).toFixed(1) : "0.0";
-                let p1F9 = state.p[0].f9d > 0 ? ((state.p[0].f9pts / state.p[0].f9d) * 3).toFixed(1) : "0.0";
-                let p2F9 = state.p[1].f9d > 0 ? ((state.p[1].f9pts / state.p[1].f9d) * 3).toFixed(1) : "0.0";
-
-                let newHistObj = { 
-                    id: matchId, date: dateStr, desc: matchText, avg: finalAvg, 
-                    pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
-                    p1Name: state.p[0].name, p2Name: state.p[1].name,
-                    p1Avg: p1Avg, p2Avg: p2Avg,
-                    p1F9: p1F9, p2F9: p2F9,
-                    p1Hc: state.p[0].hc, p2Hc: state.p[1].hc,
-                    p1140: state.p[0].n140, p2140: state.p[1].n140,
-                    p1180: state.p[0].n180, p2180: state.p[1].n180
-                };
-                
-                await updateDoc(userRef, { 
-                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
-                    matchHistory: arrayUnion(newHistObj)
-                });
-                statsSavedThisMatch = true;
-            }
-        } catch(e) {}
-    }
 
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
@@ -1525,22 +1417,19 @@
         if (!isLocalMatch) broadcast(state);
     };
 
-    async function initApp() {
+    window.initApp = async function() {
         requestWakeLock();
         statsSavedThisMatch = false; 
         
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
-        startBtn.disabled = true;
+        if(startBtn) startBtn.disabled = true;
 
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
-        if (state.mode !== 'online') {
-            window.targetChallengeFriend = null;
-        }
 
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
-        state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
+        state.limit170 = parseInt(document.getElementById('dart-limit-input') ? document.getElementById('dart-limit-input').value : 9) || 9;
         isLocalMatch = (state.mode === 'local' || state.mode === 'bot');
 
         let startScore = 501;
@@ -1553,7 +1442,7 @@
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
-        state.p[0].name = document.getElementById('name-input').value || "Player 1";
+        state.p[0].name = document.getElementById('name-input') ? document.getElementById('name-input').value : "Player 1";
         state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
         state.p[0].target170 = 170;
         state.p[0].s = startScore;
@@ -1602,7 +1491,7 @@
             if (!spectateId) {
                 if (state.mode === 'single') { stream = null; } 
                 else {
-                    log.innerText = "Accessing Camera...";
+                    if(log) log.innerText = "Accessing Camera...";
                     let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
                     if (isMobile) {
                         constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
@@ -1615,8 +1504,7 @@
                         try {
                             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                         } catch (fallbackErr) {
-                            startBtn.disabled = false;
-                            startBtn.innerText = "START MATCH";
+                            if(startBtn) { startBtn.disabled = false; startBtn.innerText = "START MATCH"; }
                             throw new Error("Could not access camera/mic.");
                         }
                     }
@@ -1628,7 +1516,10 @@
                 }
             }
             
-            if (state.mode !== 'single') log.innerText = "Connecting to server...";
+            if (state.mode !== 'single') {
+                if(log) log.innerText = "Connecting to server...";
+            }
+            
             peer = new Peer({
                 config: {
                     'iceServers': [
@@ -1643,21 +1534,9 @@
             });
 
             peer.on('open', async (id) => {
-                document.getElementById('display-id').innerText = id;
-                document.getElementById('wait-id').innerText = id;
+                if(document.getElementById('display-id')) document.getElementById('display-id').innerText = id;
+                if(document.getElementById('wait-id')) document.getElementById('wait-id').innerText = id;
 
-                // THIS IS THE ORIGINAL FIREBASE CALL FOR CHALLENGING FRIENDS
-                if(window.targetChallengeFriend && window.db) {
-                    try {
-                        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-                        await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
-                            activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
-                        });
-                        alert("Challenge sent! Waiting for them to accept...");
-                    } catch(e) {}
-                    window.targetChallengeFriend = null;
-                }
-                
                 if (spectateId) { 
                     document.getElementById('setup-layer').classList.add('hidden');
                     connectToMatch(spectateId, true);
@@ -1701,14 +1580,17 @@
             });
 
             peer.on('error', err => {
-                if (state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
+                if (state.mode !== 'single') { 
+                    if(log) log.innerText = "Connection Error: " + err.type; 
+                    if(startBtn) startBtn.disabled = false; 
+                }
             });
 
         } catch (e) {
-            log.innerText = "Camera/Mic error. (" + e.message + ")";
-            startBtn.disabled = false;
+            if(log) log.innerText = "Camera/Mic error. (" + e.message + ")";
+            if(startBtn) startBtn.disabled = false;
         }
-    }
+    };
 
     function attachPeerVideo(s) {
         const peerVideo = document.getElementById('peer');
