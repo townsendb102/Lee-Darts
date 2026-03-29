@@ -15,6 +15,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>🎯 RAF Darts Scorer 🎯</title>
+    
+    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
 
     <style>
         /* --- THEME VARIABLES --- */
@@ -135,8 +137,8 @@
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; pointer-events: none;}
 
-        /* OVERLAY CANVAS FOR PRECISE DRAWING */
-        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: none; }
+        /* OVERLAY CANVAS FOR PRECISE DRAWING & DEBUGGING */
+        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; cursor: crosshair; }
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
@@ -461,7 +463,6 @@
     <div id="box-me" class="v-box visible">
         <div class="cam-label" id="cam-label-me">YOU</div>
         <canvas id="overlay-canvas"></canvas>
-        <canvas id="current-canvas" style="display: none;"></canvas>
         <video id="me" autoplay playsinline webkit-playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
@@ -609,15 +610,13 @@
     </div>
 </div>
 
-<div id="calibration-controls" style="display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 15px; border-radius: 12px; z-index: 10000; width: 95%; max-width: 350px; border: 2px solid #4caf50; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-    <div style="color: #4caf50; font-size: 13px; text-align: center; margin-bottom: 10px; font-weight: bold;">🎯 Move phone to fit board in ring!</div>
+<canvas id="current-canvas" style="display: none;"></canvas>
+
+<div id="calibration-controls" style="display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 15px; border-radius: 12px; z-index: 10000; width: 95%; max-width: 350px; border: 2px solid #ffcc00; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+    <div id="calib-msg" style="color: #ffcc00; font-size: 16px; text-align: center; margin-bottom: 10px; font-weight: bold;">Step 1: Tap Top Double 20</div>
+    <div style="color: #ccc; font-size: 11px; text-align: center; margin-bottom: 10px;">This forces the math to fix your camera angle!</div>
     
-    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;">
-        <label style="color: white; font-size: 11px; font-weight: bold; white-space: nowrap;">Ring Size</label>
-        <input type="range" id="cal-size" min="0.6" max="1.4" step="0.01" value="1" style="flex: 1; accent-color: #4caf50;">
-    </div>
-    
-    <button onclick="finishCalibration()" style="width:100%; padding: 12px; background: #4caf50; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px;">✅ SET BASELINE</button>
+    <button onclick="resetCalibration()" style="width:100%; padding: 12px; background: #444; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px;">🔄 RESTART CALIBRATION</button>
 </div>
 
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
@@ -1134,7 +1133,6 @@
     let isLocalMatch = false;
     let localInputMode = 'total'; let numpadVal = "";
     
-    // NEW DART BY DART STATE
     let dbdMult = 1;
     let currentDarts = [];
 
@@ -2266,16 +2264,19 @@
     }
 
     // ==========================================
-    // 🎯 CLOUD AI ENGINE (ROBOFLOW HOSTED API) 🎯
+    // 🎯 CLOUD AI ENGINE (ROBOFLOW API + 4-POINT CALIBRATION) 🎯
     // ==========================================
 
     let autoScoreEnabled = false;
     let detectionTimeout = null;
+    let cvReady = false;
     
     let previousDartsCount = 0;
     let settleFrames = 0;
     
-    let ringScale = 1.0; 
+    let clickPoints = [];
+    const targetSize = 500; 
+    let transformMatrix = null;
 
     // EXACT ROBOFLOW DETAILS
     const API_KEY = "rf_29awkTXGorYWZp81ZLPa8tH67fr1";
@@ -2286,6 +2287,7 @@
         const autoBtn = document.getElementById('auto-toggle-btn');
         const calibControls = document.getElementById('calibration-controls');
         const overlay = document.getElementById('overlay-canvas');
+        const debugCanvas = document.getElementById('debug-canvas');
         
         if(autoBtn) {
             autoBtn.style.display = 'block'; 
@@ -2296,71 +2298,188 @@
                     autoBtn.style.color = "#4caf50";
                     overlay.style.display = "block"; 
                     calibControls.style.display = "block";
+                    debugCanvas.style.display = "block";
                     
                     if(localInputMode !== 'darts') {
                         localInputMode = 'darts';
                         render();
                     }
                     
-                    requestAnimationFrame(drawStaticRing);
+                    clickPoints = [];
+                    updateCalibMsg();
                 } else {
                     autoBtn.innerText = "AUTO: OFF";
                     autoBtn.style.color = "#ffcc00";
                     overlay.style.display = "none";
                     calibControls.style.display = "none";
+                    debugCanvas.style.display = "none";
                     if (detectionTimeout) clearTimeout(detectionTimeout);
                     autoScoreEnabled = false;
                 }
             });
         }
 
-        document.getElementById('cal-size').addEventListener('input', (e) => {
-            ringScale = parseFloat(e.target.value);
-            drawStaticRing();
+        // Handle clicking on the video for calibration
+        overlay.addEventListener('click', (e) => {
+            if (!autoScoreEnabled || clickPoints.length >= 4) return;
+            
+            const rect = overlay.getBoundingClientRect();
+            const domX = e.clientX - rect.left;
+            const domY = e.clientY - rect.top;
+            
+            const video = document.getElementById('me');
+            const vidRatio = video.videoWidth / video.videoHeight;
+            const domRatio = rect.width / rect.height;
+            
+            let renderedW = rect.width;
+            let renderedH = rect.height;
+            let offsetX = 0; let offsetY = 0;
+
+            if (vidRatio > domRatio) {
+                renderedH = rect.width / vidRatio;
+                offsetY = (rect.height - renderedH) / 2;
+            } else {
+                renderedW = rect.height * vidRatio;
+                offsetX = (rect.width - renderedW) / 2;
+            }
+            
+            let vidX = ((domX - offsetX) / renderedW) * video.videoWidth;
+            let vidY = ((domY - offsetY) / renderedH) * video.videoHeight;
+            
+            vidX = Math.max(0, Math.min(vidX, video.videoWidth));
+            vidY = Math.max(0, Math.min(vidY, video.videoHeight));
+            
+            clickPoints.push({x: vidX, y: vidY});
+            
+            drawClickPoints();
+            updateCalibMsg();
+            
+            if (clickPoints.length === 4) {
+                calculateTransform();
+            }
         });
     });
 
-    function drawStaticRing() {
+    window.onOpenCvReady = function() {
+        cvReady = true;
+        console.log("OpenCV Math Engine Loaded.");
+    };
+
+    function drawClickPoints() {
+        const overlay = document.getElementById('overlay-canvas');
+        const ctx = overlay.getContext('2d');
         const video = document.getElementById('me');
-        if (!video || !video.videoWidth) {
-            if(autoScoreEnabled) requestAnimationFrame(drawStaticRing);
-            return;
+        
+        const rect = overlay.getBoundingClientRect();
+        const vidRatio = video.videoWidth / video.videoHeight;
+        const domRatio = rect.width / rect.height;
+        
+        let renderedW = rect.width;
+        let renderedH = rect.height;
+        let offsetX = 0; let offsetY = 0;
+
+        if (vidRatio > domRatio) {
+            renderedH = rect.width / vidRatio;
+            offsetY = (rect.height - renderedH) / 2;
+        } else {
+            renderedW = rect.height * vidRatio;
+            offsetX = (rect.width - renderedW) / 2;
         }
-
-        const overlayCanvas = document.getElementById('overlay-canvas');
-        overlayCanvas.width = video.videoWidth;
-        overlayCanvas.height = video.videoHeight;
-        const oCtx = overlayCanvas.getContext('2d');
         
-        const centerX = video.videoWidth / 2;
-        const centerY = video.videoHeight / 2;
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
         
-        const baseRadius = (Math.min(video.videoWidth, video.videoHeight) * 0.4);
-        const radius = baseRadius * ringScale;
-
-        oCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        clickPoints.forEach((pt, index) => {
+            const domX = offsetX + (pt.x / video.videoWidth) * renderedW;
+            const domY = offsetY + (pt.y / video.videoHeight) * renderedH;
+            
+            ctx.beginPath();
+            ctx.arc(domX, domY, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = "yellow";
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "black";
+            ctx.stroke();
+            
+            ctx.fillStyle = "black";
+            ctx.font = "12px Arial";
+            ctx.fillText(index + 1, domX - 4, domY + 4);
+        });
         
-        oCtx.beginPath();
-        oCtx.ellipse(centerX, centerY, radius, radius, 0, 0, 2 * Math.PI);
-        oCtx.lineWidth = 4;
-        oCtx.strokeStyle = '#4caf50'; 
-        oCtx.stroke();
-        
-        oCtx.beginPath();
-        oCtx.moveTo(centerX, centerY - 15); oCtx.lineTo(centerX, centerY + 15);
-        oCtx.moveTo(centerX - 15, centerY); oCtx.lineTo(centerX + 15, centerY);
-        oCtx.lineWidth = 2;
-        oCtx.strokeStyle = 'rgba(76, 175, 80, 0.6)';
-        oCtx.stroke();
+        if (clickPoints.length > 1) {
+            ctx.beginPath();
+            const firstDomX = offsetX + (clickPoints[0].x / video.videoWidth) * renderedW;
+            const firstDomY = offsetY + (clickPoints[0].y / video.videoHeight) * renderedH;
+            ctx.moveTo(firstDomX, firstDomY);
+            
+            for (let i = 1; i < clickPoints.length; i++) {
+                const domX = offsetX + (clickPoints[i].x / video.videoWidth) * renderedW;
+                const domY = offsetY + (clickPoints[i].y / video.videoHeight) * renderedH;
+                ctx.lineTo(domX, domY);
+            }
+            if (clickPoints.length === 4) {
+                ctx.lineTo(firstDomX, firstDomY); 
+            }
+            ctx.strokeStyle = "rgba(255, 255, 0, 0.5)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
     }
 
-    window.finishCalibration = function() {
-        document.getElementById('calibration-controls').style.display = "none";
+    function updateCalibMsg() {
+        const msg = document.getElementById('calib-msg');
+        const msgs = [
+            "Step 1: Tap Top Double 20",
+            "Step 2: Tap Right Double 6",
+            "Step 3: Tap Bottom Double 3",
+            "Step 4: Tap Left Double 11",
+            "✅ Board Flattened! AI is ready."
+        ];
+        msg.innerText = msgs[clickPoints.length];
         
-        const overlayCanvas = document.getElementById('overlay-canvas');
-        const oCtx = overlayCanvas.getContext('2d');
-        oCtx.strokeStyle = 'red';
-        oCtx.stroke();
+        if(clickPoints.length === 4) {
+            msg.style.color = "#4caf50";
+            setTimeout(() => {
+                document.getElementById('calibration-controls').style.display = 'none';
+            }, 2000);
+        } else {
+            msg.style.color = "#ffcc00";
+        }
+    }
+
+    window.resetCalibration = function() {
+        clickPoints = [];
+        if (detectionTimeout) clearTimeout(detectionTimeout);
+        detectionTimeout = null;
+        updateCalibMsg();
+        
+        const overlay = document.getElementById('overlay-canvas');
+        const ctx = overlay.getContext('2d');
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+    }
+
+    function calculateTransform() {
+        if (!cvReady || clickPoints.length !== 4) return;
+        
+        let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            clickPoints[0].x, clickPoints[0].y,
+            clickPoints[1].x, clickPoints[1].y,
+            clickPoints[2].x, clickPoints[2].y,
+            clickPoints[3].x, clickPoints[3].y
+        ]);
+        
+        // Flatten the board into a perfect 500x500 square!
+        let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            targetSize/2, 0,
+            targetSize, targetSize/2,
+            targetSize/2, targetSize,
+            0, targetSize/2
+        ]);
+
+        if (transformMatrix) transformMatrix.delete();
+        transformMatrix = cv.getPerspectiveTransform(srcTri, dstTri);
+        
+        srcTri.delete();
+        dstTri.delete();
         
         if (autoScoreEnabled) {
             console.log("Starting Cloud AI Detection...");
@@ -2368,18 +2487,26 @@
         }
     }
 
-    function calculateDartScore(tipX, tipY) {
-        const video = document.getElementById('me');
-        
-        const centerX = video.videoWidth / 2;
-        const centerY = video.videoHeight / 2;
-        
-        const baseRadius = (Math.min(video.videoWidth, video.videoHeight) * 0.4);
-        const radius = baseRadius * ringScale;
+    // Convert raw AI video pixel into a "flat" score
+    function getTransformedPoint(x, y) {
+        if (!transformMatrix) return { x, y };
+        let src = cv.matFromArray(1, 1, cv.CV_32FC2, [x, y]);
+        let dst = new cv.Mat();
+        cv.perspectiveTransform(src, dst, transformMatrix);
+        let flatX = dst.data32F[0];
+        let flatY = dst.data32F[1];
+        src.delete(); dst.delete();
+        return { x: flatX, y: flatY };
+    }
 
-        const dx = tipX - centerX;
-        const dy = tipY - centerY;
+    function calculateDartScore(flatX, flatY) {
+        // We know the board is exactly a 500x500 square with radius 250
+        const centerX = 250;
+        const centerY = 250;
+        const radius = 250;
 
+        const dx = flatX - centerX;
+        const dy = flatY - centerY;
         const distance = Math.sqrt(dx*dx + dy*dy);
         
         let dartAngle = Math.atan2(dy, dx) * (180 / Math.PI);
@@ -2400,8 +2527,48 @@
         return { val: segmentScore, mult: multiplier, label: (multiplier===3?"T":multiplier===2?"D":"") + segmentScore };
     }
 
+    // Draws exactly what the AI sees for debugging
+    function drawDebugAI(predictions) {
+        drawClickPoints(); // Redraw base lines
+        const overlay = document.getElementById('overlay-canvas');
+        const ctx = overlay.getContext('2d');
+        const video = document.getElementById('me');
+        
+        const rect = overlay.getBoundingClientRect();
+        const vidRatio = video.videoWidth / video.videoHeight;
+        const domRatio = rect.width / rect.height;
+        
+        let renderedW = rect.width;
+        let renderedH = rect.height;
+        let offsetX = 0; let offsetY = 0;
+
+        if (vidRatio > domRatio) {
+            renderedH = rect.width / vidRatio;
+            offsetY = (rect.height - renderedH) / 2;
+        } else {
+            renderedW = rect.height * vidRatio;
+            offsetX = (rect.width - renderedW) / 2;
+        }
+
+        predictions.forEach(pred => {
+            const domX = offsetX + (pred.x / video.videoWidth) * renderedW;
+            const domY = offsetY + (pred.y / video.videoHeight) * renderedH;
+            
+            ctx.beginPath();
+            ctx.arc(domX, domY, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = pred.class.toLowerCase().includes("dart") ? "cyan" : "red";
+            ctx.fill();
+            ctx.strokeStyle = "black";
+            ctx.stroke();
+            
+            ctx.fillStyle = "white";
+            ctx.font = "bold 12px Arial";
+            ctx.fillText(pred.class, domX + 8, domY);
+        });
+    }
+
     async function detectDartsAI() {
-        if (!autoScoreEnabled) return;
+        if (!autoScoreEnabled || clickPoints.length !== 4) return;
         
         const video = document.getElementById('me');
         if (!video || video.paused || video.ended) {
@@ -2409,17 +2576,33 @@
             return;
         }
 
-        const canvas = document.getElementById('current-canvas');
+        // Draw the warped flat board onto the debug canvas for the user to see!
+        const debugCanvas = document.getElementById('debug-canvas');
+        debugCanvas.width = targetSize;
+        debugCanvas.height = targetSize;
+        const debugCtx = debugCanvas.getContext('2d');
+        
+        if (cvReady && transformMatrix) {
+            const tempCnv = document.createElement('canvas');
+            tempCnv.width = video.videoWidth; tempCnv.height = video.videoHeight;
+            tempCnv.getContext('2d').drawImage(video, 0, 0, tempCnv.width, tempCnv.height);
+            let rawMat = cv.imread(tempCnv);
+            let warpedMat = new cv.Mat();
+            cv.warpPerspective(rawMat, warpedMat, transformMatrix, new cv.Size(targetSize, targetSize));
+            cv.imshow('debug-canvas', warpedMat);
+            rawMat.delete(); warpedMat.delete();
+        }
+
+        // Grab standard frame to send to AI
+        const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Convert the image to base64, removing the header
-        const base64Image = canvas.toDataURL("image/jpeg", 0.8).split(',')[1];
+        const base64Image = canvas.toDataURL("image/jpeg", 0.7).split(',')[1];
 
         try {
-            // Ping the Hosted API directly
             const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -2431,18 +2614,15 @@
             }
 
             const data = await response.json();
-            
             let dartTips = [];
             let playerInFrame = false;
 
             if (data.predictions) {
+                drawDebugAI(data.predictions); // Visually debug what the AI found
+                
                 data.predictions.forEach(pred => {
                     const className = pred.class.toLowerCase();
-                    
-                    if (className.includes("dart")) {
-                        dartTips.push({ x: pred.x, y: pred.y });
-                    }
-                    
+                    if (className.includes("dart")) dartTips.push({ x: pred.x, y: pred.y });
                     if (className.includes("player") || className.includes("hand") || className.includes("person") || className.includes("human")) {
                         playerInFrame = true;
                     }
@@ -2460,11 +2640,15 @@
             } else {
                 if (dartTips.length > previousDartsCount) {
                     settleFrames++;
-                    if (settleFrames >= 2) {
+                    if (settleFrames >= 2) { // Waited 1 second total
                         console.log("New Dart Detected!");
                         
                         let newDart = dartTips[dartTips.length - 1]; 
-                        let dartScore = calculateDartScore(newDart.x, newDart.y);
+                        
+                        // 1. Un-tilt the coordinate
+                        let flatPt = getTransformedPoint(newDart.x, newDart.y);
+                        // 2. Score the flat coordinate
+                        let dartScore = calculateDartScore(flatPt.x, flatPt.y);
                         
                         console.log("Scored:", dartScore);
                         
