@@ -131,14 +131,17 @@
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; flex: 0 0 auto;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
-        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
+        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; transition: opacity 0.2s; }
         .v-box.visible { opacity: 1; z-index: 1; pointer-events: auto; }
 
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; pointer-events: none;}
 
-        /* OVERLAY CANVAS FOR PRECISE DRAWING */
-        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; display: none; }
+        /* OVERLAY CANVAS FOR CLICKS AND DRAWING */
+        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; cursor: crosshair; }
+        
+        /* DEBUG CANVAS (X-RAY VISION) */
+        #debug-canvas { position: absolute; bottom: 10px; right: 10px; width: 100px; height: 100px; border: 2px solid var(--blue); border-radius: 8px; z-index: 30; display: none; background: black; pointer-events: none; box-shadow: 0px 4px 10px rgba(0,0,0,0.8);}
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
@@ -463,7 +466,7 @@
     <div id="box-me" class="v-box visible">
         <div class="cam-label" id="cam-label-me">YOU</div>
         <canvas id="overlay-canvas"></canvas>
-        <video id="me" autoplay playsinline webkit-playsinline muted></video>
+        <canvas id="debug-canvas"></canvas> <video id="me" autoplay playsinline webkit-playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
         <div class="cam-label">OPPONENT / STREAM</div>
@@ -612,16 +615,13 @@
 
 <canvas id="baseline-canvas" style="display: none;"></canvas>
 <canvas id="current-canvas" style="display: none;"></canvas>
+<canvas id="warped-canvas" style="display: none;"></canvas>
 
-<div id="calibration-controls" style="display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 15px; border-radius: 12px; z-index: 10000; width: 95%; max-width: 350px; border: 2px solid #4caf50; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-    <div style="color: #4caf50; font-size: 13px; text-align: center; margin-bottom: 10px; font-weight: bold;">🎯 Move phone to fit board in ring!</div>
+<div id="calibration-controls" style="display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 15px; border-radius: 12px; z-index: 10000; width: 95%; max-width: 350px; border: 2px solid #ffcc00; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+    <div id="calib-msg" style="color: #ffcc00; font-size: 16px; text-align: center; margin-bottom: 10px; font-weight: bold;">Step 1: Tap Top Double 20</div>
+    <div style="color: #ccc; font-size: 11px; text-align: center; margin-bottom: 10px;">This forces the math to fix your camera angle!</div>
     
-    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;">
-        <label style="color: white; font-size: 11px; font-weight: bold; white-space: nowrap;">Ring Size</label>
-        <input type="range" id="cal-size" min="0.6" max="1.4" step="0.01" value="1" style="flex: 1; accent-color: #4caf50;">
-    </div>
-    
-    <button onclick="finishCalibration()" style="width:100%; padding: 12px; background: #4caf50; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px;">✅ SET BASELINE</button>
+    <button onclick="resetCalibration()" style="width:100%; padding: 12px; background: #444; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px;">🔄 RESTART CALIBRATION</button>
 </div>
 
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
@@ -2270,7 +2270,7 @@
     }
 
     // ==========================================
-    // 🎯 ADVANCED OPEN-CV ENGINE (STATIC CENTER) 🎯
+    // 🎯 ADVANCED OPEN-CV ENGINE (4-POINT HOMOGRAPHY) 🎯
     // ==========================================
 
     let cvReady = false;
@@ -2278,19 +2278,25 @@
     let currentMat = null;
     let diffMat = null;
     let threshMat = null;
+    let warpedBaseline = null;
+    let warpedCurrent = null;
+    let transformMatrix = null;
+    
     let detectionInterval = null;
     let autoScoreEnabled = false;
     
-    // State machine variables
     let playerInFrame = false;
     let settleFrames = 0;
     
-    let ringScale = 1.0; 
+    // Homography points
+    let clickPoints = [];
+    const targetSize = 500; // The flattened board will be a 500x500 square
 
     window.addEventListener('load', () => {
         const autoBtn = document.getElementById('auto-toggle-btn');
         const calibControls = document.getElementById('calibration-controls');
         const overlay = document.getElementById('overlay-canvas');
+        const debugCanvas = document.getElementById('debug-canvas');
         
         if(autoBtn) {
             autoBtn.addEventListener('click', () => {
@@ -2300,28 +2306,70 @@
                     autoBtn.style.color = "#4caf50";
                     overlay.style.display = "block"; 
                     calibControls.style.display = "block";
+                    debugCanvas.style.display = "block";
                     
                     if(localInputMode !== 'darts') {
                         localInputMode = 'darts';
                         render();
                     }
                     
-                    // Draw the static center ring immediately
-                    requestAnimationFrame(drawStaticRing);
+                    clickPoints = [];
+                    updateCalibMsg();
+                    
                 } else {
                     autoBtn.innerText = "AUTO: OFF";
                     autoBtn.style.color = "#ffcc00";
                     overlay.style.display = "none";
                     calibControls.style.display = "none";
+                    debugCanvas.style.display = "none";
                     if (detectionInterval) clearInterval(detectionInterval);
                     detectionInterval = null;
                 }
             });
         }
+        
+        // Handle clicking on the video for calibration
+        overlay.addEventListener('click', (e) => {
+            if (!autoScoreEnabled || clickPoints.length >= 4) return;
+            
+            const rect = overlay.getBoundingClientRect();
+            
+            // Get click coordinates relative to the DOM element
+            const domX = e.clientX - rect.left;
+            const domY = e.clientY - rect.top;
+            
+            const video = document.getElementById('me');
+            const vidRatio = video.videoWidth / video.videoHeight;
+            const domRatio = rect.width / rect.height;
+            
+            let renderedW = rect.width;
+            let renderedH = rect.height;
+            let offsetX = 0; let offsetY = 0;
 
-        document.getElementById('cal-size').addEventListener('input', (e) => {
-            ringScale = parseFloat(e.target.value);
-            drawStaticRing();
+            if (vidRatio > domRatio) {
+                renderedH = rect.width / vidRatio;
+                offsetY = (rect.height - renderedH) / 2;
+            } else {
+                renderedW = rect.height * vidRatio;
+                offsetX = (rect.width - renderedW) / 2;
+            }
+            
+            // Map DOM click to actual Video Pixel coordinates
+            let vidX = ((domX - offsetX) / renderedW) * video.videoWidth;
+            let vidY = ((domY - offsetY) / renderedH) * video.videoHeight;
+            
+            // Ensure bounds
+            vidX = Math.max(0, Math.min(vidX, video.videoWidth));
+            vidY = Math.max(0, Math.min(vidY, video.videoHeight));
+            
+            clickPoints.push({x: vidX, y: vidY});
+            
+            drawClickPoints();
+            updateCalibMsg();
+            
+            if (clickPoints.length === 4) {
+                calculateTransform();
+            }
         });
     });
 
@@ -2329,64 +2377,136 @@
         cvReady = true;
         console.log("OpenCV Engine Loaded.");
     };
-
-    function drawStaticRing() {
+    
+    function drawClickPoints() {
+        const overlay = document.getElementById('overlay-canvas');
+        const ctx = overlay.getContext('2d');
         const video = document.getElementById('me');
-        if (!video || !video.videoWidth) {
-            // Retry if video hasn't loaded metadata yet
-            if(autoScoreEnabled) requestAnimationFrame(drawStaticRing);
-            return;
+        
+        const rect = overlay.getBoundingClientRect();
+        const vidRatio = video.videoWidth / video.videoHeight;
+        const domRatio = rect.width / rect.height;
+        
+        let renderedW = rect.width;
+        let renderedH = rect.height;
+        let offsetX = 0; let offsetY = 0;
+
+        if (vidRatio > domRatio) {
+            renderedH = rect.width / vidRatio;
+            offsetY = (rect.height - renderedH) / 2;
+        } else {
+            renderedW = rect.height * vidRatio;
+            offsetX = (rect.width - renderedW) / 2;
         }
-
-        const overlayCanvas = document.getElementById('overlay-canvas');
-        overlayCanvas.width = video.videoWidth;
-        overlayCanvas.height = video.videoHeight;
-        const oCtx = overlayCanvas.getContext('2d');
         
-        // Find exact center of the video
-        const centerX = video.videoWidth / 2;
-        const centerY = video.videoHeight / 2;
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
         
-        // Base radius is exactly 40% of the shortest side of the video
-        const baseRadius = (Math.min(video.videoWidth, video.videoHeight) * 0.4);
-        const radius = baseRadius * ringScale;
-
-        oCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        clickPoints.forEach((pt, index) => {
+            // Reverse mapping back to DOM
+            const domX = offsetX + (pt.x / video.videoWidth) * renderedW;
+            const domY = offsetY + (pt.y / video.videoHeight) * renderedH;
+            
+            ctx.beginPath();
+            ctx.arc(domX, domY, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = "yellow";
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "black";
+            ctx.stroke();
+            
+            ctx.fillStyle = "black";
+            ctx.font = "12px Arial";
+            ctx.fillText(index + 1, domX - 4, domY + 4);
+        });
         
-        // Draw main targeting ring
-        oCtx.beginPath();
-        oCtx.ellipse(centerX, centerY, radius, radius, 0, 0, 2 * Math.PI);
-        oCtx.lineWidth = 4;
-        oCtx.strokeStyle = '#4caf50'; // Green
-        oCtx.stroke();
+        // Draw connecting lines
+        if (clickPoints.length > 1) {
+            ctx.beginPath();
+            const firstDomX = offsetX + (clickPoints[0].x / video.videoWidth) * renderedW;
+            const firstDomY = offsetY + (clickPoints[0].y / video.videoHeight) * renderedH;
+            ctx.moveTo(firstDomX, firstDomY);
+            
+            for (let i = 1; i < clickPoints.length; i++) {
+                const domX = offsetX + (clickPoints[i].x / video.videoWidth) * renderedW;
+                const domY = offsetY + (clickPoints[i].y / video.videoHeight) * renderedH;
+                ctx.lineTo(domX, domY);
+            }
+            if (clickPoints.length === 4) {
+                ctx.lineTo(firstDomX, firstDomY); // close the square
+            }
+            ctx.strokeStyle = "rgba(255, 255, 0, 0.5)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+    
+    function updateCalibMsg() {
+        const msg = document.getElementById('calib-msg');
+        const msgs = [
+            "Step 1: Tap Top Double 20",
+            "Step 2: Tap Right Double 6",
+            "Step 3: Tap Bottom Double 3",
+            "Step 4: Tap Left Double 11",
+            "✅ Board Flattened! Camera is ready."
+        ];
+        msg.innerText = msgs[clickPoints.length];
         
-        // Draw crosshairs to help align the bullseye
-        oCtx.beginPath();
-        oCtx.moveTo(centerX, centerY - 15); oCtx.lineTo(centerX, centerY + 15);
-        oCtx.moveTo(centerX - 15, centerY); oCtx.lineTo(centerX + 15, centerY);
-        oCtx.lineWidth = 2;
-        oCtx.strokeStyle = 'rgba(76, 175, 80, 0.6)';
-        oCtx.stroke();
+        if(clickPoints.length === 4) {
+            msg.style.color = "#4caf50";
+            setTimeout(() => {
+                document.getElementById('calibration-controls').style.display = 'none';
+            }, 2000);
+        } else {
+            msg.style.color = "#ffcc00";
+        }
     }
 
-    window.finishCalibration = function() {
-        document.getElementById('calibration-controls').style.display = "none";
+    window.resetCalibration = function() {
+        clickPoints = [];
+        if (detectionInterval) clearInterval(detectionInterval);
+        detectionInterval = null;
+        updateCalibMsg();
         
-        // Turn the ring red to indicate it is "hot" and watching
-        const overlayCanvas = document.getElementById('overlay-canvas');
-        const oCtx = overlayCanvas.getContext('2d');
-        oCtx.strokeStyle = 'red';
-        oCtx.stroke();
+        const overlay = document.getElementById('overlay-canvas');
+        const ctx = overlay.getContext('2d');
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+    }
+
+    function calculateTransform() {
+        if (!cvReady || clickPoints.length !== 4) return;
+        
+        // Top, Right, Bottom, Left of the double ring on the screen
+        let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            clickPoints[0].x, clickPoints[0].y,
+            clickPoints[1].x, clickPoints[1].y,
+            clickPoints[2].x, clickPoints[2].y,
+            clickPoints[3].x, clickPoints[3].y
+        ]);
+        
+        // Map them to a perfect 500x500 square. 
+        // Top(250, 0), Right(500, 250), Bottom(250, 500), Left(0, 250)
+        let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            targetSize/2, 0,
+            targetSize, targetSize/2,
+            targetSize/2, targetSize,
+            0, targetSize/2
+        ]);
+
+        if (transformMatrix) transformMatrix.delete();
+        transformMatrix = cv.getPerspectiveTransform(srcTri, dstTri);
+        
+        srcTri.delete();
+        dstTri.delete();
         
         captureBaseline();
+        
         if (!detectionInterval) {
-            // Scan 2 times a second
             detectionInterval = setInterval(detectDarts, 500); 
         }
     }
 
     function captureBaseline() {
-        if (!cvReady) return;
+        if (!cvReady || !transformMatrix) return;
         const video = document.getElementById('me');
         if (!video || !video.videoWidth) return;
 
@@ -2396,35 +2516,36 @@
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        if (baselineMat) baselineMat.delete();
-        baselineMat = cv.imread(canvas);
+        let rawMat = cv.imread(canvas);
         
-        cv.cvtColor(baselineMat, baselineMat, cv.COLOR_RGBA2GRAY, 0);
-        let ksize = new cv.Size(5, 5);
-        cv.GaussianBlur(baselineMat, baselineMat, ksize, 0, 0, cv.BORDER_DEFAULT);
+        if (!warpedBaseline) warpedBaseline = new cv.Mat();
+        let dsize = new cv.Size(targetSize, targetSize);
+        
+        // Warp the skewed camera image into a perfect flat square
+        cv.warpPerspective(rawMat, warpedBaseline, transformMatrix, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+        cv.cvtColor(warpedBaseline, warpedBaseline, cv.COLOR_RGBA2GRAY, 0);
+        cv.GaussianBlur(warpedBaseline, warpedBaseline, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
 
-        if (!currentMat) currentMat = new cv.Mat();
+        if (!warpedCurrent) warpedCurrent = new cv.Mat();
         if (!diffMat) diffMat = new cv.Mat();
         if (!threshMat) threshMat = new cv.Mat();
+        
+        rawMat.delete();
     }
 
-    function calculateDartScore(tipX, tipY) {
-        const video = document.getElementById('me');
+    // Now the math is perfectly flat!
+    function calculateDartScore(flatX, flatY) {
+        // Because the board is forced to be 500x500, the center is exactly 250,250
+        const centerX = targetSize / 2;
+        const centerY = targetSize / 2;
         
-        // The mathematical center of the board is the exact center of the video
-        const centerX = video.videoWidth / 2;
-        const centerY = video.videoHeight / 2;
-        
-        // Find the absolute radius of the board in Video Pixels
-        const baseRadius = (Math.min(video.videoWidth, video.videoHeight) * 0.4);
-        const radius = baseRadius * ringScale;
+        // The double ring is exactly 500 wide, so radius is 250
+        const radius = targetSize / 2;
 
-        const dx = tipX - centerX;
-        const dy = tipY - centerY;
-
+        const dx = flatX - centerX;
+        const dy = flatY - centerY;
         const distance = Math.sqrt(dx*dx + dy*dy);
         
-        // Shift angle so 0 is at 12 o'clock, adjusting for normal dartboard layout
         let dartAngle = Math.atan2(dy, dx) * (180 / Math.PI);
         dartAngle = (dartAngle + 360 + 9) % 360; 
         
@@ -2434,7 +2555,6 @@
         
         let multiplier = 1;
         
-        // Mathematically standard ratios for a bristle dartboard
         if (distance < radius * 0.037) return { val: 25, mult: 2, label: "DB" };
         if (distance < radius * 0.094) return { val: 25, mult: 1, label: "B" };
         if (distance > radius * 0.58 && distance <= radius * 0.63) multiplier = 3;
@@ -2445,7 +2565,7 @@
     }
 
     function detectDarts() {
-        if (!baselineMat || !cvReady || !autoScoreEnabled) return;
+        if (!warpedBaseline || !cvReady || !autoScoreEnabled || !transformMatrix) return;
         const video = document.getElementById('me');
         if (video.paused || video.ended) return;
 
@@ -2455,13 +2575,21 @@
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        let tempMat = cv.imread(canvas);
-        cv.cvtColor(tempMat, currentMat, cv.COLOR_RGBA2GRAY, 0);
-        cv.GaussianBlur(currentMat, currentMat, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+        let rawMat = cv.imread(canvas);
+        let dsize = new cv.Size(targetSize, targetSize);
+        
+        cv.warpPerspective(rawMat, warpedCurrent, transformMatrix, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+        cv.cvtColor(warpedCurrent, warpedCurrent, cv.COLOR_RGBA2GRAY, 0);
+        cv.GaussianBlur(warpedCurrent, warpedCurrent, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
 
-        // Diff and Threshold (Lowered to 15 to pick up thin dart flights from afar)
-        cv.absdiff(baselineMat, currentMat, diffMat);
-        cv.threshold(diffMat, threshMat, 15, 255, cv.THRESH_BINARY); 
+        // Diff and Threshold 
+        cv.absdiff(warpedBaseline, warpedCurrent, diffMat);
+        cv.threshold(diffMat, threshMat, 35, 255, cv.THRESH_BINARY); // Adjust threshold up slightly for noise
+        
+        // --- X-RAY VISION (DEBUG VIEW) ---
+        // Draw the threshold mask to the small debug canvas so the user can see what's happening
+        cv.imshow('debug-canvas', threshMat);
+        // ---------------------------------
 
         let contours = new cv.MatVector();
         let hierarchy = new cv.Mat();
@@ -2479,8 +2607,9 @@
         }
 
         // STATE MACHINE
-        if (maxArea > 8000) { 
-            // 1. A human is walking up to the board
+        // Note: Areas are different now because the board is a 500x500 warped square!
+        if (maxArea > 15000) { 
+            // 1. A human hand/arm is in frame
             if (!playerInFrame) {
                 console.log("Player entered frame.");
                 if (currentDarts.length > 0) {
@@ -2500,12 +2629,14 @@
                 settleFrames = 0;
             }
         }
-        else if (!playerInFrame && maxArea > 15 && maxArea < 4000) {
+        else if (!playerInFrame && maxArea > 20 && maxArea < 10000) {
             // 3. A dart was thrown!
             settleFrames++;
             console.log("Dart tracking...");
             if (settleFrames >= 2) { 
                 let rect = cv.boundingRect(bestContour);
+                // In a flattened 2D board, the tip is always nearest to the center.
+                // But a simple center-of-mass of the blob works well enough for testing.
                 let tipX = rect.x + (rect.width / 2);
                 let tipY = rect.y + (rect.height / 2); 
 
@@ -2522,7 +2653,7 @@
             settleFrames = 0; 
         }
 
-        tempMat.delete();
+        rawMat.delete();
         contours.delete();
         hierarchy.delete();
     }
