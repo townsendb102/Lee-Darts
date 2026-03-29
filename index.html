@@ -300,7 +300,7 @@
             <tr><td id="md-f90" style="color: white;">0.0</td><td style="color: white;">First 9 Avg</td><td id="md-f91" style="color: white;">0.0</td></tr>
             <tr><td id="md-hc0" style="color: white;">-</td><td style="color: white;">High Out</td><td id="md-hc1" style="color: white;">-</td></tr>
             <tr><td id="md-1400" style="color: white;">0</td><td style="color: white;">140+</td><td id="md-1401" style="color: white;">0</td></tr>
-            <tr><td id="md-1800" style="color: white;">0</td><td style="color: white;">180s</td><td id="md-1801" style="color: white;">0</td></tr>
+            <tr><td id="md-1800" style="color: white;">0</td><td style="color: white;">180s</td><td id="ws-1801" style="color: white;">0</td></tr>
         </table>
         <button id="close-md-btn" class="btn-start" style="background: #444; color: white; margin-top: auto;">BACK</button>
     </div>
@@ -1170,10 +1170,9 @@
                     autoBtn.innerText = "AUTO: ON";
                     autoBtn.style.color = "#4caf50";
                     overlay.style.display = "block"; 
-                    overlay.style.pointerEvents = "auto"; // CRITICAL: Allow touch events for calibration
+                    overlay.style.pointerEvents = "auto"; 
                     calibControls.style.display = "block";
                     
-                    // Force 1:1 pixel resolution to prevent stretching
                     overlay.width = overlay.offsetWidth;
                     overlay.height = overlay.offsetHeight;
                     
@@ -1240,11 +1239,11 @@
                 if (clickPoints.length === 4) {
                     hMatrix = getHomography(clickPoints, dstPoints);
                     document.getElementById('set-baseline-btn').style.display = 'block';
-                    overlay.style.pointerEvents = "none"; // Disable blocking touches
+                    overlay.style.pointerEvents = "none"; // Stop blocking touches
                 }
             });
         }
-    }); // END WINDOW LOAD EVENT
+    });
 
     async function requestWakeLock() {
         try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
@@ -1484,6 +1483,7 @@
                     if (stream) {
                         const meVid = document.getElementById('me');
                         meVid.srcObject = stream;
+                        // Important for iOS WebRTC compatibility
                         meVid.onloadedmetadata = () => { meVid.play().catch(e => console.log(e)); };
                     }
                 }
@@ -1659,9 +1659,12 @@
 
     function toggleMic() {
         isMicMuted = !isMicMuted;
-        if (stream && stream.getAudioTracks().length > 0) { stream.getAudioTracks()[0].enabled = !isMicMuted; }
-        const peerVideo = document.getElementById('peer');
-        if (peerVideo) peerVideo.muted = isMicMuted;
+        try {
+            if (stream && stream.getAudioTracks().length > 0) { 
+                stream.getAudioTracks()[0].enabled = !isMicMuted; 
+            }
+        } catch(e) { console.warn("Mic Error:", e); }
+        
         const btn = document.getElementById('mic-btn');
         if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
         else { btn.innerText = "MIC ON"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
@@ -1722,6 +1725,14 @@
         render(); 
         if (!isLocalMatch) { broadcast(state); }
     }
+
+    let cricketMult = 1;
+    window.setCricMult = function(m) {
+        cricketMult = m;
+        document.getElementById('cric-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('cric-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('cric-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
+    };
 
     function checkCricketWin(pIndex) {
         let p = state.p[pIndex];
@@ -2191,24 +2202,8 @@
     }
 
     // ==========================================
-    // 🎯 CLOUD AI ENGINE (ROBOFLOW API + 4-POINT CALIBRATION) 🎯
+    // 🎯 PURE JS MATH ENGINE (NO OPENCV REQUIRED) 🎯
     // ==========================================
-
-    let autoScoreEnabled = false;
-    let detectionTimeout = null;
-    
-    let previousDartsCount = 0;
-    let settleFrames = 0;
-    
-    let clickPoints = [];
-    const targetSize = 500; 
-    let hMatrix = null;
-
-    // EXACT ROBOFLOW DETAILS
-    const API_KEY = "rf_29awkTXGorYWZp81ZLPa8tH67fr1";
-    const MODEL_ENDPOINT = "dartboarddetection-bvwb1/1";
-    const API_URL = `https://detect.roboflow.com/${MODEL_ENDPOINT}?api_key=${API_KEY}`;
-
     function gauss(A) {
         let n = A.length;
         for (let i = 0; i < n; i++) {
@@ -2260,6 +2255,24 @@
             y: (h[3] * x + h[4] * y + h[5]) / denom
         };
     }
+
+    // ==========================================
+    // 🎯 CLOUD AI ENGINE (ROBOFLOW API + 4-POINT CALIBRATION) 🎯
+    // ==========================================
+
+    let autoScoreEnabled = false;
+    let detectionTimeout = null;
+    let previousDartsCount = 0;
+    let settleFrames = 0;
+    
+    let clickPoints = [];
+    const targetSize = 500; 
+    let hMatrix = null;
+
+    // EXACT ROBOFLOW DETAILS
+    const API_KEY = "rf_29awkTXGorYWZp81ZLPa8tH67fr1";
+    const MODEL_ENDPOINT = "dartboarddetection-bvwb1/1";
+    const API_URL = `https://detect.roboflow.com/${MODEL_ENDPOINT}?api_key=${API_KEY}`;
 
     function drawClickPoints() {
         const overlay = document.getElementById('overlay-canvas');
@@ -2352,6 +2365,10 @@
         ctx.clearRect(0, 0, overlay.width, overlay.height);
         
         document.getElementById('set-baseline-btn').style.display = 'none';
+        
+        const debugCanvas = document.getElementById('debug-canvas');
+        const debugCtx = debugCanvas.getContext('2d');
+        debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
     }
 
     window.finishCalibration = function() {
@@ -2389,7 +2406,7 @@
         return { val: segmentScore, mult: multiplier, label: (multiplier===3?"T":multiplier===2?"D":"") + segmentScore };
     }
 
-    function drawDebugAI(predictions) {
+    function drawDebugAI(predictions, scaleX, scaleY) {
         drawClickPoints(); 
         const overlay = document.getElementById('overlay-canvas');
         const ctx = overlay.getContext('2d');
@@ -2412,8 +2429,13 @@
         }
 
         predictions.forEach(pred => {
-            const domX = offsetX + (pred.x / video.videoWidth) * renderedW;
-            const domY = offsetY + (pred.y / video.videoHeight) * renderedH;
+            // Scale AI coordinates back up to full video size
+            const videoX = pred.x * scaleX;
+            const videoY = pred.y * scaleY;
+            
+            // Map video size to DOM layout
+            const domX = offsetX + (videoX / video.videoWidth) * renderedW;
+            const domY = offsetY + (videoY / video.videoHeight) * renderedH;
             
             ctx.beginPath();
             ctx.arc(domX, domY, 5, 0, 2 * Math.PI);
@@ -2437,13 +2459,19 @@
             return;
         }
 
+        // CRITICAL FIX: Shrink the video to 640x640 to prevent iPhone RAM crash
+        const aiResolution = 640;
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = aiResolution;
+        canvas.height = aiResolution;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const base64Image = canvas.toDataURL("image/jpeg", 0.7).split(',')[1];
+        // Calculate scaling factors so we can map AI data back to the original video size
+        const scaleX = video.videoWidth / aiResolution;
+        const scaleY = video.videoHeight / aiResolution;
+
+        const base64Image = canvas.toDataURL("image/jpeg", 0.6).split(',')[1];
 
         try {
             const response = await fetch(API_URL, {
@@ -2452,71 +2480,4 @@
                 body: base64Image
             });
 
-            if (!response.ok) throw new Error(`API Error: ${response.status} ${response.statusText}`);
-
-            const data = await response.json();
-            let dartTips = [];
-            let playerInFrame = false;
-
-            if (data.predictions) {
-                drawDebugAI(data.predictions); 
-                
-                data.predictions.forEach(pred => {
-                    const className = pred.class.toLowerCase();
-                    if (className.includes("dart")) dartTips.push({ x: pred.x, y: pred.y });
-                    if (className.includes("player") || className.includes("hand") || className.includes("person") || className.includes("human")) {
-                        playerInFrame = true;
-                    }
-                });
-            }
-
-            // STATE MACHINE LOGIC
-            if (playerInFrame) {
-                if (currentDarts.length > 0) {
-                    console.log("Player detected! Locking in score...");
-                    window.dbdEnter();
-                }
-                previousDartsCount = 0; 
-                settleFrames = 0;
-            } else {
-                if (dartTips.length > previousDartsCount) {
-                    settleFrames++;
-                    if (settleFrames >= 2) { // Waited 1 second total
-                        console.log("New Dart Detected!");
-                        
-                        let newDart = dartTips[dartTips.length - 1]; 
-                        
-                        // 1. Un-tilt the coordinate using pure JS Homography
-                        let flatPt = applyHomography(hMatrix, newDart.x, newDart.y);
-                        
-                        // 2. Score the flat coordinate
-                        let dartScore = calculateDartScore(flatPt.x, flatPt.y);
-                        
-                        console.log("Scored:", dartScore);
-                        
-                        window.setDbdMult(dartScore.mult);
-                        window.hitDbd(dartScore.val);
-                        
-                        previousDartsCount = dartTips.length;
-                        settleFrames = 0;
-                    }
-                } else if (dartTips.length < previousDartsCount) {
-                    previousDartsCount = dartTips.length;
-                    settleFrames = 0;
-                } else {
-                    settleFrames = 0;
-                }
-            }
-
-        } catch (error) {
-            console.error("AI Detection Error:", error);
-        }
-
-        // Loop twice a second
-        if (autoScoreEnabled) {
-            detectionTimeout = setTimeout(detectDartsAI, 500);
-        }
-    }
-</script>
-</body>
-</html>
+            if (!response
