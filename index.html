@@ -15,9 +15,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>🎯 RAF Darts Scorer 🎯</title>
-    
-    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
-
     <style>
         /* --- THEME VARIABLES --- */
         body.theme-classic { --blue: #00d4ff; --dark: #020408; --card: #0d1b2a; --active: #162a3f; }
@@ -26,13 +23,17 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
+        /* Force strict boundaries for Android chrome nav bar and iOS Safari (No position fixed!) */
         html, body { 
-            height: 100%; width: 100%; 
+            height: 100%; 
+            width: 100%; 
             overflow: hidden; 
-            overscroll-behavior: none; 
-            margin: 0; padding: 0; 
+            overscroll-behavior: none; /* Stops bounce scroll on mobile */
+            margin: 0; 
+            padding: 0; 
         }
 
+        /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             display: grid;
@@ -41,7 +42,10 @@
         }
 
         .install-btn { background: #4caf50 !important; color: white !important; display: none; margin-bottom: 15px; border: 2px solid #81c784 !important; }
-        
+        .ios-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 15px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; font-weight: bold; z-index: 20000; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); display: none; }
+        .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
+        .ios-close { position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 16px; color: #888; padding: 5px; }
+
         /* SPECTATOR MODE OVERRIDES */
         body.spectator-mode { display: block; } 
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
@@ -52,6 +56,7 @@
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
         
+        /* GLASSMORPHISM TRANSPARENT CARDS */
         body.spectator-mode .player-card { 
             flex: 0 0 auto; width: 125px; 
             background-color: rgba(13, 27, 42, 0.45) !important; 
@@ -63,7 +68,12 @@
             border-radius: 15px;
             pointer-events: auto;
         }
-        body.spectator-mode .player-card.active { background-color: rgba(22, 42, 63, 0.6) !important; border: 2px solid var(--blue); box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
+        body.spectator-mode .player-card.active { 
+            background-color: rgba(22, 42, 63, 0.6) !important;
+            border: 2px solid var(--blue); 
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
         body.spectator-mode .score-val { font-size: 40px; }
@@ -124,24 +134,16 @@
 
         .btn-update { background: transparent; border: none; color: #888; font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
 
-        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; background: #000; overflow: hidden; gap: 10px; }
-        header > div:first-child { flex: 0 0 auto; white-space: nowrap; }
-        .header-controls { display: flex; gap: 5px; align-items: center; overflow-x: auto; white-space: nowrap; padding-bottom: 10px; margin-bottom: -10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-        .header-controls::-webkit-scrollbar { display: none; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; flex: 0 0 auto;}
+        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 10px 10px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; background: #000; }
+        .header-controls { display: flex; gap: 5px; align-items: center; }
+        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
-        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; transition: opacity 0.2s; }
+        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
         .v-box.visible { opacity: 1; z-index: 1; pointer-events: auto; }
 
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; pointer-events: none;}
-
-        /* OVERLAY CANVAS FOR CLICKS AND DRAWING */
-        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; cursor: crosshair; }
-        
-        /* DEBUG CANVAS (X-RAY VISION) */
-        #debug-canvas { position: absolute; bottom: 10px; right: 10px; width: 100px; height: 100px; border: 2px solid var(--blue); border-radius: 8px; z-index: 30; display: none; background: black; pointer-events: none; box-shadow: 0px 4px 10px rgba(0,0,0,0.8);}
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
@@ -156,20 +158,25 @@
         .legs-count { font-size: 11px; color: #888; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
+        
+        /* MISSED DOUBLE BUTTON */
         .missed-db-btn { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; cursor: pointer; }
 
+        /* CRICKET CENTER BOARD STYLES */
         #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--card); border-radius: 8px; padding: 4px; border: 1px solid rgba(255,255,255,0.1); justify-content: space-evenly; margin: 0 5px; }
         .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
         .cric-mark { flex: 1; text-align: center; font-size: 14px; font-weight: bold; color: var(--blue); }
         .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 0; border: 1px solid rgba(255,255,255,0.1);}
         .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; border-color: transparent;}
 
+        /* ADDED 24px BOTTOM PADDING TO STOP FOOTER OVERLAP ON IPHONE */
         .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 8px 24px 8px; }
         .controls { display: grid; gap: 8px; }
         
         #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
+        /* CUSTOM NUMPAD STYLES */
         #numpad-display { font-size: 28px; font-weight: bold; text-align: center; height: 35px; line-height: 35px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
         .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
         .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px 0;}
@@ -178,12 +185,14 @@
         .np-btn.enter { background: var(--blue); color: black; }
         .np-btn.enter:disabled { background: #333; color: #666; }
         
+        /* NEW DART-BY-DART GRID STYLES */
         .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
         .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 14px; font-weight: bold; border-radius: 6px; padding: 6px 0; cursor: pointer; text-align: center;}
         .dbd-btn:active { background: var(--blue); color: black; }
         .dbd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 32px; font-size: 16px; font-weight: bold; border-radius: 6px; height: 32px; }
 
+        /* CRICKET CUSTOM KEYPAD STYLES */
         .cric-mult { flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;}
         .cric-mult.active { background: var(--blue); color: black; border-color: var(--blue); }
         .cric-mult:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -193,6 +202,7 @@
         .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
 
+        /* PROFILE STYLES */
         .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 2px solid var(--blue); cursor: pointer; margin: 0 auto 10px auto; display: block; background: #111; }
         .stat-box { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; flex: 1; border: 1px solid rgba(255,255,255,0.1); }
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
@@ -229,7 +239,8 @@
         </div>
 
         <button id="login-btn" class="btn-start">LOG IN</button>
-        <button id="signup-btn" class="btn-start" style="background: #444; color: white; margin-top: 10px;">SIGN UP</button>
+       
+         <button id="signup-btn" class="btn-start" style="background: #444; color: white; margin-top: 10px;">SIGN UP</button>
         
         <p id="auth-error" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
 
@@ -451,7 +462,6 @@
 <header>
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
-        <button class="header-btn" id="auto-toggle-btn" style="color: #ffcc00;">AUTO: OFF</button>
         <button class="header-btn" id="mic-btn" style="color: #ff4d4d;">MIC ON</button>
         <button class="header-btn" id="caller-btn" style="color: #4caf50;">VOICE ON</button>
         <button class="header-btn" id="zoom-btn" style="color: #ffeb3b;">ZOOM</button>
@@ -465,8 +475,7 @@
 <div class="v-container">
     <div id="box-me" class="v-box visible">
         <div class="cam-label" id="cam-label-me">YOU</div>
-        <canvas id="overlay-canvas"></canvas>
-        <canvas id="debug-canvas"></canvas> <video id="me" autoplay playsinline webkit-playsinline muted></video>
+        <video id="me" autoplay playsinline webkit-playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
         <div class="cam-label">OPPONENT / STREAM</div>
@@ -613,17 +622,6 @@
     </div>
 </div>
 
-<canvas id="baseline-canvas" style="display: none;"></canvas>
-<canvas id="current-canvas" style="display: none;"></canvas>
-<canvas id="warped-canvas" style="display: none;"></canvas>
-
-<div id="calibration-controls" style="display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 15px; border-radius: 12px; z-index: 10000; width: 95%; max-width: 350px; border: 2px solid #ffcc00; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-    <div id="calib-msg" style="color: #ffcc00; font-size: 16px; text-align: center; margin-bottom: 10px; font-weight: bold;">Step 1: Tap Top Double 20</div>
-    <div style="color: #ccc; font-size: 11px; text-align: center; margin-bottom: 10px;">This forces the math to fix your camera angle!</div>
-    
-    <button onclick="resetCalibration()" style="width:100%; padding: 12px; background: #444; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px;">🔄 RESTART CALIBRATION</button>
-</div>
-
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
 
 <script type="module">
@@ -639,6 +637,7 @@
       messagingSenderId: "551286613527",
       appId: "1:551286613527:web:7b80ae6c58b769364e5e52"
     };
+
     const app = initializeApp(firebaseConfig);
     window.auth = getAuth(app); 
     window.db = getFirestore(app);
@@ -648,13 +647,12 @@
     const profileLayer = document.getElementById('profile-layer');
     const historyLayer = document.getElementById('history-layer');
     const friendsLayer = document.getElementById('friends-layer');
-
+    
     document.getElementById('guest-btn').addEventListener('click', () => {
         loginLayer.style.display = 'none'; 
         setupLayer.classList.remove('hidden');
         document.getElementById('name-input').value = "Guest";
     });
-
     document.getElementById('signup-btn').addEventListener('click', () => {
         const email = document.getElementById('email-input').value;
         const pass = document.getElementById('password-input').value;
@@ -667,17 +665,14 @@
             else err.innerText = error.message;
         });
     });
-
     document.getElementById('login-btn').addEventListener('click', () => {
         signInWithEmailAndPassword(window.auth, document.getElementById('email-input').value, document.getElementById('password-input').value)
             .catch((error) => { document.getElementById('auth-error').innerText = "Invalid Email or Password."; });
     });
-
     document.getElementById('logout-btn').addEventListener('click', () => {
         if(window.userUnsub) window.userUnsub();
         signOut(window.auth).then(() => { window.location.href = window.location.pathname; });
     });
-
     onAuthStateChanged(window.auth, async (user) => {
         if (user) {
             loginLayer.style.display = 'none'; 
@@ -720,7 +715,7 @@
                     }
                     
                     renderProfileMenu(); 
-  
+                    
                     const challenge = window.currentUserDoc.activeChallenge;
                     if(challenge && challenge.time > Date.now() - 60000) { 
                         showChallengePopup(challenge);
@@ -737,7 +732,6 @@
             window.currentUserDoc = null;
         }
     });
-
     document.getElementById('theme-select').addEventListener('change', async function() {
         const selectedTheme = this.value;
         document.body.classList.remove('theme-classic', 'theme-neon', 'theme-pub');
@@ -746,7 +740,6 @@
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { theme: selectedTheme });
         }
     });
-
     function showChallengePopup(challenge) {
         const popup = document.getElementById('challenge-popup');
         document.getElementById('challenge-text').innerText = `⚔️ ${challenge.hostName} challenged you!`;
@@ -776,37 +769,30 @@
         profileLayer.classList.remove('hidden');
         renderProfileMenu();
     });
-
     document.getElementById('close-profile-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         setupLayer.classList.remove('hidden');
     });
-
     document.getElementById('open-history-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         historyLayer.classList.remove('hidden');
     });
-
     document.getElementById('close-history-btn').addEventListener('click', () => {
         historyLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
     });
-
     document.getElementById('close-md-btn').addEventListener('click', () => {
         document.getElementById('match-details-layer').classList.add('hidden');
         document.getElementById('history-layer').classList.remove('hidden');
     });
-
     document.getElementById('open-friends-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         friendsLayer.classList.remove('hidden');
     });
-
     document.getElementById('close-friends-btn').addEventListener('click', () => {
         friendsLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
     });
-
     document.getElementById('reset-stats-btn').addEventListener('click', async () => {
         if(confirm("Are you sure you want to completely reset your Lifetime Stats? This clears your Average, Checkout %, High Out, and Match History.")) {
             try {
@@ -824,6 +810,7 @@
             return;
         }
         if(!window.currentUserDoc || !window.currentUserDoc.matchHistory) return;
+        
         let h = window.currentUserDoc.matchHistory.find(x => x.id === matchId);
         if (!h) return;
         
@@ -840,6 +827,7 @@
         document.getElementById('md-1401').innerText = h.p2140 || "0";
         document.getElementById('md-1800').innerText = h.p1180 || "0";
         document.getElementById('md-1801').innerText = h.p2180 || "0";
+        
         document.getElementById('history-layer').classList.add('hidden');
         document.getElementById('match-details-layer').classList.remove('hidden');
     };
@@ -852,7 +840,7 @@
             const userRef = doc(window.db, "users", window.auth.currentUser.uid);
             let historyArray = window.currentUserDoc.matchHistory || [];
             let targetItem = historyArray.find(h => h.id === matchId) ||
-            historyArray.find(h => h.date === matchDate && h.desc === matchDesc);
+                historyArray.find(h => h.date === matchDate && h.desc === matchDesc);
             
             if (!targetItem) return;
 
@@ -874,7 +862,6 @@
             setTimeout(() => document.getElementById('save-name-btn').innerText = "SAVE", 2000);
         }
     });
-
     document.getElementById('prof-pic').addEventListener('click', () => { document.getElementById('pic-upload').click(); });
     document.getElementById('pic-upload').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -883,6 +870,7 @@
         reader.onload = (event) => {
             const img = new Image();
             img.onload = async () => {
+               
                 const canvas = document.createElement('canvas');
                 const MAX_WIDTH = 200;
                 const scaleSize = MAX_WIDTH / img.width;
@@ -897,7 +885,6 @@
         }
         reader.readAsDataURL(file);
     });
-
     document.getElementById('add-friend-btn').addEventListener('click', async () => {
         const email = document.getElementById('friend-email').value.trim().toLowerCase();
         const err = document.getElementById('friend-error');
@@ -913,6 +900,7 @@
             if(window.currentUserDoc.friends && window.currentUserDoc.friends.includes(friendId)) { err.innerText = "Already friends!"; return; }
             
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { friends: arrayUnion(friendId) });
+          
             document.getElementById('friend-email').value = "";
             err.style.color = "#4caf50";
             err.innerText = "Friend Added!";
@@ -927,11 +915,12 @@
         if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
         
         let avg = window.currentUserDoc.totalDarts > 0 ?
-        ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
+            ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
         let coPerc = window.currentUserDoc.coAtt > 0 ?
-        Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
+            Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
+        // document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0;
         document.getElementById('prof-co').innerText = coPerc;
         const histContainer = document.getElementById('history-list-container');
         if(window.currentUserDoc.matchHistory && window.currentUserDoc.matchHistory.length > 0) {
@@ -943,6 +932,7 @@
                 let safeDate = `'${h.date}'`;
                 let safeDesc = `'${h.desc}'`;
           
+                
                 histHtml += `<div class="history-item">
                     <div style="flex:1; cursor:pointer;" onclick="window.showMatchDetails(${safeId})">
                         <div style="color:${color}; font-weight:bold; line-height: 1.2;">${h.desc}</div>
@@ -968,7 +958,7 @@
                     let fAvg = f.totalDarts > 0 ? ((f.totalPts / f.totalDarts) * 3).toFixed(1) : "0.0";
                     let fHc = f.highCheckout || 0;
                     let fImg = f.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=';
-         
+                    
                     list.innerHTML += `
                         <div class="friend-item">
                             <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue);">
@@ -998,7 +988,6 @@
     document.addEventListener('visibilitychange', () => {
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
     });
-
     window.addEventListener('load', () => {
         const quitBtn = document.getElementById('quit-btn');
         if (quitBtn) {
@@ -1009,7 +998,6 @@
             });
         }
     });
-
     document.querySelectorAll('.cache-clear-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             btn.innerText = "Clearing Cache & Updating...";
@@ -1023,7 +1011,6 @@
             setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
         });
     });
-
     let statsSavedThisMatch = false;
     async function saveStatsToCloud() {
         if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
@@ -1082,7 +1069,7 @@
                     p1140: state.p[0].n140, p2140: state.p[1].n140,
                     p1180: state.p[0].n180, p2180: state.p[1].n180
                 };
-                
+
                 await updateDoc(userRef, { 
                     totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
                     matchHistory: arrayUnion(newHistObj)
@@ -1130,7 +1117,6 @@
             };
         }
     });
-
     const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
 
     let stream, peer, currentCall, botTimeout;
@@ -1198,7 +1184,6 @@
         7:"3 D2",6:"D3",5:"1 D2",4:"D2",
         3:"1 D1",2:"D1"
     };
-
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
         try {
@@ -1221,7 +1206,6 @@
             if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
-
     function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
 
     function unlockAudio() {
@@ -1240,16 +1224,18 @@
     document.body.addEventListener('click', unlockAudio, { once: true });
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
+    // Creates an invisible video and audio stream to force WebRTC receivers open on iOS Safari
     function createDummyStream() {
         try {
             const canvas = document.createElement('canvas');
             canvas.width = 1; canvas.height = 1;
-            return canvas.captureStream(1); 
+            return canvas.captureStream(1); // 1 FPS is enough to trick WebRTC
         } catch (e) { 
             return null;
         }
     }
 
+    // Load buttons directly on window load exactly as they were before
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
@@ -1314,7 +1300,6 @@
         if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
         if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
         if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
-        
         if(document.getElementById('mode-toggle-btn')) {
             document.getElementById('mode-toggle-btn').onclick = () => {
                 localInputMode = localInputMode === 'total' ? 'darts' : 'total';
@@ -1324,10 +1309,11 @@
 
         if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
     });
-
+    
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
         else if(val === 'E') {
+            // FIX: If nothing is typed (empty input), it immediately resolves to 0
             let v = numpadVal === "" ? 0 : parseInt(numpadVal);
             if(!isNaN(v)) processHit(v);
         }
@@ -1338,13 +1324,13 @@
         if(display) display.innerText = numpadVal || "0";
     }
 
+    // --- NEW DART-BY-DART LOGIC ---
     window.setDbdMult = function(m) {
         dbdMult = m;
         document.getElementById('dbd-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
     };
-
     window.hitDbd = function(val) {
         if(currentDarts.length >= 3) return;
         let label = "";
@@ -1376,12 +1362,10 @@
             else { slot.innerText = "-"; }
         }
     };
-
     window.dbdEnter = function() {
         if(currentDarts.length === 0) return;
         processHit(null, currentDarts);
     };
-
     window.logMissedDouble = function(pIndex) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
@@ -1418,6 +1402,7 @@
             processHit(val);
         }, 1500);
     }
+
 
     function toggleBullPhase(isActive) {
         if (isActive) { document.body.classList.add('bull-throw'); } 
@@ -1456,7 +1441,6 @@
         render();
         if (!isLocalMatch) broadcast(state);
     };
-
     async function initApp() {
         requestWakeLock();
         statsSavedThisMatch = false; 
@@ -1467,6 +1451,7 @@
 
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
+        
         if (state.mode !== 'online') {
             window.targetChallengeFriend = null;
         }
@@ -1496,7 +1481,6 @@
         state.p[1].s = startScore;
         state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
         state.p[1].coAtt = 0; state.p[1].coHit = 0;
-
         if (state.mode === 'bot') {
             state.botLevel = parseInt(document.getElementById('bot-level-input').value) || 5;
             state.p[1].name = `DartBot Lvl ${state.botLevel}`;
@@ -1573,7 +1557,6 @@
                     ]
                 }
             });
-
             peer.on('open', async (id) => {
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
@@ -1588,7 +1571,7 @@
                     } catch(e) {}
                     window.targetChallengeFriend = null;
                 }
-                
+                 
                 if (spectateId) { 
                     document.getElementById('setup-layer').classList.add('hidden');
                     connectToMatch(spectateId, true);
@@ -1617,12 +1600,12 @@
                     call.on('stream', s => { currentCall = call; if(s) { attachPeerVideo(s); } render(); });
                 }
             });
-
             peer.on('connection', c => {
                 conns.push(c);
                 c.on('open', () => c.send({ type: 'SYNC', state }));
                 c.on('data', d => {
                     handleData(d);
+                    
                     conns.forEach(otherConn => {
                         if (otherConn !== c && otherConn.open && d.type !== 'JOIN') {
                             otherConn.send(d);
@@ -1630,11 +1613,9 @@
                     });
                 });
             });
-
             peer.on('error', err => {
                 if (state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
             });
-
         } catch (e) {
             log.innerText = "Camera/Mic error. (" + e.message + ")";
             startBtn.disabled = false;
@@ -1651,16 +1632,16 @@
         const c = peer.connect(id);
         conns.push(c);
         c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); });
-        
         c.on('data', d => {
             handleData(d);
+            
             conns.forEach(otherConn => {
                 if (otherConn !== c && otherConn.open && d.type !== 'JOIN') {
                     otherConn.send(d);
                 }
             });
         });
-
+        
         if (isSpectator) {
             const dummy = createDummyStream();
             const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
@@ -1846,6 +1827,7 @@
         if (!isLocalMatch) { broadcast(state); }
     }
 
+    // --- REVISED processHit WITH DART-BY-DART LOGIC ---
     function processHit(manualVal = null, dartsArr = null) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
@@ -1868,7 +1850,7 @@
                     if (d.mult === 2 || (d.val === 25 && d.label === 'DB')) { p.coAtt++; }
                 }
                 tempS -= d.pts;
-                if (tempS <= 1 && tempS !== 0) break; 
+                if (tempS <= 1 && tempS !== 0) break; // Bust
             }
         } else {
             val = numpadVal === '' ? 0 : parseInt(numpadVal);
@@ -1890,13 +1872,11 @@
         if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
             if (state.gameType === '121') { p.l = Math.max(0, p.l - 1); p.s = 121 + p.l; } 
             else { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; }
-            p.ld = 0;
-            soundToPlay = 0;
+            p.ld = 0; soundToPlay = 0;
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
         }
         else if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val;
-            p.pts += val; 
+            p.s -= val; p.pts += val; 
             if (p.ld <= 9) { p.f9pts += val; }
             if (val === 180) p.n180++;
             else if (val >= 140) p.n140++;
@@ -1929,8 +1909,7 @@
                 if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
                     if (state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; } 
                     else { p.s = 121 + p.l; }
-                    p.ld = 0;
-                    soundToPlay = 'bust'; 
+                    p.ld = 0; soundToPlay = 'bust'; 
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
                 } else if (state.mode !== 'single') {
                     state.turn = (state.turn === 0) ? 1 : 0; 
@@ -1944,6 +1923,7 @@
         }
         
         playDartSound(soundToPlay);
+        // Reset inputs
         numpadVal = "";
         currentDarts = [];
         updateDbdDisplay();
@@ -2068,8 +2048,8 @@
             const cardEl = document.getElementById(`card-${i}`);
             if (cardEl) cardEl.className = (state.turn === i) ? "player-card active" : "player-card";
         });
-
         if (!spectateId) {
+            
             if (state.gameType === 'atc') {
                 document.getElementById('cricket-center')?.classList.add('hidden');
                 if (document.getElementById('main-score-area')) {
@@ -2105,6 +2085,7 @@
                     const btn = document.getElementById(id);
                     if (btn) {
                         btn.disabled = !isMyTurn;
+                        
                         btn.style.opacity = isMyTurn ? 1 : 0.5;
                     }
                 });
@@ -2155,7 +2136,6 @@
                     btn.disabled = !isMyTurn;
                     btn.style.opacity = isMyTurn ? 1 : 0.5;
                 });
-
             } else {
                 
                 document.getElementById('cricket-center')?.classList.add('hidden');
@@ -2169,11 +2149,9 @@
                     }
                     if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(28px, 6dvh, 50px)';
                 });
-
                 if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'flex';
                 if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'none';
                 if(document.getElementById('cricket-controls')) document.getElementById('cricket-controls').style.display = 'none';
-
                 if (localInputMode === 'darts') {
                     if(document.getElementById('total-mode-ui')) document.getElementById('total-mode-ui').style.display = 'none';
                     if(document.getElementById('darts-mode-ui')) document.getElementById('darts-mode-ui').style.display = 'flex';
@@ -2212,7 +2190,7 @@
                         const aSender = senders.find(s => s.track && s.track.kind === 'audio');
                         if (vSender && videoTrack && vSender.track !== videoTrack) { vSender.replaceTrack(videoTrack).catch(e => {}); }
                         if (aSender && audioTrack && aSender.track !== audioTrack) { aSender.replaceTrack(audioTrack).catch(e => {}); }
-                     }
+                    }
                 });
             }
         }
@@ -2269,394 +2247,6 @@
         }
     }
 
-    // ==========================================
-    // 🎯 ADVANCED OPEN-CV ENGINE (4-POINT HOMOGRAPHY) 🎯
-    // ==========================================
-
-    let cvReady = false;
-    let baselineMat = null;
-    let currentMat = null;
-    let diffMat = null;
-    let threshMat = null;
-    let warpedBaseline = null;
-    let warpedCurrent = null;
-    let transformMatrix = null;
-    
-    let detectionInterval = null;
-    let autoScoreEnabled = false;
-    
-    let playerInFrame = false;
-    let settleFrames = 0;
-    
-    // Homography points
-    let clickPoints = [];
-    const targetSize = 500; // The flattened board will be a 500x500 square
-
-    window.addEventListener('load', () => {
-        const autoBtn = document.getElementById('auto-toggle-btn');
-        const calibControls = document.getElementById('calibration-controls');
-        const overlay = document.getElementById('overlay-canvas');
-        const debugCanvas = document.getElementById('debug-canvas');
-        
-        if(autoBtn) {
-            autoBtn.addEventListener('click', () => {
-                autoScoreEnabled = !autoScoreEnabled;
-                if(autoScoreEnabled) {
-                    autoBtn.innerText = "AUTO: ON";
-                    autoBtn.style.color = "#4caf50";
-                    overlay.style.display = "block"; 
-                    calibControls.style.display = "block";
-                    debugCanvas.style.display = "block";
-                    
-                    if(localInputMode !== 'darts') {
-                        localInputMode = 'darts';
-                        render();
-                    }
-                    
-                    clickPoints = [];
-                    updateCalibMsg();
-                    
-                } else {
-                    autoBtn.innerText = "AUTO: OFF";
-                    autoBtn.style.color = "#ffcc00";
-                    overlay.style.display = "none";
-                    calibControls.style.display = "none";
-                    debugCanvas.style.display = "none";
-                    if (detectionInterval) clearInterval(detectionInterval);
-                    detectionInterval = null;
-                }
-            });
-        }
-        
-        // Handle clicking on the video for calibration
-        overlay.addEventListener('click', (e) => {
-            if (!autoScoreEnabled || clickPoints.length >= 4) return;
-            
-            const rect = overlay.getBoundingClientRect();
-            
-            // Get click coordinates relative to the DOM element
-            const domX = e.clientX - rect.left;
-            const domY = e.clientY - rect.top;
-            
-            const video = document.getElementById('me');
-            const vidRatio = video.videoWidth / video.videoHeight;
-            const domRatio = rect.width / rect.height;
-            
-            let renderedW = rect.width;
-            let renderedH = rect.height;
-            let offsetX = 0; let offsetY = 0;
-
-            if (vidRatio > domRatio) {
-                renderedH = rect.width / vidRatio;
-                offsetY = (rect.height - renderedH) / 2;
-            } else {
-                renderedW = rect.height * vidRatio;
-                offsetX = (rect.width - renderedW) / 2;
-            }
-            
-            // Map DOM click to actual Video Pixel coordinates
-            let vidX = ((domX - offsetX) / renderedW) * video.videoWidth;
-            let vidY = ((domY - offsetY) / renderedH) * video.videoHeight;
-            
-            // Ensure bounds
-            vidX = Math.max(0, Math.min(vidX, video.videoWidth));
-            vidY = Math.max(0, Math.min(vidY, video.videoHeight));
-            
-            clickPoints.push({x: vidX, y: vidY});
-            
-            drawClickPoints();
-            updateCalibMsg();
-            
-            if (clickPoints.length === 4) {
-                calculateTransform();
-            }
-        });
-    });
-
-    window.onOpenCvReady = function() {
-        cvReady = true;
-        console.log("OpenCV Engine Loaded.");
-    };
-    
-    function drawClickPoints() {
-        const overlay = document.getElementById('overlay-canvas');
-        const ctx = overlay.getContext('2d');
-        const video = document.getElementById('me');
-        
-        const rect = overlay.getBoundingClientRect();
-        const vidRatio = video.videoWidth / video.videoHeight;
-        const domRatio = rect.width / rect.height;
-        
-        let renderedW = rect.width;
-        let renderedH = rect.height;
-        let offsetX = 0; let offsetY = 0;
-
-        if (vidRatio > domRatio) {
-            renderedH = rect.width / vidRatio;
-            offsetY = (rect.height - renderedH) / 2;
-        } else {
-            renderedW = rect.height * vidRatio;
-            offsetX = (rect.width - renderedW) / 2;
-        }
-        
-        ctx.clearRect(0, 0, overlay.width, overlay.height);
-        
-        clickPoints.forEach((pt, index) => {
-            // Reverse mapping back to DOM
-            const domX = offsetX + (pt.x / video.videoWidth) * renderedW;
-            const domY = offsetY + (pt.y / video.videoHeight) * renderedH;
-            
-            ctx.beginPath();
-            ctx.arc(domX, domY, 8, 0, 2 * Math.PI);
-            ctx.fillStyle = "yellow";
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = "black";
-            ctx.stroke();
-            
-            ctx.fillStyle = "black";
-            ctx.font = "12px Arial";
-            ctx.fillText(index + 1, domX - 4, domY + 4);
-        });
-        
-        // Draw connecting lines
-        if (clickPoints.length > 1) {
-            ctx.beginPath();
-            const firstDomX = offsetX + (clickPoints[0].x / video.videoWidth) * renderedW;
-            const firstDomY = offsetY + (clickPoints[0].y / video.videoHeight) * renderedH;
-            ctx.moveTo(firstDomX, firstDomY);
-            
-            for (let i = 1; i < clickPoints.length; i++) {
-                const domX = offsetX + (clickPoints[i].x / video.videoWidth) * renderedW;
-                const domY = offsetY + (clickPoints[i].y / video.videoHeight) * renderedH;
-                ctx.lineTo(domX, domY);
-            }
-            if (clickPoints.length === 4) {
-                ctx.lineTo(firstDomX, firstDomY); // close the square
-            }
-            ctx.strokeStyle = "rgba(255, 255, 0, 0.5)";
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-    }
-    
-    function updateCalibMsg() {
-        const msg = document.getElementById('calib-msg');
-        const msgs = [
-            "Step 1: Tap Top Double 20",
-            "Step 2: Tap Right Double 6",
-            "Step 3: Tap Bottom Double 3",
-            "Step 4: Tap Left Double 11",
-            "✅ Board Flattened! Camera is ready."
-        ];
-        msg.innerText = msgs[clickPoints.length];
-        
-        if(clickPoints.length === 4) {
-            msg.style.color = "#4caf50";
-            setTimeout(() => {
-                document.getElementById('calibration-controls').style.display = 'none';
-            }, 2000);
-        } else {
-            msg.style.color = "#ffcc00";
-        }
-    }
-
-    window.resetCalibration = function() {
-        clickPoints = [];
-        if (detectionInterval) clearInterval(detectionInterval);
-        detectionInterval = null;
-        updateCalibMsg();
-        
-        const overlay = document.getElementById('overlay-canvas');
-        const ctx = overlay.getContext('2d');
-        ctx.clearRect(0, 0, overlay.width, overlay.height);
-    }
-
-    function calculateTransform() {
-        if (!cvReady || clickPoints.length !== 4) return;
-        
-        // Top, Right, Bottom, Left of the double ring on the screen
-        let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-            clickPoints[0].x, clickPoints[0].y,
-            clickPoints[1].x, clickPoints[1].y,
-            clickPoints[2].x, clickPoints[2].y,
-            clickPoints[3].x, clickPoints[3].y
-        ]);
-        
-        // Map them to a perfect 500x500 square. 
-        // Top(250, 0), Right(500, 250), Bottom(250, 500), Left(0, 250)
-        let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-            targetSize/2, 0,
-            targetSize, targetSize/2,
-            targetSize/2, targetSize,
-            0, targetSize/2
-        ]);
-
-        if (transformMatrix) transformMatrix.delete();
-        transformMatrix = cv.getPerspectiveTransform(srcTri, dstTri);
-        
-        srcTri.delete();
-        dstTri.delete();
-        
-        captureBaseline();
-        
-        if (!detectionInterval) {
-            detectionInterval = setInterval(detectDarts, 500); 
-        }
-    }
-
-    function captureBaseline() {
-        if (!cvReady || !transformMatrix) return;
-        const video = document.getElementById('me');
-        if (!video || !video.videoWidth) return;
-
-        const canvas = document.getElementById('baseline-canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        let rawMat = cv.imread(canvas);
-        
-        if (!warpedBaseline) warpedBaseline = new cv.Mat();
-        let dsize = new cv.Size(targetSize, targetSize);
-        
-        // Warp the skewed camera image into a perfect flat square
-        cv.warpPerspective(rawMat, warpedBaseline, transformMatrix, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
-        cv.cvtColor(warpedBaseline, warpedBaseline, cv.COLOR_RGBA2GRAY, 0);
-        cv.GaussianBlur(warpedBaseline, warpedBaseline, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
-
-        if (!warpedCurrent) warpedCurrent = new cv.Mat();
-        if (!diffMat) diffMat = new cv.Mat();
-        if (!threshMat) threshMat = new cv.Mat();
-        
-        rawMat.delete();
-    }
-
-    // Now the math is perfectly flat!
-    function calculateDartScore(flatX, flatY) {
-        // Because the board is forced to be 500x500, the center is exactly 250,250
-        const centerX = targetSize / 2;
-        const centerY = targetSize / 2;
-        
-        // The double ring is exactly 500 wide, so radius is 250
-        const radius = targetSize / 2;
-
-        const dx = flatX - centerX;
-        const dy = flatY - centerY;
-        const distance = Math.sqrt(dx*dx + dy*dy);
-        
-        let dartAngle = Math.atan2(dy, dx) * (180 / Math.PI);
-        dartAngle = (dartAngle + 360 + 9) % 360; 
-        
-        const boardSegments = [6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5, 20, 1, 18, 4, 13];
-        const segmentIndex = Math.floor(dartAngle / 18);
-        const segmentScore = boardSegments[segmentIndex];
-        
-        let multiplier = 1;
-        
-        if (distance < radius * 0.037) return { val: 25, mult: 2, label: "DB" };
-        if (distance < radius * 0.094) return { val: 25, mult: 1, label: "B" };
-        if (distance > radius * 0.58 && distance <= radius * 0.63) multiplier = 3;
-        if (distance > radius * 0.95 && distance <= radius * 1.05) multiplier = 2; // Allow tiny 5% overlap padding
-        if (distance > radius * 1.05) return { val: 0, mult: 1, label: "MISS" }; 
-        
-        return { val: segmentScore, mult: multiplier, label: (multiplier===3?"T":multiplier===2?"D":"") + segmentScore };
-    }
-
-    function detectDarts() {
-        if (!warpedBaseline || !cvReady || !autoScoreEnabled || !transformMatrix) return;
-        const video = document.getElementById('me');
-        if (video.paused || video.ended) return;
-
-        const canvas = document.getElementById('current-canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        let rawMat = cv.imread(canvas);
-        let dsize = new cv.Size(targetSize, targetSize);
-        
-        cv.warpPerspective(rawMat, warpedCurrent, transformMatrix, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
-        cv.cvtColor(warpedCurrent, warpedCurrent, cv.COLOR_RGBA2GRAY, 0);
-        cv.GaussianBlur(warpedCurrent, warpedCurrent, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
-
-        // Diff and Threshold 
-        cv.absdiff(warpedBaseline, warpedCurrent, diffMat);
-        cv.threshold(diffMat, threshMat, 35, 255, cv.THRESH_BINARY); // Adjust threshold up slightly for noise
-        
-        // --- X-RAY VISION (DEBUG VIEW) ---
-        // Draw the threshold mask to the small debug canvas so the user can see what's happening
-        cv.imshow('debug-canvas', threshMat);
-        // ---------------------------------
-
-        let contours = new cv.MatVector();
-        let hierarchy = new cv.Mat();
-        cv.findContours(threshMat, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROCH_SIMPLE);
-
-        let maxArea = 0;
-        let bestContour = null;
-
-        for (let i = 0; i < contours.size(); ++i) {
-            let area = cv.contourArea(contours.get(i));
-            if (area > maxArea) {
-                maxArea = area;
-                bestContour = contours.get(i);
-            }
-        }
-
-        // STATE MACHINE
-        // Note: Areas are different now because the board is a 500x500 warped square!
-        if (maxArea > 15000) { 
-            // 1. A human hand/arm is in frame
-            if (!playerInFrame) {
-                console.log("Player entered frame.");
-                if (currentDarts.length > 0) {
-                    window.dbdEnter();
-                }
-            }
-            playerInFrame = true;
-            settleFrames = 0;
-        } 
-        else if (playerInFrame && maxArea < 1000) {
-            // 2. The human walked away from the board. 
-            settleFrames++;
-            if (settleFrames >= 3) {
-                console.log("Player left frame. Capturing new clean baseline.");
-                captureBaseline(); 
-                playerInFrame = false;
-                settleFrames = 0;
-            }
-        }
-        else if (!playerInFrame && maxArea > 20 && maxArea < 10000) {
-            // 3. A dart was thrown!
-            settleFrames++;
-            console.log("Dart tracking...");
-            if (settleFrames >= 2) { 
-                let rect = cv.boundingRect(bestContour);
-                // In a flattened 2D board, the tip is always nearest to the center.
-                // But a simple center-of-mass of the blob works well enough for testing.
-                let tipX = rect.x + (rect.width / 2);
-                let tipY = rect.y + (rect.height / 2); 
-
-                let dart = calculateDartScore(tipX, tipY);
-                console.log("Dart Scored:", dart);
-                
-                window.setDbdMult(dart.mult);
-                window.hitDbd(dart.val);
-                
-                captureBaseline(); 
-                settleFrames = 0;
-            }
-        } else {
-            settleFrames = 0; 
-        }
-
-        rawMat.delete();
-        contours.delete();
-        hierarchy.delete();
-    }
 </script>
 </body>
 </html>
