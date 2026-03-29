@@ -131,7 +131,7 @@
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; flex: 0 0 auto;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
-        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
+        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; transition: opacity 0.2s; }
         .v-box.visible { opacity: 1; z-index: 1; pointer-events: auto; }
 
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
@@ -139,6 +139,7 @@
 
         /* OVERLAY CANVAS FOR PRECISE DRAWING & DEBUGGING */
         #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; cursor: crosshair; }
+        #debug-canvas { position: absolute; bottom: 10px; right: 10px; width: 100px; height: 100px; border: 2px solid var(--blue); border-radius: 8px; z-index: 30; display: none; background: black; pointer-events: none; box-shadow: 0px 4px 10px rgba(0,0,0,0.8);}
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
@@ -448,7 +449,7 @@
 <header>
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
-        <button class="header-btn" id="auto-toggle-btn" style="color: #ffcc00; display: none;">AUTO: OFF</button>
+        <button class="header-btn" id="auto-toggle-btn" style="color: #ffcc00;">AUTO: OFF</button>
         <button class="header-btn" id="mic-btn" style="color: #ff4d4d;">MIC ON</button>
         <button class="header-btn" id="caller-btn" style="color: #4caf50;">VOICE ON</button>
         <button class="header-btn" id="zoom-btn" style="color: #ffeb3b;">ZOOM</button>
@@ -463,6 +464,8 @@
     <div id="box-me" class="v-box visible">
         <div class="cam-label" id="cam-label-me">YOU</div>
         <canvas id="overlay-canvas"></canvas>
+        <canvas id="debug-canvas"></canvas>
+        <canvas id="current-canvas" style="display: none;"></canvas>
         <video id="me" autoplay playsinline webkit-playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
@@ -610,7 +613,7 @@
     </div>
 </div>
 
-<canvas id="current-canvas" style="display: none;"></canvas>
+<canvas id="baseline-canvas" style="display: none;"></canvas>
 
 <div id="calibration-controls" style="display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 15px; border-radius: 12px; z-index: 10000; width: 95%; max-width: 350px; border: 2px solid #ffcc00; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
     <div id="calib-msg" style="color: #ffcc00; font-size: 16px; text-align: center; margin-bottom: 10px; font-weight: bold;">Step 1: Tap Top Double 20</div>
@@ -995,6 +998,7 @@
     });
 
     window.addEventListener('load', () => {
+        // --- BUTTON BINDINGS (FIXED AND ISOLATED) ---
         const quitBtn = document.getElementById('quit-btn');
         if (quitBtn) {
             quitBtn.addEventListener('click', () => {
@@ -1003,20 +1007,93 @@
                 }
             });
         }
-    });
-
-    document.querySelectorAll('.cache-clear-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.innerText = "Clearing Cache & Updating...";
-            btn.style.color = "#4caf50";
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) { registration.unregister(); }
-                });
-            }
-            if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
-            setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+        
+        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.innerText = "Clearing Cache & Updating...";
+                btn.style.color = "#4caf50";
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) { registration.unregister(); }
+                    });
+                }
+                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+            });
         });
+
+        document.getElementById('start-btn').onclick = initApp;
+        if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
+        if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
+        if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
+        if(document.getElementById('caller-btn')) document.getElementById('caller-btn').onclick = toggleCaller;
+        if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
+        if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
+        
+        if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
+        if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
+        
+        if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
+        if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
+        if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
+        if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
+        
+        if(document.getElementById('mode-toggle-btn')) {
+            document.getElementById('mode-toggle-btn').onclick = () => {
+                localInputMode = localInputMode === 'total' ? 'darts' : 'total';
+                render();
+            };
+        }
+
+        if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
+        
+        const modeInput = document.getElementById('mode-input');
+        const gameTypeInput = document.getElementById('game-type-input');
+
+        function updateMenuUI() {
+            if (!modeInput) return;
+            const mode = modeInput.value;
+            const gameType = gameTypeInput.value;
+
+            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
+            document.getElementById('game-type-group').style.display = 'block'; 
+            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
+            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
+            
+            const p1Label = document.getElementById('p1-label');
+            if (p1Label) {
+                if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
+                else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
+                else p1Label.innerText = 'Your Name';
+            }
+            
+            if (mode === 'bot') {
+                if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
+                    gameTypeInput.value = '501';
+                    alert("DartBot currently only supports standard 301-1001 games.");
+                }
+            }
+        }
+
+        if (modeInput) modeInput.addEventListener('change', updateMenuUI);
+        if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
+        updateMenuUI();
+
+        if (spectateId) {
+            document.body.classList.add('spectator-mode');
+            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
+            document.getElementById('name-input').placeholder = "Your Name (Optional)";
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('setup-layer').classList.remove('hidden');
+        } else if (joinId) {
+            document.getElementById('legs-group').style.display = 'none';
+            document.getElementById('start-btn').innerText = "JOIN MATCH";
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('setup-layer').classList.remove('hidden');
+        }
     });
 
     let statsSavedThisMatch = false;
@@ -1133,6 +1210,7 @@
     let isLocalMatch = false;
     let localInputMode = 'total'; let numpadVal = "";
     
+    // NEW DART BY DART STATE
     let dbdMult = 1;
     let currentDarts = [];
 
@@ -1192,132 +1270,6 @@
         7:"3 D2",6:"D3",5:"1 D2",4:"D2",
         3:"1 D1",2:"D1"
     };
-
-    async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
-        if (!peerConnection) return;
-        try {
-            const senders = peerConnection.getSenders();
-            const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
-            if (!videoSender || !videoSender.getParameters) return;
-            const parameters = videoSender.getParameters();
-            if (!parameters.encodings || parameters.encodings.length === 0) { parameters.encodings = [{}]; }
-            parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
-            await videoSender.setParameters(parameters);
-        } catch (e) {}
-    }
-
-    document.addEventListener('visibilitychange', () => {
-        if (!stream || state.mode === 'single' || state.mode === 'bot') return;
-        const videoTrack = stream.getVideoTracks()[0];
-        if (videoTrack) {
-            const isHidden = document.visibilityState === 'hidden';
-            videoTrack.enabled = !isHidden; 
-            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
-        }
-    });
-
-    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
-
-    function unlockAudio() {
-        const peerVideo = document.getElementById('peer');
-        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
-        
-        const meVideo = document.getElementById('me');
-        if (meVideo && meVideo.paused && meVideo.srcObject) { meVideo.play().catch(e => {}); }
-
-        const dartAudio = document.getElementById('dart-audio');
-        if (dartAudio && dartAudio.src === "") {
-            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-            dartAudio.play().catch(e => {});
-        }
-    }
-    document.body.addEventListener('click', unlockAudio, { once: true });
-    document.body.addEventListener('touchstart', unlockAudio, { once: true });
-
-    function createDummyStream() {
-        try {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1; canvas.height = 1;
-            return canvas.captureStream(1); 
-        } catch (e) { 
-            return null;
-        }
-    }
-
-    window.addEventListener('load', () => {
-        const modeInput = document.getElementById('mode-input');
-        const gameTypeInput = document.getElementById('game-type-input');
-
-        function updateMenuUI() {
-            if (!modeInput) return;
-            const mode = modeInput.value;
-            const gameType = gameTypeInput.value;
-
-            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
-            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
-            document.getElementById('game-type-group').style.display = 'block'; 
-            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
-            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
-            
-            const p1Label = document.getElementById('p1-label');
-            if (p1Label) {
-                if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
-                else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
-                else p1Label.innerText = 'Your Name';
-            }
-            
-            if (mode === 'bot') {
-                if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
-                    gameTypeInput.value = '501';
-                    alert("DartBot currently only supports standard 301-1001 games.");
-                }
-            }
-        }
-
-        if (modeInput) modeInput.addEventListener('change', updateMenuUI);
-        if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
-        updateMenuUI();
-
-        if (spectateId) {
-            document.body.classList.add('spectator-mode');
-            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
-            document.getElementById('name-input').placeholder = "Your Name (Optional)";
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('setup-layer').classList.remove('hidden');
-        } else if (joinId) {
-            document.getElementById('legs-group').style.display = 'none';
-            document.getElementById('start-btn').innerText = "JOIN MATCH";
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('setup-layer').classList.remove('hidden');
-        }
-
-        document.getElementById('start-btn').onclick = initApp;
-        if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
-        if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
-        if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
-        if(document.getElementById('caller-btn')) document.getElementById('caller-btn').onclick = toggleCaller;
-        if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
-        if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
-        
-        if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
-        if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
-        
-        if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
-        if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
-        if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
-        if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
-        
-        if(document.getElementById('mode-toggle-btn')) {
-            document.getElementById('mode-toggle-btn').onclick = () => {
-                localInputMode = localInputMode === 'total' ? 'darts' : 'total';
-                render();
-            };
-        }
-
-        if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
-    });
 
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
@@ -2263,290 +2215,6 @@
         }
     }
 
-    
-                renderedW = rect.height * vidRatio;
-                offsetX = (rect.width - renderedW) / 2;
-            }
-            
-            let vidX = ((domX - offsetX) / renderedW) * video.videoWidth;
-            let vidY = ((domY - offsetY) / renderedH) * video.videoHeight;
-            
-            vidX = Math.max(0, Math.min(vidX, video.videoWidth));
-            vidY = Math.max(0, Math.min(vidY, video.videoHeight));
-            
-            clickPoints.push({x: vidX, y: vidY});
-            
-            drawClickPoints();
-            updateCalibMsg();
-            
-            if (clickPoints.length === 4) {
-                calculateTransform();
-            }
-        });
-    });
-
-    window.onOpenCvReady = function() {
-        cvReady = true;
-        console.log("OpenCV Math Engine Loaded.");
-    };
-
-    function drawClickPoints() {
-        const overlay = document.getElementById('overlay-canvas');
-        const ctx = overlay.getContext('2d');
-        const video = document.getElementById('me');
-        
-        const rect = overlay.getBoundingClientRect();
-        const vidRatio = video.videoWidth / video.videoHeight;
-        const domRatio = rect.width / rect.height;
-        
-        let renderedW = rect.width;
-        let renderedH = rect.height;
-        let offsetX = 0; let offsetY = 0;
-
-        if (vidRatio > domRatio) {
-            renderedH = rect.width / vidRatio;
-            offsetY = (rect.height - renderedH) / 2;
-        } else {
-            renderedW = rect.height * vidRatio;
-            offsetX = (rect.width - renderedW) / 2;
-        }
-        
-        ctx.clearRect(0, 0, overlay.width, overlay.height);
-        
-        clickPoints.forEach((pt, index) => {
-            const domX = offsetX + (pt.x / video.videoWidth) * renderedW;
-            const domY = offsetY + (pt.y / video.videoHeight) * renderedH;
-            
-            ctx.beginPath();
-            ctx.arc(domX, domY, 8, 0, 2 * Math.PI);
-            ctx.fillStyle = "yellow";
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = "black";
-            ctx.stroke();
-            
-            ctx.fillStyle = "black";
-            ctx.font = "12px Arial";
-            ctx.fillText(index + 1, domX - 4, domY + 4);
-        });
-        
-        if (clickPoints.length > 1) {
-            ctx.beginPath();
-            const firstDomX = offsetX + (clickPoints[0].x / video.videoWidth) * renderedW;
-            const firstDomY = offsetY + (clickPoints[0].y / video.videoHeight) * renderedH;
-            ctx.moveTo(firstDomX, firstDomY);
-            
-            for (let i = 1; i < clickPoints.length; i++) {
-                const domX = offsetX + (clickPoints[i].x / video.videoWidth) * renderedW;
-                const domY = offsetY + (clickPoints[i].y / video.videoHeight) * renderedH;
-                ctx.lineTo(domX, domY);
-            }
-            if (clickPoints.length === 4) {
-                ctx.lineTo(firstDomX, firstDomY); 
-            }
-            ctx.strokeStyle = "rgba(255, 255, 0, 0.5)";
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-    }
-
-    function updateCalibMsg() {
-        const msg = document.getElementById('calib-msg');
-        const msgs = [
-            "Step 1: Tap Top Double 20",
-            "Step 2: Tap Right Double 6",
-            "Step 3: Tap Bottom Double 3",
-            "Step 4: Tap Left Double 11",
-            "✅ Board Flattened! AI is ready."
-        ];
-        msg.innerText = msgs[clickPoints.length];
-        
-        if(clickPoints.length === 4) {
-            msg.style.color = "#4caf50";
-            setTimeout(() => {
-                document.getElementById('calibration-controls').style.display = 'none';
-            }, 2000);
-        } else {
-            msg.style.color = "#ffcc00";
-        }
-    }
-
-    window.resetCalibration = function() {
-        clickPoints = [];
-        if (detectionTimeout) clearTimeout(detectionTimeout);
-        detectionTimeout = null;
-        updateCalibMsg();
-        
-        const overlay = document.getElementById('overlay-canvas');
-        const ctx = overlay.getContext('2d');
-        ctx.clearRect(0, 0, overlay.width, overlay.height);
-    }
-
-    function calculateTransform() {
-        if (!cvReady || clickPoints.length !== 4) return;
-        
-        let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-            clickPoints[0].x, clickPoints[0].y,
-            clickPoints[1].x, clickPoints[1].y,
-            clickPoints[2].x, clickPoints[2].y,
-            clickPoints[3].x, clickPoints[3].y
-        ]);
-        
-        // Flatten the board into a perfect 500x500 square!
-        let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-            targetSize/2, 0,
-            targetSize, targetSize/2,
-            targetSize/2, targetSize,
-            0, targetSize/2
-        ]);
-
-        if (transformMatrix) transformMatrix.delete();
-        transformMatrix = cv.getPerspectiveTransform(srcTri, dstTri);
-        
-        srcTri.delete();
-        dstTri.delete();
-        
-        if (autoScoreEnabled) {
-            console.log("Starting Cloud AI Detection...");
-            detectDartsAI(); 
-        }
-    }
-
-    // Convert raw AI video pixel into a "flat" score
-    function getTransformedPoint(x, y) {
-        if (!transformMatrix) return { x, y };
-        let src = cv.matFromArray(1, 1, cv.CV_32FC2, [x, y]);
-        let dst = new cv.Mat();
-        cv.perspectiveTransform(src, dst, transformMatrix);
-        let flatX = dst.data32F[0];
-        let flatY = dst.data32F[1];
-        src.delete(); dst.delete();
-        return { x: flatX, y: flatY };
-    }
-
-    function calculateDartScore(flatX, flatY) {
-        // We know the board is exactly a 500x500 square with radius 250
-        const centerX = 250;
-        const centerY = 250;
-        const radius = 250;
-
-        const dx = flatX - centerX;
-        const dy = flatY - centerY;
-        const distance = Math.sqrt(dx*dx + dy*dy);
-        
-        let dartAngle = Math.atan2(dy, dx) * (180 / Math.PI);
-        dartAngle = (dartAngle + 360 + 9) % 360; 
-        
-        const boardSegments = [6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5, 20, 1, 18, 4, 13];
-        const segmentIndex = Math.floor(dartAngle / 18);
-        const segmentScore = boardSegments[segmentIndex];
-        
-        let multiplier = 1;
-        
-        if (distance < radius * 0.037) return { val: 25, mult: 2, label: "DB" };
-        if (distance < radius * 0.094) return { val: 25, mult: 1, label: "B" };
-        if (distance > radius * 0.58 && distance <= radius * 0.63) multiplier = 3;
-        if (distance > radius * 0.95 && distance <= radius * 1.05) multiplier = 2; 
-        if (distance > radius * 1.05) return { val: 0, mult: 1, label: "MISS" }; 
-        
-        return { val: segmentScore, mult: multiplier, label: (multiplier===3?"T":multiplier===2?"D":"") + segmentScore };
-    }
-
-    // Draws exactly what the AI sees for debugging
-    function drawDebugAI(predictions) {
-        drawClickPoints(); // Redraw base lines
-        const overlay = document.getElementById('overlay-canvas');
-        const ctx = overlay.getContext('2d');
-        const video = document.getElementById('me');
-        
-        const rect = overlay.getBoundingClientRect();
-        const vidRatio = video.videoWidth / video.videoHeight;
-        const domRatio = rect.width / rect.height;
-        
-        let renderedW = rect.width;
-        let renderedH = rect.height;
-        let offsetX = 0; let offsetY = 0;
-
-        if (vidRatio > domRatio) {
-            renderedH = rect.width / vidRatio;
-            offsetY = (rect.height - renderedH) / 2;
-        } else {
-            renderedW = rect.height * vidRatio;
-            offsetX = (rect.width - renderedW) / 2;
-        }
-
-        predictions.forEach(pred => {
-            const domX = offsetX + (pred.x / video.videoWidth) * renderedW;
-            const domY = offsetY + (pred.y / video.videoHeight) * renderedH;
-            
-            ctx.beginPath();
-            ctx.arc(domX, domY, 5, 0, 2 * Math.PI);
-            ctx.fillStyle = pred.class.toLowerCase().includes("dart") ? "cyan" : "red";
-            ctx.fill();
-            ctx.strokeStyle = "black";
-            ctx.stroke();
-            
-            ctx.fillStyle = "white";
-            ctx.font = "bold 12px Arial";
-            ctx.fillText(pred.class, domX + 8, domY);
-        });
-    }
-
-    async function detectDartsAI() {
-        if (!autoScoreEnabled || clickPoints.length !== 4) return;
-        
-        const video = document.getElementById('me');
-        if (!video || video.paused || video.ended) {
-            detectionTimeout = setTimeout(detectDartsAI, 500);
-            return;
-        }
-
-        // Draw the warped flat board onto the debug canvas for the user to see!
-        const debugCanvas = document.getElementById('debug-canvas');
-        debugCanvas.width = targetSize;
-        debugCanvas.height = targetSize;
-        const debugCtx = debugCanvas.getContext('2d');
-        
-        if (cvReady && transformMatrix) {
-            const tempCnv = document.createElement('canvas');
-            tempCnv.width = video.videoWidth; tempCnv.height = video.videoHeight;
-            tempCnv.getContext('2d').drawImage(video, 0, 0, tempCnv.width, tempCnv.height);
-            let rawMat = cv.imread(tempCnv);
-            let warpedMat = new cv.Mat();
-            cv.warpPerspective(rawMat, warpedMat, transformMatrix, new cv.Size(targetSize, targetSize));
-            cv.imshow('debug-canvas', warpedMat);
-            rawMat.delete(); warpedMat.delete();
-        }
-
-        // Grab standard frame to send to AI
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const base64Image = canvas.toDataURL("image/jpeg", 0.7).split(',')[1];
-
-        try {
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: base64Image
-            });
-
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            let dartTips = [];
-            let playerInFrame = false;
-
-            if (data.predictions) {
-                drawDebugAI(data.predictions); // Visually debug what the AI found
-                
-                data.predictions.forEach(pred => {
-                    const className = pred.class.toLowerCase();
     // ==========================================
     // 🎯 CLOUD AI ENGINE (ROBOFLOW API + 4-POINT CALIBRATION) 🎯
     // ==========================================
@@ -2973,4 +2641,5 @@
         }
     }
 </script>
-
+</body>
+</html>
