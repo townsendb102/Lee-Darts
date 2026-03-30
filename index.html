@@ -967,8 +967,69 @@
     });
     
     // --- APP & AI STATE VARIABLES ---
+    let stream, peer, currentCall, botTimeout;
+    let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
+    let isLocalMatch = false;
+    let localInputMode = 'total'; let numpadVal = "";
+    let dbdMult = 1;
+    let currentDarts = [];
+    let isMicMuted = false;
+    let isCallerMuted = false;
+    let statsSavedThisMatch = false;
     let aiEnabled = false;
     let lastDetectedDarts = [];
+
+    const checkouts = {
+        170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
+        160:"T20 T20 D20",158:"T20 T20 D19",157:"T20 T19 D20",156:"T20 T20 D18",
+        155:"T20 T19 D19",154:"T20 T18 D20",153:"T20 T19 D18",152:"T20 T20 D16",
+        151:"T20 T17 D20",150:"T20 T18 D18",149:"T20 T19 D16",148:"T20 T16 D20",
+        147:"T20 T17 D18",146:"T20 T18 D16",145:"T20 T15 D20",144:"T20 T20 D12",
+        143:"T20 T17 D16",142:"T20 T14 D20",141:"T20 T19 D12",140:"T20 T20 D10",
+        139:"T20 T13 D20",138:"T20 T18 D12",137:"T17 T18 D16",136:"T20 T20 D8",
+        135:"T20 T17 D12",134:"T20 T14 D16",133:"T20 T19 D8",132:"T20 T16 D12",
+        131:"T20 T13 D16",130:"T20 T20 D5",129:"T19 T16 D12",128:"T18 T14 D16",
+        127:"T20 T17 D8",126:"T19 T19 D6",125:"25 T20 D20",124:"T20 T16 D8",
+        123:"T19 T16 D9",122:"T18 T20 D4",121:"T20 T11 D14",120:"T20 20 D20",
+        119:"T19 T10 D16",118:"T20 18 D20",117:"T20 17 D20",116:"T20 16 D20",
+        115:"T20 15 D20",114:"T20 14 D20",113:"T20 13 D20",112:"T20 12 D20",
+        111:"T20 11 D20",110:"T20 10 D20",109:"T20 9 D20",108:"T20 16 D16",
+        107:"T19 10 D20",106:"T20 10 D18",105:"T20 13 D16",104:"T18 10 D20",
+        103:"T20 3 D20",102:"T20 10 D16",101:"T20 9 D16",100:"T20 D20",
+        99:"T19 10 D16",98:"T20 D19",97:"T19 D20",96:"T20 D18",
+        95:"T19 D19",94:"T18 D20",93:"T19 D18",92:"T20 D16",
+        91:"T17 D20",90:"T20 D15",89:"T19 D16",88:"T16 D20",
+        87:"T17 D18",86:"T18 D16",85:"T15 D20",84:"T20 D12",
+        83:"T17 D16",82:"T14 D20",81:"T19 D12",80:"T20 D10",
+        79:"T13 D20",78:"T18 D12",77:"T15 D16",76:"T20 D8",
+        75:"T17 D12",74:"T14 D16",73:"T19 D8",72:"T16 D12",
+        71:"T13 D16",70:"T18 D8",69:"T15 D12",68:"T20 D4",
+        67:"T17 D8",66:"T14 D12",65:"T15 D10",64:"T16 D8",
+        63:"T13 D12",62:"T10 D16",61:"T15 D8",60:"20 D20",
+        59:"19 D20",58:"18 D20",57:"17 D20",56:"16 D20",
+        55:"15 D20",54:"14 D20",53:"13 D20",52:"12 D20",
+        51:"11 D20",50:"10 D20",49:"9 D20",48:"16 D16",
+        47:"15 D16",46:"14 D16",45:"13 D16",44:"12 D16",
+        43:"11 D16",42:"10 D16",41:"9 D16",40:"D20",
+        39:"7 D16",38:"D19",37:"5 D16",36:"D18",
+        35:"3 D16",34:"D17",33:"1 D16",32:"D16",
+        31:"15 D8",30:"D15",29:"13 D8",28:"D14",
+        27:"11 D8",26:"D13",25:"9 D8",24:"D12",
+        23:"7 D8",22:"D11",21:"5 D8",20:"D10",
+        19:"3 D8",18:"D9",17:"1 D8",16:"D8",
+        15:"7 D4",14:"D7",13:"5 D4",12:"D6",
+        11:"3 D4",10:"D5",9:"1 D4",8:"D4",
+        7:"3 D2",6:"D3",5:"1 D2",4:"D2",
+        3:"1 D1",2:"D1"
+    };
+
+    let history = null;
+    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    let currentFacingMode = "user"; let currentCamIndex = 0;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinId = urlParams.get('join');
+    const spectateId = urlParams.get('spectate');
 
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
@@ -1041,7 +1102,6 @@
                     btn.innerText = "🤖 AI: ON";
                     btn.style.color = "#4caf50";
                     btn.style.borderColor = "#4caf50";
-                    // Automatically switch to Dart-by-Dart mode for the best AI experience
                     if (localInputMode !== 'darts') {
                         localInputMode = 'darts';
                         render();
@@ -1050,7 +1110,7 @@
                     btn.innerText = "🤖 AI: OFF";
                     btn.style.color = "#888";
                     btn.style.borderColor = "#444";
-                    lastDetectedDarts = []; // Clear AI memory
+                    lastDetectedDarts = []; 
                 }
             };
         }
@@ -1135,13 +1195,12 @@
         setDbdMult(1);
         updateDbdDisplay();
 
-        // TEMPORARY SCORE PREVIEW FOR AI/DART-BY-DART
         if (state && state.p && state.p[state.turn] && typeof myIndex !== 'undefined') {
             let tempScore = state.p[state.turn].s - currentDarts.reduce((a,b) => a + b.pts, 0);
             let scoreDisplay = document.getElementById(`s-${state.turn}`);
             if(scoreDisplay) {
                 scoreDisplay.innerText = tempScore;
-                scoreDisplay.style.color = "#ffcc00"; // Flash gold to show immediate deduction
+                scoreDisplay.style.color = "#ffcc00"; 
             }
         }
     };
@@ -1151,7 +1210,6 @@
             currentDarts.pop(); 
             updateDbdDisplay(); 
 
-            // REVERT TEMPORARY SCORE PREVIEW
             if (state && state.p && state.p[state.turn] && typeof myIndex !== 'undefined') {
                 let tempScore = state.p[state.turn].s - currentDarts.reduce((a,b) => a + b.pts, 0);
                 let scoreDisplay = document.getElementById(`s-${state.turn}`);
@@ -1161,7 +1219,6 @@
                 }
             }
             
-            // Wipe AI memory so it doesn't immediately put it back
             lastDetectedDarts = []; 
         }
     };
@@ -1251,70 +1308,20 @@
         render();
         if (!isLocalMatch) broadcast(state);
     };
-    
-    let stream, peer, currentCall, botTimeout;
-    let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
-    let isLocalMatch = false;
-    let localInputMode = 'total'; let numpadVal = "";
-    let dbdMult = 1;
-    let currentDarts = [];
 
-    const checkouts = {
-        170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
-        160:"T20 T20 D20",158:"T20 T20 D19",157:"T20 T19 D20",156:"T20 T20 D18",
-        155:"T20 T19 D19",154:"T20 T18 D20",153:"T20 T19 D18",152:"T20 T20 D16",
-        151:"T20 T17 D20",150:"T20 T18 D18",149:"T20 T19 D16",148:"T20 T16 D20",
-        147:"T20 T17 D18",146:"T20 T18 D16",145:"T20 T15 D20",144:"T20 T20 D12",
-        143:"T20 T17 D16",142:"T20 T14 D20",141:"T20 T19 D12",140:"T20 T20 D10",
-        139:"T20 T13 D20",138:"T20 T18 D12",137:"T17 T18 D16",136:"T20 T20 D8",
-        135:"T20 T17 D12",134:"T20 T14 D16",133:"T20 T19 D8",132:"T20 T16 D12",
-        131:"T20 T13 D16",130:"T20 T20 D5",129:"T19 T16 D12",128:"T18 T14 D16",
-        127:"T20 T17 D8",126:"T19 T19 D6",125:"25 T20 D20",124:"T20 T16 D8",
-        123:"T19 T16 D9",122:"T18 T20 D4",121:"T20 T11 D14",120:"T20 20 D20",
-        119:"T19 T10 D16",118:"T20 18 D20",117:"T20 17 D20",116:"T20 16 D20",
-        115:"T20 15 D20",114:"T20 14 D20",113:"T20 13 D20",112:"T20 12 D20",
-        111:"T20 11 D20",110:"T20 10 D20",109:"T20 9 D20",108:"T20 16 D16",
-        107:"T19 10 D20",106:"T20 10 D18",105:"T20 13 D16",104:"T18 10 D20",
-        103:"T20 3 D20",102:"T20 10 D16",101:"T20 9 D16",100:"T20 D20",
-        99:"T19 10 D16",98:"T20 D19",97:"T19 D20",96:"T20 D18",
-        95:"T19 D19",94:"T18 D20",93:"T19 D18",92:"T20 D16",
-        91:"T17 D20",90:"T20 D15",89:"T19 D16",88:"T16 D20",
-        87:"T17 D18",86:"T18 D16",85:"T15 D20",84:"T20 D12",
-        83:"T17 D16",82:"T14 D20",81:"T19 D12",80:"T20 D10",
-        79:"T13 D20",78:"T18 D12",77:"T15 D16",76:"T20 D8",
-        75:"T17 D12",74:"T14 D16",73:"T19 D8",72:"T16 D12",
-        71:"T13 D16",70:"T18 D8",69:"T15 D12",68:"T20 D4",
-        67:"T17 D8",66:"T14 D12",65:"T15 D10",64:"T16 D8",
-        63:"T13 D12",62:"T10 D16",61:"T15 D8",60:"20 D20",
-        59:"19 D20",58:"18 D20",57:"17 D20",56:"16 D20",
-        55:"15 D20",54:"14 D20",53:"13 D20",52:"12 D20",
-        51:"11 D20",50:"10 D20",49:"9 D20",48:"16 D16",
-        47:"15 D16",46:"14 D16",45:"13 D16",44:"12 D16",
-        43:"11 D16",42:"10 D16",41:"9 D16",40:"D20",
-        39:"7 D16",38:"D19",37:"5 D16",36:"D18",
-        35:"3 D16",34:"D17",33:"1 D16",32:"D16",
-        31:"15 D8",30:"D15",29:"13 D8",28:"D14",
-        27:"11 D8",26:"D13",25:"9 D8",24:"D12",
-        23:"7 D8",22:"D11",21:"5 D8",20:"D10",
-        19:"3 D8",18:"D9",17:"1 D8",16:"D8",
-        15:"7 D4",14:"D7",13:"5 D4",12:"D6",
-        11:"3 D4",10:"D5",9:"1 D4",8:"D4",
-        7:"3 D2",6:"D3",5:"1 D2",4:"D2",
-        3:"1 D1",2:"D1"
-    };
-
-    let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
-        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
-        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
-    ]};
-    let history = null;
-
-    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    let currentFacingMode = "user"; let currentCamIndex = 0;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join');
-    const spectateId = urlParams.get('spectate');
+    async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
+        if (!peerConnection) return;
+        try {
+            const senders = peerConnection.getSenders();
+            const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
+            if (!videoSender || !videoSender.getParameters) return;
+            const parameters = videoSender.getParameters();
+            if (!parameters.encodings || parameters.encodings.length === 0) { parameters.encodings = [{}];
+            }
+            parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
+            await videoSender.setParameters(parameters);
+        } catch (e) {}
+    }
 
     async function initApp() {
         requestWakeLock();
@@ -1854,7 +1861,6 @@
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                 if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
                 
-                // IMPORTANT: Ensure the score text is reset to white!
                 let scoreBox = document.getElementById(`s-${i}`);
                 if(scoreBox) {
                     scoreBox.innerText = p.s;
@@ -2087,24 +2093,20 @@
         let mult = 1;
         let val = 0;
         
-        // Handling Bullseyes
         if (className === 'BULL' || className === 'DB' || className === 'DOUBLE BULL') return { val: 25, mult: 2, class: className };
         if (className === 'B' || className === 'SB' || className === '25' || className === 'SINGLE BULL' || className === 'OUTER BULL') return { val: 25, mult: 1, class: className };
         if (className === 'MISS' || className === '0') return { val: 0, mult: 1, class: className };
         
-        // Multipliers
         if (className.startsWith('T')) mult = 3;
         else if (className.startsWith('D')) mult = 2;
         else if (className.startsWith('S')) mult = 1;
         
-        // Grab the number out of the text (e.g. "T20" -> 20)
         let numStr = className.replace(/[^0-9]/g, '');
         if (numStr !== '') {
             val = parseInt(numStr);
             if (val > 0 && val <= 20) return { val, mult, class: className };
         }
         
-        // Edge cases for weird AI model outputs
         if (!isNaN(className)) {
             let num = parseInt(className);
             if (num === 50) return { val: 25, mult: 2, class: className };
@@ -2116,7 +2118,7 @@
 
     // --- 🤖 ULTRA-SAFE ASYNC AI AUTO-SCORER ---
     setInterval(async () => {
-        if (!aiEnabled) return; // Wait until they click the toggle!
+        if (!aiEnabled) return; 
 
         try {
             if (typeof state === 'undefined' || typeof myIndex === 'undefined') return;
@@ -2125,7 +2127,6 @@
             const video = document.getElementById('me');
             if (!video || video.paused || !video.srcObject) return;
 
-            // Take a small hidden picture
             const canvas = document.createElement('canvas');
             canvas.width = 640; 
             canvas.height = 480;
@@ -2133,7 +2134,6 @@
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
-            // Ask Roboflow for the score
             const response = await fetch("https://detect.roboflow.com/dartboarddetection-bvwb1/1?api_key=rf_29awkTXGorYWZp81ZLPa8tH67fr1", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -2143,61 +2143,53 @@
             
             if (!data.predictions) return;
 
-            // Figure out what valid darts it found
             let currentValidDarts = [];
             data.predictions.forEach(pred => {
                 let parsed = parseDartClass(pred.class);
                 if (parsed) currentValidDarts.push(parsed);
             });
 
-            // If the board is completely empty, clear the memory
             if (currentValidDarts.length === 0) {
                 lastDetectedDarts = [];
                 return;
             }
 
-            // Only score the darts if a brand NEW dart landed on the board
             if (currentValidDarts.length > lastDetectedDarts.length) {
                 
-                // Compare to memory to single out just the new throw
                 let newDarts = [...currentValidDarts];
                 for (let oldDart of lastDetectedDarts) {
                     let idx = newDarts.findIndex(d => d.val === oldDart.val && d.mult === oldDart.mult);
                     if (idx !== -1) newDarts.splice(idx, 1);
                 }
 
-                // Actually log the newly thrown dart(s) into the game
                 let addedDarts = false;
                 for (let nd of newDarts) {
                     if (currentDarts.length < 3) {
                         dbdMult = nd.mult;
-                        hitDbd(nd.val); // This deducts the score off the main screen visually!
+                        hitDbd(nd.val); 
                         addedDarts = true;
                     }
                 }
 
-                // Update memory so we don't accidentally score the same dart twice next frame
                 lastDetectedDarts = currentValidDarts;
 
-                // CHECK IF TURN IS OVER OR IF THEY CHECKED OUT
                 if (addedDarts) {
                     let p = state.p[state.turn];
                     let hitSum = currentDarts.reduce((a,b) => a + b.pts, 0);
                     let remaining = p.s - hitSum;
                     
                     if (currentDarts.length === 3 || remaining <= 1) {
-                        // Pause for 1.5 seconds so they see the final score pop up...
                         setTimeout(() => {
                             if (currentDarts.length > 0) {
-                                dbdEnter(); // Automatically submit the turn perfectly!
-                                lastDetectedDarts = []; // Wipe memory for next turn
+                                dbdEnter(); 
+                                lastDetectedDarts = []; 
                             }
                         }, 1500); 
                     }
                 }
             }
         } catch (err) {
-            // Fail completely silently so it doesn't break the app!
+            // Fails gracefully in the background
         }
     }, 2000); 
 
