@@ -129,14 +129,14 @@
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; flex: 0 0 auto;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
-        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; transition: opacity 0.2s; }
+        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
         .v-box.visible { opacity: 1; z-index: 1; pointer-events: auto; }
 
-        video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; position: absolute; inset: 0; z-index: 1; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 30; pointer-events: none;}
+        video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; position: absolute; inset: 0; z-index: 1;}
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; pointer-events: none;}
 
-        /* AI OVERLAYS - INVISIBLE BY DEFAULT */
-        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; cursor: crosshair; touch-action: none; pointer-events: none;}
+        /* AI OVERLAYS - POINTER EVENTS NONE SO CLICKS PASS THROUGH */
+        #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; cursor: crosshair; pointer-events: none; touch-action: none; }
         #debug-canvas { position: absolute; bottom: 10px; right: 10px; width: 100px; height: 100px; border: 2px solid var(--blue); border-radius: 8px; z-index: 30; display: none; background: black; pointer-events: none; box-shadow: 0px 4px 10px rgba(0,0,0,0.8);}
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
@@ -400,7 +400,8 @@
                 <option value="11">Best of 11</option>
             </select>
         </div>
-        <button id="start-btn" class="btn-start">START MATCH</button>
+        
+        <button id="start-btn" class="btn-start" onclick="initApp()">START MATCH</button>
         <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center; line-height: 1.4;"></p>
         
         <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
@@ -439,7 +440,7 @@
             <tr><td id="ws-1400" style="color: white;">0</td><td style="color: white;">140+</td><td id="ws-1401" style="color: white;">0</td></tr>
             <tr><td id="ws-1800" style="color: white;">0</td><td style="color: white;">180s</td><td id="ws-1801" style="color: white;">0</td></tr>
         </table>
-        <button id="rematch-btn" class="btn-start">REMATCH</button>
+        <button id="rematch-btn" class="btn-start" onclick="triggerRematch()">REMATCH</button>
         <button class="btn-update" onclick="window.location.href = window.location.pathname;">QUIT TO MENU</button>
     </div>
 </div>
@@ -448,12 +449,12 @@
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
         <button class="header-btn" id="auto-toggle-btn" style="color: #ffcc00; display: none;">AUTO: OFF</button>
-        <button class="header-btn" id="mic-btn" style="color: #ff4d4d;">MIC ON</button>
-        <button class="header-btn" id="caller-btn" style="color: #4caf50;">VOICE ON</button>
-        <button class="header-btn" id="zoom-btn" style="color: #ffeb3b;">ZOOM</button>
-        <button class="header-btn" id="flip-btn">FLIP</button>
-        <button class="header-btn" id="spectate-btn" style="color: var(--blue);">SPECTATE</button>
-        <button class="header-btn" id="share-btn">INVITE</button>
+        <button class="header-btn" id="mic-btn" onclick="toggleMic()" style="color: #ff4d4d;">MIC ON</button>
+        <button class="header-btn" id="caller-btn" onclick="toggleCaller()" style="color: #4caf50;">VOICE ON</button>
+        <button class="header-btn" id="zoom-btn" onclick="cycleZoom()" style="color: #ffeb3b;">ZOOM</button>
+        <button class="header-btn" id="flip-btn" onclick="swapCam()">FLIP</button>
+        <button class="header-btn" id="spectate-btn" onclick="shareSpectator()" style="color: var(--blue);">SPECTATE</button>
+        <button class="header-btn" id="share-btn" onclick="shareInvite()">INVITE</button>
         <button class="header-btn" id="quit-btn" style="color: #ff4d4d; font-weight: bold;">QUIT</button>
     </div>
 </header>
@@ -511,7 +512,7 @@
 <div class="controls-wrapper">
     <div class="controls" id="standard-controls">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -5px;">
-            <button class="header-btn" id="undo-btn" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
+            <button class="header-btn" id="undo-btn" onclick="undo()" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
             <button id="mode-toggle-btn" class="header-btn" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
         </div>
 
@@ -576,11 +577,11 @@
     </div>
 
     <div class="controls" id="atc-controls" style="display: none; grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr;">
-        <button class="btn-undo" id="atc-undo-btn">⟲</button>
-        <button class="btn-hit" id="atc-miss-btn" style="background: #444; color: white;">MISS</button>
-        <button class="btn-hit" id="atc-s-btn">S1</button>
-        <button class="btn-hit" id="atc-d-btn">D1</button>
-        <button class="btn-hit" id="atc-t-btn">T1</button>
+        <button class="btn-undo" id="atc-undo-btn" onclick="undo()">⟲</button>
+        <button class="btn-hit" id="atc-miss-btn" onclick="processAtcDart(0)" style="background: #444; color: white;">MISS</button>
+        <button class="btn-hit" id="atc-s-btn" onclick="processAtcDart(1)">S1</button>
+        <button class="btn-hit" id="atc-d-btn" onclick="processAtcDart(2)">D1</button>
+        <button class="btn-hit" id="atc-t-btn" onclick="processAtcDart(3)">T1</button>
     </div>
 
     <div class="controls" id="cricket-controls" style="display: none;">
@@ -614,8 +615,8 @@
     <div id="calib-msg" style="color: #ffcc00; font-size: 16px; text-align: center; margin-bottom: 10px; font-weight: bold;">Step 1: Tap Top Double 20</div>
     <div style="color: #ccc; font-size: 11px; text-align: center; margin-bottom: 10px;">This forces the math to fix your camera angle!</div>
     
-    <button id="set-baseline-btn" onclick="window.finishCalibration()" style="width:100%; padding: 12px; background: #4caf50; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px; display: none; margin-bottom: 10px;">✅ START DETECTION</button>
-    <button onclick="window.resetCalibration()" style="width:100%; padding: 12px; background: #444; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px;">🔄 RESTART CALIBRATION</button>
+    <button id="set-baseline-btn" onclick="finishCalibration()" style="width:100%; padding: 12px; background: #4caf50; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px; display: none; margin-bottom: 10px;">✅ START DETECTION</button>
+    <button onclick="resetCalibration()" style="width:100%; padding: 12px; background: #444; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px;">🔄 RESTART CALIBRATION</button>
 </div>
 
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
@@ -980,6 +981,74 @@
             list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>No friends added yet.</p>";
         }
     }
+    
+    // Safely expose required cloud funcs for the main logic to call
+    window.saveStatsToCloudModule = async function(myP, state, isWin, matchId) {
+        if(!window.db || !window.auth || !window.auth.currentUser) return;
+        const validGames = ["301", "501", "701", "1001", "170_race"];
+        try {
+            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
+            const userSnap = await getDoc(userRef);
+            if(userSnap.exists()) {
+                let dbData = userSnap.data();
+                let newPts = dbData.totalPts || 0;
+                let newDarts = dbData.totalDarts || 0;
+                let newHc = dbData.highCheckout || 0;
+                let newCoAtt = dbData.coAtt || 0;
+                let newCoHit = dbData.coHit || 0;
+                
+                let matchPts = 0; let matchDarts = 0;
+                let matchCoAtt = 0; let matchCoHit = 0;
+                
+                if(validGames.includes(state.gameType)) {
+                    matchPts = myP.pts;
+                    matchDarts = myP.d;
+                    matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
+                    
+                    newPts += matchPts; newDarts += matchDarts;
+                    newCoAtt += matchCoAtt; newCoHit += matchCoHit;
+                    newHc = Math.max(newHc, myP.hc);
+                }
+
+                let p1Avg = state.p[0].d > 0 ? ((state.p[0].pts / state.p[0].d) * 3).toFixed(1) : "0.0";
+                let p2Avg = state.p[1].d > 0 ? ((state.p[1].pts / state.p[1].d) * 3).toFixed(1) : "0.0";
+                let p1F9 = state.p[0].f9d > 0 ? ((state.p[0].f9pts / state.p[0].f9d) * 3).toFixed(1) : "0.0";
+                let p2F9 = state.p[1].f9d > 0 ? ((state.p[1].f9pts / state.p[1].f9d) * 3).toFixed(1) : "0.0";
+
+                let resultStr = isWin ? "WON" : "LOST";
+                let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
+                let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
+                let dateStr = new Date().toLocaleDateString();
+                let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
+
+                let newHistObj = { 
+                    id: matchId, date: dateStr, desc: matchText, avg: finalAvg, 
+                    pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
+                    p1Name: state.p[0].name, p2Name: state.p[1].name,
+                    p1Avg: p1Avg, p2Avg: p2Avg,
+                    p1F9: p1F9, p2F9: p2F9,
+                    p1Hc: state.p[0].hc, p2Hc: state.p[1].hc,
+                    p1140: state.p[0].n140, p2140: state.p[1].n140,
+                    p1180: state.p[0].n180, p2180: state.p[1].n180
+                };
+                
+                await updateDoc(userRef, { 
+                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
+                    matchHistory: arrayUnion(newHistObj)
+                });
+            }
+        } catch(e) {}
+    };
+
+    window.sendChallengeToCloud = async function(friendUid, matchId) {
+        if (!window.db || !window.currentUserDoc) return;
+        try {
+            await updateDoc(doc(window.db, "users", friendUid), {
+                activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: matchId, time: Date.now() }
+            });
+            alert("Challenge sent! Waiting for them to accept...");
+        } catch(e) {}
+    };
 </script>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -1060,8 +1129,49 @@
     };
 
     window.addEventListener('load', () => {
-        // Essential DOM listeners
-        if(document.getElementById('start-btn')) document.getElementById('start-btn').onclick = initApp;
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); 
+            deferredPrompt = e;
+            const installBtn = document.getElementById('install-btn');
+            if (installBtn) {
+                installBtn.style.display = 'block';
+                installBtn.onclick = async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') { installBtn.style.display = 'none'; }
+                        deferredPrompt = null;
+                    }
+                };
+            }
+        });
+
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) {
+            quitBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                    window.location.href = window.location.pathname;
+                }
+            });
+        }
+
+        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.innerText = "Clearing Cache & Updating...";
+                btn.style.color = "#4caf50";
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) { registration.unregister(); }
+                    });
+                }
+                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+            });
+        });
+
+        // RE-ATTACH ALL BUTTONS
+        document.getElementById('start-btn').onclick = window.initApp;
         if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
         if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
         if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
@@ -1230,6 +1340,22 @@
             });
         }
     }); // END WINDOW LOAD EVENT
+
+    let statsSavedThisMatch = false;
+    async function saveStatsToCloud() {
+        if(statsSavedThisMatch) return;
+        if(state.mode === 'single' || state.mode === 'bot') return;
+        
+        let myP = state.p[myIndex];
+        if(state.mode === 'local') myP = state.p[0]; 
+        let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
+        let matchId = Date.now().toString();
+
+        if (window.saveStatsToCloudModule) {
+            window.saveStatsToCloudModule(myP, state, isWin, matchId);
+        }
+        statsSavedThisMatch = true;
+    }
 
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
@@ -1417,6 +1543,7 @@
         if (!isLocalMatch) broadcast(state);
     };
 
+    // FIX: Explictly attached to window so Start Match button finds it
     window.initApp = async function() {
         requestWakeLock();
         statsSavedThisMatch = false; 
@@ -1537,6 +1664,11 @@
                 if(document.getElementById('display-id')) document.getElementById('display-id').innerText = id;
                 if(document.getElementById('wait-id')) document.getElementById('wait-id').innerText = id;
 
+                if(window.targetChallengeFriend && window.sendChallengeToCloud) {
+                    window.sendChallengeToCloud(window.targetChallengeFriend, id);
+                    window.targetChallengeFriend = null;
+                }
+                
                 if (spectateId) { 
                     document.getElementById('setup-layer').classList.add('hidden');
                     connectToMatch(spectateId, true);
@@ -2422,104 +2554,4 @@
             const domX = offsetX + (videoX / video.videoWidth) * renderedW;
             const domY = offsetY + (videoY / video.videoHeight) * renderedH;
             
-            ctx.beginPath();
-            ctx.arc(domX, domY, 5, 0, 2 * Math.PI);
-            ctx.fillStyle = pred.class.toLowerCase().includes("dart") ? "cyan" : "red";
-            ctx.fill();
-            ctx.strokeStyle = "black";
-            ctx.stroke();
-            
-            ctx.fillStyle = "white";
-            ctx.font = "bold 12px Arial";
-            ctx.fillText(pred.class, domX + 8, domY);
-        });
-    }
-
-    async function detectDartsAI() {
-        if (!autoScoreEnabled || clickPoints.length !== 4) return;
-        
-        const video = document.getElementById('me');
-        if (!video || video.paused || video.ended) {
-            detectionTimeout = setTimeout(detectDartsAI, 500);
-            return;
-        }
-
-        const aiResolution = 640;
-        const canvas = document.createElement('canvas');
-        canvas.width = aiResolution;
-        canvas.height = aiResolution;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const scaleX = video.videoWidth / aiResolution;
-        const scaleY = video.videoHeight / aiResolution;
-        const base64Image = canvas.toDataURL("image/jpeg", 0.6).split(',')[1];
-
-        try {
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: base64Image
-            });
-
-            if (!response.ok) throw new Error(`API Error: ${response.status}`);
-
-            const data = await response.json();
-            let dartTips = [];
-            let playerInFrame = false;
-
-            if (data.predictions) {
-                drawDebugAI(data.predictions, scaleX, scaleY); 
-                
-                data.predictions.forEach(pred => {
-                    const className = pred.class.toLowerCase();
-                    if (className.includes("dart")) {
-                        dartTips.push({ x: pred.x * scaleX, y: pred.y * scaleY });
-                    }
-                    if (className.includes("player") || className.includes("hand") || className.includes("person") || className.includes("human")) {
-                        playerInFrame = true;
-                    }
-                });
-            }
-
-            if (playerInFrame) {
-                if (typeof window.currentDarts !== 'undefined' && window.currentDarts.length > 0) {
-                    console.log("Player detected! Locking in score...");
-                    if(typeof window.dbdEnter === 'function') window.dbdEnter();
-                }
-                previousDartsCount = 0; 
-                settleFrames = 0;
-            } else {
-                if (dartTips.length > previousDartsCount) {
-                    settleFrames++;
-                    if (settleFrames >= 2) { 
-                        console.log("New Dart Detected!");
-                        let newDart = dartTips[dartTips.length - 1]; 
-                        let flatPt = applyHomography(hMatrix, newDart.x, newDart.y);
-                        let dartScore = calculateDartScore(flatPt.x, flatPt.y);
-                        
-                        console.log("Scored:", dartScore);
-                        if(typeof window.setDbdMult === 'function') window.setDbdMult(dartScore.mult);
-                        if(typeof window.hitDbd === 'function') window.hitDbd(dartScore.val);
-                        
-                        previousDartsCount = dartTips.length;
-                        settleFrames = 0;
-                    }
-                } else if (dartTips.length < previousDartsCount) {
-                    previousDartsCount = dartTips.length;
-                    settleFrames = 0;
-                } else {
-                    settleFrames = 0;
-                }
-            }
-        } catch (error) {
-            console.error("AI Detection Error:", error);
-        }
-
-        if (autoScoreEnabled) {
-            detectionTimeout = setTimeout(detectDartsAI, 500);
-        }
-    }
-</script>
-</body>
-</html>
+            ctx.beginPath
