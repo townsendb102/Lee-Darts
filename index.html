@@ -957,17 +957,9 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
+    // --- SAFE GLOBAL VARIABLES (Declared strictly ONCE) ---
     let wakeLock = null;
-    async function requestWakeLock() {
-        try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
-        catch (err) {}
-    }
-    document.addEventListener('visibilitychange', () => {
-        if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
-    });
-    
-    // --- APP & AI STATE VARIABLES ---
-    let stream, peer, currentCall, botTimeout;
+    let stream = null, peer = null, currentCall = null, botTimeout = null;
     let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
     let isLocalMatch = false;
     let localInputMode = 'total'; let numpadVal = "";
@@ -978,6 +970,9 @@
     let statsSavedThisMatch = false;
     let aiEnabled = false;
     let lastDetectedDarts = [];
+    let history = null;
+    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    let currentFacingMode = "user"; let currentCamIndex = 0;
 
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
@@ -1023,14 +1018,16 @@
         3:"1 D1",2:"D1"
     };
 
-    let history = null;
-    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    let currentFacingMode = "user"; let currentCamIndex = 0;
+    let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
+        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
+        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
+    ]};
 
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
     const spectateId = urlParams.get('spectate');
 
+    // --- INITIALIZATION & BINDINGS ---
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
@@ -1088,12 +1085,10 @@
         if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
         if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
         
-        // --- BUTTON BINDINGS ---
         if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
         if(document.getElementById('edit-last-btn')) document.getElementById('edit-last-btn').onclick = editLastThrowPopup;
         if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
         
-        // AI TOGGLE BUTTON
         if(document.getElementById('ai-toggle-btn')) {
             document.getElementById('ai-toggle-btn').onclick = () => {
                 aiEnabled = !aiEnabled;
@@ -1152,6 +1147,130 @@
             });
         });
     });
+
+    // --- CORE APP FUNCTIONS ---
+    async function requestWakeLock() {
+        try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
+        catch (err) {}
+    }
+    
+    document.addEventListener('visibilitychange', () => {
+        if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
+        if (!stream || state.mode === 'single' || state.mode === 'bot') return;
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+            const isHidden = document.visibilityState === 'hidden';
+            videoTrack.enabled = !isHidden; 
+            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
+        }
+    });
+
+    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
+
+    function playDartSound(type) {
+        if (isCallerMuted) return;
+        if (state.gameType === 'atc' || state.gameType === 'cricket') return;
+
+        let audioSrc = "";
+        if (type === 'bust') { audioSrc = "sounds/bust.wav"; } 
+        else if (type === 'gameshot') { audioSrc = "sounds/gameshot.wav"; } 
+        else if (type === 'gameon') { audioSrc = "sounds/gameon.wav"; } 
+        else if (typeof type === 'number' && type >= 0 && type <= 180) { audioSrc = `sounds/${type}.wav`; }
+
+        if (audioSrc !== "") {
+            const dartAudio = document.getElementById('dart-audio');
+            if (dartAudio) { dartAudio.src = audioSrc; dartAudio.play().catch(e => {}); }
+        }
+    }
+
+    function unlockAudio() {
+        const peerVideo = document.getElementById('peer');
+        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
+        const meVideo = document.getElementById('me');
+        if (meVideo && meVideo.paused && meVideo.srcObject) { meVideo.play().catch(e => {}); }
+        const dartAudio = document.getElementById('dart-audio');
+        if (dartAudio && dartAudio.src === "") {
+            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            dartAudio.play().catch(e => {});
+        }
+    }
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+
+    function createDummyStream() {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1; canvas.height = 1;
+            return canvas.captureStream(1); 
+        } catch (e) { 
+            return null;
+        }
+    }
+
+    async function saveStatsToCloud() {
+        if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
+        const validGames = ["301", "501", "701", "1001", "170_race"];
+        if(state.mode === 'single' || state.mode === 'bot') return;
+        try {
+            let myP = state.p[myIndex];
+            if(state.mode === 'local') myP = state.p[0]; 
+
+            let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
+            let resultStr = isWin ? "WON" : "LOST";
+            let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
+            let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
+            let dateStr = new Date().toLocaleDateString();
+            let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
+            let matchId = Date.now().toString();
+
+            const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
+            const userSnap = await getDoc(userRef);
+            
+            if(userSnap.exists()) {
+                let dbData = userSnap.data();
+                let newPts = dbData.totalPts || 0;
+                let newDarts = dbData.totalDarts || 0;
+                let newHc = dbData.highCheckout || 0;
+                let newCoAtt = dbData.coAtt || 0;
+                let newCoHit = dbData.coHit || 0;
+                
+                let matchPts = 0; let matchDarts = 0;
+                let matchCoAtt = 0; let matchCoHit = 0;
+                
+                if(validGames.includes(state.gameType)) {
+                    matchPts = myP.pts;
+                    matchDarts = myP.d;
+                    matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
+                    
+                    newPts += matchPts; newDarts += matchDarts;
+                    newCoAtt += matchCoAtt; newCoHit += matchCoHit;
+                    newHc = Math.max(newHc, myP.hc);
+                }
+
+                let p1Avg = state.p[0].d > 0 ? ((state.p[0].pts / state.p[0].d) * 3).toFixed(1) : "0.0";
+                let p2Avg = state.p[1].d > 0 ? ((state.p[1].pts / state.p[1].d) * 3).toFixed(1) : "0.0";
+                let p1F9 = state.p[0].f9d > 0 ? ((state.p[0].f9pts / state.p[0].f9d) * 3).toFixed(1) : "0.0";
+                let p2F9 = state.p[1].f9d > 0 ? ((state.p[1].f9pts / state.p[1].f9d) * 3).toFixed(1) : "0.0";
+
+                let newHistObj = { 
+                    id: matchId, date: dateStr, desc: matchText, avg: finalAvg, 
+                    pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
+                    p1Name: state.p[0].name, p2Name: state.p[1].name,
+                    p1Avg: p1Avg, p2Avg: p2Avg,
+                    p1F9: p1F9, p2F9: p2F9,
+                    p1Hc: state.p[0].hc, p2Hc: state.p[1].hc,
+                    p1140: state.p[0].n140, p2140: state.p[1].n140,
+                    p1180: state.p[0].n180, p2180: state.p[1].n180
+                };
+                await updateDoc(userRef, { 
+                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
+                    matchHistory: arrayUnion(newHistObj)
+                });
+                statsSavedThisMatch = true;
+            }
+        } catch(e) {}
+    }
 
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
@@ -1637,6 +1756,81 @@
         } catch (e) {}
     }
 
+    function processAtcDart(multiplier) {
+        if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
+        if(botTimeout) clearTimeout(botTimeout);
+        history = JSON.parse(JSON.stringify(state));
+        let p = state.p[state.turn];
+
+        p.d++; 
+        if (multiplier > 0) { p.s += multiplier; } 
+        
+        if (p.s > 21) {
+            state.winner = state.turn;
+        } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
+            state.turn = (state.turn === 0) ? 1 : 0;
+        }
+        render(); 
+        if (!isLocalMatch) { broadcast(state); }
+    }
+
+    window.setCricMult = function(m) {
+        let cricketMult = m; // localized variable logic to keep function clean
+        document.getElementById('cric-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('cric-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('cric-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
+    };
+
+    function checkCricketWin(pIndex) {
+        let p = state.p[pIndex];
+        let opp = state.p[pIndex === 0 ? 1 : 0];
+        let targets = [10,11,12,13,14,15,16,17,18,19,20,25];
+        for (let t of targets) { if ((p.marks[t] || 0) < 3) return false; }
+        return p.s >= opp.s;
+    }
+
+    window.hitCricket = function(val) {
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
+        
+        // Find out current active multiplier based on UI class
+        let m = 1;
+        if(document.getElementById('cric-m-2').classList.contains('active')) m = 2;
+        if(document.getElementById('cric-m-3').classList.contains('active')) m = 3;
+        
+        if (val === 25 && m === 3) { alert("Invalid Dart: Cannot throw a Treble Bull."); return; }
+        if(botTimeout) clearTimeout(botTimeout);
+        
+        history = JSON.parse(JSON.stringify(state));
+        let p = state.p[state.turn];
+        let opp = state.p[state.turn === 0 ? 1 : 0];
+
+        p.d++;
+        if (val > 0) {
+            let currentMarks = p.marks[val] || 0;
+            let oppMarks = opp.marks[val] || 0;
+            
+            let marksToAdd = m;
+            let spaceLeft = 3 - currentMarks;
+            let marksApplied = Math.min(spaceLeft, marksToAdd);
+            let excess = marksToAdd - marksApplied;
+            
+            p.marks[val] += marksApplied;
+            if (excess > 0 && oppMarks < 3) {
+                p.s += (excess * val);
+            }
+        }
+        
+        window.setCricMult(1);
+        if (checkCricketWin(state.turn)) {
+            state.winner = state.turn;
+        } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
+            state.turn = state.turn === 0 ? 1 : 0;
+        }
+        
+        render();
+        if (!isLocalMatch) { broadcast(state); }
+    }
+
     function processHit(manualVal = null, dartsArr = null) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
@@ -2087,7 +2281,6 @@
         }
     }
 
-    // --- HELPER FUNCTION: Turns Roboflow Text into Game Math ---
     function parseDartClass(className) {
         className = className.toUpperCase().trim();
         let mult = 1;
