@@ -25,12 +25,10 @@
         
         /* Force strict boundaries for Android chrome nav bar and iOS Safari (No position fixed!) */
         html, body { 
-            height: 100%; 
-            width: 100%; 
+            height: 100%; width: 100%; 
             overflow: hidden; 
             overscroll-behavior: none; /* Stops bounce scroll on mobile */
-            margin: 0; 
-            padding: 0; 
+            margin: 0; padding: 0; 
         }
 
         /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
@@ -62,17 +60,14 @@
             background-color: rgba(13, 27, 42, 0.45) !important; 
             background-image: none !important; 
             border: 1px solid rgba(255, 255, 255, 0.2); 
-            justify-content: space-evenly;
-            backdrop-filter: blur(8px);
+            justify-content: space-evenly; backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border-radius: 15px;
             pointer-events: auto;
         }
         body.spectator-mode .player-card.active { 
-            background-color: rgba(22, 42, 63, 0.6) !important;
-            border: 2px solid var(--blue); 
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-        }
+            background-color: rgba(22, 42, 63, 0.6) !important; border: 2px solid var(--blue); 
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
         
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
@@ -239,8 +234,7 @@
         </div>
 
         <button id="login-btn" class="btn-start">LOG IN</button>
-       
-         <button id="signup-btn" class="btn-start" style="background: #444; color: white; margin-top: 10px;">SIGN UP</button>
+        <button id="signup-btn" class="btn-start" style="background: #444; color: white; margin-top: 10px;">SIGN UP</button>
         
         <p id="auth-error" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
 
@@ -523,7 +517,10 @@
 <div class="controls-wrapper">
     <div class="controls" id="standard-controls">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -5px;">
-            <button class="header-btn" id="undo-btn" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
+            <div style="display: flex; gap: 5px;">
+                <button class="header-btn" id="undo-btn" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
+                <button class="header-btn" id="edit-last-btn" style="background:transparent; border:1px solid #ffcc00; color:#ffcc00; font-size:14px; padding:4px 12px;">✎ EDIT</button>
+            </div>
             <button id="mode-toggle-btn" class="header-btn" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
         </div>
 
@@ -803,14 +800,12 @@
             } catch(e) { alert("Error resetting stats."); }
         }
     });
-
     window.showMatchDetails = function(matchId) {
         if (!matchId) {
             alert("Detailed stats are not available for this legacy match.");
             return;
         }
         if(!window.currentUserDoc || !window.currentUserDoc.matchHistory) return;
-        
         let h = window.currentUserDoc.matchHistory.find(x => x.id === matchId);
         if (!h) return;
         
@@ -827,7 +822,6 @@
         document.getElementById('md-1401').innerText = h.p2140 || "0";
         document.getElementById('md-1800').innerText = h.p1180 || "0";
         document.getElementById('md-1801').innerText = h.p2180 || "0";
-        
         document.getElementById('history-layer').classList.add('hidden');
         document.getElementById('match-details-layer').classList.remove('hidden');
     };
@@ -870,7 +864,6 @@
         reader.onload = (event) => {
             const img = new Image();
             img.onload = async () => {
-               
                 const canvas = document.createElement('canvas');
                 const MAX_WIDTH = 200;
                 const scaleSize = MAX_WIDTH / img.width;
@@ -900,7 +893,6 @@
             if(window.currentUserDoc.friends && window.currentUserDoc.friends.includes(friendId)) { err.innerText = "Already friends!"; return; }
             
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { friends: arrayUnion(friendId) });
-          
             document.getElementById('friend-email').value = "";
             err.style.color = "#4caf50";
             err.innerText = "Friend Added!";
@@ -931,7 +923,6 @@
                 let safeId = h.id ? `'${h.id}'` : `null`;
                 let safeDate = `'${h.date}'`;
                 let safeDesc = `'${h.desc}'`;
-          
                 
                 histHtml += `<div class="history-item">
                     <div style="flex:1; cursor:pointer;" onclick="window.showMatchDetails(${safeId})">
@@ -1007,7 +998,8 @@
                     for(let registration of registrations) { registration.unregister(); }
                 });
             }
-            if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+            if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); });
+            }
             setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
         });
     });
@@ -1069,7 +1061,6 @@
                     p1140: state.p[0].n140, p2140: state.p[1].n140,
                     p1180: state.p[0].n180, p2180: state.p[1].n180
                 };
-
                 await updateDoc(userRef, { 
                     totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
                     matchHistory: arrayUnion(newHistObj)
@@ -1191,7 +1182,8 @@
             const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
             if (!videoSender || !videoSender.getParameters) return;
             const parameters = videoSender.getParameters();
-            if (!parameters.encodings || parameters.encodings.length === 0) { parameters.encodings = [{}]; }
+            if (!parameters.encodings || parameters.encodings.length === 0) { parameters.encodings = [{}];
+            }
             parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
             await videoSender.setParameters(parameters);
         } catch (e) {}
@@ -1206,7 +1198,8 @@
             if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
-    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
+    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); });
+    }
 
     function unlockAudio() {
         const peerVideo = document.getElementById('peer');
@@ -1294,6 +1287,7 @@
         if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
         
         if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
+        if(document.getElementById('edit-last-btn')) document.getElementById('edit-last-btn').onclick = editLastThrowPopup;
         if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
         
         if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
@@ -1309,7 +1303,6 @@
 
         if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
     });
-    
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
         else if(val === 'E') {
@@ -1451,7 +1444,6 @@
 
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
-        
         if (state.mode !== 'online') {
             window.targetChallengeFriend = null;
         }
@@ -1571,7 +1563,7 @@
                     } catch(e) {}
                     window.targetChallengeFriend = null;
                 }
-                 
+                
                 if (spectateId) { 
                     document.getElementById('setup-layer').classList.add('hidden');
                     connectToMatch(spectateId, true);
@@ -1641,7 +1633,6 @@
                 }
             });
         });
-        
         if (isSpectator) {
             const dummy = createDummyStream();
             const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
@@ -1857,6 +1848,9 @@
             if (isNaN(val) || val < 0 || val > 180) return;
         }
         
+        // Remember the throw for the edit popup
+        state.lastThrow = { playerIndex: state.turn, value: val };
+
         if (p.ld < 9) { p.f9d += 3; }
         p.d += 3; p.ld += 3;
 
@@ -1938,6 +1932,29 @@
         if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state); }
     }
 
+    window.editLastThrowPopup = function() {
+        if (!history || state.lastThrow === undefined) {
+            alert("No previous throw to edit!");
+            return;
+        }
+
+        let lastVal = state.lastThrow.value;
+        let pName = history.p[state.lastThrow.playerIndex].name;
+
+        let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
+
+        if (userInput !== null && userInput.trim() !== "") {
+            let correctedThrow = parseInt(userInput);
+
+            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
+                undo();
+                processHit(correctedThrow);
+            } else {
+                alert("Please enter a valid dart score (0-180).");
+            }
+        }
+    };
+
     function triggerRematch() {
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
@@ -1978,7 +1995,7 @@
             
             const avatarImg = document.getElementById(`avatar-${i}`);
             if (avatarImg) {
-                if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
+                 if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
                 else { avatarImg.style.display = 'none'; }
             }
             
