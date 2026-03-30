@@ -23,13 +23,15 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
+        /* Force strict boundaries for Android chrome nav bar and iOS Safari (No position fixed!) */
         html, body { 
             height: 100%; width: 100%; 
             overflow: hidden; 
-            overscroll-behavior: none; 
+            overscroll-behavior: none; /* Stops bounce scroll on mobile */
             margin: 0; padding: 0; 
         }
 
+        /* RESPONSIVE GRID TO PREVENT IPHONE SQUASHING */
         body { 
             background: var(--dark); color: white; font-family: system-ui, sans-serif; 
             display: grid;
@@ -38,7 +40,11 @@
         }
 
         .install-btn { background: #4caf50 !important; color: white !important; display: none; margin-bottom: 15px; border: 2px solid #81c784 !important; }
-        
+        .ios-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 15px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; font-weight: bold; z-index: 20000; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); display: none; }
+        .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
+        .ios-close { position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 16px; color: #888; padding: 5px; }
+
+        /* SPECTATOR MODE OVERRIDES */
         body.spectator-mode { display: block; } 
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; display: none !important; }
@@ -48,6 +54,7 @@
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
         
+        /* GLASSMORPHISM TRANSPARENT CARDS */
         body.spectator-mode .player-card { 
             flex: 0 0 auto; width: 125px; 
             background-color: rgba(13, 27, 42, 0.45) !important; 
@@ -142,26 +149,30 @@
         
         .p-name { font-size: 14px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;}
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .score-val { font-size: clamp(28px, 6dvh, 50px); font-weight: 900; line-height: 1; transition: color 0.3s ease; }
+        .score-val { font-size: clamp(28px, 6dvh, 50px); font-weight: 900; line-height: 1; }
         .legs-count { font-size: 11px; color: #888; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
         
+        /* MISSED DOUBLE BUTTON */
         .missed-db-btn { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; cursor: pointer; }
 
+        /* CRICKET CENTER BOARD STYLES */
         #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--card); border-radius: 8px; padding: 4px; border: 1px solid rgba(255,255,255,0.1); justify-content: space-evenly; margin: 0 5px; }
         .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
         .cric-mark { flex: 1; text-align: center; font-size: 14px; font-weight: bold; color: var(--blue); }
         .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 0; border: 1px solid rgba(255,255,255,0.1);}
         .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; border-color: transparent;}
 
+        /* ADDED 24px BOTTOM PADDING TO STOP FOOTER OVERLAP ON IPHONE */
         .controls-wrapper { width: 100%; min-height: 90px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 8px 24px 8px; }
         .controls { display: grid; gap: 8px; }
         
         #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
         #atc-controls { grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr; } 
         
-        #numpad-display { font-size: 28px; font-weight: bold; text-align: center; height: 35px; line-height: 35px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px; transition: color 0.3s ease;}
+        /* CUSTOM NUMPAD STYLES */
+        #numpad-display { font-size: 28px; font-weight: bold; text-align: center; height: 35px; line-height: 35px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; letter-spacing: 2px;}
         .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
         .np-btn { background: #1a1a1a; border: 1px solid #333; color: white; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px 0;}
         .np-btn:active { background: var(--blue); color: black; }
@@ -169,12 +180,14 @@
         .np-btn.enter { background: var(--blue); color: black; }
         .np-btn.enter:disabled { background: #333; color: #666; }
         
+        /* NEW DART-BY-DART GRID STYLES */
         .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
         .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 14px; font-weight: bold; border-radius: 6px; padding: 6px 0; cursor: pointer; text-align: center;}
         .dbd-btn:active { background: var(--blue); color: black; }
         .dbd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 32px; font-size: 16px; font-weight: bold; border-radius: 6px; height: 32px; }
 
+        /* CRICKET CUSTOM KEYPAD STYLES */
         .cric-mult { flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;}
         .cric-mult.active { background: var(--blue); color: black; border-color: var(--blue); }
         .cric-mult:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -184,6 +197,7 @@
         .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
 
+        /* PROFILE STYLES */
         .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 2px solid var(--blue); cursor: pointer; margin: 0 auto 10px auto; display: block; background: #111; }
         .stat-box { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; flex: 1; border: 1px solid rgba(255,255,255,0.1); }
         .stat-box-val { font-size: 24px; color: var(--blue); font-weight: bold; }
@@ -958,22 +972,28 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
-    // --- SAFE GLOBAL VARIABLES (Declared strictly ONCE) ---
     let wakeLock = null;
-    let stream = null, peer = null, currentCall = null, botTimeout = null;
+    let stream, peer, currentCall, botTimeout;
     let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
     let isLocalMatch = false;
     let localInputMode = 'total'; let numpadVal = "";
+    
+    // NEW DART BY DART STATE
     let dbdMult = 1;
     let currentDarts = [];
-    let isMicMuted = false;
-    let isCallerMuted = false;
-    let statsSavedThisMatch = false;
-    let aiEnabled = false;
-    let lastDetectedDarts = [];
+
+    let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
+        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
+        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
+    ]};
     let history = null;
+
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user"; let currentCamIndex = 0;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinId = urlParams.get('join');
+    const spectateId = urlParams.get('spectate');
 
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
@@ -1019,16 +1039,89 @@
         3:"1 D1",2:"D1"
     };
 
-    let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
-        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
-        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
-    ]};
+    window.editLastThrowPopup = function() {
+        if (!history || state.lastThrow === undefined) {
+            alert("No previous throw to edit!");
+            return;
+        }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join');
-    const spectateId = urlParams.get('spectate');
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.lastThrow.playerIndex !== myIndex) {
+            alert("You can only edit your own scores!");
+            return;
+        }
 
-    // --- INITIALIZATION & BINDINGS ---
+        let lastVal = state.lastThrow.value;
+        let pName = history.p[state.lastThrow.playerIndex].name;
+
+        let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
+
+        if (userInput !== null && userInput.trim() !== "") {
+            let correctedThrow = parseInt(userInput);
+
+            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
+                undo();
+                processHit(correctedThrow);
+            } else {
+                alert("Please enter a valid dart score (0-180).");
+            }
+        }
+    };
+
+    async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
+        if (!peerConnection) return;
+        try {
+            const senders = peerConnection.getSenders();
+            const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
+            if (!videoSender || !videoSender.getParameters) return;
+            const parameters = videoSender.getParameters();
+            if (!parameters.encodings || parameters.encodings.length === 0) { parameters.encodings = [{}];
+            }
+            parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
+            await videoSender.setParameters(parameters);
+        } catch (e) {}
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (!stream || state.mode === 'single' || state.mode === 'bot') return;
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+            const isHidden = document.visibilityState === 'hidden';
+            videoTrack.enabled = !isHidden; 
+            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
+        }
+    });
+
+    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); });
+    }
+
+    function unlockAudio() {
+        const peerVideo = document.getElementById('peer');
+        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
+        
+        const meVideo = document.getElementById('me');
+        if (meVideo && meVideo.paused && meVideo.srcObject) { meVideo.play().catch(e => {}); }
+
+        const dartAudio = document.getElementById('dart-audio');
+        if (dartAudio && dartAudio.src === "") {
+            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            dartAudio.play().catch(e => {});
+        }
+    }
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+
+    // Creates an invisible video and audio stream to force WebRTC receivers open on iOS Safari
+    function createDummyStream() {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1; canvas.height = 1;
+            return canvas.captureStream(1); // 1 FPS is enough to trick WebRTC
+        } catch (e) { 
+            return null;
+        }
+    }
+
+    // Load buttons directly on window load exactly as they were before
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
         const gameTypeInput = document.getElementById('game-type-input');
@@ -1086,17 +1179,15 @@
         if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
         if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
         
-        // --- BUTTON BINDINGS ---
         if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
-        if(document.getElementById('edit-last-btn')) document.getElementById('edit-last-btn').onclick = editLastThrowPopup;
+        if(document.getElementById('edit-last-btn')) document.getElementById('edit-last-btn').onclick = window.editLastThrowPopup;
         if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
         
-        // AI TOGGLE BUTTON
         if(document.getElementById('ai-toggle-btn')) {
             document.getElementById('ai-toggle-btn').onclick = () => {
-                aiEnabled = !aiEnabled;
+                window.aiEnabled = !window.aiEnabled;
                 const btn = document.getElementById('ai-toggle-btn');
-                if(aiEnabled) {
+                if(window.aiEnabled) {
                     btn.innerText = "🤖 AI: ON";
                     btn.style.color = "#4caf50";
                     btn.style.borderColor = "#4caf50";
@@ -1108,7 +1199,7 @@
                     btn.innerText = "🤖 AI: OFF";
                     btn.style.color = "#888";
                     btn.style.borderColor = "#444";
-                    lastDetectedDarts = []; 
+                    window.lastDetectedDarts = []; 
                 }
             };
         }
@@ -1117,7 +1208,6 @@
         if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
         if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
         if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
-        
         if(document.getElementById('mode-toggle-btn')) {
             document.getElementById('mode-toggle-btn').onclick = () => {
                 localInputMode = localInputMode === 'total' ? 'darts' : 'total';
@@ -1126,154 +1216,163 @@
         }
 
         if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
-        
-        const quitBtn = document.getElementById('quit-btn');
-        if (quitBtn) {
-            quitBtn.addEventListener('click', () => {
-                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-                    window.location.href = window.location.pathname;
-                }
-            });
-        }
-        
-        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.innerText = "Clearing Cache & Updating...";
-                btn.style.color = "#4caf50";
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                        for(let registration of registrations) { registration.unregister(); }
-                    });
-                }
-                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
-                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
-            });
-        });
     });
 
-    // --- CORE APP FUNCTIONS ---
-    async function requestWakeLock() {
-        try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
-        catch (err) {}
-    }
-    
-    document.addEventListener('visibilitychange', () => {
-        if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
-        if (!stream || state.mode === 'single' || state.mode === 'bot') return;
-        const videoTrack = stream.getVideoTracks()[0];
-        if (videoTrack) {
-            const isHidden = document.visibilityState === 'hidden';
-            videoTrack.enabled = !isHidden; 
-            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
+    window.np = function(val) {
+        if(val === 'C') { numpadVal = ""; }
+        else if(val === 'E') {
+            // FIX: If nothing is typed (empty input), it immediately resolves to 0
+            let v = numpadVal === "" ? 0 : parseInt(numpadVal);
+            if(!isNaN(v)) processHit(v);
         }
-    });
-
-    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
-
-    function playDartSound(type) {
-        if (isCallerMuted) return;
-        if (state.gameType === 'atc' || state.gameType === 'cricket') return;
-
-        let audioSrc = "";
-        if (type === 'bust') { audioSrc = "sounds/bust.wav"; } 
-        else if (type === 'gameshot') { audioSrc = "sounds/gameshot.wav"; } 
-        else if (type === 'gameon') { audioSrc = "sounds/gameon.wav"; } 
-        else if (typeof type === 'number' && type >= 0 && type <= 180) { audioSrc = `sounds/${type}.wav`; }
-
-        if (audioSrc !== "") {
-            const dartAudio = document.getElementById('dart-audio');
-            if (dartAudio) { dartAudio.src = audioSrc; dartAudio.play().catch(e => {}); }
+        else {
+            if(numpadVal.length < 3) numpadVal += val;
         }
+        let display = document.getElementById('numpad-display');
+        if(display) display.innerText = numpadVal || "0";
     }
 
-    function unlockAudio() {
-        const peerVideo = document.getElementById('peer');
-        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
-        const meVideo = document.getElementById('me');
-        if (meVideo && meVideo.paused && meVideo.srcObject) { meVideo.play().catch(e => {}); }
-        const dartAudio = document.getElementById('dart-audio');
-        if (dartAudio && dartAudio.src === "") {
-            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-            dartAudio.play().catch(e => {});
+    // --- NEW DART-BY-DART LOGIC ---
+    window.setDbdMult = function(m) {
+        dbdMult = m;
+        document.getElementById('dbd-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
+        document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
+    };
+
+    window.hitDbd = function(val) {
+        if(currentDarts.length >= 3) return;
+        let label = "";
+        let pts = 0;
+        
+        if (val === 0) { label = "MISS"; pts = 0; dbdMult = 1; } 
+        else if (val === 25) {
+            if (dbdMult === 3) { alert("Cannot hit Treble Bull."); return; }
+            label = dbdMult === 2 ? "DB" : "B";
+            pts = val * dbdMult;
+        } else {
+            label = (dbdMult === 3 ? "T" : dbdMult === 2 ? "D" : "") + val;
+            pts = val * dbdMult;
         }
-    }
-    document.body.addEventListener('click', unlockAudio, { once: true });
-    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+        
+        currentDarts.push({ val: val, mult: val===0?1:dbdMult, pts: pts, label: label });
+        setDbdMult(1);
+        updateDbdDisplay();
 
-    function createDummyStream() {
-        try {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1; canvas.height = 1;
-            return canvas.captureStream(1); 
-        } catch (e) { 
-            return null;
-        }
-    }
-
-    async function saveStatsToCloud() {
-        if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
-        const validGames = ["301", "501", "701", "1001", "170_race"];
-        if(state.mode === 'single' || state.mode === 'bot') return;
-        try {
-            let myP = state.p[myIndex];
-            if(state.mode === 'local') myP = state.p[0]; 
-
-            let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
-            let resultStr = isWin ? "WON" : "LOST";
-            let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
-            let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
-            let dateStr = new Date().toLocaleDateString();
-            let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
-            let matchId = Date.now().toString();
-
-            const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
-            const userSnap = await getDoc(userRef);
-            
-            if(userSnap.exists()) {
-                let dbData = userSnap.data();
-                let newPts = dbData.totalPts || 0;
-                let newDarts = dbData.totalDarts || 0;
-                let newHc = dbData.highCheckout || 0;
-                let newCoAtt = dbData.coAtt || 0;
-                let newCoHit = dbData.coHit || 0;
-                
-                let matchPts = 0; let matchDarts = 0;
-                let matchCoAtt = 0; let matchCoHit = 0;
-                
-                if(validGames.includes(state.gameType)) {
-                    matchPts = myP.pts;
-                    matchDarts = myP.d;
-                    matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
-                    
-                    newPts += matchPts; newDarts += matchDarts;
-                    newCoAtt += matchCoAtt; newCoHit += matchCoHit;
-                    newHc = Math.max(newHc, myP.hc);
-                }
-
-                let p1Avg = state.p[0].d > 0 ? ((state.p[0].pts / state.p[0].d) * 3).toFixed(1) : "0.0";
-                let p2Avg = state.p[1].d > 0 ? ((state.p[1].pts / state.p[1].d) * 3).toFixed(1) : "0.0";
-                let p1F9 = state.p[0].f9d > 0 ? ((state.p[0].f9pts / state.p[0].f9d) * 3).toFixed(1) : "0.0";
-                let p2F9 = state.p[1].f9d > 0 ? ((state.p[1].f9pts / state.p[1].f9d) * 3).toFixed(1) : "0.0";
-
-                let newHistObj = { 
-                    id: matchId, date: dateStr, desc: matchText, avg: finalAvg, 
-                    pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
-                    p1Name: state.p[0].name, p2Name: state.p[1].name,
-                    p1Avg: p1Avg, p2Avg: p2Avg,
-                    p1F9: p1F9, p2F9: p2F9,
-                    p1Hc: state.p[0].hc, p2Hc: state.p[1].hc,
-                    p1140: state.p[0].n140, p2140: state.p[1].n140,
-                    p1180: state.p[0].n180, p2180: state.p[1].n180
-                };
-                await updateDoc(userRef, { 
-                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
-                    matchHistory: arrayUnion(newHistObj)
-                });
-                statsSavedThisMatch = true;
+        if (state && state.p && state.p[state.turn] && typeof myIndex !== 'undefined') {
+            let tempScore = state.p[state.turn].s - currentDarts.reduce((a,b) => a + b.pts, 0);
+            let scoreDisplay = document.getElementById(`s-${state.turn}`);
+            if(scoreDisplay) {
+                scoreDisplay.innerText = tempScore;
+                scoreDisplay.style.color = "#ffcc00"; 
             }
-        } catch(e) {}
+        }
+    };
+
+    window.dbdDel = function() {
+        if(currentDarts.length > 0) { 
+            currentDarts.pop(); 
+            updateDbdDisplay(); 
+
+            if (state && state.p && state.p[state.turn] && typeof myIndex !== 'undefined') {
+                let tempScore = state.p[state.turn].s - currentDarts.reduce((a,b) => a + b.pts, 0);
+                let scoreDisplay = document.getElementById(`s-${state.turn}`);
+                if(scoreDisplay) {
+                    scoreDisplay.innerText = tempScore;
+                    if(currentDarts.length === 0) scoreDisplay.style.color = "white";
+                }
+            }
+            if (typeof window.lastDetectedDarts !== 'undefined') window.lastDetectedDarts = []; 
+        }
+    };
+
+    window.updateDbdDisplay = function() {
+        for(let i=0; i<3; i++) {
+            let slot = document.getElementById(`dbd-slot-${i+1}`);
+            if(currentDarts[i]) { slot.innerText = currentDarts[i].label; } 
+            else { slot.innerText = "-"; }
+        }
+    };
+
+    window.dbdEnter = function() {
+        if(currentDarts.length === 0) return;
+        processHit(null, currentDarts);
+    };
+
+    window.logMissedDouble = function(pIndex) {
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
+        state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
+        render();
+        if (!isLocalMatch) broadcast(state);
     }
+
+    function playBotTurn() {
+        if(state.winner !== undefined || state.turn !== 1 || state.mode !== 'bot') return;
+        let level = state.botLevel || 5;
+        let targetAvg = 25 + (level * 10);
+        let p = state.p[1];
+        let s = p.s;
+        let val = 0;
+
+        if (s > 170 || !checkouts[s]) {
+            let variance = 20;
+            val = Math.floor(targetAvg + (Math.random() * variance * 2) - variance);
+            val = Math.max(0, Math.min(180, val));
+            if (s - val <= 1 && s - val !== 0) val = s - 2;
+        } else {
+            let hitChance = level * 0.08;
+            if (Math.random() < hitChance) { val = s; } 
+            else {
+                val = Math.floor(s / 2);
+                if (val % 2 !== 0) val -= 1;
+                if (val < 0) val = 0;
+            }
+        }
+
+        document.getElementById('numpad-display').innerText = val;
+        botTimeout = setTimeout(() => {
+            document.getElementById('numpad-display').innerText = "0";
+            processHit(val);
+        }, 1500);
+    }
+
+    function toggleBullPhase(isActive) {
+        if (isActive) { document.body.classList.add('bull-throw'); } 
+        else { document.body.classList.remove('bull-throw'); }
+    }
+
+    function showFirstThrowUI() {
+        document.getElementById('first-throw-layer').classList.remove('hidden');
+        document.getElementById('ft-step-1').classList.remove('hidden');
+        document.getElementById('ft-step-2').classList.add('hidden');
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') { toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true }); }
+    }
+
+    window.showFtStep2 = function(mode) {
+        document.getElementById('ft-step-1').classList.add('hidden');
+        document.getElementById('ft-step-2').classList.remove('hidden');
+        document.getElementById('ft-p1-btn').innerText = state.p[0].name;
+        document.getElementById('ft-p2-btn').innerText = state.p[1].name;
+        if (mode === 'bull') { document.getElementById('ft-title').innerText = "Who was closest to Bull?"; } 
+        else { document.getElementById('ft-title').innerText = "Who throws first?"; }
+    };
+
+    window.setFirstPlayer = function(playerIndex) {
+        state.startingPlayer = playerIndex;
+        state.turn = playerIndex;
+        document.getElementById('first-throw-layer').classList.add('hidden');
+        
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
+            toggleBullPhase(false);
+            broadcast({ type: 'BULL_PHASE', active: false });
+        }
+        
+        playDartSound('gameon');
+        if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
+
+        render();
+        if (!isLocalMatch) broadcast(state);
+    };
 
     async function initApp() {
         requestWakeLock();
@@ -1588,7 +1687,7 @@
             }
         } catch (e) {}
     }
-
+    
     function processAtcDart(multiplier) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
@@ -1763,6 +1862,9 @@
         numpadVal = "";
         currentDarts = [];
         updateDbdDisplay();
+        
+        let scoreDisplay = document.getElementById(`s-${state.turn}`);
+        if(scoreDisplay) scoreDisplay.style.color = "white";
 
         render();
         if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
@@ -1771,41 +1873,10 @@
     function undo() {
         if(botTimeout) clearTimeout(botTimeout);
         numpadVal = ""; currentDarts = []; updateDbdDisplay();
+        let scoreDisplay = document.getElementById(`s-${state.turn}`);
+        if(scoreDisplay) scoreDisplay.style.color = "white";
         if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state); }
     }
-
-    // ----------------------------------------------------
-    // EDIT SCORE LOGIC FUNCTION
-    // ----------------------------------------------------
-    window.editLastThrowPopup = function() {
-        if (!history || state.lastThrow === undefined) {
-            alert("No previous throw to edit!");
-            return;
-        }
-
-        // --- NEW SECURITY CHECK ---
-        // Prevents users from editing their opponent's score during an online match!
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.lastThrow.playerIndex !== myIndex) {
-            alert("You can only edit your own scores!");
-            return;
-        }
-
-        let lastVal = state.lastThrow.value;
-        let pName = history.p[state.lastThrow.playerIndex].name;
-
-        let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
-
-        if (userInput !== null && userInput.trim() !== "") {
-            let correctedThrow = parseInt(userInput);
-
-            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
-                undo();
-                processHit(correctedThrow);
-            } else {
-                alert("Please enter a valid dart score (0-180).");
-            }
-        }
-    };
 
     function triggerRematch() {
         let startScore = 501;
@@ -1900,7 +1971,6 @@
                 let scoreBox = document.getElementById(`s-${i}`);
                 if(scoreBox) {
                     scoreBox.innerText = p.s;
-                    scoreBox.style.color = "white"; 
                 }
 
                 if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
@@ -2127,69 +2197,6 @@
 
 <script>
 (function() {
-    let aiEnabled = false;
-    let lastDetectedDarts = [];
-
-    window.addEventListener('DOMContentLoaded', () => {
-        const aiBtn = document.getElementById('ai-toggle-btn');
-        if (aiBtn) {
-            aiBtn.onclick = () => {
-                aiEnabled = !aiEnabled;
-                if(aiEnabled) {
-                    aiBtn.innerText = "🤖 AI: ON";
-                    aiBtn.style.color = "#4caf50";
-                    aiBtn.style.borderColor = "#4caf50";
-                    if (typeof localInputMode !== 'undefined' && localInputMode !== 'darts') {
-                        localInputMode = 'darts';
-                        if (typeof render === 'function') render();
-                    }
-                } else {
-                    aiBtn.innerText = "🤖 AI: OFF";
-                    aiBtn.style.color = "#888";
-                    aiBtn.style.borderColor = "#444";
-                    lastDetectedDarts = []; 
-                }
-            };
-        }
-    });
-
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            if (typeof window.hitDbd === 'function') {
-                const originalHitDbd = window.hitDbd;
-                window.hitDbd = function(val) {
-                    originalHitDbd(val); 
-                    
-                    if (typeof state !== 'undefined' && state.p && state.p[state.turn] && typeof currentDarts !== 'undefined') {
-                        let tempScore = state.p[state.turn].s - currentDarts.reduce((a,b) => a + b.pts, 0);
-                        let scoreDisplay = document.getElementById('s-' + state.turn);
-                        if(scoreDisplay) {
-                            scoreDisplay.innerText = tempScore;
-                            scoreDisplay.style.color = "#ffcc00"; 
-                        }
-                    }
-                };
-            }
-
-            if (typeof window.dbdDel === 'function') {
-                const originalDbdDel = window.dbdDel;
-                window.dbdDel = function() {
-                    originalDbdDel(); 
-                    
-                    if (typeof state !== 'undefined' && state.p && state.p[state.turn] && typeof currentDarts !== 'undefined') {
-                        let tempScore = state.p[state.turn].s - currentDarts.reduce((a,b) => a + b.pts, 0);
-                        let scoreDisplay = document.getElementById('s-' + state.turn);
-                        if(scoreDisplay) {
-                            scoreDisplay.innerText = tempScore;
-                            if(currentDarts.length === 0) scoreDisplay.style.color = "white";
-                        }
-                    }
-                    lastDetectedDarts = []; 
-                };
-            }
-        }, 1000);
-    });
-
     function parseDartClass(className) {
         className = className.toUpperCase().trim();
         let mult = 1; let val = 0;
@@ -2214,8 +2221,11 @@
         return null;
     }
 
+    window.aiEnabled = false;
+    window.lastDetectedDarts = [];
+
     setInterval(async () => {
-        if (!aiEnabled) return; 
+        if (!window.aiEnabled) return; 
 
         try {
             if (typeof state === 'undefined' || typeof myIndex === 'undefined') return;
@@ -2246,13 +2256,13 @@
             });
 
             if (currentValidDarts.length === 0) {
-                lastDetectedDarts = [];
+                window.lastDetectedDarts = [];
                 return;
             }
 
-            if (currentValidDarts.length > lastDetectedDarts.length) {
+            if (currentValidDarts.length > window.lastDetectedDarts.length) {
                 let newDarts = [...currentValidDarts];
-                for (let oldDart of lastDetectedDarts) {
+                for (let oldDart of window.lastDetectedDarts) {
                     let idx = newDarts.findIndex(d => d.val === oldDart.val && d.mult === oldDart.mult);
                     if (idx !== -1) newDarts.splice(idx, 1);
                 }
@@ -2265,7 +2275,7 @@
                         addedDarts = true;
                     }
                 }
-                lastDetectedDarts = currentValidDarts;
+                window.lastDetectedDarts = currentValidDarts;
 
                 if (addedDarts) {
                     let p = state.p[state.turn];
@@ -2276,7 +2286,7 @@
                         setTimeout(() => {
                             if (currentDarts.length > 0) {
                                 if (typeof window.dbdEnter === 'function') window.dbdEnter(); 
-                                lastDetectedDarts = []; 
+                                window.lastDetectedDarts = []; 
                             }
                         }, 1500); 
                     }
