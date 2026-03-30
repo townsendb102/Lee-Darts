@@ -121,9 +121,11 @@
 
         .btn-update { background: transparent; border: none; color: #888; font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
 
-        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 10px 10px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; background: #000; }
-        .header-controls { display: flex; gap: 5px; align-items: center; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;}
+        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; background: #000; overflow: hidden; gap: 10px; }
+        header > div:first-child { flex: 0 0 auto; white-space: nowrap; }
+        .header-controls { display: flex; gap: 5px; align-items: center; overflow-x: auto; white-space: nowrap; padding-bottom: 10px; margin-bottom: -10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .header-controls::-webkit-scrollbar { display: none; }
+        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; flex: 0 0 auto;}
 
         .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
         .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
@@ -132,11 +134,12 @@
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; position: absolute; inset: 0; z-index: 1;}
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 30; pointer-events: none;}
 
+        /* AI OVERLAYS - INVISIBLE BY DEFAULT */
         #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; cursor: crosshair; touch-action: none; pointer-events: none;}
         #debug-canvas { position: absolute; bottom: 10px; right: 10px; width: 100px; height: 100px; border: 2px solid var(--blue); border-radius: 8px; z-index: 30; display: none; background: black; pointer-events: none; box-shadow: 0px 4px 10px rgba(0,0,0,0.8);}
 
-        .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 50; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
-        .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 50; }
+        .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
+        .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
 
         .score-area { display: flex; flex-direction: column; padding: 8px; gap: 6px; min-height: 0; }
         .player-card { flex: 1; background-color: var(--card); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border: 2px solid transparent; min-height: 0; transition: background 0.3s; }
@@ -227,12 +230,13 @@
 
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 20px 0; width: 100%;">
         <button id="guest-btn" class="btn-start" style="background: transparent; border: 1px solid var(--blue); color: var(--blue);">PLAY AS GUEST</button>
-        <button class="btn-update cache-clear-btn" onclick="clearCache()">🔄 Check for Updates / Fix App</button>
+        <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
     </div>
 </div>
 
 <div id="profile-layer" class="hidden">
     <div class="setup-card" style="max-height: 85vh; overflow-y: auto;">
+        
         <h2 style="margin-bottom: 5px;">MY PROFILE</h2>
         <p id="prof-email" style="color: #888; font-size: 12px; margin-bottom: 15px;">loading...</p>
 
@@ -328,7 +332,7 @@
 
         <div class="input-group" id="mode-group">
             <label style="color: white;">Match Type</label>
-            <select id="mode-input" class="setup-input" onchange="updateMenuUI()">
+            <select id="mode-input" class="setup-input">
                 <option value="online">Online (Remote Opponent)</option>
                 <option value="local">Local (Same Device)</option>
                 <option value="single">Single Player (Practice)</option>
@@ -338,7 +342,7 @@
 
         <div class="input-group" id="game-type-group">
             <label style="color: white;">Game Type</label>
-            <select id="game-type-input" class="setup-input" onchange="updateMenuUI()">
+            <select id="game-type-input" class="setup-input">
                 <option value="121">121 Checkout</option>
                 <option value="170_race">170 (Normal)</option>
                 <option value="170">170 Big Fish</option>
@@ -396,10 +400,10 @@
             </select>
         </div>
         
-        <button id="start-btn" class="btn-start" onclick="initApp()">START MATCH</button>
+        <button id="start-btn" class="btn-start">START MATCH</button>
         <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center; line-height: 1.4;"></p>
         
-        <button class="btn-update cache-clear-btn" onclick="clearCache()">🔄 Check for Updates / Fix App</button>
+        <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
     </div>
 </div>
 
@@ -435,8 +439,8 @@
             <tr><td id="ws-1400" style="color: white;">0</td><td style="color: white;">140+</td><td id="ws-1401" style="color: white;">0</td></tr>
             <tr><td id="ws-1800" style="color: white;">0</td><td style="color: white;">180s</td><td id="ws-1801" style="color: white;">0</td></tr>
         </table>
-        <button id="rematch-btn" class="btn-start" onclick="triggerRematch()">REMATCH</button>
-        <button class="btn-update" onclick="quitMatch()">QUIT TO MENU</button>
+        <button id="rematch-btn" class="btn-start">REMATCH</button>
+        <button class="btn-update" onclick="window.location.href = window.location.pathname;">QUIT TO MENU</button>
     </div>
 </div>
 
@@ -444,13 +448,13 @@
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
         <button class="header-btn" id="auto-toggle-btn" style="color: #ffcc00; display: none;">AUTO: OFF</button>
-        <button class="header-btn" id="mic-btn" onclick="toggleMic()" style="color: #ff4d4d;">MIC ON</button>
-        <button class="header-btn" id="caller-btn" onclick="toggleCaller()" style="color: #4caf50;">VOICE ON</button>
-        <button class="header-btn" id="zoom-btn" onclick="cycleZoom()" style="color: #ffeb3b;">ZOOM</button>
-        <button class="header-btn" id="flip-btn" onclick="swapCam()">FLIP</button>
-        <button class="header-btn" id="spectate-btn" onclick="shareSpectator()" style="color: var(--blue);">SPECTATE</button>
-        <button class="header-btn" id="share-btn" onclick="shareInvite()">INVITE</button>
-        <button class="header-btn" id="quit-btn" onclick="quitMatch()" style="color: #ff4d4d; font-weight: bold;">QUIT</button>
+        <button class="header-btn" id="mic-btn" style="color: #ff4d4d;">MIC ON</button>
+        <button class="header-btn" id="caller-btn" style="color: #4caf50;">VOICE ON</button>
+        <button class="header-btn" id="zoom-btn" style="color: #ffeb3b;">ZOOM</button>
+        <button class="header-btn" id="flip-btn">FLIP</button>
+        <button class="header-btn" id="spectate-btn" style="color: var(--blue);">SPECTATE</button>
+        <button class="header-btn" id="share-btn">INVITE</button>
+        <button class="header-btn" id="quit-btn" style="color: #ff4d4d; font-weight: bold;">QUIT</button>
     </div>
 </header>
 
@@ -507,8 +511,8 @@
 <div class="controls-wrapper">
     <div class="controls" id="standard-controls">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -5px;">
-            <button class="header-btn" id="undo-btn" onclick="undo()" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
-            <button id="mode-toggle-btn" class="header-btn" onclick="toggleMode()" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
+            <button class="header-btn" id="undo-btn" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
+            <button id="mode-toggle-btn" class="header-btn" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
         </div>
 
         <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
@@ -572,11 +576,11 @@
     </div>
 
     <div class="controls" id="atc-controls" style="display: none; grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr;">
-        <button class="btn-undo" id="atc-undo-btn" onclick="undo()">⟲</button>
-        <button class="btn-hit" id="atc-miss-btn" onclick="processAtcDart(0)" style="background: #444; color: white;">MISS</button>
-        <button class="btn-hit" id="atc-s-btn" onclick="processAtcDart(1)">S1</button>
-        <button class="btn-hit" id="atc-d-btn" onclick="processAtcDart(2)">D1</button>
-        <button class="btn-hit" id="atc-t-btn" onclick="processAtcDart(3)">T1</button>
+        <button class="btn-undo" id="atc-undo-btn">⟲</button>
+        <button class="btn-hit" id="atc-miss-btn" style="background: #444; color: white;">MISS</button>
+        <button class="btn-hit" id="atc-s-btn">S1</button>
+        <button class="btn-hit" id="atc-d-btn">D1</button>
+        <button class="btn-hit" id="atc-t-btn">T1</button>
     </div>
 
     <div class="controls" id="cricket-controls" style="display: none;">
@@ -610,8 +614,8 @@
     <div id="calib-msg" style="color: #ffcc00; font-size: 16px; text-align: center; margin-bottom: 10px; font-weight: bold;">Step 1: Tap Top Double 20</div>
     <div style="color: #ccc; font-size: 11px; text-align: center; margin-bottom: 10px;">This forces the math to fix your camera angle!</div>
     
-    <button id="set-baseline-btn" onclick="finishCalibration()" style="width:100%; padding: 12px; background: #4caf50; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px; display: none; margin-bottom: 10px;">✅ START DETECTION</button>
-    <button onclick="resetCalibration()" style="width:100%; padding: 12px; background: #444; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px;">🔄 RESTART CALIBRATION</button>
+    <button id="set-baseline-btn" style="width:100%; padding: 12px; background: #4caf50; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px; display: none; margin-bottom: 10px;">✅ START DETECTION</button>
+    <button id="reset-calib-btn" style="width:100%; padding: 12px; background: #444; color:white; font-weight:bold; border:none; border-radius:8px; font-size: 14px;">🔄 RESTART CALIBRATION</button>
 </div>
 
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
@@ -976,80 +980,11 @@
             list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>No friends added yet.</p>";
         }
     }
-    
-    // SAFE EXPOSURE FOR CLOUD FUNCS
-    window.saveStatsToCloudModule = async function(myP, state, isWin, matchId) {
-        if(!window.db || !window.auth || !window.auth.currentUser) return;
-        const validGames = ["301", "501", "701", "1001", "170_race"];
-        try {
-            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
-            const userSnap = await getDoc(userRef);
-            if(userSnap.exists()) {
-                let dbData = userSnap.data();
-                let newPts = dbData.totalPts || 0;
-                let newDarts = dbData.totalDarts || 0;
-                let newHc = dbData.highCheckout || 0;
-                let newCoAtt = dbData.coAtt || 0;
-                let newCoHit = dbData.coHit || 0;
-                
-                let matchPts = 0; let matchDarts = 0;
-                let matchCoAtt = 0; let matchCoHit = 0;
-                
-                if(validGames.includes(state.gameType)) {
-                    matchPts = myP.pts;
-                    matchDarts = myP.d;
-                    matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
-                    
-                    newPts += matchPts; newDarts += matchDarts;
-                    newCoAtt += matchCoAtt; newCoHit += matchCoHit;
-                    newHc = Math.max(newHc, myP.hc);
-                }
-
-                let p1Avg = state.p[0].d > 0 ? ((state.p[0].pts / state.p[0].d) * 3).toFixed(1) : "0.0";
-                let p2Avg = state.p[1].d > 0 ? ((state.p[1].pts / state.p[1].d) * 3).toFixed(1) : "0.0";
-                let p1F9 = state.p[0].f9d > 0 ? ((state.p[0].f9pts / state.p[0].f9d) * 3).toFixed(1) : "0.0";
-                let p2F9 = state.p[1].f9d > 0 ? ((state.p[1].f9pts / state.p[1].f9d) * 3).toFixed(1) : "0.0";
-
-                let resultStr = isWin ? "WON" : "LOST";
-                let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
-                let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
-                let dateStr = new Date().toLocaleDateString();
-                let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
-
-                let newHistObj = { 
-                    id: matchId, date: dateStr, desc: matchText, avg: finalAvg, 
-                    pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
-                    p1Name: state.p[0].name, p2Name: state.p[1].name,
-                    p1Avg: p1Avg, p2Avg: p2Avg,
-                    p1F9: p1F9, p2F9: p2F9,
-                    p1Hc: state.p[0].hc, p2Hc: state.p[1].hc,
-                    p1140: state.p[0].n140, p2140: state.p[1].n140,
-                    p1180: state.p[0].n180, p2180: state.p[1].n180
-                };
-                
-                await updateDoc(userRef, { 
-                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
-                    matchHistory: arrayUnion(newHistObj)
-                });
-            }
-        } catch(e) {}
-    };
-
-    window.sendChallengeToCloud = async function(friendUid, matchId) {
-        if (!window.db || !window.currentUserDoc) return;
-        try {
-            await updateDoc(doc(window.db, "users", friendUid), {
-                activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: matchId, time: Date.now() }
-            });
-            alert("Challenge sent! Waiting for them to accept...");
-        } catch(e) {}
-    };
 </script>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
-    // --- MAIN APP SCRIPT ---
     let wakeLock = null;
     let stream = null;
     let peer = null;
@@ -1061,9 +996,9 @@
     let currentZoom = 1; 
     let isLocalMatch = false;
     let localInputMode = 'total'; 
-    let numpadVal = "";
-    let dbdMult = 1;
-    let currentDarts = [];
+    var numpadVal = "";
+    var dbdMult = 1;
+    var currentDarts = [];
 
     let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
         { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
@@ -1122,45 +1057,169 @@
         3:"1 D1",2:"D1"
     };
 
-    function quitMatch() {
-        if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-            window.location.href = window.location.pathname;
-        }
-    }
-
-    function clearCache() {
-        const btn = document.querySelector('.cache-clear-btn');
-        if(btn) {
-            btn.innerText = "Clearing Cache & Updating...";
-            btn.style.color = "#4caf50";
-        }
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) { registration.unregister(); }
+    window.addEventListener('load', () => {
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) {
+            quitBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                    window.location.href = window.location.pathname;
+                }
             });
         }
-        if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
-        setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
-    }
 
-    function toggleMode() {
-        localInputMode = localInputMode === 'total' ? 'darts' : 'total';
-        render();
-    }
+        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.innerText = "Clearing Cache & Updating...";
+                btn.style.color = "#4caf50";
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) { registration.unregister(); }
+                    });
+                }
+                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+            });
+        });
 
-    async function saveStatsToCloud() {
-        if(statsSavedThisMatch) return;
-        if(state.mode === 'single' || state.mode === 'bot') return;
+        document.getElementById('start-btn').onclick = initApp;
+        if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
+        if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
+        if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
+        if(document.getElementById('caller-btn')) document.getElementById('caller-btn').onclick = toggleCaller;
+        if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
+        if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
         
-        let myP = state.p[myIndex];
-        if(state.mode === 'local') myP = state.p[0]; 
-        let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
-        let matchId = Date.now().toString();
-
-        if (window.saveStatsToCloudModule) {
-            window.saveStatsToCloudModule(myP, state, isWin, matchId);
+        if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
+        if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
+        
+        if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
+        if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
+        if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
+        if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
+        
+        if(document.getElementById('mode-toggle-btn')) {
+            document.getElementById('mode-toggle-btn').onclick = () => {
+                localInputMode = localInputMode === 'total' ? 'darts' : 'total';
+                render();
+            };
         }
-        statsSavedThisMatch = true;
+
+        if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
+        
+        const modeInput = document.getElementById('mode-input');
+        const gameTypeInput = document.getElementById('game-type-input');
+
+        function updateMenuUI() {
+            if (!modeInput) return;
+            const mode = modeInput.value;
+            const gameType = gameTypeInput.value;
+
+            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
+            document.getElementById('game-type-group').style.display = 'block'; 
+            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
+            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
+            
+            const p1Label = document.getElementById('p1-label');
+            if (p1Label) {
+                if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
+                else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
+                else p1Label.innerText = 'Your Name';
+            }
+            
+            if (mode === 'bot') {
+                if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
+                    gameTypeInput.value = '501';
+                    alert("DartBot currently only supports standard 301-1001 games.");
+                }
+            }
+        }
+
+        if (modeInput) modeInput.addEventListener('change', updateMenuUI);
+        if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
+        updateMenuUI();
+
+        if (spectateId) {
+            document.body.classList.add('spectator-mode');
+            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
+            document.getElementById('name-input').placeholder = "Your Name (Optional)";
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('setup-layer').classList.remove('hidden');
+        } else if (joinId) {
+            document.getElementById('legs-group').style.display = 'none';
+            document.getElementById('start-btn').innerText = "JOIN MATCH";
+            document.getElementById('mode-group').style.display = 'none';
+            document.getElementById('login-layer').style.display = 'none';
+            document.getElementById('setup-layer').classList.remove('hidden');
+        }
+    });
+
+    let statsSavedThisMatch = false;
+    async function saveStatsToCloud() {
+        if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
+        const validGames = ["301", "501", "701", "1001", "170_race"];
+        if(state.mode === 'single' || state.mode === 'bot') return;
+        try {
+            let myP = state.p[myIndex];
+            if(state.mode === 'local') myP = state.p[0]; 
+
+            let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
+            let resultStr = isWin ? "WON" : "LOST";
+            let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
+            let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
+            let dateStr = new Date().toLocaleDateString();
+            let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
+            let matchId = Date.now().toString();
+
+            const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
+            const userSnap = await getDoc(userRef);
+            
+            if(userSnap.exists()) {
+                let dbData = userSnap.data();
+                let newPts = dbData.totalPts || 0;
+                let newDarts = dbData.totalDarts || 0;
+                let newHc = dbData.highCheckout || 0;
+                let newCoAtt = dbData.coAtt || 0;
+                let newCoHit = dbData.coHit || 0;
+                
+                let matchPts = 0; let matchDarts = 0;
+                let matchCoAtt = 0; let matchCoHit = 0;
+                
+                if(validGames.includes(state.gameType)) {
+                    matchPts = myP.pts;
+                    matchDarts = myP.d;
+                    matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
+                    
+                    newPts += matchPts; newDarts += matchDarts;
+                    newCoAtt += matchCoAtt; newCoHit += matchCoHit;
+                    newHc = Math.max(newHc, myP.hc);
+                }
+
+                let p1Avg = state.p[0].d > 0 ? ((state.p[0].pts / state.p[0].d) * 3).toFixed(1) : "0.0";
+                let p2Avg = state.p[1].d > 0 ? ((state.p[1].pts / state.p[1].d) * 3).toFixed(1) : "0.0";
+                let p1F9 = state.p[0].f9d > 0 ? ((state.p[0].f9pts / state.p[0].f9d) * 3).toFixed(1) : "0.0";
+                let p2F9 = state.p[1].f9d > 0 ? ((state.p[1].f9pts / state.p[1].f9d) * 3).toFixed(1) : "0.0";
+
+                let newHistObj = { 
+                    id: matchId, date: dateStr, desc: matchText, avg: finalAvg, 
+                    pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
+                    p1Name: state.p[0].name, p2Name: state.p[1].name,
+                    p1Avg: p1Avg, p2Avg: p2Avg,
+                    p1F9: p1F9, p2F9: p2F9,
+                    p1Hc: state.p[0].hc, p2Hc: state.p[1].hc,
+                    p1140: state.p[0].n140, p2140: state.p[1].n140,
+                    p1180: state.p[0].n180, p2180: state.p[1].n180
+                };
+                
+                await updateDoc(userRef, { 
+                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
+                    matchHistory: arrayUnion(newHistObj)
+                });
+                statsSavedThisMatch = true;
+            }
+        } catch(e) {}
     }
 
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
@@ -1323,7 +1382,7 @@
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') { toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true }); }
     }
 
-    function showFtStep2(mode) {
+    window.showFtStep2 = function(mode) {
         document.getElementById('ft-step-1').classList.add('hidden');
         document.getElementById('ft-step-2').classList.remove('hidden');
         document.getElementById('ft-p1-btn').innerText = state.p[0].name;
@@ -1332,7 +1391,7 @@
         else { document.getElementById('ft-title').innerText = "Who throws first?"; }
     };
 
-    function setFirstPlayer(playerIndex) {
+    window.setFirstPlayer = function(playerIndex) {
         state.startingPlayer = playerIndex;
         state.turn = playerIndex;
         document.getElementById('first-throw-layer').classList.add('hidden');
@@ -1355,13 +1414,16 @@
         
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
-        if(startBtn) startBtn.disabled = true;
+        startBtn.disabled = true;
 
         const modeSelect = document.getElementById('mode-input');
         state.mode = modeSelect ? modeSelect.value : 'online';
+        if (state.mode !== 'online') {
+            window.targetChallengeFriend = null;
+        }
 
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
-        state.limit170 = parseInt(document.getElementById('dart-limit-input') ? document.getElementById('dart-limit-input').value : 9) || 9;
+        state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
         isLocalMatch = (state.mode === 'local' || state.mode === 'bot');
 
         let startScore = 501;
@@ -1374,7 +1436,7 @@
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
-        state.p[0].name = document.getElementById('name-input') ? document.getElementById('name-input').value : "Player 1";
+        state.p[0].name = document.getElementById('name-input').value || "Player 1";
         state.p[0].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
         state.p[0].target170 = 170;
         state.p[0].s = startScore;
@@ -1423,7 +1485,7 @@
             if (!spectateId) {
                 if (state.mode === 'single') { stream = null; } 
                 else {
-                    if(log) log.innerText = "Accessing Camera...";
+                    log.innerText = "Accessing Camera...";
                     let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
                     if (isMobile) {
                         constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
@@ -1436,7 +1498,8 @@
                         try {
                             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                         } catch (fallbackErr) {
-                            if(startBtn) { startBtn.disabled = false; startBtn.innerText = "START MATCH"; }
+                            startBtn.disabled = false;
+                            startBtn.innerText = "START MATCH";
                             throw new Error("Could not access camera/mic.");
                         }
                     }
@@ -1448,10 +1511,7 @@
                 }
             }
             
-            if (state.mode !== 'single') {
-                if(log) log.innerText = "Connecting to server...";
-            }
-            
+            if (state.mode !== 'single') log.innerText = "Connecting to server...";
             peer = new Peer({
                 config: {
                     'iceServers': [
@@ -1466,11 +1526,18 @@
             });
 
             peer.on('open', async (id) => {
-                if(document.getElementById('display-id')) document.getElementById('display-id').innerText = id;
-                if(document.getElementById('wait-id')) document.getElementById('wait-id').innerText = id;
+                document.getElementById('display-id').innerText = id;
+                document.getElementById('wait-id').innerText = id;
 
-                if(window.targetChallengeFriend && window.sendChallengeToCloud) {
-                    window.sendChallengeToCloud(window.targetChallengeFriend, id);
+                // THIS IS THE ORIGINAL WORKING FIREBASE CALL - UNTOUCHED
+                if(window.targetChallengeFriend && window.db) {
+                    try {
+                        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+                        await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
+                            activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
+                        });
+                        alert("Challenge sent! Waiting for them to accept...");
+                    } catch(e) {}
                     window.targetChallengeFriend = null;
                 }
                 
@@ -1517,17 +1584,14 @@
             });
 
             peer.on('error', err => {
-                if (state.mode !== 'single') { 
-                    if(log) log.innerText = "Connection Error: " + err.type; 
-                    if(startBtn) startBtn.disabled = false; 
-                }
+                if (state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
             });
 
         } catch (e) {
-            if(log) log.innerText = "Camera/Mic error. (" + e.message + ")";
-            if(startBtn) startBtn.disabled = false;
+            log.innerText = "Camera/Mic error. (" + e.message + ")";
+            startBtn.disabled = false;
         }
-    };
+    }
 
     function attachPeerVideo(s) {
         const peerVideo = document.getElementById('peer');
@@ -1618,12 +1682,9 @@
 
     function toggleMic() {
         isMicMuted = !isMicMuted;
-        try {
-            if (stream && stream.getAudioTracks().length > 0) { 
-                stream.getAudioTracks()[0].enabled = !isMicMuted; 
-            }
-        } catch(e) { console.warn("Mic Error:", e); }
-        
+        if (stream && stream.getAudioTracks().length > 0) { stream.getAudioTracks()[0].enabled = !isMicMuted; }
+        const peerVideo = document.getElementById('peer');
+        if (peerVideo) peerVideo.muted = isMicMuted;
         const btn = document.getElementById('mic-btn');
         if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
         else { btn.innerText = "MIC ON"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
@@ -1693,7 +1754,7 @@
         return p.s >= opp.s;
     }
 
-    window.hitCricket = function(val) {
+    function hitCricket(val) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if (val === 25 && cricketMult === 3) { alert("Invalid Dart: Cannot throw a Treble Bull."); return; }
         if(botTimeout) clearTimeout(botTimeout);
@@ -2155,14 +2216,20 @@
             for (let k = i + 1; k < n; k++) {
                 let c = -A[k][i] / A[i][i];
                 for (let j = i; j < n + 1; j++) {
-                    if (i === j) { A[k][j] = 0; } else { A[k][j] += c * A[i][j]; }
+                    if (i === j) {
+                        A[k][j] = 0;
+                    } else {
+                        A[k][j] += c * A[i][j];
+                    }
                 }
             }
         }
         let x = new Array(n);
         for (let i = n - 1; i >= 0; i--) {
             x[i] = A[i][n] / A[i][i];
-            for (let k = i - 1; k >= 0; k--) { A[k][n] -= A[k][i] * x[i]; }
+            for (let k = i - 1; k >= 0; k--) {
+                A[k][n] -= A[k][i] * x[i];
+            }
         }
         return x;
     }
@@ -2195,6 +2262,7 @@
     const targetSize = 500; 
     let hMatrix = null;
 
+    // EXACT ROBOFLOW DETAILS
     const API_KEY = "rf_29awkTXGorYWZp81ZLPa8tH67fr1";
     const MODEL_ENDPOINT = "dartboarddetection-bvwb1/1";
     const API_URL = `https://detect.roboflow.com/${MODEL_ENDPOINT}?api_key=${API_KEY}`;
@@ -2276,6 +2344,7 @@
         msg.style.color = clickPoints.length === 4 ? "#4caf50" : "#ffcc00";
     }
 
+    // Exposed for the buttons
     window.resetCalibration = function() {
         clickPoints = [];
         if (detectionTimeout) clearTimeout(detectionTimeout);
@@ -2292,14 +2361,14 @@
         
         const debugCanvas = document.getElementById('debug-canvas');
         if (debugCanvas) debugCanvas.getContext('2d').clearRect(0, 0, debugCanvas.width, debugCanvas.height);
-    }
+    };
 
     window.finishCalibration = function() {
         document.getElementById('calibration-controls').style.display = "none";
         document.getElementById('overlay-canvas').style.pointerEvents = "none";
         console.log("Starting Cloud AI Detection...");
         detectDartsAI();
-    }
+    };
 
     function calculateDartScore(flatX, flatY) {
         const centerX = targetSize / 2;
@@ -2311,4 +2380,151 @@
         const distance = Math.sqrt(dx*dx + dy*dy);
         
         let dartAngle = Math.atan2(dy, dx) * (180 / Math.PI);
-        dartAngle = (dartAngle + 360 + 9)
+        dartAngle = (dartAngle + 360 + 9) % 360; 
+        
+        const boardSegments = [6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5, 20, 1, 18, 4, 13];
+        const segmentIndex = Math.floor(dartAngle / 18);
+        const segmentScore = boardSegments[segmentIndex];
+        
+        let multiplier = 1;
+        
+        if (distance < radius * 0.037) return { val: 25, mult: 2, label: "DB" };
+        if (distance < radius * 0.094) return { val: 25, mult: 1, label: "B" };
+        if (distance > radius * 0.58 && distance <= radius * 0.63) multiplier = 3;
+        if (distance > radius * 0.95 && distance <= radius * 1.05) multiplier = 2; 
+        if (distance > radius * 1.05) return { val: 0, mult: 1, label: "MISS" }; 
+        
+        return { val: segmentScore, mult: multiplier, label: (multiplier===3?"T":multiplier===2?"D":"") + segmentScore };
+    }
+
+    function drawDebugAI(predictions, scaleX, scaleY) {
+        drawClickPoints(); 
+        const overlay = document.getElementById('overlay-canvas');
+        if(!overlay) return;
+        const ctx = overlay.getContext('2d');
+        const video = document.getElementById('me');
+        
+        const rect = overlay.getBoundingClientRect();
+        const vidRatio = video.videoWidth / video.videoHeight;
+        const domRatio = rect.width / rect.height;
+        
+        let renderedW = rect.width;
+        let renderedH = rect.height;
+        let offsetX = 0; let offsetY = 0;
+
+        if (vidRatio > domRatio) {
+            renderedH = rect.width / vidRatio;
+            offsetY = (rect.height - renderedH) / 2;
+        } else {
+            renderedW = rect.height * vidRatio;
+            offsetX = (rect.width - renderedW) / 2;
+        }
+
+        predictions.forEach(pred => {
+            const videoX = pred.x * scaleX;
+            const videoY = pred.y * scaleY;
+            
+            const domX = offsetX + (videoX / video.videoWidth) * renderedW;
+            const domY = offsetY + (videoY / video.videoHeight) * renderedH;
+            
+            ctx.beginPath();
+            ctx.arc(domX, domY, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = pred.class.toLowerCase().includes("dart") ? "cyan" : "red";
+            ctx.fill();
+            ctx.strokeStyle = "black";
+            ctx.stroke();
+            
+            ctx.fillStyle = "white";
+            ctx.font = "bold 12px Arial";
+            ctx.fillText(pred.class, domX + 8, domY);
+        });
+    }
+
+    async function detectDartsAI() {
+        if (!autoScoreEnabled || clickPoints.length !== 4) return;
+        
+        const video = document.getElementById('me');
+        if (!video || video.paused || video.ended) {
+            detectionTimeout = setTimeout(detectDartsAI, 500);
+            return;
+        }
+
+        const aiResolution = 640;
+        const canvas = document.createElement('canvas');
+        canvas.width = aiResolution;
+        canvas.height = aiResolution;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const scaleX = video.videoWidth / aiResolution;
+        const scaleY = video.videoHeight / aiResolution;
+        const base64Image = canvas.toDataURL("image/jpeg", 0.6).split(',')[1];
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: base64Image
+            });
+
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+            const data = await response.json();
+            let dartTips = [];
+            let playerInFrame = false;
+
+            if (data.predictions) {
+                drawDebugAI(data.predictions, scaleX, scaleY); 
+                
+                data.predictions.forEach(pred => {
+                    const className = pred.class.toLowerCase();
+                    if (className.includes("dart")) {
+                        dartTips.push({ x: pred.x * scaleX, y: pred.y * scaleY });
+                    }
+                    if (className.includes("player") || className.includes("hand") || className.includes("person") || className.includes("human")) {
+                        playerInFrame = true;
+                    }
+                });
+            }
+
+            if (playerInFrame) {
+                if (typeof currentDarts !== 'undefined' && currentDarts.length > 0) {
+                    console.log("Player detected! Locking in score...");
+                    if(typeof dbdEnter === 'function') dbdEnter();
+                }
+                previousDartsCount = 0; 
+                settleFrames = 0;
+            } else {
+                if (dartTips.length > previousDartsCount) {
+                    settleFrames++;
+                    if (settleFrames >= 2) { 
+                        console.log("New Dart Detected!");
+                        let newDart = dartTips[dartTips.length - 1]; 
+                        let flatPt = applyHomography(hMatrix, newDart.x, newDart.y);
+                        let dartScore = calculateDartScore(flatPt.x, flatPt.y);
+                        
+                        console.log("Scored:", dartScore);
+                        if(typeof setDbdMult === 'function') setDbdMult(dartScore.mult);
+                        if(typeof hitDbd === 'function') hitDbd(dartScore.val);
+                        
+                        previousDartsCount = dartTips.length;
+                        settleFrames = 0;
+                    }
+                } else if (dartTips.length < previousDartsCount) {
+                    previousDartsCount = dartTips.length;
+                    settleFrames = 0;
+                } else {
+                    settleFrames = 0;
+                }
+            }
+        } catch (error) {
+            console.error("AI Detection Error:", error);
+        }
+
+        if (autoScoreEnabled) {
+            detectionTimeout = setTimeout(detectDartsAI, 500);
+        }
+    }
+</script>
+</body>
+</html>
