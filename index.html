@@ -149,7 +149,7 @@
         
         .p-name { font-size: 14px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;}
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .score-val { font-size: clamp(28px, 6dvh, 50px); font-weight: 900; line-height: 1; }
+        .score-val { font-size: clamp(28px, 6dvh, 50px); font-weight: 900; line-height: 1; transition: color 0.3s ease; }
         .legs-count { font-size: 11px; color: #888; text-align: right; }
         .legs-count span { color: var(--blue); font-weight: bold; font-size: 16px; display: block; }
         .checkout-hint { text-align: center; color: #ffeb3b; font-size: 14px; font-weight: bold; min-height: 18px; margin-top: 4px; }
@@ -974,144 +974,6 @@
 
 <script>
     let wakeLock = null;
-    async function requestWakeLock() {
-        try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
-        catch (err) {}
-    }
-    document.addEventListener('visibilitychange', () => {
-        if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
-    });
-    window.addEventListener('load', () => {
-        const quitBtn = document.getElementById('quit-btn');
-        if (quitBtn) {
-            quitBtn.addEventListener('click', () => {
-                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-                    window.location.href = window.location.pathname;
-                }
-            });
-        }
-    });
-    document.querySelectorAll('.cache-clear-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.innerText = "Clearing Cache & Updating...";
-            btn.style.color = "#4caf50";
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) { registration.unregister(); }
-                });
-            }
-            if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); });
-            }
-            setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
-        });
-    });
-    let statsSavedThisMatch = false;
-    async function saveStatsToCloud() {
-        if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
-        const validGames = ["301", "501", "701", "1001", "170_race"];
-        if(state.mode === 'single' || state.mode === 'bot') return;
-        try {
-            let myP = state.p[myIndex];
-            if(state.mode === 'local') myP = state.p[0]; 
-
-            let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
-            let resultStr = isWin ? "WON" : "LOST";
-            let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
-            let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
-            let dateStr = new Date().toLocaleDateString();
-            let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
-            let matchId = Date.now().toString();
-
-            const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
-            const userSnap = await getDoc(userRef);
-            
-            if(userSnap.exists()) {
-                let dbData = userSnap.data();
-                let newPts = dbData.totalPts || 0;
-                let newDarts = dbData.totalDarts || 0;
-                let newHc = dbData.highCheckout || 0;
-                let newCoAtt = dbData.coAtt || 0;
-                let newCoHit = dbData.coHit || 0;
-                
-                let matchPts = 0; let matchDarts = 0;
-                let matchCoAtt = 0; let matchCoHit = 0;
-                
-                if(validGames.includes(state.gameType)) {
-                    matchPts = myP.pts;
-                    matchDarts = myP.d;
-                    matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
-                    
-                    newPts += matchPts; newDarts += matchDarts;
-                    newCoAtt += matchCoAtt; newCoHit += matchCoHit;
-                    newHc = Math.max(newHc, myP.hc);
-                }
-
-                // Compile comprehensive stats for the new Match Details modal
-                let p1Avg = state.p[0].d > 0 ? ((state.p[0].pts / state.p[0].d) * 3).toFixed(1) : "0.0";
-                let p2Avg = state.p[1].d > 0 ? ((state.p[1].pts / state.p[1].d) * 3).toFixed(1) : "0.0";
-                let p1F9 = state.p[0].f9d > 0 ? ((state.p[0].f9pts / state.p[0].f9d) * 3).toFixed(1) : "0.0";
-                let p2F9 = state.p[1].f9d > 0 ? ((state.p[1].f9pts / state.p[1].f9d) * 3).toFixed(1) : "0.0";
-
-                let newHistObj = { 
-                    id: matchId, date: dateStr, desc: matchText, avg: finalAvg, 
-                    pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
-                    p1Name: state.p[0].name, p2Name: state.p[1].name,
-                    p1Avg: p1Avg, p2Avg: p2Avg,
-                    p1F9: p1F9, p2F9: p2F9,
-                    p1Hc: state.p[0].hc, p2Hc: state.p[1].hc,
-                    p1140: state.p[0].n140, p2140: state.p[1].n140,
-                    p1180: state.p[0].n180, p2180: state.p[1].n180
-                };
-                await updateDoc(userRef, { 
-                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
-                    matchHistory: arrayUnion(newHistObj)
-                });
-                statsSavedThisMatch = true;
-            }
-        } catch(e) {}
-    }
-
-    let isMicMuted = false;
-    let isCallerMuted = false;
-
-    function playDartSound(type) {
-        if (isCallerMuted) return;
-        if (state.gameType === 'atc' || state.gameType === 'cricket') return;
-
-        let audioSrc = "";
-        if (type === 'bust') { audioSrc = "sounds/bust.wav"; } 
-        else if (type === 'gameshot') { audioSrc = "sounds/gameshot.wav"; } 
-        else if (type === 'gameon') { audioSrc = "sounds/gameon.wav"; } 
-        else if (typeof type === 'number' && type >= 0 && type <= 180) { audioSrc = `sounds/${type}.wav`; }
-
-        if (audioSrc !== "") {
-            const dartAudio = document.getElementById('dart-audio');
-            if (dartAudio) { dartAudio.src = audioSrc; dartAudio.play().catch(e => {}); }
-        }
-    }
-
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault(); 
-        deferredPrompt = e;
-        const installBtn = document.getElementById('install-btn');
-        if (installBtn) {
-            installBtn.style.display = 'block';
-            installBtn.onclick = async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') {
-                        installBtn.style.display = 'none';
-                    }
-                    deferredPrompt = null;
-                }
-            };
-        }
-    });
-    const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
-
     let stream, peer, currentCall, botTimeout;
     let conns = []; let spectatorCalls = []; let myIndex = 0; let currentZoom = 1; 
     let isLocalMatch = false;
@@ -1177,6 +1039,58 @@
         7:"3 D2",6:"D3",5:"1 D2",4:"D2",
         3:"1 D1",2:"D1"
     };
+
+    async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
+        if (!peerConnection) return;
+        try {
+            const senders = peerConnection.getSenders();
+            const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
+            if (!videoSender || !videoSender.getParameters) return;
+            const parameters = videoSender.getParameters();
+            if (!parameters.encodings || parameters.encodings.length === 0) { parameters.encodings = [{}];
+            }
+            parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
+            await videoSender.setParameters(parameters);
+        } catch (e) {}
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (!stream || state.mode === 'single' || state.mode === 'bot') return;
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+            const isHidden = document.visibilityState === 'hidden';
+            videoTrack.enabled = !isHidden; 
+            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
+        }
+    });
+
+    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
+
+    function unlockAudio() {
+        const peerVideo = document.getElementById('peer');
+        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
+        
+        const meVideo = document.getElementById('me');
+        if (meVideo && meVideo.paused && meVideo.srcObject) { meVideo.play().catch(e => {}); }
+
+        const dartAudio = document.getElementById('dart-audio');
+        if (dartAudio && dartAudio.src === "") {
+            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            dartAudio.play().catch(e => {});
+        }
+    }
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+
+    function createDummyStream() {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1; canvas.height = 1;
+            return canvas.captureStream(1); 
+        } catch (e) { 
+            return null;
+        }
+    }
 
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
@@ -1250,11 +1164,34 @@
         }
 
         if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
+
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) {
+            quitBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                    window.location.href = window.location.pathname;
+                }
+            });
+        }
+        
+        document.querySelectorAll('.cache-clear-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.innerText = "Clearing Cache & Updating...";
+                btn.style.color = "#4caf50";
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) { registration.unregister(); }
+                    });
+                }
+                if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+                setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+            });
+        });
     });
+
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
         else if(val === 'E') {
-            // FIX: If nothing is typed (empty input), it immediately resolves to 0
             let v = numpadVal === "" ? 0 : parseInt(numpadVal);
             if(!isNaN(v)) processHit(v);
         }
@@ -1265,13 +1202,13 @@
         if(display) display.innerText = numpadVal || "0";
     }
 
-    // --- NEW DART-BY-DART LOGIC ---
     window.setDbdMult = function(m) {
         dbdMult = m;
         document.getElementById('dbd-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('dbd-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('dbd-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
     };
+
     window.hitDbd = function(val) {
         if(currentDarts.length >= 3) return;
         let label = "";
@@ -1290,10 +1227,34 @@
         currentDarts.push({ val: val, mult: val===0?1:dbdMult, pts: pts, label: label });
         setDbdMult(1);
         updateDbdDisplay();
+
+        // Temporary visual deduction
+        if (typeof state !== 'undefined' && state && state.p && state.p[state.turn] && typeof myIndex !== 'undefined') {
+            let tempScore = state.p[state.turn].s - currentDarts.reduce((a,b) => a + b.pts, 0);
+            let scoreDisplay = document.getElementById(`s-${state.turn}`);
+            if(scoreDisplay) {
+                scoreDisplay.innerText = tempScore;
+                scoreDisplay.style.color = "#ffcc00"; 
+            }
+        }
     };
 
     window.dbdDel = function() {
-        if(currentDarts.length > 0) { currentDarts.pop(); updateDbdDisplay(); }
+        if(currentDarts.length > 0) { 
+            currentDarts.pop(); 
+            updateDbdDisplay(); 
+            
+            // Revert temporary visual deduction
+            if (typeof state !== 'undefined' && state && state.p && state.p[state.turn] && typeof myIndex !== 'undefined') {
+                let tempScore = state.p[state.turn].s - currentDarts.reduce((a,b) => a + b.pts, 0);
+                let scoreDisplay = document.getElementById(`s-${state.turn}`);
+                if(scoreDisplay) {
+                    scoreDisplay.innerText = tempScore;
+                    if(currentDarts.length === 0) scoreDisplay.style.color = "white";
+                }
+            }
+            if(typeof window.lastDetectedDarts !== 'undefined') window.lastDetectedDarts = []; 
+        }
     };
 
     window.updateDbdDisplay = function() {
@@ -1303,10 +1264,12 @@
             else { slot.innerText = "-"; }
         }
     };
+
     window.dbdEnter = function() {
         if(currentDarts.length === 0) return;
         processHit(null, currentDarts);
     };
+
     window.logMissedDouble = function(pIndex) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
@@ -1382,6 +1345,7 @@
         render();
         if (!isLocalMatch) broadcast(state);
     };
+
     async function initApp() {
         requestWakeLock();
         statsSavedThisMatch = false; 
@@ -1695,7 +1659,7 @@
             }
         } catch (e) {}
     }
-    
+
     function processAtcDart(multiplier) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
@@ -1714,9 +1678,8 @@
         if (!isLocalMatch) { broadcast(state); }
     }
 
-    let cricketMult = 1;
     window.setCricMult = function(m) {
-        cricketMult = m;
+        let cricketMult = m;
         document.getElementById('cric-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('cric-m-2').className = m === 2 ? 'cric-mult active' : 'cric-mult';
         document.getElementById('cric-m-3').className = m === 3 ? 'cric-mult active' : 'cric-mult';
@@ -1732,7 +1695,12 @@
 
     window.hitCricket = function(val) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
-        if (val === 25 && cricketMult === 3) { alert("Invalid Dart: Cannot throw a Treble Bull."); return; }
+        
+        let m = 1;
+        if(document.getElementById('cric-m-2').classList.contains('active')) m = 2;
+        if(document.getElementById('cric-m-3').classList.contains('active')) m = 3;
+        
+        if (val === 25 && m === 3) { alert("Invalid Dart: Cannot throw a Treble Bull."); return; }
         if(botTimeout) clearTimeout(botTimeout);
         
         history = JSON.parse(JSON.stringify(state));
@@ -1744,7 +1712,7 @@
             let currentMarks = p.marks[val] || 0;
             let oppMarks = opp.marks[val] || 0;
             
-            let marksToAdd = cricketMult;
+            let marksToAdd = m;
             let spaceLeft = 3 - currentMarks;
             let marksApplied = Math.min(spaceLeft, marksToAdd);
             let excess = marksToAdd - marksApplied;
@@ -1755,7 +1723,7 @@
             }
         }
         
-        setCricMult(1);
+        window.setCricMult(1);
         if (checkCricketWin(state.turn)) {
             state.winner = state.turn;
         } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
@@ -1788,13 +1756,20 @@
                     if (d.mult === 2 || (d.val === 25 && d.label === 'DB')) { p.coAtt++; }
                 }
                 tempS -= d.pts;
-                if (tempS <= 1 && tempS !== 0) break; // Bust
+                if (tempS <= 1 && tempS !== 0) break; 
             }
         } else {
             val = numpadVal === '' ? 0 : parseInt(numpadVal);
             if (isNaN(val) || val < 0 || val > 180) return;
         }
         
+        // Memory for Edit Popup
+        let valToRemember = 0;
+        if (manualVal !== null) { valToRemember = manualVal; }
+        else if (dartsArr !== null) { valToRemember = dartsArr.reduce((sum, d) => sum + d.pts, 0); }
+        else { valToRemember = val; }
+        state.lastThrow = { playerIndex: state.turn, value: valToRemember };
+
         if (p.ld < 9) { p.f9d += 3; }
         p.d += 3; p.ld += 3;
 
@@ -1865,6 +1840,10 @@
         currentDarts = [];
         updateDbdDisplay();
 
+        // Reset score color
+        let scoreDisplay = document.getElementById(`s-${state.turn}`);
+        if(scoreDisplay) scoreDisplay.style.color = "white";
+
         render();
         if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
     }
@@ -1872,6 +1851,8 @@
     function undo() {
         if(botTimeout) clearTimeout(botTimeout);
         numpadVal = ""; currentDarts = []; updateDbdDisplay();
+        let scoreDisplay = document.getElementById(`s-${state.turn}`);
+        if(scoreDisplay) scoreDisplay.style.color = "white";
         if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state); }
     }
 
@@ -1964,7 +1945,12 @@
             } else {
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                 if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-                if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s;
+                
+                let scoreBox = document.getElementById(`s-${i}`);
+                if(scoreBox) {
+                    scoreBox.innerText = p.s;
+                }
+
                 if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'block';
                 if(document.getElementById(`l-${i}`)) document.getElementById(`l-${i}`).innerText = p.l;
@@ -2192,39 +2178,34 @@
     window.aiEnabled = false;
     window.lastDetectedDarts = [];
 
-    // Edit button popup logic
-    window.editLastThrowPopup = function() {
-        if (!history || state.lastThrow === undefined) {
-            alert("No previous throw to edit!");
-            return;
-        }
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.lastThrow.playerIndex !== myIndex) {
-            alert("You can only edit your own scores!");
-            return;
-        }
-        let lastVal = state.lastThrow.value;
-        let pName = history.p[state.lastThrow.playerIndex].name;
-        let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
-        if (userInput !== null && userInput.trim() !== "") {
-            let correctedThrow = parseInt(userInput);
-            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
-                if (typeof undo === 'function') undo();
-                if (typeof processHit === 'function') processHit(correctedThrow);
-            } else {
-                alert("Please enter a valid dart score (0-180).");
-            }
-        }
-    };
-
-    // Bind AI Toggle button on load
+    // Setup UI Buttons dynamically so they don't break existing HTML
     window.addEventListener('DOMContentLoaded', () => {
-        const editBtn = document.getElementById('edit-last-btn');
-        if (editBtn) editBtn.onclick = window.editLastThrowPopup;
+        const standardControls = document.getElementById('standard-controls');
+        if (standardControls && document.getElementById('undo-btn')) {
+            const btnContainer = document.getElementById('undo-btn').parentElement;
+            
+            // Edit Button
+            const editBtn = document.createElement('button');
+            editBtn.className = 'header-btn';
+            editBtn.id = 'edit-last-btn';
+            editBtn.style = 'background:transparent; border:1px solid #ffcc00; color:#ffcc00; font-size:14px; padding:4px 12px; margin-left: 5px;';
+            editBtn.innerText = '✎ EDIT';
+            btnContainer.appendChild(editBtn);
+            
+            // AI Toggle Button
+            const aiBtn = document.createElement('button');
+            aiBtn.className = 'header-btn';
+            aiBtn.id = 'ai-toggle-btn';
+            aiBtn.style = 'background:transparent; border:1px solid #444; color:#888; font-size:14px; padding:4px 12px; margin-left: 5px;';
+            aiBtn.innerText = '🤖 AI: OFF';
+            btnContainer.appendChild(aiBtn);
+            
+            // Debug Status Box
+            const debugBox = document.createElement('div');
+            debugBox.id = 'ai-debug-box';
+            debugBox.style = 'color: #ffeb3b; font-size: 11px; text-align: center; margin-top: 4px; min-height: 14px;';
+            standardControls.appendChild(debugBox);
 
-        const aiBtn = document.getElementById('ai-toggle-btn');
-        const debugBox = document.getElementById('ai-debug-box');
-        
-        if (aiBtn) {
             aiBtn.onclick = () => {
                 window.aiEnabled = !window.aiEnabled;
                 if(window.aiEnabled) {
@@ -2248,9 +2229,36 @@
         }
     });
 
-    // Modify game functions to show score tracking
+    // Add Edit Function logic
+    window.editLastThrowPopup = function() {
+        if (!history || state.lastThrow === undefined) {
+            alert("No previous throw to edit!");
+            return;
+        }
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.lastThrow.playerIndex !== myIndex) {
+            alert("You can only edit your own scores!");
+            return;
+        }
+        let lastVal = state.lastThrow.value;
+        let pName = history.p[state.lastThrow.playerIndex].name;
+        let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
+        if (userInput !== null && userInput.trim() !== "") {
+            let correctedThrow = parseInt(userInput);
+            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
+                if (typeof undo === 'function') undo();
+                if (typeof processHit === 'function') processHit(correctedThrow);
+            } else {
+                alert("Please enter a valid dart score (0-180).");
+            }
+        }
+    };
+
+    // Safely wrap window functions for Visual Deduction after load
     window.addEventListener('load', () => {
         setTimeout(() => {
+            const editBtn = document.getElementById('edit-last-btn');
+            if (editBtn) editBtn.onclick = window.editLastThrowPopup;
+            
             if (typeof window.hitDbd === 'function') {
                 const originalHitDbd = window.hitDbd;
                 window.hitDbd = function(val) {
@@ -2284,13 +2292,10 @@
                 const origProcessHit = window.processHit;
                 window.processHit = function(m, d) {
                     if (typeof state !== 'undefined') {
-                        let valToRemember = 0;
-                        if (m !== null && m !== undefined) {
-                            valToRemember = m;
-                        } else if (d !== null && typeof d !== 'undefined') {
-                            valToRemember = d.reduce((sum, item) => sum + item.pts, 0);
-                        }
-                        state.lastThrow = { playerIndex: state.turn, value: valToRemember };
+                        let valForMem = 0;
+                        if (m !== null) { valForMem = m; }
+                        else if (d !== null) { valForMem = d.reduce((sum, item) => sum + item.pts, 0); }
+                        state.lastThrow = { playerIndex: state.turn, value: valForMem };
                     }
 
                     origProcessHit(m, d);
@@ -2307,11 +2312,9 @@
         if (className === 'BULL' || className === 'DB' || className === 'DOUBLE BULL') return { val: 25, mult: 2, class: className };
         if (className === 'B' || className === 'SB' || className === '25' || className === 'SINGLE BULL' || className === 'OUTER BULL') return { val: 25, mult: 1, class: className };
         if (className === 'MISS' || className === '0') return { val: 0, mult: 1, class: className };
-        
         if (className.startsWith('T')) mult = 3;
         else if (className.startsWith('D')) mult = 2;
         else if (className.startsWith('S')) mult = 1;
-        
         let numStr = className.replace(/[^0-9]/g, '');
         if (numStr !== '') {
             val = parseInt(numStr);
@@ -2326,22 +2329,21 @@
         return null;
     }
 
-    // AI Background Loop
+    // Background Fetch Loop
     setInterval(async () => {
         if (!window.aiEnabled) return; 
-
         const debugBox = document.getElementById('ai-debug-box');
 
         try {
             if (typeof state === 'undefined' || typeof myIndex === 'undefined') return;
             if (state.mode !== 'single' && state.turn !== myIndex) {
-                if (debugBox && debugBox.innerText !== "Waiting for your turn...") debugBox.innerText = "Waiting for your turn...";
+                if (debugBox) debugBox.innerText = "Waiting for your turn...";
                 return;
             }
 
             const video = document.getElementById('me');
             if (!video || video.paused || !video.srcObject) {
-                if (debugBox) debugBox.innerText = "Camera not active...";
+                if (debugBox) debugBox.innerText = "Camera not ready.";
                 return;
             }
 
@@ -2351,22 +2353,32 @@
             canvas.width = 640; canvas.height = 480;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+            const base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
-            const response = await fetch("https://detect.roboflow.com/dartboarddetection-bvwb1/1?api_key=rf_29awkTXGorYWZp81ZLPa8tH67fr1", {
+            // Primary URL Attempt (With Workspace)
+            const response = await fetch("https://detect.roboflow.com/bens-workspace-qokhi/dartboarddetection-bvwb1/1?api_key=rf_29awkTXGorYWZp81ZLPa8tH67fr1", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: base64Image
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                if (debugBox) debugBox.innerText = "API Error " + response.status + ": " + (errorText.length > 50 ? errorText.substring(0, 50) + "..." : errorText);
-                return;
+                // Fallback URL (Standard)
+                const fallbackResponse = await fetch("https://detect.roboflow.com/dartboarddetection-bvwb1/1?api_key=rf_29awkTXGorYWZp81ZLPa8tH67fr1", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: base64Image
+                });
+                
+                if (!fallbackResponse.ok) {
+                    const errorText = await fallbackResponse.text();
+                    if (debugBox) debugBox.innerText = "API Error " + fallbackResponse.status + ": Check Domain Settings in Roboflow.";
+                    return;
+                }
+                var data = await fallbackResponse.json();
+            } else {
+                var data = await response.json();
             }
-
-            const data = await response.json();
             
             if (!data.predictions || data.predictions.length === 0) {
                 if (debugBox) debugBox.innerText = "Board clear / No darts detected";
@@ -2425,7 +2437,7 @@
         } catch (err) {
             if (debugBox) debugBox.innerText = "Network Error: " + err.message;
         }
-    }, 2500); 
+    }, 2000); 
 })();
 </script>
 </body>
