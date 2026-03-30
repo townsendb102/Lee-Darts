@@ -524,6 +524,8 @@
             </div>
             <button id="mode-toggle-btn" class="header-btn" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
         </div>
+        
+        <div id="ai-debug-box" style="color: #ffeb3b; font-size: 11px; text-align: center; margin-top: 4px; min-height: 14px;"></div>
 
         <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
             <div id="numpad-display">0</div>
@@ -1288,27 +1290,6 @@
         if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
         
         if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
-        if(document.getElementById('edit-last-btn')) document.getElementById('edit-last-btn').onclick = window.editLastThrowPopup;
-        if(document.getElementById('ai-toggle-btn')) {
-            document.getElementById('ai-toggle-btn').onclick = () => {
-                window.aiEnabled = !window.aiEnabled;
-                const btn = document.getElementById('ai-toggle-btn');
-                if(window.aiEnabled) {
-                    btn.innerText = "🤖 AI: ON";
-                    btn.style.color = "#4caf50";
-                    btn.style.borderColor = "#4caf50";
-                    if (typeof localInputMode !== 'undefined' && localInputMode !== 'darts') {
-                        localInputMode = 'darts';
-                        if (typeof render === 'function') render();
-                    }
-                } else {
-                    btn.innerText = "🤖 AI: OFF";
-                    btn.style.color = "#888";
-                    btn.style.borderColor = "#444";
-                    window.lastDetectedDarts = []; 
-                }
-            };
-        }
         if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
         
         if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
@@ -1869,8 +1850,6 @@
             if (isNaN(val) || val < 0 || val > 180) return;
         }
         
-        state.lastThrow = { playerIndex: state.turn, value: val };
-
         if (p.ld < 9) { p.f9d += 3; }
         p.d += 3; p.ld += 3;
 
@@ -1937,6 +1916,7 @@
         }
         
         playDartSound(soundToPlay);
+        // Reset inputs
         numpadVal = "";
         currentDarts = [];
         updateDbdDisplay();
@@ -1948,32 +1928,8 @@
     function undo() {
         if(botTimeout) clearTimeout(botTimeout);
         numpadVal = ""; currentDarts = []; updateDbdDisplay();
-        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state);
-        }
+        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state); }
     }
-
-    window.editLastThrowPopup = function() {
-        if (!history || state.lastThrow === undefined) {
-            alert("No previous throw to edit!");
-            return;
-        }
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.lastThrow.playerIndex !== myIndex) {
-            alert("You can only edit your own scores!");
-            return;
-        }
-        let lastVal = state.lastThrow.value;
-        let pName = history.p[state.lastThrow.playerIndex].name;
-        let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
-        if (userInput !== null && userInput.trim() !== "") {
-            let correctedThrow = parseInt(userInput);
-            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
-                undo();
-                processHit(correctedThrow);
-            } else {
-                alert("Please enter a valid dart score (0-180).");
-            }
-        }
-    };
 
     function triggerRematch() {
         let startScore = 501;
@@ -2293,14 +2249,42 @@
     window.lastDetectedDarts = [];
 
     window.addEventListener('DOMContentLoaded', () => {
-        const aiBtn = document.getElementById('ai-toggle-btn');
-        if (aiBtn) {
+        // Setup AI Toggle
+        const standardControls = document.getElementById('standard-controls');
+        if (standardControls && document.getElementById('undo-btn')) {
+            const btnContainer = document.getElementById('undo-btn').parentElement;
+            
+            // Add Edit Button
+            const editBtn = document.createElement('button');
+            editBtn.className = 'header-btn';
+            editBtn.id = 'edit-last-btn';
+            editBtn.style = 'background:transparent; border:1px solid #ffcc00; color:#ffcc00; font-size:14px; padding:4px 12px;';
+            editBtn.innerText = '✎ EDIT';
+            btnContainer.appendChild(editBtn);
+            
+            // Add AI Button
+            const aiBtn = document.createElement('button');
+            aiBtn.className = 'header-btn';
+            aiBtn.id = 'ai-toggle-btn';
+            aiBtn.style = 'background:transparent; border:1px solid #444; color:#888; font-size:14px; padding:4px 12px;';
+            aiBtn.innerText = '🤖 AI: OFF';
+            btnContainer.appendChild(aiBtn);
+            
+            // Add Debug Box below standard controls
+            const debugBox = document.createElement('div');
+            debugBox.id = 'ai-debug-box';
+            debugBox.style = 'color: #ffeb3b; font-size: 11px; text-align: center; margin-top: 4px; min-height: 14px;';
+            standardControls.appendChild(debugBox);
+
             aiBtn.onclick = () => {
                 window.aiEnabled = !window.aiEnabled;
                 if(window.aiEnabled) {
                     aiBtn.innerText = "🤖 AI: ON";
                     aiBtn.style.color = "#4caf50";
                     aiBtn.style.borderColor = "#4caf50";
+                    if (debugBox) debugBox.innerText = "AI Started. Waiting for turn...";
+                    
+                    // Force Dart-By-Dart mode
                     if (typeof localInputMode !== 'undefined' && localInputMode !== 'darts') {
                         localInputMode = 'darts';
                         if (typeof render === 'function') render();
@@ -2309,19 +2293,48 @@
                     aiBtn.innerText = "🤖 AI: OFF";
                     aiBtn.style.color = "#888";
                     aiBtn.style.borderColor = "#444";
+                    if (debugBox) debugBox.innerText = "";
                     window.lastDetectedDarts = []; 
                 }
             };
         }
     });
 
+    // Add Edit logic to window so button can find it
+    window.editLastThrowPopup = function() {
+        if (!history || state.lastThrow === undefined) {
+            alert("No previous throw to edit!");
+            return;
+        }
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.lastThrow.playerIndex !== myIndex) {
+            alert("You can only edit your own scores!");
+            return;
+        }
+        let lastVal = state.lastThrow.value;
+        let pName = history.p[state.lastThrow.playerIndex].name;
+        let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
+        if (userInput !== null && userInput.trim() !== "") {
+            let correctedThrow = parseInt(userInput);
+            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
+                if (typeof undo === 'function') undo();
+                if (typeof processHit === 'function') processHit(correctedThrow);
+            } else {
+                alert("Please enter a valid dart score (0-180).");
+            }
+        }
+    };
+
+    // Wire Edit button on load
     window.addEventListener('load', () => {
         setTimeout(() => {
+            const editBtn = document.getElementById('edit-last-btn');
+            if (editBtn) editBtn.onclick = window.editLastThrowPopup;
+            
+            // Visual deduction logic
             if (typeof window.hitDbd === 'function') {
                 const originalHitDbd = window.hitDbd;
                 window.hitDbd = function(val) {
                     originalHitDbd(val); 
-                    
                     if (typeof state !== 'undefined' && state.p && state.p[state.turn] && typeof currentDarts !== 'undefined') {
                         let tempScore = state.p[state.turn].s - currentDarts.reduce((a,b) => a + b.pts, 0);
                         let scoreDisplay = document.getElementById('s-' + state.turn);
@@ -2332,12 +2345,10 @@
                     }
                 };
             }
-
             if (typeof window.dbdDel === 'function') {
                 const originalDbdDel = window.dbdDel;
                 window.dbdDel = function() {
                     originalDbdDel(); 
-                    
                     if (typeof state !== 'undefined' && state.p && state.p[state.turn] && typeof currentDarts !== 'undefined') {
                         let tempScore = state.p[state.turn].s - currentDarts.reduce((a,b) => a + b.pts, 0);
                         let scoreDisplay = document.getElementById('s-' + state.turn);
@@ -2348,6 +2359,22 @@
                     }
                     window.lastDetectedDarts = []; 
                 };
+            }
+            // Fix text color reset after manual submit
+            if (typeof window.processHit === 'function') {
+                const origProcessHit = window.processHit;
+                window.processHit = function(m, d) {
+                    // Remember this throw for the Edit button!
+                    if (typeof state !== 'undefined' && m !== null) {
+                        state.lastThrow = { playerIndex: state.turn, value: m };
+                    } else if (typeof state !== 'undefined' && d !== null) {
+                        state.lastThrow = { playerIndex: state.turn, value: d.reduce((sum, item) => sum + item.pts, 0) };
+                    }
+
+                    origProcessHit(m, d);
+                    let scoreDisplay = document.getElementById('s-' + state.turn);
+                    if(scoreDisplay) scoreDisplay.style.color = "white";
+                }
             }
         }, 1000);
     });
@@ -2372,6 +2399,7 @@
             let num = parseInt(className);
             if (num === 50) return { val: 25, mult: 2, class: className };
             if (num === 25) return { val: 25, mult: 1, class: className };
+            if (num > 0 && num <= 20) return { val: num, mult: 1, class: className };
         }
         return null;
     }
@@ -2379,12 +2407,22 @@
     setInterval(async () => {
         if (!window.aiEnabled) return; 
 
+        const debugBox = document.getElementById('ai-debug-box');
+
         try {
             if (typeof state === 'undefined' || typeof myIndex === 'undefined') return;
-            if (state.mode !== 'single' && state.turn !== myIndex) return;
+            if (state.mode !== 'single' && state.turn !== myIndex) {
+                if (debugBox) debugBox.innerText = "Waiting for your turn...";
+                return;
+            }
 
             const video = document.getElementById('me');
-            if (!video || video.paused || !video.srcObject) return;
+            if (!video || video.paused || !video.srcObject) {
+                if (debugBox) debugBox.innerText = "Camera not ready.";
+                return;
+            }
+
+            if (debugBox) debugBox.innerText = "Scanning...";
 
             const canvas = document.createElement('canvas');
             canvas.width = 640; canvas.height = 480;
@@ -2397,21 +2435,36 @@
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: base64Image
             });
+
+            if (!response.ok) {
+                if (debugBox) debugBox.innerText = "API Error: " + response.status;
+                return;
+            }
+
             const data = await response.json();
             
-            if (!data.predictions) return;
+            if (!data.predictions || data.predictions.length === 0) {
+                if (debugBox) debugBox.innerText = "Board clear / No darts detected.";
+                window.lastDetectedDarts = [];
+                return;
+            }
 
             let currentValidDarts = [];
+            let rawClasses = [];
             data.predictions.forEach(pred => {
+                rawClasses.push(pred.class);
                 let parsed = parseDartClass(pred.class);
                 if (parsed) currentValidDarts.push(parsed);
             });
+
+            if (debugBox) debugBox.innerText = "Detected: " + rawClasses.join(', ');
 
             if (currentValidDarts.length === 0) {
                 window.lastDetectedDarts = [];
                 return;
             }
 
+            // If new darts landed, score them!
             if (currentValidDarts.length > window.lastDetectedDarts.length) {
                 let newDarts = [...currentValidDarts];
                 for (let oldDart of window.lastDetectedDarts) {
@@ -2435,6 +2488,7 @@
                     let remaining = p.s - hitSum;
                     
                     if (currentDarts.length === 3 || remaining <= 1) {
+                        if (debugBox) debugBox.innerText = "Turn complete! Submitting...";
                         setTimeout(() => {
                             if (currentDarts.length > 0) {
                                 if (typeof window.dbdEnter === 'function') window.dbdEnter(); 
@@ -2445,6 +2499,7 @@
                 }
             }
         } catch (err) {
+            if (debugBox) debugBox.innerText = "Error: " + err.message;
         }
     }, 2000); 
 })();
