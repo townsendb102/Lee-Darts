@@ -18,10 +18,6 @@
     <style>
         /* --- MODERN PREMIUM THEME (DartCounter Style) --- */
         :root {
-            --bg-main: var(--dark);
-            --bg-card: var(--card);
-            --bg-active: var(--active);
-            --accent: var(--blue);
             --accent-glow: rgba(255,255,255,0.05);
             --danger: #ef4444; 
             --text-main: #f8fafc;
@@ -30,10 +26,19 @@
             --btn-hover: rgba(0,0,0,0.5);
         }
 
-        /* Restored Theme Definitions */
-        body.theme-classic { --blue: #10b981; --dark: #0f172a; --card: #1e293b; --active: #334155; }
-        body.theme-neon { --blue: #ff00ff; --dark: #0a001a; --card: #20003b; --active: #3d0066; }
-        body.theme-pub { --blue: #f59e0b; --dark: #1c1917; --card: #292524; --active: #44403c; }
+        /* Fixed Theme Definitions (Maps both new and old variable names safely) */
+        body.theme-classic { 
+            --accent: #10b981; --bg-main: #0f172a; --bg-card: #1e293b; --bg-active: #334155; 
+            --blue: #10b981; --dark: #0f172a; --card: #1e293b; --active: #334155; 
+        }
+        body.theme-neon { 
+            --accent: #ff00ff; --bg-main: #0a001a; --bg-card: #20003b; --bg-active: #3d0066; 
+            --blue: #ff00ff; --dark: #0a001a; --card: #20003b; --active: #3d0066;
+        }
+        body.theme-pub { 
+            --accent: #f59e0b; --bg-main: #1c1917; --bg-card: #292524; --bg-active: #44403c; 
+            --blue: #f59e0b; --dark: #1c1917; --card: #292524; --active: #44403c;
+        }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         
@@ -111,7 +116,7 @@
         .bg-yellow { background: linear-gradient(135deg, #f59e0b, #eab308); color: #000; }
         .bg-yellow .dc-card-title { color: #000; }
         .bg-yellow .dc-card-sub { color: #000; opacity: 0.8; }
-        .bg-dark { background: linear-gradient(135deg, var(--active), var(--bg-card)); }
+        .bg-dark { background: linear-gradient(135deg, var(--bg-active), var(--bg-card)); }
 
         /* PILL BUTTONS FOR SETUP */
         .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -229,6 +234,14 @@
         .in-game-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); display: none; }
         
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 15px; border-radius: 12px; z-index: 30000; display: none; box-shadow: 0px 10px 25px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; }
+        
+        /* MISC TABLES */
+        .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
+        .stats-table th { padding-bottom: 12px; font-size: 16px; width: 30%; font-weight: 800; color: var(--accent); }
+        .stats-table th:nth-child(2) { font-size: 12px; width: 40%; color: var(--text-muted); }
+        .stats-table td { padding: 10px 0; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 700; color: white; }
+        .stats-table td:nth-child(2) { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+        .stats-table tr:last-child td { border-bottom: none; }
     </style>
 
     <script>
