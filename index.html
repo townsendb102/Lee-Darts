@@ -18,30 +18,26 @@
     <style>
         /* --- MODERN PREMIUM THEME (DartCounter Style) --- */
         :root {
-            --bg-main: #0f172a;       /* Deep slate */
-            --bg-card: #1e293b;       /* Lighter slate */
-            --bg-active: #334155;     /* Highlighted slate */
-            --accent: #10b981;        /* Emerald green */
-            --accent-glow: rgba(16, 185, 129, 0.3);
-            --danger: #ef4444;        /* Soft Red */
+            --bg-main: var(--dark);
+            --bg-card: var(--card);
+            --bg-active: var(--active);
+            --accent: var(--blue);
+            --accent-glow: rgba(255,255,255,0.05);
+            --danger: #ef4444; 
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --btn-bg: #1e293b;
-            --btn-hover: #475569;
-            --blue: #10b981;          /* Remapped legacy blue to accent */
-            --dark: #0f172a;
-            --card: #1e293b;
-            --active: #334155;
+            --btn-bg: rgba(0,0,0,0.3);
+            --btn-hover: rgba(0,0,0,0.5);
         }
+
+        /* Restored Theme Definitions */
+        body.theme-classic { --blue: #10b981; --dark: #0f172a; --card: #1e293b; --active: #334155; }
+        body.theme-neon { --blue: #ff00ff; --dark: #0a001a; --card: #20003b; --active: #3d0066; }
+        body.theme-pub { --blue: #f59e0b; --dark: #1c1917; --card: #292524; --active: #44403c; }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         
-        html, body { 
-            height: 100%; width: 100%; 
-            overflow: hidden; 
-            overscroll-behavior: none; 
-            margin: 0; padding: 0; 
-        }
+        html, body { height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; margin: 0; padding: 0; }
 
         body { 
             background: var(--bg-main); color: var(--text-main); 
@@ -51,39 +47,24 @@
         }
 
         .install-btn { background: var(--accent) !important; color: #000 !important; display: none; margin-bottom: 15px; border: none !important; }
-        .ios-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 15px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; font-weight: bold; z-index: 20000; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); display: none; }
-        .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
-        .ios-close { position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 16px; color: #888; padding: 5px; }
-
-        /* SPECTATOR MODE OVERRIDES */
+        
+        /* MODES & SPECTATOR OVERRIDES */
         body.spectator-mode { display: block; } 
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; display: none !important; }
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 100% !important; height: 100% !important; left: 0 !important; border: none !important; }
         body.spectator-mode .v-container { position: fixed; inset: 0; height: 100%; width: 100vw; z-index: 0; border: none; display: block !important; }
-        body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(15,23,42,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; }
-        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(15,23,42,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; padding-bottom: env(safe-area-inset-bottom); }
+        body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; }
+        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
-        
-        body.spectator-mode .player-card { 
-            flex: 0 0 auto; width: 125px; 
-            background: rgba(30, 41, 59, 0.6) !important; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            justify-content: space-evenly; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border-radius: 16px; pointer-events: auto; padding: 15px; border-top: none;
-        }
-        body.spectator-mode .player-card.active { 
-            background: rgba(51, 65, 85, 0.8) !important; border: 2px solid var(--accent); 
-            box-shadow: 0 0 25px var(--accent-glow); 
-        }
-        
+        body.spectator-mode .player-card { flex: 0 0 auto; width: 125px; background: rgba(0,0,0,0.4) !important; border: 1px solid rgba(255, 255, 255, 0.1); justify-content: space-evenly; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; pointer-events: auto; padding: 15px; border-top: none; }
+        body.spectator-mode .player-card.active { background: rgba(0,0,0,0.7) !important; border: 2px solid var(--accent); box-shadow: 0 0 25px var(--accent-glow); }
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--accent); }
         body.spectator-mode .score-val { font-size: 40px; }
         body.spectator-mode .legs-count { text-align: center; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
-        
-        /* MODES */
+
         body.single-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
         body.single-mode .v-container, body.single-mode #card-1, body.single-mode #mic-btn, body.single-mode #zoom-btn, body.single-mode #flip-btn { display: none !important; }
         body.single-mode .score-area { flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
@@ -95,48 +76,62 @@
         body.local-mode .v-container, body.local-mode header > div:first-child, body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn { display: none !important; }
         body.local-mode header { justify-content: flex-end; }
 
-        /* OVERLAYS */
+        /* OVERLAYS & SETUPS */
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
-            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-            overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+            position: fixed; inset: 0; background: var(--bg-main); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
         }
+        #winner-layer, #first-throw-layer, #waiting-layer { background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
         #login-layer { z-index: 20000; } 
         #profile-layer { z-index: 15000; }
         #history-layer, #friends-layer { z-index: 16000; }
         #match-details-layer { z-index: 17000; }
-        
+
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 1px solid var(--accent); }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(40px + 45dvh + env(safe-area-inset-top)); background: rgba(15, 23, 42, 0.95); }
-        
-        /* SETUP CARDS */
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(40px + 45dvh + env(safe-area-inset-top)); background: rgba(0, 0, 0, 0.95); }
+
         .setup-card { 
-            background: var(--bg-card); padding: 30px 25px; border-radius: 20px; width: 100%; max-width: 380px; 
+            background: var(--bg-card); padding: 30px 25px; border-radius: 20px; width: 100%; max-width: 400px; 
             display: flex; flex-direction: column; gap: 12px; text-align: center; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05);
         }
-        .setup-card h2 { color: var(--text-main); margin-bottom: 5px; font-weight: 800; letter-spacing: 1px;}
+        .setup-card h2 { color: var(--text-main); margin-bottom: 5px; font-weight: 900; letter-spacing: -0.5px;}
+
+        /* DARTCOUNTER-STYLE HOME CARDS */
+        .dc-card {
+            padding: 20px 15px; border-radius: 16px; cursor: pointer; text-align: left; color: white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: transform 0.1s; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .dc-card:active { transform: scale(0.96); }
+        .dc-card-title { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; text-transform: uppercase; font-style: italic;}
+        .dc-card-sub { font-size: 11px; opacity: 0.9; font-weight: 500; line-height: 1.3;}
         
-        .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
-        .stats-table th { padding-bottom: 12px; font-size: 16px; width: 30%; font-weight: 800; color: var(--accent); }
-        .stats-table th:nth-child(2) { font-size: 12px; width: 40%; color: var(--text-muted); }
-        .stats-table td { padding: 10px 0; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 700; color: white; }
-        .stats-table td:nth-child(2) { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
-        .stats-table tr:last-child td { border-bottom: none; }
-        
+        .bg-orange { background: linear-gradient(135deg, #ef4444, #f97316); }
+        .bg-yellow { background: linear-gradient(135deg, #f59e0b, #eab308); color: #000; }
+        .bg-yellow .dc-card-title { color: #000; }
+        .bg-yellow .dc-card-sub { color: #000; opacity: 0.8; }
+        .bg-dark { background: linear-gradient(135deg, var(--active), var(--bg-card)); }
+
+        /* PILL BUTTONS FOR SETUP */
+        .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pill { 
+            background: var(--btn-bg); padding: 12px 18px; border-radius: 20px; 
+            font-size: 13px; font-weight: 800; color: var(--text-muted); 
+            cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .pill.active { background: var(--accent); color: #000; border-color: var(--accent); box-shadow: 0 4px 10px var(--accent-glow);}
+
         .input-group { margin-bottom: 8px; text-align: left; }
-        .input-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
-        .setup-input { width: 100%; background: var(--bg-main); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 14px; border-radius: 12px; font-size: 16px; outline: none; transition: border 0.2s;}
+        .input-group label { display: block; font-size: 12px; font-weight: 800; margin-bottom: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
+        .setup-input { width: 100%; background: var(--btn-bg); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 14px; border-radius: 12px; font-size: 16px; outline: none; transition: border 0.2s; font-weight: bold;}
         .setup-input:focus { border-color: var(--accent); }
         .setup-input option { background: var(--bg-main); color: white; }
-        
-        .btn-start { background: var(--accent); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; margin-top: 15px; text-transform: uppercase; box-shadow: 0 4px 15px var(--accent-glow); display: block !important; visibility: visible !important;}
+
+        .btn-start { background: var(--accent); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 900; border: none; border-radius: 12px; cursor: pointer; margin-top: 15px; text-transform: uppercase; display: block !important; visibility: visible !important;}
         .btn-start:active { transform: scale(0.98); }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-
-        .btn-update { background: transparent; border: none; color: var(--text-muted); font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
+        .btn-update { background: transparent; border: none; color: var(--text-muted); font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; font-weight: bold;}
 
         /* HEADER */
         header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 15px 10px 15px; background: var(--bg-main); font-size: 12px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -148,9 +143,8 @@
         .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.3s; }
         .v-box.visible { opacity: 1; z-index: 1; pointer-events: auto; }
         video { width: 100%; height: 100%; object-fit: contain; background: #000; transition: transform 0.3s ease; transform-origin: center center; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(15, 23, 42, 0.8); padding: 6px 12px; font-size: 10px; border-radius: 8px; color: var(--accent); font-weight: bold; letter-spacing: 1px; z-index: 10; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
-
-        .paused-overlay { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.9); color: var(--accent); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 800; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 6px 12px; font-size: 10px; border-radius: 8px; color: var(--accent); font-weight: 800; letter-spacing: 1px; z-index: 10; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
+        .paused-overlay { position: absolute; inset: 0; background: rgba(0,0,0, 0.85); color: var(--accent); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 800; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
 
         /* SCORE AREA */
@@ -166,27 +160,26 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
         
-        .p-name { font-size: 16px; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-bottom: 2px;}
+        .p-name { font-size: 16px; color: var(--text-muted); font-weight: 800; display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-bottom: 2px;}
         .player-card.active .p-name { color: var(--text-main); }
         .score-row { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
         
         .stats-col { font-size: 11px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; padding-bottom: 4px;}
-        .stats-col span { font-weight: 600; }
+        .stats-col span { font-weight: 700; }
         .stats-col b { color: var(--text-main); font-size: 13px;}
         
-        .score-val { font-size: clamp(40px, 8dvh, 70px); font-weight: 800; line-height: 0.9; color: var(--text-main); letter-spacing: -1px; text-align: center; flex: 1;}
+        .score-val { font-size: clamp(40px, 8dvh, 70px); font-weight: 900; line-height: 0.9; color: var(--text-main); letter-spacing: -1px; text-align: center; flex: 1;}
         
-        .legs-count { font-size: 11px; color: var(--text-muted); text-align: right; padding-bottom: 4px; font-weight: 600; text-transform: uppercase;}
-        .legs-count span { color: var(--text-main); font-weight: 800; font-size: 20px; display: block; line-height: 1; margin-bottom: 2px;}
+        .legs-count { font-size: 11px; color: var(--text-muted); text-align: right; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;}
+        .legs-count span { color: var(--text-main); font-weight: 900; font-size: 20px; display: block; line-height: 1; margin-bottom: 2px;}
         
         .checkout-hint { position: absolute; top: 12px; right: 20px; color: var(--accent); font-size: 13px; font-weight: 800; }
-        
-        .missed-db-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); font-size: 10px; padding: 4px 8px; border-radius: 6px; margin-top: 6px; cursor: pointer; width: fit-content; align-self: center;}
+        .missed-db-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); font-size: 10px; padding: 4px 8px; border-radius: 6px; margin-top: 6px; cursor: pointer; width: fit-content; align-self: center; font-weight: bold;}
 
         /* CRICKET CENTER */
         #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--bg-card); border-radius: 12px; padding: 6px; justify-content: space-evenly; margin: 0 5px; }
         .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
-        .cric-mark { flex: 1; text-align: center; font-size: 16px; font-weight: 800; color: var(--accent); }
+        .cric-mark { flex: 1; text-align: center; font-size: 16px; font-weight: 900; color: var(--accent); }
         .cric-num { flex: 1; text-align: center; font-size: 13px; font-weight: 900; color: white; background: var(--btn-bg); border-radius: 6px; padding: 2px 0; }
         .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; }
 
@@ -197,12 +190,12 @@
         
         .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .action-btns { display: flex; gap: 8px; }
-        .action-btn { background: var(--btn-bg); border: none; color: var(--text-main); font-size: 12px; font-weight: bold; padding: 8px 16px; border-radius: 8px; cursor: pointer;}
+        .action-btn { background: var(--btn-bg); border: none; color: var(--text-main); font-size: 12px; font-weight: 800; padding: 8px 16px; border-radius: 8px; cursor: pointer;}
         
         /* NUMPAD */
-        #numpad-display { font-size: 32px; font-weight: 800; text-align: center; height: 40px; line-height: 40px; color: var(--accent); letter-spacing: 2px;}
+        #numpad-display { font-size: 32px; font-weight: 900; text-align: center; height: 40px; line-height: 40px; color: var(--accent); letter-spacing: 2px;}
         .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex: 1;}
-        .np-btn { background: var(--btn-bg); border: none; color: var(--text-main); font-size: 24px; font-weight: 700; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 12px 0; transition: background 0.1s;}
+        .np-btn { background: var(--btn-bg); border: none; color: var(--text-main); font-size: 24px; font-weight: 800; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 12px 0; transition: background 0.1s;}
         .np-btn:active { background: var(--btn-hover); transform: scale(0.97);}
         .np-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         .np-btn.del { color: var(--danger); font-size: 18px;}
@@ -213,20 +206,20 @@
         /* DART-BY-DART GRID */
         #darts-mode-ui { display: none; flex-direction: column; gap: 8px; height: 100%; }
         .dbd-top { display: flex; gap: 8px; align-items: center; }
-        .dbd-slot { flex: 1; background: var(--bg-card); color: white; text-align: center; line-height: 40px; font-size: 18px; font-weight: 800; border-radius: 8px; height: 40px; }
+        .dbd-slot { flex: 1; background: var(--bg-card); color: white; text-align: center; line-height: 40px; font-size: 18px; font-weight: 900; border-radius: 8px; height: 40px; }
         .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        .dbd-btn { background: var(--btn-bg); border: none; color: white; font-size: 16px; font-weight: 700; border-radius: 8px; padding: 10px 0; cursor: pointer; text-align: center;}
+        .dbd-btn { background: var(--btn-bg); border: none; color: white; font-size: 16px; font-weight: 800; border-radius: 8px; padding: 10px 0; cursor: pointer; text-align: center;}
         .dbd-btn:active { background: var(--accent); color: black; }
         .dbd-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         
-        .cric-mult { flex: 1; padding: 10px; background: var(--btn-bg); border: none; color: var(--text-muted); border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer;}
+        .cric-mult { flex: 1; padding: 10px; background: var(--btn-bg); border: none; color: var(--text-muted); border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;}
         .cric-mult.active { background: var(--accent); color: black; }
         .cric-mult:disabled { opacity: 0.3; cursor: not-allowed; }
         
-        .cric-num-btn { background: var(--btn-bg); border: none; border-radius: 8px; color: white; font-size: 18px; font-weight: 700; padding: 12px; cursor: pointer; }
+        .cric-num-btn { background: var(--btn-bg); border: none; border-radius: 8px; color: white; font-size: 18px; font-weight: 800; padding: 12px; cursor: pointer; }
         .cric-num-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        .site-footer { display: flex; align-items: center; justify-content: center; background: var(--bg-main); color: var(--text-muted); font-size: 10px; font-weight: 700; text-transform: uppercase; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid rgba(255,255,255,0.05); z-index: 10002; }
+        .site-footer { display: flex; align-items: center; justify-content: center; background: var(--bg-main); color: var(--text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid rgba(255,255,255,0.05); z-index: 10002; }
         .hidden { display: none !important; }
 
         /* PROFILE STYLES */
@@ -235,8 +228,43 @@
         .history-item { display: flex; justify-content: space-between; background: var(--btn-bg); padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; align-items: center;}
         .in-game-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); display: none; }
         
-        #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 15px; border-radius: 12px; z-index: 30000; display: none; box-shadow: 0px 10px 25px var(--accent-glow); font-weight: bold; text-align: center; width: 90%; max-width: 350px; }
+        #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 15px; border-radius: 12px; z-index: 30000; display: none; box-shadow: 0px 10px 25px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; }
     </style>
+
+    <script>
+        function openSetup(mode) {
+            document.getElementById('mode-input').value = mode;
+            document.getElementById('home-menu').style.display = 'none';
+            document.getElementById('config-menu').style.display = 'flex';
+            
+            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
+            
+            document.getElementById('p1-label').innerText = (mode === 'local') ? 'Player 1 Name' : 'Your Name';
+            
+            document.getElementById('mode-input').dispatchEvent(new Event('change'));
+        }
+        function closeSetup() {
+            document.getElementById('config-menu').style.display = 'none';
+            document.getElementById('home-menu').style.display = 'block';
+        }
+        function setOpt(selectId, val, btnEl) {
+            document.getElementById(selectId).value = val;
+            let siblings = btnEl.parentElement.children;
+            for (let b of siblings) { b.classList.remove('active'); }
+            btnEl.classList.add('active');
+            
+            if (selectId === 'game-type-input') {
+                let mode = document.getElementById('mode-input').value;
+                if(mode === 'bot' && (val === 'atc' || val === '121' || val === '170' || val === 'cricket')) {
+                    alert("DartBot currently only supports standard games (301-1001).");
+                    setOpt('game-type-input', '501', document.getElementById('gt-pills').children[0]);
+                    return;
+                }
+            }
+            document.getElementById(selectId).dispatchEvent(new Event('change'));
+        }
+    </script>
 </head>
 <body class="theme-classic">
 
@@ -278,26 +306,28 @@
             <button id="save-name-btn" class="btn-start" style="width: auto; margin: 0; padding: 0 15px; font-size: 14px;">SAVE</button>
         </div>
         
-        <div class="input-group" style="margin-bottom: 15px; display: none;">
+        <div class="input-group" style="margin-bottom: 15px;">
             <label>App Theme</label>
             <select id="theme-select" class="setup-input" style="padding: 12px; font-size: 14px;">
-                <option value="classic">Classic</option>
+                <option value="classic">Modern Slate (Green)</option>
+                <option value="neon">Neon Cyberpunk</option>
+                <option value="pub">Pub Darts (Orange)</option>
             </select>
         </div>
         
         <div style="display: flex; gap: 10px; margin-bottom: 15px; margin-top: 10px;">
             <div style="background: var(--btn-bg); padding: 15px; border-radius: 12px; flex: 1;">
-                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Lifetime Avg</div>
-                <div style="font-size: 28px; color: var(--accent); font-weight: 800;" id="prof-avg">0.0</div>
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; font-weight: bold;">Lifetime Avg</div>
+                <div style="font-size: 28px; color: var(--accent); font-weight: 900;" id="prof-avg">0.0</div>
             </div>
             <div style="background: var(--btn-bg); padding: 15px; border-radius: 12px; flex: 1;">
-                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Checkout %</div>
-                <div style="font-size: 28px; color: var(--accent); font-weight: 800;" id="prof-co">0%</div>
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; font-weight: bold;">Checkout %</div>
+                <div style="font-size: 28px; color: var(--accent); font-weight: 900;" id="prof-co">0%</div>
             </div>
         </div>
         
         <div style="text-align: right; margin-bottom: 20px;">
-            <button id="reset-stats-btn" style="background:transparent; border:none; color:var(--danger); font-size:11px; text-decoration:underline; cursor:pointer;">Reset Stats & History</button>
+            <button id="reset-stats-btn" style="background:transparent; border:none; color:var(--danger); font-size:11px; text-decoration:underline; cursor:pointer; font-weight: bold;">Reset Stats & History</button>
         </div>
         <hr style="border: 1px solid rgba(255,255,255,0.05); margin: 0 0 15px 0; width: 100%;">
         
@@ -308,7 +338,7 @@
 </div>
 
 <div id="history-layer" class="hidden">
-    <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 380px;">
+    <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 400px;">
         <h2 style="margin-bottom: 15px;">MATCH HISTORY</h2>
         <div id="history-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
         <button id="close-history-btn" class="btn-start" style="background: var(--btn-bg); color: white; margin-top: auto;">BACK</button>
@@ -316,7 +346,7 @@
 </div>
 
 <div id="match-details-layer" class="hidden">
-    <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 380px;">
+    <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 400px;">
         <h2 style="margin-bottom: 5px;">MATCH STATS</h2>
         <p id="md-date" style="color: var(--text-muted); font-size: 12px; margin-bottom: 15px;"></p>
         <table class="stats-table">
@@ -332,76 +362,133 @@
 </div>
 
 <div id="friends-layer" class="hidden">
-    <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 380px;">
+    <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 400px;">
         <h2 style="margin-bottom: 15px;">FRIENDS LIST</h2>
         <div id="friends-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
         <div style="display: flex; gap: 5px; margin-bottom: 5px;">
             <input type="email" id="friend-email" class="setup-input" placeholder="Friend's Email..." style="flex: 1; padding: 12px; font-size: 14px;">
             <button id="add-friend-btn" class="btn-start" style="width: auto; margin: 0; padding: 0 15px; font-size: 14px;">ADD</button>
         </div>
-        <p id="friend-error" style="color: #ffeb3b; font-size: 11px; line-height: 1.4; margin-bottom: 15px;"></p>
+        <p id="friend-error" style="color: var(--accent); font-size: 11px; line-height: 1.4; margin-bottom: 15px;"></p>
         <button id="close-friends-btn" class="btn-start" style="background: var(--btn-bg); color: white; margin-top: auto;">BACK</button>
     </div>
 </div>
 
 <div id="setup-layer" class="hidden">
-    <div class="setup-card">
-        <h2>RAF DARTS SCORER</h2>
-        
-        <button id="install-btn" class="btn-start install-btn">📲 INSTALL APP</button>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <button id="open-profile-btn" class="header-btn" style="display: none; background: transparent; border: 1px solid var(--accent); color: var(--accent);">👤 Profile & Stats</button>
-            <button id="logout-btn" class="header-btn" style="display: none; background: transparent; color: var(--danger);">Log Out</button>
+    
+    <div id="home-menu" style="width: 100%; max-width: 400px; padding: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div>
+                    <h2 style="color: var(--text-main); font-weight: 900; margin:0; font-size: 26px; letter-spacing: -0.5px; font-style: italic;">RAF DARTS</h2>
+                    <div style="color: var(--text-muted); font-size: 12px; font-weight: 700;">DIGITAL SCORER</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button id="open-profile-btn" class="header-btn" style="display: none; background: var(--bg-card); color: var(--text-main); padding: 10px; border-radius: 50%; font-size: 14px;">👤</button>
+                <button id="logout-btn" class="header-btn" style="display: none; background: var(--bg-card); color: var(--danger); padding: 10px; border-radius: 50%; font-size: 14px;">🚪</button>
+            </div>
         </div>
 
-        <div class="input-group" id="mode-group">
-            <label>Match Type</label>
-            <select id="mode-input" class="setup-input">
-                <option value="online">Online (Remote Opponent)</option>
-                <option value="local">Local (Same Device)</option>
-                <option value="single">Single Player (Practice)</option>
-                <option value="bot">Play vs DartBot (AI)</option>
-            </select>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <div class="dc-card bg-orange" onclick="openSetup('local')">
+                <div class="dc-card-title" style="font-size: 28px; margin-bottom: 10px;">🎯</div>
+                <div class="dc-card-title">PLAY<br>LOCAL</div>
+                <div class="dc-card-sub">Enjoy games on one device!</div>
+            </div>
+            <div class="dc-card bg-yellow" onclick="openSetup('online')">
+                <div class="dc-card-title" style="font-size: 28px; margin-bottom: 10px;">🌍</div>
+                <div class="dc-card-title">PLAY<br>ONLINE</div>
+                <div class="dc-card-sub">Find remote opponents</div>
+            </div>
         </div>
+        
+        <div class="dc-card bg-dark" onclick="openSetup('single')" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div class="dc-card-title">PRACTICE MODE</div>
+                <div class="dc-card-sub">Single player training & scoring</div>
+            </div>
+            <div style="font-size: 35px; opacity: 0.5;">📈</div>
+        </div>
+
+        <div class="dc-card bg-dark" onclick="openSetup('bot')" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div class="dc-card-title">PLAY DARTBOT</div>
+                <div class="dc-card-sub">Test your skills against AI</div>
+            </div>
+            <div style="font-size: 35px; opacity: 0.5;">🤖</div>
+        </div>
+
+        <button id="install-btn" class="btn-start install-btn" style="margin-bottom: 15px;">📲 INSTALL APP</button>
+        <p id="error-log" style="color: var(--danger); font-size: 12px; margin-top: 10px; text-align: center;"></p>
+        <div style="text-align: center;">
+            <button class="btn-update cache-clear-btn" style="margin-top: 0;">🔄 Check for Updates / Fix App</button>
+        </div>
+    </div>
+
+    <div id="config-menu" class="setup-card" style="display: none; width: 100%; max-width: 400px; margin-top: 0;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <button onclick="closeSetup()" style="background:transparent; border:none; color:var(--text-muted); font-size:16px; font-weight:800; cursor:pointer; padding: 5px;">← BACK</button>
+            <h3 style="color:var(--text-main); margin:0; font-weight: 900;">MATCH SETUP</h3>
+            <div style="width: 60px;"></div>
+        </div>
+
+        <select id="mode-input" style="display: none;">
+            <option value="online">online</option><option value="local">local</option><option value="single">single</option><option value="bot">bot</option>
+        </select>
+        <select id="game-type-input" style="display: none;">
+            <option value="501" selected>501</option><option value="301">301</option><option value="701">701</option><option value="1001">1001</option><option value="121">121</option><option value="170">170</option><option value="170_race">170_race</option><option value="cricket">cricket</option><option value="atc">atc</option>
+        </select>
+        <select id="legs-input" style="display: none;">
+            <option value="1">1</option><option value="3">3</option><option value="5" selected>5</option><option value="7">7</option><option value="11">11</option>
+        </select>
+        <select id="bot-level-input" style="display: none;">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+        </select>
+        <select id="dart-limit-input" style="display: none;">
+            <option value="6">6</option><option value="9" selected>9</option>
+        </select>
 
         <div class="input-group" id="game-type-group">
             <label>Game Type</label>
-            <select id="game-type-input" class="setup-input">
-                <option value="121">121 Checkout</option>
-                <option value="170_race">170 (Normal)</option>
-                <option value="170">170 Big Fish</option>
-                <option value="301">301</option>
-                <option value="501" selected>501</option>
-                <option value="701">701</option>
-                <option value="1001">1001</option>
-                <option value="cricket">Cricket (10 to Bull)</option>
-                <option value="atc">Around the Clock</option>
-            </select>
+            <div class="pill-group" id="gt-pills">
+                <div class="pill active" onclick="setOpt('game-type-input', '501', this)">501</div>
+                <div class="pill" onclick="setOpt('game-type-input', '301', this)">301</div>
+                <div class="pill" onclick="setOpt('game-type-input', 'cricket', this)">Cricket</div>
+                <div class="pill" onclick="setOpt('game-type-input', '121', this)">121</div>
+                <div class="pill" onclick="setOpt('game-type-input', '170', this)">170</div>
+                <div class="pill" onclick="setOpt('game-type-input', 'atc', this)">ATC</div>
+            </div>
         </div>
 
-        <div class="input-group" id="bot-level-group" style="display: none;">
-            <label>Bot Difficulty</label>
-            <select id="bot-level-input" class="setup-input">
-                <option value="1">Level 1 (~35 Avg)</option>
-                <option value="2">Level 2 (~45 Avg)</option>
-                <option value="3">Level 3 (~55 Avg)</option>
-                <option value="4">Level 4 (~65 Avg)</option>
-                <option value="5" selected>Level 5 (~75 Avg)</option>
-                <option value="6">Level 6 (~85 Avg)</option>
-                <option value="7">Level 7 (~95 Avg)</option>
-                <option value="8">Level 8 (~105 Avg)</option>
-                <option value="9">Level 9 (~115 Avg)</option>
-                <option value="10">Level 10 (~125 Avg)</option>
-            </select>
+        <div class="input-group" id="legs-group">
+            <label>Best Of (Legs)</label>
+            <div class="pill-group" id="leg-pills">
+                <div class="pill" onclick="setOpt('legs-input', '1', this)">1</div>
+                <div class="pill" onclick="setOpt('legs-input', '3', this)">3</div>
+                <div class="pill active" onclick="setOpt('legs-input', '5', this)">5</div>
+                <div class="pill" onclick="setOpt('legs-input', '7', this)">7</div>
+                <div class="pill" onclick="setOpt('legs-input', '11', this)">11</div>
+            </div>
         </div>
 
-        <div class="input-group" id="dart-limit-group" style="display: none;">
-            <label>Dart Limit</label>
-            <select id="dart-limit-input" class="setup-input">
-                <option value="6">6 Darts</option>
-                <option value="9" selected>9 Darts</option>
-            </select>
+        <div class="input-group" id="bot-level-group" style="display:none;">
+            <label>Bot Difficulty (Avg)</label>
+            <div class="pill-group" id="bot-pills">
+                <div class="pill" onclick="setOpt('bot-level-input', '1', this)">Lvl 1 (35)</div>
+                <div class="pill" onclick="setOpt('bot-level-input', '3', this)">Lvl 3 (55)</div>
+                <div class="pill active" onclick="setOpt('bot-level-input', '5', this)">Lvl 5 (75)</div>
+                <div class="pill" onclick="setOpt('bot-level-input', '8', this)">Lvl 8 (105)</div>
+                <div class="pill" onclick="setOpt('bot-level-input', '10', this)">Lvl 10 (125)</div>
+            </div>
+        </div>
+        
+        <div class="input-group" id="dart-limit-group" style="display:none;">
+            <label>Dart Limit (For 170)</label>
+            <div class="pill-group" id="dl-pills">
+                <div class="pill" onclick="setOpt('dart-limit-input', '6', this)">6 Darts</div>
+                <div class="pill active" onclick="setOpt('dart-limit-input', '9', this)">9 Darts</div>
+            </div>
         </div>
 
         <div class="input-group" id="p1-name-group">
@@ -414,21 +501,7 @@
             <input type="text" id="p2-name-input" class="setup-input" placeholder="Player 2 Name..." maxlength="12">
         </div>
 
-        <div class="input-group" id="legs-group">
-            <label>Best Of (Legs)</label>
-            <select id="legs-input" class="setup-input">
-                <option value="1">1 Leg</option>
-                <option value="3">Best of 3</option>
-                <option value="5" selected>Best of 5</option>
-                <option value="7">Best of 7</option>
-                <option value="11">Best of 11</option>
-            </select>
-        </div>
-        
-        <button id="start-btn" class="btn-start">START MATCH</button>
-        <p id="error-log" style="color: var(--danger); font-size: 12px; margin-top: 10px; text-align: center; line-height: 1.4;"></p>
-        
-        <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
+        <button id="start-btn" class="btn-start" style="margin-top: 15px;">START MATCH</button>
     </div>
 </div>
 
@@ -928,14 +1001,13 @@
             Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
-        // document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0;
         document.getElementById('prof-co').innerText = coPerc;
         const histContainer = document.getElementById('history-list-container');
         if(window.currentUserDoc.matchHistory && window.currentUserDoc.matchHistory.length > 0) {
             let histHtml = '';
             let recent = window.currentUserDoc.matchHistory.slice(-15).reverse();
             recent.forEach(h => {
-                let color = h.desc.startsWith("WON") ? "#4caf50" : "#ff4d4d";
+                let color = h.desc.startsWith("WON") ? "var(--accent)" : "var(--danger)";
                 let safeId = h.id ? `'${h.id}'` : `null`;
                 let safeDate = `'${h.date}'`;
                 let safeDesc = `'${h.desc}'`;
@@ -943,19 +1015,19 @@
                 histHtml += `<div class="history-item">
                     <div style="flex:1; cursor:pointer;" onclick="window.showMatchDetails(${safeId})">
                         <div style="color:${color}; font-weight:bold; line-height: 1.2;">${h.desc}</div>
-                        <div style="color:#aaa; font-size:11px; margin-top:3px; line-height:1.4;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
+                        <div style="color:var(--text-muted); font-size:11px; margin-top:3px; line-height:1.4;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
                         <div style="color:var(--blue); font-size:10px; margin-top:2px;">Tap for stats 📊</div>
                     </div>
-                    <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0}, ${h.coAtt || 0}, ${h.coHit || 0})" style="background:transparent; border:none; color:#ff4d4d; font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
+                    <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0}, ${h.coAtt || 0}, ${h.coHit || 0})" style="background:transparent; border:none; color:var(--danger); font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
                 </div>`;
             });
             histContainer.innerHTML = histHtml;
         } else {
-            histContainer.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>No matches played yet.</p>";
+            histContainer.innerHTML = "<p style='color:var(--text-muted); font-size:12px; line-height:1.5; padding-bottom:5px;'>No matches played yet.</p>";
         }
 
         const list = document.getElementById('friends-list-container');
-        list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>Loading friends...</p>";
+        list.innerHTML = "<p style='color:var(--text-muted); font-size:12px; line-height:1.5; padding-bottom:5px;'>Loading friends...</p>";
         if(window.currentUserDoc.friends && window.currentUserDoc.friends.length > 0) {
             list.innerHTML = "";
             for(let uid of window.currentUserDoc.friends) {
@@ -968,18 +1040,18 @@
                     
                     list.innerHTML += `
                         <div class="friend-item">
-                            <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue);">
+                            <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--accent);">
                             <div style="flex: 1;">
-                                <div style="color:var(--blue); font-weight:bold; font-size:14px; line-height:1.2;">${f.displayName}</div>
-                                <div style="color:#aaa; font-size:10px; margin-top:3px; line-height:1.4;">Avg: ${fAvg} | High Out: ${fHc}</div>
+                                <div style="color:white; font-weight:bold; font-size:14px; line-height:1.2;">${f.displayName}</div>
+                                <div style="color:var(--text-muted); font-size:10px; margin-top:3px; line-height:1.4;">Avg: ${fAvg} | High Out: ${fHc}</div>
                             </div>
-                            <button onclick="window.issueChallenge('${uid}')" style="background:var(--blue); color:black; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:11px;">⚔️ PLAY</button>
+                            <button onclick="window.issueChallenge('${uid}')" style="background:var(--accent); color:black; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:11px;">⚔️ PLAY</button>
                         </div>
                     `;
                 }
             }
         } else {
-            list.innerHTML = "<p style='color:#888; font-size:12px; line-height:1.5; padding-bottom:5px;'>No friends added yet.</p>";
+            list.innerHTML = "<p style='color:var(--text-muted); font-size:12px; line-height:1.5; padding-bottom:5px;'>No friends added yet.</p>";
         }
     }
 </script>
@@ -1266,13 +1338,6 @@
                 else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
                 else p1Label.innerText = 'Your Name';
             }
-            
-            if (mode === 'bot') {
-                if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
-                    gameTypeInput.value = '501';
-                    alert("DartBot currently only supports standard 301-1001 games.");
-                }
-            }
         }
 
         if (modeInput) modeInput.addEventListener('change', updateMenuUI);
@@ -1322,7 +1387,6 @@
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
         else if(val === 'E') {
-            // FIX: If nothing is typed (empty input), it immediately resolves to 0
             let v = numpadVal === "" ? 0 : parseInt(numpadVal);
             if(!isNaN(v)) processHit(v);
         }
@@ -1722,15 +1786,15 @@
         const peerVideo = document.getElementById('peer');
         if (peerVideo) peerVideo.muted = isMicMuted;
         const btn = document.getElementById('mic-btn');
-        if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
-        else { btn.innerText = "MIC ON"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
+        if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "var(--danger)"; } 
+        else { btn.innerText = "MIC ON"; btn.style.color = "var(--accent)"; }
     }
 
     function toggleCaller() {
         isCallerMuted = !isCallerMuted;
         const btn = document.getElementById('caller-btn');
-        if (isCallerMuted) { btn.innerText = "VOICE OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
-        else { btn.innerText = "VOICE ON"; btn.style.color = "#4caf50"; btn.style.borderColor = "#444"; }
+        if (isCallerMuted) { btn.innerText = "VOICE OFF"; btn.style.color = "var(--danger)"; } 
+        else { btn.innerText = "VOICE ON"; btn.style.color = "var(--accent)"; }
     }
 
     async function swapCam() {
@@ -1764,7 +1828,7 @@
         } catch (e) {}
     }
     
-    function processAtcDart(multiplier) {
+    window.processAtcDart = function(multiplier) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
         history = JSON.parse(JSON.stringify(state));
@@ -1835,7 +1899,7 @@
     }
 
     // --- REVISED processHit WITH DART-BY-DART LOGIC ---
-    function processHit(manualVal = null, dartsArr = null) {
+    window.processHit = function(manualVal = null, dartsArr = null) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
         
@@ -1942,7 +2006,7 @@
         if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
     }
 
-    function undo() {
+    window.undo = function() {
         if(botTimeout) clearTimeout(botTimeout);
         numpadVal = ""; currentDarts = []; updateDbdDisplay();
         if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state); }
@@ -2004,7 +2068,7 @@
         else { render(); }
     }
 
-    function render() {
+    window.render = function() {
         state.p.forEach((p, i) => {
             const nameEl = document.getElementById(`n-${i}`);
             if (nameEl) nameEl.innerText = p.name;
@@ -2060,7 +2124,12 @@
             } else {
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                 if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-                if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s;
+                
+                let scoreBox = document.getElementById(`s-${i}`);
+                if(scoreBox && scoreBox.style.color !== "rgb(255, 204, 0)" && scoreBox.style.color !== "#ffcc00") {
+                    scoreBox.innerText = p.s;
+                }
+
                 if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'block';
                 if(document.getElementById(`l-${i}`)) document.getElementById(`l-${i}`).innerText = p.l;
@@ -2081,6 +2150,7 @@
             const cardEl = document.getElementById(`card-${i}`);
             if (cardEl) cardEl.className = (state.turn === i) ? "player-card active" : "player-card";
         });
+
         if (!spectateId) {
             
             if (state.gameType === 'atc') {
@@ -2180,19 +2250,20 @@
                         document.getElementById(`srow-${i}`).style.flexDirection = 'row';
                         document.getElementById(`srow-${i}`).style.alignItems = 'center';
                     }
-                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(28px, 6dvh, 50px)';
+                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(40px, 8dvh, 70px)';
                 });
                 if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'flex';
                 if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'none';
                 if(document.getElementById('cricket-controls')) document.getElementById('cricket-controls').style.display = 'none';
+                
                 if (localInputMode === 'darts') {
                     if(document.getElementById('total-mode-ui')) document.getElementById('total-mode-ui').style.display = 'none';
                     if(document.getElementById('darts-mode-ui')) document.getElementById('darts-mode-ui').style.display = 'flex';
-                    if(document.getElementById('mode-toggle-btn')) document.getElementById('mode-toggle-btn').innerText = 'MODE: DART-BY-DART';
+                    if(document.getElementById('mode-toggle-btn')) document.getElementById('mode-toggle-btn').innerText = 'DART ENTRY';
                 } else {
                     if(document.getElementById('total-mode-ui')) document.getElementById('total-mode-ui').style.display = 'flex';
                     if(document.getElementById('darts-mode-ui')) document.getElementById('darts-mode-ui').style.display = 'none';
-                    if(document.getElementById('mode-toggle-btn')) document.getElementById('mode-toggle-btn').innerText = 'MODE: TOTAL SCORE';
+                    if(document.getElementById('mode-toggle-btn')) document.getElementById('mode-toggle-btn').innerText = 'TOTAL ENTRY';
                     if(document.getElementById('numpad-display')) document.getElementById('numpad-display').innerText = numpadVal || "0";
                 }
 
@@ -2262,24 +2333,7 @@
             clearTimeout(botTimeout);
             botTimeout = null;
         }
-    }
-
-    function shareInvite() {
-        if (peer && peer.id) {
-            const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
-        }
-    }
-
-    function shareSpectator() {
-        if (peer && peer.id) {
-            const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
-        }
-    }
-
+    };
 </script>
 </body>
 </html>
