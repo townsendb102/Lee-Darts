@@ -73,6 +73,7 @@
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 100% !important; height: 100% !important; left: 0 !important; border: none !important; }
         body.spectator-mode .v-container { position: fixed; inset: 0; height: 100%; width: 100vw; z-index: 0; border: none; display: block !important; }
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; }
+        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
         
         body.spectator-mode .player-card { 
@@ -121,7 +122,7 @@
         
         .bg-cyan { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
         .bg-blue { background: linear-gradient(135deg, #4338ca, #60a5fa); }
-        .bg-dark-grad { background: linear-gradient(135deg, var(--bg-active), var(--bg-card)); }
+        .bg-dark-grad { background: linear-gradient(135deg, var(--active), var(--card)); }
 
         .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
         .pill { background: var(--btn-bg); padding: 12px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: var(--text-muted); cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.05); text-align: center; flex: 1; min-width: 70px;}
@@ -131,10 +132,12 @@
         .input-group label { display: block; font-size: 11px; font-weight: 900; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
         .setup-input { width: 100%; background: var(--btn-bg); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 14px; border-radius: 14px; font-size: 16px; outline: none; transition: border 0.2s; font-weight: bold;}
         .setup-input:focus { border-color: var(--accent); }
+        .setup-input option { background: var(--dark); color: white; }
         
         .btn-start { background: var(--accent); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 900; border: none; border-radius: 14px; cursor: pointer; margin-top: 15px; text-transform: uppercase; display: block !important; visibility: visible !important;}
         .btn-start:active { transform: scale(0.98); }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
+
         .btn-update { background: transparent; border: none; color: var(--text-muted); font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; font-weight: bold;}
 
         /* HEADER */
@@ -144,7 +147,7 @@
         .header-controls { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap;}
 
-        /* CAMERAS - RESTORED TO ORIGINAL WORKING CSS */
+        /* CAMERAS - RESTORED TO ORIGINAL CSS */
         .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
         .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
         .v-box.visible { opacity: 1; z-index: 1; pointer-events: auto; }
@@ -157,12 +160,12 @@
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 2px solid var(--accent); }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(50px + 35dvh + env(safe-area-inset-top)); background: rgba(0, 0, 0, 0.95); }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(45px + 35dvh + env(safe-area-inset-top)); background: rgba(0, 0, 0, 0.95); }
 
         /* PLAYER CARDS */
         .score-area { display: flex; flex-direction: column; padding: 10px; gap: 8px; min-height: 0; z-index: 5;}
-        .player-card { flex: 1; background: var(--bg-card); border-radius: 16px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border-top: 4px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 0;}
-        .player-card.active { background: var(--bg-active); border-top: 4px solid var(--accent); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .player-card { flex: 1; background: var(--card); border-radius: 16px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border-top: 4px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 0;}
+        .player-card.active { background: var(--active); border-top: 4px solid var(--accent); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
         
         .p-name { font-size: 15px; color: var(--text-muted); font-weight: 900; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; text-transform: uppercase;}
         .player-card.active .p-name { color: white; }
@@ -178,7 +181,7 @@
         .missed-db-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); font-size: 9px; padding: 4px 8px; border-radius: 6px; margin-top: 4px; cursor: pointer; width: fit-content; align-self: center; font-weight: bold;}
 
         /* CRICKET CENTER */
-        #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--bg-card); border-radius: 14px; padding: 6px; border: 1px solid rgba(255,255,255,0.05); justify-content: space-evenly; margin: 0 5px; }
+        #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--card); border-radius: 14px; padding: 6px; border: 1px solid rgba(255,255,255,0.05); justify-content: space-evenly; margin: 0 5px; }
         .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
         .cric-mark { flex: 1; text-align: center; font-size: 16px; font-weight: 900; color: var(--accent); }
         .cric-num { flex: 1; text-align: center; font-size: 13px; font-weight: 900; color: white; background: var(--btn-bg); border-radius: 6px; padding: 2px 0; }
@@ -233,6 +236,7 @@
             document.getElementById('mode-input').value = mode;
             document.getElementById('home-menu').style.display = 'none';
             document.getElementById('config-menu').style.display = 'flex';
+            
             document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
             document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
             document.getElementById('dart-limit-group').style.display = 'none'; 
@@ -261,7 +265,7 @@
             if (selectId === 'game-type-input') {
                 if(mode === 'bot' && (val === 'atc' || val === '121' || val === '170' || val === 'cricket')) {
                     alert("DartBot currently only supports standard games (301-1001).");
-                    setOpt('game-type-input', '501', document.getElementById('gt-pills').children[0]);
+                    window.setOpt('game-type-input', '501', document.getElementById('gt-pills').children[0]);
                     return;
                 }
                 
@@ -407,19 +411,19 @@
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-            <div class="dc-card bg-cyan" onclick="openSetup('local')">
+            <div class="dc-card bg-cyan" onclick="window.openSetup('local')">
                 <div class="dc-card-title" style="font-size: 32px; margin-bottom: 12px;">🎯</div>
                 <div class="dc-card-title">PLAY<br>LOCAL</div>
                 <div class="dc-card-sub">Same device game</div>
             </div>
-            <div class="dc-card bg-blue" onclick="openSetup('online')">
+            <div class="dc-card bg-blue" onclick="window.openSetup('online')">
                 <div class="dc-card-title" style="font-size: 32px; margin-bottom: 12px;">🌍</div>
                 <div class="dc-card-title">PLAY<br>ONLINE</div>
                 <div class="dc-card-sub">Remote opponents</div>
             </div>
         </div>
         
-        <div class="dc-card bg-dark-grad" onclick="openSetup('single')" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="dc-card bg-dark-grad" onclick="window.openSetup('single')" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <div class="dc-card-title">PRACTICE MODE</div>
                 <div class="dc-card-sub">Single player training</div>
@@ -427,7 +431,7 @@
             <div style="font-size: 35px; opacity: 0.4;">📈</div>
         </div>
 
-        <div class="dc-card bg-dark-grad" onclick="openSetup('bot')" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="dc-card bg-dark-grad" onclick="window.openSetup('bot')" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <div class="dc-card-title">PLAY DARTBOT</div>
                 <div class="dc-card-sub">Test skills against AI</div>
@@ -443,7 +447,7 @@
 
     <div id="config-menu" class="setup-card" style="display: none; z-index: 10;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-            <button onclick="closeSetup()" style="background:transparent; border:none; color:var(--text-muted); font-size:14px; font-weight:900; cursor:pointer; padding: 5px;">← CANCEL</button>
+            <button onclick="window.closeSetup()" style="background:transparent; border:none; color:var(--text-muted); font-size:14px; font-weight:900; cursor:pointer; padding: 5px;">← CANCEL</button>
             <h3 style="color:var(--text-main); margin:0; font-weight: 900; letter-spacing: -0.5px;">MATCH SETUP</h3>
             <div style="width: 70px;"></div>
         </div>
@@ -467,42 +471,42 @@
         <div class="input-group" id="game-type-group">
             <label>Game Type</label>
             <div class="pill-group" id="gt-pills">
-                <div class="pill active" onclick="setOpt('game-type-input', '501', this)">501</div>
-                <div class="pill" onclick="setOpt('game-type-input', '301', this)">301</div>
-                <div class="pill" onclick="setOpt('game-type-input', 'cricket', this)">Cricket</div>
-                <div class="pill" onclick="setOpt('game-type-input', '121', this)">121</div>
-                <div class="pill" onclick="setOpt('game-type-input', '170', this)">170</div>
-                <div class="pill" onclick="setOpt('game-type-input', 'atc', this)">ATC</div>
+                <div class="pill active" onclick="window.setOpt('game-type-input', '501', this)">501</div>
+                <div class="pill" onclick="window.setOpt('game-type-input', '301', this)">301</div>
+                <div class="pill" onclick="window.setOpt('game-type-input', 'cricket', this)">Cricket</div>
+                <div class="pill" onclick="window.setOpt('game-type-input', '121', this)">121</div>
+                <div class="pill" onclick="window.setOpt('game-type-input', '170', this)">170</div>
+                <div class="pill" onclick="window.setOpt('game-type-input', 'atc', this)">ATC</div>
             </div>
         </div>
 
         <div class="input-group" id="legs-group">
             <label>Best Of (Legs)</label>
             <div class="pill-group" id="leg-pills">
-                <div class="pill" onclick="setOpt('legs-input', '1', this)">1</div>
-                <div class="pill" onclick="setOpt('legs-input', '3', this)">3</div>
-                <div class="pill active" onclick="setOpt('legs-input', '5', this)">5</div>
-                <div class="pill" onclick="setOpt('legs-input', '7', this)">7</div>
-                <div class="pill" onclick="setOpt('legs-input', '11', this)">11</div>
+                <div class="pill" onclick="window.setOpt('legs-input', '1', this)">1</div>
+                <div class="pill" onclick="window.setOpt('legs-input', '3', this)">3</div>
+                <div class="pill active" onclick="window.setOpt('legs-input', '5', this)">5</div>
+                <div class="pill" onclick="window.setOpt('legs-input', '7', this)">7</div>
+                <div class="pill" onclick="window.setOpt('legs-input', '11', this)">11</div>
             </div>
         </div>
 
         <div class="input-group" id="bot-level-group" style="display:none;">
             <label>Bot Difficulty (Avg)</label>
             <div class="pill-group" id="bot-pills">
-                <div class="pill" onclick="setOpt('bot-level-input', '1', this)">Lvl 1</div>
-                <div class="pill" onclick="setOpt('bot-level-input', '3', this)">Lvl 3</div>
-                <div class="pill active" onclick="setOpt('bot-level-input', '5', this)">Lvl 5</div>
-                <div class="pill" onclick="setOpt('bot-level-input', '8', this)">Lvl 8</div>
-                <div class="pill" onclick="setOpt('bot-level-input', '10', this)">Lvl 10</div>
+                <div class="pill" onclick="window.setOpt('bot-level-input', '1', this)">Lvl 1</div>
+                <div class="pill" onclick="window.setOpt('bot-level-input', '3', this)">Lvl 3</div>
+                <div class="pill active" onclick="window.setOpt('bot-level-input', '5', this)">Lvl 5</div>
+                <div class="pill" onclick="window.setOpt('bot-level-input', '8', this)">Lvl 8</div>
+                <div class="pill" onclick="window.setOpt('bot-level-input', '10', this)">Lvl 10</div>
             </div>
         </div>
         
         <div class="input-group" id="dart-limit-group" style="display:none;">
             <label>Dart Limit (For 170)</label>
             <div class="pill-group" id="dl-pills">
-                <div class="pill" onclick="setOpt('dart-limit-input', '6', this)">6 Darts</div>
-                <div class="pill active" onclick="setOpt('dart-limit-input', '9', this)">9 Darts</div>
+                <div class="pill" onclick="window.setOpt('dart-limit-input', '6', this)">6 Darts</div>
+                <div class="pill active" onclick="window.setOpt('dart-limit-input', '9', this)">9 Darts</div>
             </div>
         </div>
 
@@ -525,20 +529,20 @@
         <h2 style="margin-bottom: 20px; font-size: 22px;">Waiting for Opponent...</h2>
         <h1 style="color: var(--accent); margin-bottom: 20px; font-size: 32px; letter-spacing: 2px;" id="wait-id">...</h1>
         <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 15px;">Send this ID to your friend</p>
-        <button class="btn-start" onclick="shareInvite()">SHARE INVITE LINK</button>
+        <button class="btn-start" onclick="window.shareInvite()">SHARE INVITE LINK</button>
     </div>
 </div>
 
 <div id="first-throw-layer" class="hidden">
     <div class="setup-card" id="ft-step-1">
         <h2 style="margin-bottom: 20px; font-size: 22px;">Who Throws First?</h2>
-        <button class="btn-start" onclick="showFtStep2('bull')" style="margin-bottom: 10px;">Closest to Bull</button>
-        <button class="btn-start" onclick="showFtStep2('manual')" style="background: var(--btn-bg); color: white; border: 1px solid rgba(255,255,255,0.1);">Choose Player</button>
+        <button class="btn-start" onclick="window.showFtStep2('bull')" style="margin-bottom: 10px;">Closest to Bull</button>
+        <button class="btn-start" onclick="window.showFtStep2('manual')" style="background: var(--btn-bg); color: white; border: 1px solid rgba(255,255,255,0.1);">Choose Player</button>
     </div>
     <div class="setup-card hidden" id="ft-step-2">
         <h2 id="ft-title" style="margin-bottom: 20px; font-size: 22px;">Who won the Bull?</h2>
-        <button class="btn-start" id="ft-p1-btn" onclick="setFirstPlayer(0)" style="margin-bottom: 10px;">P1</button>
-        <button class="btn-start" id="ft-p2-btn" onclick="setFirstPlayer(1)" style="background: var(--btn-bg); color: white; border: 1px solid rgba(255,255,255,0.1);">P2</button>
+        <button class="btn-start" id="ft-p1-btn" onclick="window.setFirstPlayer(0)" style="margin-bottom: 10px;">P1</button>
+        <button class="btn-start" id="ft-p2-btn" onclick="window.setFirstPlayer(1)" style="background: var(--btn-bg); color: white; border: 1px solid rgba(255,255,255,0.1);">P2</button>
     </div>
 </div>
 
@@ -564,11 +568,11 @@
         <span id="display-id" class="header-id-trunc">...</span>
     </div>
     <div class="header-controls">
-        <button class="header-btn" id="mic-btn" style="color: var(--danger);">MIC ON</button>
+        <button class="header-btn" id="mic-btn" style="color: var(--danger);">MIC OFF</button>
         <button class="header-btn" id="caller-btn" style="color: var(--accent);">VOICE ON</button>
         <button class="header-btn" id="zoom-btn">ZOOM</button>
         <button class="header-btn" id="flip-btn">FLIP</button>
-        <button class="header-btn" id="spectate-btn" style="color: var(--blue);">SPECTATE</button>
+        <button class="header-btn" id="spectate-btn" style="color: #38bdf8;">SPECTATE</button>
         <button class="header-btn" id="share-btn-top">INVITE</button>
         <button class="header-btn" id="quit-btn" style="background: var(--danger); color: white; border-color: var(--danger);">QUIT</button>
     </div>
@@ -582,7 +586,7 @@
     <div id="box-peer" class="v-box">
         <div class="cam-label">OPPONENT / STREAM</div>
         <div id="peer-paused-msg" class="paused-overlay">OPPONENT PAUSED</div>
-        <div id="reconnect-overlay" class="paused-overlay" style="background: rgba(15, 23, 42, 0.9); color: #ffeb3b;">CONNECTION LOST...</div>
+        <div id="reconnect-overlay" class="paused-overlay" style="background: rgba(15, 23, 42, 0.9); color: #eab308;">CONNECTION LOST...</div>
         <video id="peer" autoplay playsinline webkit-playsinline></video>
     </div>
 </div>
@@ -599,7 +603,7 @@
             <div class="legs-count" id="l-area-0"><span id="l-0">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-0"></div>
-        <button class="missed-db-btn hidden" id="miss-btn-0" onclick="logMissedDouble(0)">Missed Double</button>
+        <button class="missed-db-btn hidden" id="miss-btn-0" onclick="window.logMissedDouble(0)">Missed Double</button>
     </div>
     
     <div id="cricket-center" class="hidden">
@@ -618,7 +622,7 @@
             <div class="legs-count" id="l-area-1"><span id="l-1">0</span>LEGS</div>
         </div>
         <div class="checkout-hint" id="co-1"></div>
-        <button class="missed-db-btn hidden" id="miss-btn-1" onclick="logMissedDouble(1)">Missed Double</button>
+        <button class="missed-db-btn hidden" id="miss-btn-1" onclick="window.logMissedDouble(1)">Missed Double</button>
     </div>
 </div>
 
@@ -635,18 +639,18 @@
         <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
             <div id="numpad-display">0</div>
             <div class="np-grid">
-                <button class="np-btn" onclick="np(1)">1</button>
-                <button class="np-btn" onclick="np(2)">2</button>
-                <button class="np-btn" onclick="np(3)">3</button>
-                <button class="np-btn" onclick="np(4)">4</button>
-                <button class="np-btn" onclick="np(5)">5</button>
-                <button class="np-btn" onclick="np(6)">6</button>
-                <button class="np-btn" onclick="np(7)">7</button>
-                <button class="np-btn" onclick="np(8)">8</button>
-                <button class="np-btn" onclick="np(9)">9</button>
-                <button class="np-btn del" onclick="np('C')">DEL</button>
-                <button class="np-btn" onclick="np(0)">0</button>
-                <button class="np-btn enter" id="np-enter-btn" onclick="np('E')">ENTER</button>
+                <button class="np-btn" onclick="window.np(1)">1</button>
+                <button class="np-btn" onclick="window.np(2)">2</button>
+                <button class="np-btn" onclick="window.np(3)">3</button>
+                <button class="np-btn" onclick="window.np(4)">4</button>
+                <button class="np-btn" onclick="window.np(5)">5</button>
+                <button class="np-btn" onclick="window.np(6)">6</button>
+                <button class="np-btn" onclick="window.np(7)">7</button>
+                <button class="np-btn" onclick="window.np(8)">8</button>
+                <button class="np-btn" onclick="window.np(9)">9</button>
+                <button class="np-btn del" onclick="window.np('C')">DEL</button>
+                <button class="np-btn" onclick="window.np(0)">0</button>
+                <button class="np-btn enter" id="np-enter-btn" onclick="window.np('E')">ENTER</button>
             </div>
         </div>
 
@@ -655,20 +659,20 @@
                 <div class="dbd-slot" id="dbd-slot-1">-</div>
                 <div class="dbd-slot" id="dbd-slot-2">-</div>
                 <div class="dbd-slot" id="dbd-slot-3">-</div>
-                <button class="action-btn" id="dbd-del-btn" style="width:50px; font-size: 16px; padding:0;" onclick="dbdDel()">⌫</button>
-                <button class="action-btn" id="dbd-enter-btn" style="background:var(--accent); color:#000; width:60px; font-size: 14px; padding:0;" onclick="dbdEnter()">OK</button>
+                <button class="action-btn" id="dbd-del-btn" style="width:50px; font-size: 16px; padding:0;" onclick="window.dbdDel()">⌫</button>
+                <button class="action-btn" id="dbd-enter-btn" style="background:var(--accent); color:#000; width:60px; font-size: 14px; padding:0;" onclick="window.dbdEnter()">OK</button>
             </div>
             <div style="display: flex; gap: 6px; margin: 4px 0;">
-                <button class="pill active" id="dbd-m-1" onclick="setDbdMult(1)">SINGLE</button>
-                <button class="pill" id="dbd-m-2" onclick="setDbdMult(2)">DOUBLE</button>
-                <button class="pill" id="dbd-m-3" onclick="setDbdMult(3)">TREBLE</button>
+                <button class="pill active" id="dbd-m-1" onclick="window.setDbdMult(1)">SINGLE</button>
+                <button class="pill" id="dbd-m-2" onclick="window.setDbdMult(2)">DOUBLE</button>
+                <button class="pill" id="dbd-m-3" onclick="window.setDbdMult(3)">TREBLE</button>
             </div>
             <div class="dbd-grid">
-                <button class="dbd-btn" onclick="hitDbd(20)">20</button><button class="dbd-btn" onclick="hitDbd(19)">19</button><button class="dbd-btn" onclick="hitDbd(18)">18</button><button class="dbd-btn" onclick="hitDbd(17)">17</button><button class="dbd-btn" onclick="hitDbd(16)">16</button><button class="dbd-btn" onclick="hitDbd(15)">15</button><button class="dbd-btn" onclick="hitDbd(14)">14</button><button class="dbd-btn" onclick="hitDbd(13)">13</button><button class="dbd-btn" onclick="hitDbd(12)">12</button><button class="dbd-btn" onclick="hitDbd(11)">11</button><button class="dbd-btn" onclick="hitDbd(10)">10</button><button class="dbd-btn" onclick="hitDbd(9)">9</button><button class="dbd-btn" onclick="hitDbd(8)">8</button><button class="dbd-btn" onclick="hitDbd(7)">7</button><button class="dbd-btn" onclick="hitDbd(6)">6</button><button class="dbd-btn" onclick="hitDbd(5)">5</button><button class="dbd-btn" onclick="hitDbd(4)">4</button><button class="dbd-btn" onclick="hitDbd(3)">3</button><button class="dbd-btn" onclick="hitDbd(2)">2</button><button class="dbd-btn" onclick="hitDbd(1)">1</button>
+                <button class="dbd-btn" onclick="window.hitDbd(20)">20</button><button class="dbd-btn" onclick="window.hitDbd(19)">19</button><button class="dbd-btn" onclick="window.hitDbd(18)">18</button><button class="dbd-btn" onclick="window.hitDbd(17)">17</button><button class="dbd-btn" onclick="window.hitDbd(16)">16</button><button class="dbd-btn" onclick="window.hitDbd(15)">15</button><button class="dbd-btn" onclick="window.hitDbd(14)">14</button><button class="dbd-btn" onclick="window.hitDbd(13)">13</button><button class="dbd-btn" onclick="window.hitDbd(12)">12</button><button class="dbd-btn" onclick="window.hitDbd(11)">11</button><button class="dbd-btn" onclick="window.hitDbd(10)">10</button><button class="dbd-btn" onclick="window.hitDbd(9)">9</button><button class="dbd-btn" onclick="window.hitDbd(8)">8</button><button class="dbd-btn" onclick="window.hitDbd(7)">7</button><button class="dbd-btn" onclick="window.hitDbd(6)">6</button><button class="dbd-btn" onclick="window.hitDbd(5)">5</button><button class="dbd-btn" onclick="window.hitDbd(4)">4</button><button class="dbd-btn" onclick="window.hitDbd(3)">3</button><button class="dbd-btn" onclick="window.hitDbd(2)">2</button><button class="dbd-btn" onclick="window.hitDbd(1)">1</button>
             </div>
             <div style="display:flex; gap:6px; margin-top: 4px;">
-                <button class="np-btn" style="flex:1; background: var(--bg-active); font-size:16px; padding:0;" onclick="hitDbd(25)">BULL</button>
-                <button class="np-btn" style="flex:1; background: var(--btn-bg); color: var(--text-muted); font-size:16px; padding:0; border:none;" onclick="hitDbd(0)">MISS</button>
+                <button class="np-btn" style="flex:1; background: var(--bg-active); font-size:16px; padding:0;" onclick="window.hitDbd(25)">BULL</button>
+                <button class="np-btn" style="flex:1; background: var(--btn-bg); color: var(--text-muted); font-size:16px; padding:0; border:none;" onclick="window.hitDbd(0)">MISS</button>
             </div>
         </div>
     </div>
@@ -683,16 +687,16 @@
 
     <div class="controls" id="cricket-controls" style="display: none;">
         <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-            <button class="pill active" id="cric-m-1" onclick="setCricMult(1)">SINGLE</button>
-            <button class="pill" id="cric-m-2" onclick="setCricMult(2)">DOUBLE</button>
-            <button class="pill" id="cric-m-3" onclick="setCricMult(3)">TREBLE</button>
+            <button class="pill active" id="cric-m-1" onclick="window.setCricMult(1)">SINGLE</button>
+            <button class="pill" id="cric-m-2" onclick="window.setCricMult(2)">DOUBLE</button>
+            <button class="pill" id="cric-m-3" onclick="window.setCricMult(3)">TREBLE</button>
         </div>
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-            <button class="cric-num-btn" onclick="hitCricket(20)">20</button><button class="cric-num-btn" onclick="hitCricket(19)">19</button><button class="cric-num-btn" onclick="hitCricket(18)">18</button><button class="cric-num-btn" onclick="hitCricket(17)">17</button><button class="cric-num-btn" onclick="hitCricket(16)">16</button><button class="cric-num-btn" onclick="hitCricket(15)">15</button><button class="cric-num-btn" onclick="hitCricket(14)">14</button><button class="cric-num-btn" style="background: var(--bg-active);" onclick="hitCricket(25)">B</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(20)">20</button><button class="cric-num-btn" onclick="window.hitCricket(19)">19</button><button class="cric-num-btn" onclick="window.hitCricket(18)">18</button><button class="cric-num-btn" onclick="window.hitCricket(17)">17</button><button class="cric-num-btn" onclick="window.hitCricket(16)">16</button><button class="cric-num-btn" onclick="window.hitCricket(15)">15</button><button class="cric-num-btn" onclick="window.hitCricket(14)">14</button><button class="cric-num-btn" style="background: var(--bg-active);" onclick="window.hitCricket(25)">B</button>
         </div>
         <div style="display: flex; gap: 6px; margin-top: 6px;">
-            <button class="action-btn" onclick="undo()" style="flex: 1; justify-content: center; height: 45px; font-size: 14px;">⟲ UNDO</button>
-            <button class="cric-num-btn" onclick="hitCricket(0)" style="flex: 2; background: var(--btn-bg); color: var(--text-muted); height: 45px; font-size: 14px; padding: 0;">MISS DART</button>
+            <button class="action-btn" onclick="window.undo()" style="flex: 1; justify-content: center; height: 45px; font-size: 14px;">⟲ UNDO</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(0)" style="flex: 2; background: var(--btn-bg); color: var(--text-muted); height: 45px; font-size: 14px; padding: 0;">MISS DART</button>
         </div>
     </div>
 </div>
@@ -791,15 +795,18 @@
                     
                     const challenge = window.currentUserDoc.activeChallenge;
                     if(challenge && challenge.time > Date.now() - 60000) { 
-                        showChallengePopup(challenge);
+                        window.showChallengePopup(challenge);
                     } else if (document.getElementById('challenge-popup').style.display === 'block') {
                         document.getElementById('challenge-popup').style.display = 'none';
                     }
                 }
             });
         } else {
-            loginLayer.style.display = 'flex'; 
-            setupLayer.classList.add('hidden');
+            const params = new URLSearchParams(window.location.search);
+            if (!params.get('join') && !params.get('spectate')) {
+                loginLayer.style.display = 'flex'; 
+                setupLayer.classList.add('hidden');
+            }
             document.getElementById('logout-btn').style.display = 'none'; 
             document.getElementById('open-profile-btn').style.display = 'none'; 
             window.currentUserDoc = null;
@@ -813,7 +820,7 @@
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { theme: selectedTheme });
         }
     });
-    function showChallengePopup(challenge) {
+    window.showChallengePopup = function(challenge) {
         const popup = document.getElementById('challenge-popup');
         document.getElementById('challenge-text').innerText = `⚔️ ${challenge.hostName} challenged you!`;
         popup.style.display = 'block';
@@ -831,11 +838,10 @@
 
     window.issueChallenge = async function(friendUid) {
         window.targetChallengeFriend = friendUid;
-        friendsLayer.classList.add('hidden');
-        profileLayer.classList.add('hidden');
-        setupLayer.classList.remove('hidden');
-        document.getElementById('mode-input').value = 'online';
-        document.getElementById('mode-input').dispatchEvent(new Event('change'));
+        document.getElementById('friends-layer').classList.add('hidden');
+        document.getElementById('profile-layer').classList.add('hidden');
+        document.getElementById('setup-layer').classList.remove('hidden');
+        if(typeof window.openSetup === 'function') window.openSetup('online');
     };
     document.getElementById('open-profile-btn').addEventListener('click', () => {
         setupLayer.classList.add('hidden');
@@ -972,12 +978,12 @@
             document.getElementById('friend-email').value = "";
             err.style.color = "#4caf50";
             err.innerText = "Friend Added!";
-            renderProfileMenu();
+            window.renderProfileMenu();
         } else { err.style.color = "#ff4d4d"; err.innerText = "User not found.";
         }
     });
 
-    async function renderProfileMenu() {
+    window.renderProfileMenu = async function() {
         if(!window.currentUserDoc) return;
         document.getElementById('prof-email').innerText = window.auth.currentUser.email;
         if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
@@ -988,7 +994,6 @@
             Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
-        // document.getElementById('prof-hc').innerText = window.currentUserDoc.highCheckout || 0;
         document.getElementById('prof-co').innerText = coPerc;
         const histContainer = document.getElementById('history-list-container');
         if(window.currentUserDoc.matchHistory && window.currentUserDoc.matchHistory.length > 0) {
@@ -1055,6 +1060,7 @@
     document.addEventListener('visibilitychange', () => {
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
     });
+    
     window.addEventListener('load', () => {
         const quitBtn = document.getElementById('quit-btn');
         if (quitBtn) {
@@ -1064,7 +1070,13 @@
                 }
             });
         }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('join') || urlParams.get('spectate')) {
+            window.initApp();
+        }
     });
+
     document.querySelectorAll('.cache-clear-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             btn.innerText = "Clearing Cache & Updating...";
@@ -1149,7 +1161,7 @@
     let isMicMuted = false;
     let isCallerMuted = false;
 
-    function playDartSound(type) {
+    window.playDartSound = function(type) {
         if (isCallerMuted) return;
         if (state.gameType === 'atc' || state.gameType === 'cricket') return;
 
@@ -1203,10 +1215,6 @@
 
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user"; let currentCamIndex = 0;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join');
-    const spectateId = urlParams.get('spectate');
 
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
@@ -1271,10 +1279,10 @@
         if (videoTrack) {
             const isHidden = document.visibilityState === 'hidden';
             videoTrack.enabled = !isHidden; 
-            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
+            if (!isLocalMatch) { window.broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
-    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); });
+    window.broadcast = function(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); });
     }
 
     function unlockAudio() {
@@ -1304,87 +1312,12 @@
         }
     }
 
-    // Load buttons directly on window load exactly as they were before
-    window.addEventListener('load', () => {
-        const modeInput = document.getElementById('mode-input');
-        const gameTypeInput = document.getElementById('game-type-input');
-
-        function updateMenuUI() {
-            if (!modeInput) return;
-            const mode = modeInput.value;
-            const gameType = gameTypeInput.value;
-
-            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
-            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
-            document.getElementById('game-type-group').style.display = 'block'; 
-            document.getElementById('dart-limit-group').style.display = (gameType === '170') ? 'block' : 'none';
-            document.getElementById('legs-group').style.display = (mode === 'single' || gameType === 'atc' || gameType === '121' || gameType === '170' || gameType === 'cricket') ? 'none' : 'block';
-            
-            const p1Label = document.getElementById('p1-label');
-            if (p1Label) {
-                if (mode === 'single' || mode === 'bot') p1Label.innerText = 'Your Name';
-                else if (mode === 'local') p1Label.innerText = 'Player 1 Name';
-                else p1Label.innerText = 'Your Name';
-            }
-            
-            if (mode === 'bot') {
-                if(gameType === 'cricket' || gameType === 'atc' || gameType === '121' || gameType === '170') {
-                    gameTypeInput.value = '501';
-                    alert("DartBot currently only supports standard 301-1001 games.");
-                }
-            }
-        }
-
-        if (modeInput) modeInput.addEventListener('change', updateMenuUI);
-        if (gameTypeInput) gameTypeInput.addEventListener('change', updateMenuUI);
-        updateMenuUI();
-
-        if (spectateId) {
-            document.body.classList.add('spectator-mode');
-            document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
-            document.getElementById('name-input').placeholder = "Your Name (Optional)";
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('setup-layer').classList.remove('hidden');
-        } else if (joinId) {
-            document.getElementById('legs-group').style.display = 'none';
-            document.getElementById('start-btn').innerText = "JOIN MATCH";
-            document.getElementById('mode-group').style.display = 'none';
-            document.getElementById('login-layer').style.display = 'none';
-            document.getElementById('setup-layer').classList.remove('hidden');
-        }
-
-        document.getElementById('start-btn').onclick = initApp;
-        if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = swapCam;
-        if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = cycleZoom;
-        if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = toggleMic;
-        if(document.getElementById('caller-btn')) document.getElementById('caller-btn').onclick = toggleCaller;
-        if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = shareInvite;
-        if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = shareSpectator;
-        
-        if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = undo;
-        if(document.getElementById('edit-last-btn')) document.getElementById('edit-last-btn').onclick = editLastThrowPopup;
-        if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = undo;
-        
-        if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => processAtcDart(0);
-        if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => processAtcDart(1);
-        if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => processAtcDart(2);
-        if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => processAtcDart(3);
-        if(document.getElementById('mode-toggle-btn')) {
-            document.getElementById('mode-toggle-btn').onclick = () => {
-                localInputMode = localInputMode === 'total' ? 'darts' : 'total';
-                render();
-            };
-        }
-
-        if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = triggerRematch;
-    });
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
         else if(val === 'E') {
             // FIX: If nothing is typed (empty input), it immediately resolves to 0
             let v = numpadVal === "" ? 0 : parseInt(numpadVal);
-            if(!isNaN(v)) processHit(v);
+            if(!isNaN(v)) window.processHit(v);
         }
         else {
             if(numpadVal.length < 3) numpadVal += val;
@@ -1392,6 +1325,11 @@
         let display = document.getElementById('numpad-display');
         if(display) display.innerText = numpadVal || "0";
     }
+
+    window.toggleLocalMode = function() {
+        localInputMode = localInputMode === 'total' ? 'darts' : 'total';
+        window.render();
+    };
 
     // --- NEW DART-BY-DART LOGIC ---
     window.setDbdMult = function(m) {
@@ -1416,12 +1354,12 @@
         }
         
         currentDarts.push({ val: val, mult: val===0?1:dbdMult, pts: pts, label: label });
-        setDbdMult(1);
-        updateDbdDisplay();
+        window.setDbdMult(1);
+        window.updateDbdDisplay();
     };
 
     window.dbdDel = function() {
-        if(currentDarts.length > 0) { currentDarts.pop(); updateDbdDisplay(); }
+        if(currentDarts.length > 0) { currentDarts.pop(); window.updateDbdDisplay(); }
     };
 
     window.updateDbdDisplay = function() {
@@ -1433,13 +1371,13 @@
     };
     window.dbdEnter = function() {
         if(currentDarts.length === 0) return;
-        processHit(null, currentDarts);
+        window.processHit(null, currentDarts);
     };
     window.logMissedDouble = function(pIndex) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
-        render();
-        if (!isLocalMatch) broadcast(state);
+        window.render();
+        if (!isLocalMatch) window.broadcast(state);
     }
 
     function playBotTurn() {
@@ -1468,21 +1406,21 @@
         document.getElementById('numpad-display').innerText = val;
         botTimeout = setTimeout(() => {
             document.getElementById('numpad-display').innerText = "0";
-            processHit(val);
+            window.processHit(val);
         }, 1500);
     }
 
 
-    function toggleBullPhase(isActive) {
+    window.toggleBullPhase = function(isActive) {
         if (isActive) { document.body.classList.add('bull-throw'); } 
         else { document.body.classList.remove('bull-throw'); }
     }
 
-    function showFirstThrowUI() {
+    window.showFirstThrowUI = function() {
         document.getElementById('first-throw-layer').classList.remove('hidden');
         document.getElementById('ft-step-1').classList.remove('hidden');
         document.getElementById('ft-step-2').classList.add('hidden');
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') { toggleBullPhase(true); broadcast({ type: 'BULL_PHASE', active: true }); }
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') { window.toggleBullPhase(true); window.broadcast({ type: 'BULL_PHASE', active: true }); }
     }
 
     window.showFtStep2 = function(mode) {
@@ -1500,17 +1438,22 @@
         document.getElementById('first-throw-layer').classList.add('hidden');
         
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') {
-            toggleBullPhase(false);
-            broadcast({ type: 'BULL_PHASE', active: false });
+            window.toggleBullPhase(false);
+            window.broadcast({ type: 'BULL_PHASE', active: false });
         }
         
-        playDartSound('gameon');
-        if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
+        window.playDartSound('gameon');
+        if (!isLocalMatch) window.broadcast({ type: 'SOUND', sound: 'gameon' });
 
-        render();
-        if (!isLocalMatch) broadcast(state);
+        window.render();
+        if (!isLocalMatch) window.broadcast(state);
     };
-    async function initApp() {
+    
+    window.initApp = async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const joinId = urlParams.get('join');
+        const spectateId = urlParams.get('spectate');
+        
         requestWakeLock();
         statsSavedThisMatch = false; 
         
@@ -1549,6 +1492,7 @@
         state.p[1].s = startScore;
         state.p[1].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
         state.p[1].coAtt = 0; state.p[1].coHit = 0;
+        
         if (state.mode === 'bot') {
             state.botLevel = parseInt(document.getElementById('bot-level-input').value) || 5;
             state.p[1].name = `DartBot Lvl ${state.botLevel}`;
@@ -1556,7 +1500,7 @@
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
             document.getElementById('setup-layer').classList.add('hidden');
             document.body.classList.add('local-mode');
-            showFirstThrowUI();
+            window.showFirstThrowUI();
             return;
         }
 
@@ -1567,17 +1511,18 @@
             document.getElementById('setup-layer').classList.add('hidden');
             document.body.classList.add('local-mode');
             if (state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') { 
-                playDartSound('gameon');
-                render(); 
-            } else { showFirstThrowUI(); }
+                window.playDartSound('gameon');
+                window.render(); 
+            } else { window.showFirstThrowUI(); }
             return;
         }
 
         if (state.mode === 'single') {
             document.body.classList.add('single-mode');
             document.getElementById('setup-layer').classList.add('hidden');
-            playDartSound('gameon');
-            render();
+            window.playDartSound('gameon');
+            window.render();
+            return;
         } else {
             state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
         }
@@ -1586,7 +1531,7 @@
             if (!spectateId) {
                 if (state.mode === 'single') { stream = null; } 
                 else {
-                    log.innerText = "Accessing Camera...";
+                    if (log) log.innerText = "Accessing Camera...";
                     let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
                     if (isMobile) {
                         constraints.video = { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } };
@@ -1612,7 +1557,7 @@
                 }
             }
             
-            if (state.mode !== 'single') log.innerText = "Connecting to server...";
+            if (state.mode !== 'single' && log) log.innerText = "Connecting to server...";
             peer = new Peer({
                 config: {
                     'iceServers': [
@@ -1636,43 +1581,45 @@
                             activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
                         });
                         alert("Challenge sent! Waiting for them to accept...");
-                    } catch(e) {}
+                    } catch(e) {
+                        console.error(e);
+                    }
                     window.targetChallengeFriend = null;
                 }
                 
                 if (spectateId) { 
                     document.getElementById('setup-layer').classList.add('hidden');
-                    connectToMatch(spectateId, true);
+                    window.connectToMatch(spectateId, true);
                 } else if (joinId) {
                     document.getElementById('setup-layer').classList.add('hidden');
                     myIndex = 1;
                     state.p[1].name = document.getElementById('name-input').value || "Guest";
                     state.p[1].avatar = window.currentUserDoc ? window.currentUserDoc.photoURL : "";
-                    connectToMatch(joinId, false);
+                    window.connectToMatch(joinId, false);
                 } else if (state.mode !== 'single') {
                     document.getElementById('setup-layer').classList.add('hidden');
                     document.getElementById('waiting-layer').classList.remove('hidden');
                 }
                 
-                if (joinId || spectateId) render();
+                if (joinId || spectateId) window.render();
             });
 
             peer.on('call', call => {
                 if (call.metadata && call.metadata.spectator) {
                     if (stream) { call.answer(stream); } else { call.answer(); }
                     spectatorCalls.push(call);
-                    setTimeout(() => { render(); }, 1000);
+                    setTimeout(() => { window.render(); }, 1000);
                 } else {
                     if (stream) { call.answer(stream); } else { call.answer(); }
                     limitVideoBitrate(call.peerConnection, 500);
-                    call.on('stream', s => { currentCall = call; if(s) { attachPeerVideo(s); } render(); });
+                    call.on('stream', s => { currentCall = call; if(s) { window.attachPeerVideo(s); } window.render(); });
                 }
             });
             peer.on('connection', c => {
                 conns.push(c);
                 c.on('open', () => c.send({ type: 'SYNC', state }));
                 c.on('data', d => {
-                    handleData(d);
+                    window.handleData(d);
                     
                     conns.forEach(otherConn => {
                         if (otherConn !== c && otherConn.open && d.type !== 'JOIN') {
@@ -1682,26 +1629,26 @@
                 });
             });
             peer.on('error', err => {
-                if (state.mode !== 'single') { log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
+                if (state.mode !== 'single') { if(log) log.innerText = "Connection Error: " + err.type; startBtn.disabled = false; }
             });
         } catch (e) {
-            log.innerText = "Camera/Mic error. (" + e.message + ")";
+            if(log) log.innerText = "Camera/Mic error. (" + e.message + ")";
             startBtn.disabled = false;
         }
-    }
+    };
 
-    function attachPeerVideo(s) {
+    window.attachPeerVideo = function(s) {
         const peerVideo = document.getElementById('peer');
         peerVideo.srcObject = s;
         peerVideo.onloadedmetadata = () => { peerVideo.play().catch(e => {}); };
     }
 
-    function connectToMatch(id, isSpectator = false) {
+    window.connectToMatch = function(id, isSpectator = false) {
         const c = peer.connect(id);
         conns.push(c);
         c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); });
         c.on('data', d => {
-            handleData(d);
+            window.handleData(d);
             
             conns.forEach(otherConn => {
                 if (otherConn !== c && otherConn.open && d.type !== 'JOIN') {
@@ -1712,22 +1659,22 @@
         if (isSpectator) {
             const dummy = createDummyStream();
             const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
-            specCall.on('stream', s => { attachPeerVideo(s); render(); });
+            specCall.on('stream', s => { window.attachPeerVideo(s); window.render(); });
         } else {
             currentCall = peer.call(id, stream);
             limitVideoBitrate(currentCall.peerConnection, 500); 
-            currentCall.on('stream', s => { attachPeerVideo(s); render(); });
+            currentCall.on('stream', s => { window.attachPeerVideo(s); window.render(); });
         }
     }
 
-    function handleData(data) {
-        if (data.type === 'SOUND') { playDartSound(data.sound); return; }
+    window.handleData = function(data) {
+        if (data.type === 'SOUND') { window.playDartSound(data.sound); return; }
         if (data.type === 'CAM_PAUSED') {
             const overlay = document.getElementById('peer-paused-msg');
             if (overlay) { data.paused ? overlay.classList.add('visible') : overlay.classList.remove('visible'); }
             return;
         }
-        if (data.type === 'BULL_PHASE') { toggleBullPhase(data.active); return; }
+        if (data.type === 'BULL_PHASE') { window.toggleBullPhase(data.active); return; }
         if (data.type === 'ZOOM') {
             const peerVid = document.getElementById('peer');
             if (peerVid) peerVid.style.transform = `scale(${data.level})`;
@@ -1748,7 +1695,7 @@
             state.p[1].avatar = data.avatar; 
             document.getElementById('waiting-layer').classList.add('hidden');
             if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) {
-                showFirstThrowUI();
+                window.showFirstThrowUI();
             }
         } else {
             if (data.p) {
@@ -1764,36 +1711,36 @@
             }
             state = data;
         }
-        render();
+        window.render();
     }
 
-    function cycleZoom() {
+    window.cycleZoom = function() {
         if (!stream) return;
         currentZoom = currentZoom === 1 ? 1.5 : (currentZoom === 1.5 ? 2 : 1);
         const btn = document.getElementById('zoom-btn');
         if (btn) btn.innerText = currentZoom === 1 ? "ZOOM" : `ZOOM ${currentZoom}x`;
         document.getElementById('me').style.transform = `scale(${currentZoom})`;
-        if (!isLocalMatch) { broadcast({ type: 'ZOOM', level: currentZoom }); }
+        if (!isLocalMatch) { window.broadcast({ type: 'ZOOM', level: currentZoom }); }
     }
 
-    function toggleMic() {
+    window.toggleMic = function() {
         isMicMuted = !isMicMuted;
         if (stream && stream.getAudioTracks().length > 0) { stream.getAudioTracks()[0].enabled = !isMicMuted; }
         const peerVideo = document.getElementById('peer');
         if (peerVideo) peerVideo.muted = isMicMuted;
         const btn = document.getElementById('mic-btn');
-        if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "var(--danger)"; } 
-        else { btn.innerText = "MIC ON"; btn.style.color = "var(--accent)"; }
+        if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
+        else { btn.innerText = "MIC ON"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
     }
 
-    function toggleCaller() {
+    window.toggleCaller = function() {
         isCallerMuted = !isCallerMuted;
         const btn = document.getElementById('caller-btn');
-        if (isCallerMuted) { btn.innerText = "VOICE OFF"; btn.style.color = "var(--danger)"; } 
-        else { btn.innerText = "VOICE ON"; btn.style.color = "var(--accent)"; }
+        if (isCallerMuted) { btn.innerText = "VOICE OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
+        else { btn.innerText = "VOICE ON"; btn.style.color = "#4caf50"; btn.style.borderColor = "#444"; }
     }
 
-    async function swapCam() {
+    window.swapCam = async function() {
         if (!stream || state.mode === 'single') return;
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
@@ -1824,7 +1771,7 @@
         } catch (e) {}
     }
     
-    function processAtcDart(multiplier) {
+    window.processAtcDart = function(multiplier) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
         history = JSON.parse(JSON.stringify(state));
@@ -1838,8 +1785,8 @@
         } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
             state.turn = (state.turn === 0) ? 1 : 0;
         }
-        render(); 
-        if (!isLocalMatch) { broadcast(state); }
+        window.render(); 
+        if (!isLocalMatch) { window.broadcast(state); }
     }
 
     let cricketMult = 1;
@@ -1883,19 +1830,18 @@
             }
         }
         
-        setCricMult(1);
+        window.setCricMult(1);
         if (checkCricketWin(state.turn)) {
             state.winner = state.turn;
         } else if (state.mode !== 'single' && p.d > 0 && p.d % 3 === 0) {
             state.turn = state.turn === 0 ? 1 : 0;
         }
         
-        render();
-        if (!isLocalMatch) { broadcast(state); }
+        window.render();
+        if (!isLocalMatch) { window.broadcast(state); }
     }
 
-    // --- REVISED processHit WITH DART-BY-DART LOGIC ---
-    function processHit(manualVal = null, dartsArr = null) {
+    window.processHit = function(manualVal = null, dartsArr = null) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
         
@@ -1992,20 +1938,17 @@
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0; 
         }
         
-        playDartSound(soundToPlay);
-        // Reset inputs
-        numpadVal = "";
-        currentDarts = [];
-        updateDbdDisplay();
+        window.playDartSound(soundToPlay);
+        numpadVal = ""; currentDarts = []; window.updateDbdDisplay();
 
-        render();
-        if (!isLocalMatch) { broadcast(state); broadcast({ type: 'SOUND', sound: soundToPlay }); }
+        window.render();
+        if (!isLocalMatch) { window.broadcast(state); window.broadcast({ type: 'SOUND', sound: soundToPlay }); }
     }
 
-    function undo() {
+    window.undo = function() {
         if(botTimeout) clearTimeout(botTimeout);
-        numpadVal = ""; currentDarts = []; updateDbdDisplay();
-        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; render(); if (!isLocalMatch) broadcast(state); }
+        numpadVal = ""; currentDarts = []; window.updateDbdDisplay();
+        if (history) { state = JSON.parse(JSON.stringify(history)); history = null; window.render(); if (!isLocalMatch) window.broadcast(state); }
     }
 
     window.editLastThrowPopup = function() {
@@ -2023,15 +1966,15 @@
             let correctedThrow = parseInt(userInput);
 
             if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
-                undo();
-                processHit(correctedThrow);
+                window.undo();
+                window.processHit(correctedThrow);
             } else {
                 alert("Please enter a valid dart score (0-180).");
             }
         }
     };
-
-    function triggerRematch() {
+    
+    window.triggerRematch = function() {
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
@@ -2053,18 +1996,26 @@
         delete state.winner;
         history = null;
         document.getElementById('winner-layer').classList.add('hidden');
-        if (!isLocalMatch) broadcast(state);
+        if (!isLocalMatch) window.broadcast(state);
 
         if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') { 
-            playDartSound('gameon');
-            if (!isLocalMatch) broadcast({ type: 'SOUND', sound: 'gameon' });
-            render(); 
+            window.playDartSound('gameon');
+            if (!isLocalMatch) window.broadcast({ type: 'SOUND', sound: 'gameon' });
+            window.render(); 
         } 
-        else if (isLocalMatch || myIndex === 0) { showFirstThrowUI(); } 
-        else { render(); }
+        else if (isLocalMatch || myIndex === 0) { window.showFirstThrowUI(); } 
+        else { window.render(); }
     }
 
-    function render() {
+    window.render = function() {
+        
+        // FAILSAFE: Unstick the split screen if menu goes away
+        if (!isLocalMatch && state.mode !== 'single') {
+            if (document.getElementById('first-throw-layer').classList.contains('hidden')) {
+                document.body.classList.remove('bull-throw');
+            }
+        }
+
         state.p.forEach((p, i) => {
             const nameEl = document.getElementById(`n-${i}`);
             if (nameEl) nameEl.innerText = p.name;
@@ -2120,12 +2071,7 @@
             } else {
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "AVG: ";
                 if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d > 0 ? ((p.pts / p.d) * 3).toFixed(1) : "0.0";
-                
-                let scoreBox = document.getElementById(`s-${i}`);
-                if(scoreBox && scoreBox.style.color !== "rgb(255, 204, 0)" && scoreBox.style.color !== "#ffcc00") {
-                    scoreBox.innerText = p.s;
-                }
-
+                if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s;
                 if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
                 if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'block';
                 if(document.getElementById(`l-${i}`)) document.getElementById(`l-${i}`).innerText = p.l;
@@ -2147,12 +2093,13 @@
             if (cardEl) cardEl.className = (state.turn === i) ? "player-card active" : "player-card";
         });
         
-        if (!spectateId) {
+        if (!document.body.classList.contains('spectator-mode')) {
             
             if (state.gameType === 'atc') {
                 document.getElementById('cricket-center')?.classList.add('hidden');
                 if (document.getElementById('main-score-area')) {
-                    document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
+                    document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ?
+                    'column' : 'row';
                 }
                 [0, 1].forEach(i => {
                     if(document.getElementById(`srow-${i}`)) document.getElementById(`srow-${i}`).style.flexDirection = 'row';
@@ -2238,7 +2185,8 @@
                 
                 document.getElementById('cricket-center')?.classList.add('hidden');
                 if(document.getElementById('main-score-area')) {
-                    document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row';
+                    document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ?
+                    'column' : 'row';
                 }
                 [0, 1].forEach(i => {
                     if(document.getElementById(`srow-${i}`)) {
@@ -2262,14 +2210,16 @@
                     if(document.getElementById('numpad-display')) document.getElementById('numpad-display').innerText = numpadVal || "0";
                 }
 
-                const isMyTurn = (state.mode === 'bot') ? (state.turn === 0) : (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
+                const isMyTurn = (state.mode === 'bot') ?
+                (state.turn === 0) : (isLocalMatch || state.mode === 'single' || state.turn === myIndex);
                 
                 document.querySelectorAll('.np-btn, .dbd-btn, .cric-mult').forEach(b => b.disabled = !isMyTurn);
                 if(document.getElementById('undo-btn')) document.getElementById('undo-btn').disabled = !isMyTurn;
             }
 
             if (!isLocalMatch && !document.body.classList.contains('bull-throw') && state.mode !== 'single') {
-                if(document.getElementById('box-me')) document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+                if(document.getElementById('box-me')) document.getElementById('box-me').className = (state.turn === myIndex) ?
+                "v-box visible" : "v-box";
                 if(document.getElementById('box-peer')) document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
             }
         } else {
@@ -2278,7 +2228,8 @@
         }
 
         if (spectatorCalls.length > 0) {
-            const activeStream = (state.turn === myIndex || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer')?.srcObject;
+            const activeStream = (state.turn === myIndex || state.mode === 'single' || state.mode === 'bot') ?
+            stream : document.getElementById('peer')?.srcObject;
             if (activeStream) {
                 const videoTrack = activeStream.getVideoTracks()[0];
                 const audioTrack = activeStream.getAudioTracks()[0];
@@ -2330,19 +2281,23 @@
         }
     }
 
-    function shareInvite() {
+    window.shareInvite = function() {
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
+            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {});
+            } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!"));
+            }
         }
     }
 
-    function shareSpectator() {
+    window.shareSpectator = function() {
         if (peer && peer.id) {
             const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
-            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
-            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
+            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {});
+            } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!"));
+            }
         }
     }
 
