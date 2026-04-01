@@ -16,16 +16,8 @@
     
     <title>🎯 RAF Darts Scorer 🎯</title>
     <style>
-        /* --- THEME VARIABLES & DARTCOUNTER AESTHETIC --- */
-        body.theme-classic { --blue: #10b981; --dark: #0f172a; --card: #1e293b; --active: #334155; }
-        body.theme-neon { --blue: #ff00ff; --dark: #0a001a; --card: #20003b; --active: #3d0066; }
-        body.theme-pub { --blue: #f59e0b; --dark: #1c1917; --card: #292524; --active: #44403c; }
-
+        /* --- MODERN PREMIUM THEME (Fixed Backgrounds) --- */
         :root {
-            --bg-main: var(--dark);
-            --bg-card: var(--card);
-            --bg-active: var(--active);
-            --accent: var(--blue);
             --accent-glow: rgba(255,255,255,0.05);
             --danger: #ef4444; 
             --text-main: #f8fafc;
@@ -34,9 +26,23 @@
             --btn-hover: rgba(0,0,0,0.5);
         }
 
+        /* Fixed Theme Definitions - Colors bound to body to prevent transparency bugs */
+        body.theme-classic { 
+            --accent: #10b981; --bg-main: #0f172a; --bg-card: #1e293b; --bg-active: #334155; 
+            --blue: #10b981; --dark: #0f172a; --card: #1e293b; --active: #334155; 
+        }
+        body.theme-neon { 
+            --accent: #ff00ff; --bg-main: #0a001a; --bg-card: #20003b; --bg-active: #3d0066; 
+            --blue: #ff00ff; --dark: #0a001a; --card: #20003b; --active: #3d0066;
+        }
+        body.theme-pub { 
+            --accent: #f59e0b; --bg-main: #1c1917; --bg-card: #292524; --bg-active: #44403c; 
+            --blue: #f59e0b; --dark: #1c1917; --card: #292524; --active: #44403c;
+        }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         
-        html, body { height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; margin: 0; padding: 0; background: var(--bg-main); }
+        html, body { height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; margin: 0; padding: 0; background: #000; }
 
         body { 
             background: var(--bg-main); color: var(--text-main); 
@@ -46,11 +52,8 @@
         }
 
         .install-btn { background: var(--accent) !important; color: #000 !important; display: none; margin-bottom: 15px; border: none !important; }
-        .ios-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 15px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; font-weight: bold; z-index: 20000; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); display: none; }
-        .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
-        .ios-close { position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 16px; color: #888; padding: 5px; }
-
-        /* SPECTATOR MODE OVERRIDES */
+        
+        /* MODES & SPECTATOR OVERRIDES */
         body.spectator-mode { display: block; } 
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; display: none !important; }
@@ -59,46 +62,40 @@
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; }
         body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
-        
-        body.spectator-mode .player-card { 
-            flex: 0 0 auto; width: 125px; background: rgba(0,0,0,0.4) !important; border: 1px solid rgba(255, 255, 255, 0.1); justify-content: space-evenly; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; pointer-events: auto; padding: 15px; border-top: none;
-        }
+        body.spectator-mode .player-card { flex: 0 0 auto; width: 125px; background: rgba(0,0,0,0.4) !important; border: 1px solid rgba(255, 255, 255, 0.1); justify-content: space-evenly; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; pointer-events: auto; padding: 15px; border-top: none; }
         body.spectator-mode .player-card.active { background: rgba(0,0,0,0.7) !important; border: 2px solid var(--accent); box-shadow: 0 0 25px var(--accent-glow); }
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
         body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--accent); }
         body.spectator-mode .score-val { font-size: 40px; }
         body.spectator-mode .legs-count { text-align: center; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
-        
+
         body.single-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
-        body.single-mode .v-container { display: none !important; }
-        body.single-mode #card-1 { display: none !important; }
+        body.single-mode .v-container, body.single-mode #card-1, body.single-mode #mic-btn, body.single-mode #zoom-btn, body.single-mode #flip-btn { display: none !important; }
         body.single-mode .score-area { flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
         body.single-mode #card-0 { max-width: 400px; width: 100%; border-top: 4px solid var(--accent); background: var(--bg-active); }
         body.single-mode.spectator-mode .score-area { flex-direction: row; justify-content: center; }
         body.single-mode.spectator-mode #card-0 { width: 150px; }
-        body.single-mode #mic-btn, body.single-mode #zoom-btn, body.single-mode #flip-btn { display: none !important; }
 
         body.local-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
-        body.local-mode .v-container { display: none !important; }
-        body.local-mode header > div:first-child { display: none; }
+        body.local-mode .v-container, body.local-mode header > div:first-child, body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn-top { display: none !important; }
         body.local-mode header { justify-content: flex-end; }
-        body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn-top { display: none !important; }
 
+        /* OVERLAYS & SETUPS */
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
             position: fixed; inset: 0; background: var(--bg-main); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
         }
-        #winner-layer, #first-throw-layer, #waiting-layer { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10001; }
+        #winner-layer, #first-throw-layer, #waiting-layer { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10001;}
         #login-layer { z-index: 20000; } 
         #profile-layer { z-index: 15000; }
         #history-layer, #friends-layer { z-index: 16000; }
         #match-details-layer { z-index: 17000; }
-        
+
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 1px solid var(--accent); }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(40px + 45dvh + env(safe-area-inset-top)); background: rgba(0, 0, 0, 0.95); }
-        
+
         .setup-card { 
             background: var(--bg-card); padding: 30px 25px; border-radius: 20px; width: 100%; max-width: 400px; 
             display: flex; flex-direction: column; gap: 12px; text-align: center; 
@@ -112,7 +109,7 @@
         .dc-card-title { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; text-transform: uppercase; font-style: italic;}
         .dc-card-sub { font-size: 11px; opacity: 0.9; font-weight: 500; line-height: 1.3;}
         
-        .bg-cyan { background: linear-gradient(135deg, #0ea5e9, #38bdf8); } /* Light Cyan Blue */
+        .bg-cyan { background: linear-gradient(135deg, #0284c7, #38bdf8); } /* Light Cyan Blue */
         .bg-blue { background: linear-gradient(135deg, #4338ca, #60a5fa); } /* Deep Royal Blue */
         .bg-dark { background: linear-gradient(135deg, var(--bg-active), var(--bg-card)); }
 
@@ -228,7 +225,7 @@
             
             document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
             document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
-            document.getElementById('dart-limit-group').style.display = 'none'; // Will show if 170 selected below
+            document.getElementById('dart-limit-group').style.display = 'none'; 
             document.getElementById('legs-group').style.display = (mode === 'single') ? 'none' : 'block';
             
             document.getElementById('p1-label').innerText = (mode === 'local') ? 'Player 1 Name' : 'Your Name';
@@ -258,7 +255,6 @@
                     return;
                 }
                 
-                // Hide/Show Legs and Dart Limit based on game type
                 if (val === 'atc' || val === '121' || val === 'cricket') {
                     document.getElementById('legs-group').style.display = 'none';
                     document.getElementById('dart-limit-group').style.display = 'none';
@@ -1870,7 +1866,6 @@
         if (!isLocalMatch) { broadcast(state); }
     }
 
-    // --- REVISED processHit WITH DART-BY-DART LOGIC ---
     window.processHit = function(manualVal = null, dartsArr = null) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
