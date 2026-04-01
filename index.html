@@ -135,7 +135,8 @@
         .setup-input:focus { border-color: var(--accent); }
         .setup-input option { background: var(--dark); color: white; }
         
-        .btn-start { background: var(--accent); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 900; border: none; border-radius: 14px; cursor: pointer; margin-top: 15px; text-transform: uppercase; display: block !important; visibility: visible !important;}
+        /* FIX: Removed !important to allow Javascript to toggle elements */
+        .btn-start { background: var(--accent); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 900; border: none; border-radius: 14px; cursor: pointer; margin-top: 15px; text-transform: uppercase; display: block; }
         .btn-start:active { transform: scale(0.98); }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -248,7 +249,7 @@
             const friendBtn = document.getElementById('play-friend-btn');
             const startBtn = document.getElementById('start-btn');
             
-            // FIX: Ensure Play With A Friend ONLY shows for online
+            // FIX: Ensure Play With A Friend ONLY shows for online matches
             if (mode === 'online') {
                 if (friendBtn) friendBtn.style.display = 'block';
                 if (startBtn) startBtn.innerText = window.targetChallengeFriend ? 'SEND CHALLENGE' : 'CREATE ROOM (SHARE LINK)';
@@ -297,7 +298,6 @@
             document.getElementById(selectId).dispatchEvent(new Event('change'));
         };
 
-        // Function to open friend list from the Match Setup screen
         window.openFriendsList = function() {
             document.getElementById('config-menu').style.display = 'none';
             document.getElementById('setup-layer').classList.add('hidden');
@@ -820,7 +820,7 @@
                     window.renderProfileMenu(); 
                     
                     const challenge = window.currentUserDoc.activeChallenge;
-                    if(challenge && challenge.time > Date.now() - 60000) { 
+                    if(challenge && challenge.matchId) { 
                         window.showChallengePopup(challenge);
                     } else if (document.getElementById('challenge-popup').style.display === 'block') {
                         document.getElementById('challenge-popup').style.display = 'none';
@@ -862,6 +862,7 @@
         };
     }
 
+    // NEW EXPLICIT CHALLENGE ROUTING
     window.issueChallenge = async function(friendUid) {
         window.targetChallengeFriend = friendUid;
         document.getElementById('friends-layer').classList.add('hidden');
@@ -1547,6 +1548,7 @@
             document.getElementById('setup-layer').classList.add('hidden');
             document.body.classList.add('local-mode');
             window.showFirstThrowUI();
+            if(startBtn) startBtn.disabled = false;
             return;
         }
 
@@ -1560,7 +1562,8 @@
                 window.playDartSound('gameon');
                 window.render(); 
             } else { window.showFirstThrowUI(); }
-            return; // THIS PREVENTS LOCAL PLAYER FROM ASKING FOR CAMERA
+            if(startBtn) startBtn.disabled = false;
+            return; 
         }
 
         if (state.mode === 'single') {
@@ -1568,10 +1571,11 @@
             document.getElementById('setup-layer').classList.add('hidden');
             window.playDartSound('gameon');
             window.render();
-            return; // THIS PREVENTS SINGLE PLAYER FROM ASKING FOR CAMERA
-        } else {
-            state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
-        }
+            if(startBtn) startBtn.disabled = false;
+            return; 
+        } 
+
+        state.bestOf = parseInt(document.getElementById('legs-input').value) || 5;
 
         try {
             const urlParams = new URLSearchParams(window.location.search);
@@ -1618,18 +1622,19 @@
                 }
             });
             
-            // --- NEW WAITING LAYER LOGIC ---
             document.getElementById('setup-layer').classList.add('hidden');
             if (!joinId && !spectateId) {
                 document.getElementById('waiting-layer').classList.remove('hidden');
                 if (window.targetChallengeFriend) {
-                    document.getElementById('waiting-title').innerText = "Connecting...";
-                    document.getElementById('waiting-sub').innerText = "Please wait...";
+                    document.getElementById('waiting-title').innerText = "Waiting for Opponent...";
+                    document.getElementById('waiting-sub').innerText = "Challenge sent, waiting for them to accept.";
                     document.getElementById('share-invite-btn').style.display = 'none';
+                    document.getElementById('wait-id').style.display = 'none';
                 } else {
                     document.getElementById('waiting-title').innerText = "Waiting for Opponent...";
                     document.getElementById('waiting-sub').innerText = "Send this ID to your friend";
                     document.getElementById('share-invite-btn').style.display = 'block';
+                    document.getElementById('wait-id').style.display = 'block';
                 }
             }
 
@@ -1640,11 +1645,10 @@
                 // Send the Challenge to Firebase AFTER we have successfully opened a room
                 if(window.targetChallengeFriend && window.db && window.updateDoc && window.doc) {
                     try {
-                        await window.updateDoc(window.doc(window.db, "users", window.targetChallengeFriend), {
+                        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+                        await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
                             activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
                         });
-                        document.getElementById('waiting-title').innerText = "Challenge Sent!";
-                        document.getElementById('waiting-sub').innerText = "Waiting for them to accept...";
                     } catch(e) {
                         alert("Error sending challenge. Check Firebase Firestore rules! " + e.message);
                     }
