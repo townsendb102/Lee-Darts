@@ -38,7 +38,11 @@
         }
 
         .install-btn { background: #4caf50 !important; color: white !important; display: none; margin-bottom: 15px; border: 2px solid #81c784 !important; }
-        
+        .ios-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 15px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; font-weight: bold; z-index: 20000; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); display: none; }
+        .ios-prompt::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
+        .ios-close { position: absolute; top: 5px; right: 10px; cursor: pointer; font-size: 16px; color: #888; padding: 5px; }
+
+        /* SPECTATOR MODE OVERRIDES */
         body.spectator-mode { display: block; } 
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
         body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; display: none !important; }
@@ -81,7 +85,7 @@
         body.local-mode .v-container { display: none !important; }
         body.local-mode header > div:first-child { display: none; }
         body.local-mode header { justify-content: flex-end; }
-        body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn { display: none !important; }
+        body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn { display: none !important; }
 
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
             position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
@@ -132,6 +136,25 @@
 
         video { width: 100%; height: 100%; object-fit: contain; background: #111; transition: transform 0.3s ease; transform-origin: center center; }
         .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; font-size: 11px; border-radius: 20px; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; z-index: 10; }
+
+        /* FIXED IPHONE LAYOUT: Absolute positioning floats inside the video box, won't push numpad down */
+        #ai-debug-box {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #ffeb3b;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+            max-width: 50%;
+            text-align: right;
+            border: 1px solid #ffeb3b;
+            pointer-events: none;
+        }
 
         .paused-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
@@ -211,32 +234,40 @@
     <div class="setup-card">
         <h2>🎯 RAF DARTS SCORER 🎯</h2>
         <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Log in to save stats and play friends</p>
+        
         <div class="input-group">
             <input type="email" id="email-input" class="setup-input" placeholder="Email Address">
         </div>
         <div class="input-group">
             <input type="password" id="password-input" class="setup-input" placeholder="Password">
         </div>
+
         <button id="login-btn" class="btn-start">LOG IN</button>
         <button id="signup-btn" class="btn-start" style="background: #444; color: white; margin-top: 10px;">SIGN UP</button>
+        
         <p id="auth-error" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
+
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 20px 0; width: 100%;">
         <button id="guest-btn" class="btn-start" style="background: transparent; border: 1px solid var(--blue); color: var(--blue);">PLAY AS GUEST</button>
-        <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
+        <button class="btn-update cache-clear-btn" onclick="clearCacheUpdate()">🔄 Check for Updates / Fix App</button>
     </div>
 </div>
 
 <div id="profile-layer" class="hidden">
     <div class="setup-card" style="max-height: 85vh; overflow-y: auto;">
+        
         <h2 style="margin-bottom: 5px;">MY PROFILE</h2>
         <p id="prof-email" style="color: #888; font-size: 12px; margin-bottom: 15px;">loading...</p>
+
         <img id="prof-pic" class="profile-avatar" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00czEuNzktNCA0LTRzLTQgMS43OS00IDRzMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYySDB2LTJjMC0yLjY2IDUuMzMtNCA4LTRzOCAxLjM0IDggNHYyaC0yIHYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=" alt="Tap to upload picture">
         <input type="file" id="pic-upload" hidden accept="image/*">
         <p style="font-size: 10px; color: #888; margin-top: -5px; margin-bottom: 15px;">Tap image to change</p>
+
         <div style="display: flex; gap: 5px; margin-bottom: 10px;">
             <input type="text" id="edit-name-input" class="setup-input" placeholder="Display Name..." style="flex: 1; padding: 8px; font-size: 14px;">
             <button id="save-name-btn" class="btn-start" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">SAVE</button>
         </div>
+
         <div class="input-group" style="margin-bottom: 20px;">
             <label style="color: white;">App Theme</label>
             <select id="theme-select" class="setup-input" style="padding: 8px; font-size: 14px;">
@@ -245,6 +276,7 @@
                 <option value="pub">Pub Green & Gold</option>
             </select>
         </div>
+
         <div style="display: flex; gap: 10px; margin-bottom: 5px;">
             <div class="stat-box">
                 <div style="font-size: 11px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; line-height: 1.2;">Lifetime Avg</div>
@@ -255,12 +287,16 @@
                 <div class="stat-box-val" id="prof-co">0%</div>
             </div>
         </div>
+        
         <div style="text-align: right; margin-bottom: 20px;">
             <button id="reset-stats-btn" style="background:transparent; border:none; color:#ff4d4d; font-size:11px; text-decoration:underline; cursor:pointer;">Reset Stats & History</button>
         </div>
+
         <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 0 0 15px 0; width: 100%;">
+
         <button id="open-history-btn" class="btn-start" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; margin-top: 0;">📜 MATCH HISTORY</button>
         <button id="open-friends-btn" class="btn-start" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; margin-top: 10px;">👥 FRIENDS LIST</button>
+
         <button id="close-profile-btn" class="btn-start" style="background: #444; color: white; margin-top: 20px;">BACK TO MENU</button>
     </div>
 </div>
@@ -382,10 +418,11 @@
                 <option value="11">Best of 11</option>
             </select>
         </div>
-        <button id="start-btn" class="btn-start">START MATCH</button>
+        
+        <button id="start-btn" class="btn-start" onclick="initApp()">START MATCH</button>
         <p id="error-log" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center; line-height: 1.4;"></p>
         
-        <button class="btn-update cache-clear-btn">🔄 Check for Updates / Fix App</button>
+        <button class="btn-update cache-clear-btn" onclick="clearCacheUpdate()">🔄 Check for Updates / Fix App</button>
     </div>
 </div>
 
@@ -393,7 +430,7 @@
     <div class="setup-card">
         <h2 style="color: white; font-weight: bold; margin-bottom: 20px; font-size: 22px;">Waiting for Opponent...</h2>
         <h1 style="color: var(--blue); margin-bottom: 20px; font-size: 32px;" id="wait-id">...</h1>
-        <button class="btn-start" id="share-invite-btn-waiting">SHARE INVITE LINK</button>
+        <button class="btn-start" onclick="shareInvite()">SHARE INVITE LINK</button>
     </div>
 </div>
 
@@ -421,21 +458,21 @@
             <tr><td id="ws-1400" style="color: white;">0</td><td style="color: white;">140+</td><td id="ws-1401" style="color: white;">0</td></tr>
             <tr><td id="ws-1800" style="color: white;">0</td><td style="color: white;">180s</td><td id="ws-1801" style="color: white;">0</td></tr>
         </table>
-        <button id="rematch-btn" class="btn-start">REMATCH</button>
-        <button class="btn-update" id="quit-winner-btn">QUIT TO MENU</button>
+        <button id="rematch-btn" class="btn-start" onclick="triggerRematch()">REMATCH</button>
+        <button class="btn-update" onclick="quitMatch()">QUIT TO MENU</button>
     </div>
 </div>
 
 <header>
     <div>ID: <span id="display-id" style="color:var(--blue);">...</span></div>
     <div class="header-controls">
-        <button class="header-btn" id="mic-btn" style="color: #ff4d4d;">MIC ON</button>
-        <button class="header-btn" id="caller-btn" style="color: #4caf50;">VOICE ON</button>
-        <button class="header-btn" id="zoom-btn" style="color: #ffeb3b;">ZOOM</button>
-        <button class="header-btn" id="flip-btn">FLIP</button>
-        <button class="header-btn" id="spectate-btn" style="color: var(--blue);">SPECTATE</button>
-        <button class="header-btn" id="share-btn">INVITE</button>
-        <button class="header-btn" id="quit-btn" style="color: #ff4d4d; font-weight: bold;">QUIT</button>
+        <button class="header-btn" id="mic-btn" onclick="toggleMic()" style="color: #ff4d4d;">MIC ON</button>
+        <button class="header-btn" id="caller-btn" onclick="toggleCaller()" style="color: #4caf50;">VOICE ON</button>
+        <button class="header-btn" id="zoom-btn" onclick="cycleZoom()" style="color: #ffeb3b;">ZOOM</button>
+        <button class="header-btn" id="flip-btn" onclick="swapCam()">FLIP</button>
+        <button class="header-btn" id="spectate-btn" onclick="shareSpectator()" style="color: var(--blue);">SPECTATE</button>
+        <button class="header-btn" id="share-btn" onclick="shareInvite()">INVITE</button>
+        <button class="header-btn" id="quit-btn" onclick="quitMatch()" style="color: #ff4d4d; font-weight: bold;">QUIT</button>
     </div>
 </header>
 
@@ -492,11 +529,11 @@
     <div class="controls" id="standard-controls">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -5px;">
             <div style="display: flex; gap: 5px;">
-                <button class="header-btn" id="undo-btn" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
-                <button class="header-btn" id="edit-last-btn" style="background:transparent; border:1px solid #ffcc00; color:#ffcc00; font-size:14px; padding:4px 12px;">✎ EDIT</button>
-                <button class="header-btn" id="ai-toggle-btn" style="background:transparent; border:1px solid #444; color:#888; font-size:14px; padding:4px 12px;">🤖 AI: OFF</button>
+                <button class="header-btn" id="undo-btn" onclick="undo()" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
+                <button class="header-btn" id="edit-last-btn" onclick="editLastThrowPopup()" style="background:transparent; border:1px solid #ffcc00; color:#ffcc00; font-size:14px; padding:4px 12px;">✎ EDIT</button>
+                <button class="header-btn" id="ai-toggle-btn" onclick="toggleAI()" style="background:transparent; border:1px solid #444; color:#888; font-size:14px; padding:4px 12px;">🤖 AI: OFF</button>
             </div>
-            <button id="mode-toggle-btn" class="header-btn" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
+            <button id="mode-toggle-btn" class="header-btn" onclick="toggleLocalMode()" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
         </div>
 
         <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
@@ -560,11 +597,11 @@
     </div>
 
     <div class="controls" id="atc-controls" style="display: none; grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr;">
-        <button class="btn-undo" id="atc-undo-btn">⟲</button>
-        <button class="btn-hit" id="atc-miss-btn" style="background: #444; color: white;">MISS</button>
-        <button class="btn-hit" id="atc-s-btn">S1</button>
-        <button class="btn-hit" id="atc-d-btn">D1</button>
-        <button class="btn-hit" id="atc-t-btn">T1</button>
+        <button class="btn-undo" onclick="undo()">⟲</button>
+        <button class="btn-hit" onclick="processAtcDart(0)" style="background: #444; color: white;">MISS</button>
+        <button class="btn-hit" id="atc-s-btn" onclick="processAtcDart(1)">S1</button>
+        <button class="btn-hit" id="atc-d-btn" onclick="processAtcDart(2)">D1</button>
+        <button class="btn-hit" id="atc-t-btn" onclick="processAtcDart(3)">T1</button>
     </div>
 
     <div class="controls" id="cricket-controls" style="display: none;">
@@ -641,10 +678,7 @@
         signInWithEmailAndPassword(window.auth, document.getElementById('email-input').value, document.getElementById('password-input').value)
             .catch((error) => { document.getElementById('auth-error').innerText = "Invalid Email or Password."; });
     });
-    document.getElementById('logout-btn').addEventListener('click', () => {
-        if(window.userUnsub) window.userUnsub();
-        signOut(window.auth).then(() => { window.location.href = window.location.pathname; });
-    });
+    
     onAuthStateChanged(window.auth, async (user) => {
         if (user) {
             loginLayer.style.display = 'none'; 
@@ -959,7 +993,7 @@
     let history = null;
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user"; let currentCamIndex = 0;
-    
+
     window.aiEnabled = false;
     window.lastDetectedDarts = [];
 
@@ -1011,57 +1045,6 @@
         { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
         { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
     ]};
-
-    window.editLastThrowPopup = function() {
-        if (!history || state.lastThrow === undefined) {
-            alert("No previous throw to edit!");
-            return;
-        }
-        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.lastThrow.playerIndex !== myIndex) {
-            alert("You can only edit your own scores!");
-            return;
-        }
-        let lastVal = state.lastThrow.value;
-        let pName = state.p[state.lastThrow.playerIndex].name;
-        let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
-        if (userInput !== null && userInput.trim() !== "") {
-            let correctedThrow = parseInt(userInput);
-            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
-                window.undo();
-                window.processHit(correctedThrow);
-            } else {
-                alert("Please enter a valid dart score (0-180).");
-            }
-        }
-    };
-
-    window.toggleAI = function() {
-        window.aiEnabled = !window.aiEnabled;
-        const btn = document.getElementById('ai-toggle-btn');
-        const debugBox = document.getElementById('ai-debug-box');
-        if(window.aiEnabled) {
-            btn.innerText = "🤖 AI: ON";
-            btn.style.color = "#4caf50";
-            btn.style.borderColor = "#4caf50";
-            if (debugBox) {
-                debugBox.style.display = "block";
-                debugBox.innerText = "AI Started. Waiting for turn...";
-            }
-            if (localInputMode !== 'darts') {
-                localInputMode = 'darts';
-                window.render();
-            }
-        } else {
-            btn.innerText = "🤖 AI: OFF";
-            btn.style.color = "#888";
-            btn.style.borderColor = "#444";
-            if (debugBox) {
-                debugBox.style.display = "none";
-                debugBox.innerText = "";
-            }
-            window.lastDetectedDarts = []; 
-        }
-    };
 
     window.addEventListener('load', () => {
         const modeInput = document.getElementById('mode-input');
@@ -1116,40 +1099,162 @@
             document.getElementById('setup-layer').classList.remove('hidden');
         }
 
-        document.getElementById('start-btn').onclick = window.initApp;
-        if(document.getElementById('flip-btn')) document.getElementById('flip-btn').onclick = window.swapCam;
-        if(document.getElementById('zoom-btn')) document.getElementById('zoom-btn').onclick = window.cycleZoom;
-        if(document.getElementById('mic-btn')) document.getElementById('mic-btn').onclick = window.toggleMic;
-        if(document.getElementById('caller-btn')) document.getElementById('caller-btn').onclick = window.toggleCaller;
-        if(document.getElementById('share-btn')) document.getElementById('share-btn').onclick = window.shareInvite;
-        if(document.getElementById('spectate-btn')) document.getElementById('spectate-btn').onclick = window.shareSpectator;
-        
-        if(document.getElementById('undo-btn')) document.getElementById('undo-btn').onclick = window.undo;
-        
-        if(document.getElementById('atc-undo-btn')) document.getElementById('atc-undo-btn').onclick = window.undo;
-        if(document.getElementById('atc-miss-btn')) document.getElementById('atc-miss-btn').onclick = () => window.processAtcDart(0);
-        if(document.getElementById('atc-s-btn')) document.getElementById('atc-s-btn').onclick = () => window.processAtcDart(1);
-        if(document.getElementById('atc-d-btn')) document.getElementById('atc-d-btn').onclick = () => window.processAtcDart(2);
-        if(document.getElementById('atc-t-btn')) document.getElementById('atc-t-btn').onclick = () => window.processAtcDart(3);
-        
-        if(document.getElementById('mode-toggle-btn')) {
-            document.getElementById('mode-toggle-btn').onclick = () => {
-                localInputMode = localInputMode === 'total' ? 'darts' : 'total';
-                window.render();
-            };
-        }
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            if(window.userUnsub) window.userUnsub();
+            signOut(window.auth).then(() => { window.location.href = window.location.pathname; });
+        });
+    });
 
-        if(document.getElementById('rematch-btn')) document.getElementById('rematch-btn').onclick = window.triggerRematch;
-        
-        const quitBtn = document.getElementById('quit-btn');
-        if (quitBtn) {
-            quitBtn.addEventListener('click', () => {
-                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
-                    window.location.href = window.location.pathname;
-                }
+    // Edit logic natively bound
+    window.editLastThrowPopup = function() {
+        if (!history || state.lastThrow === undefined) {
+            alert("No previous throw to edit!");
+            return;
+        }
+        if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.lastThrow.playerIndex !== myIndex) {
+            alert("You can only edit your own scores!");
+            return;
+        }
+        let lastVal = state.lastThrow.value;
+        let pName = state.p[state.lastThrow.playerIndex].name;
+        let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
+        if (userInput !== null && userInput.trim() !== "") {
+            let correctedThrow = parseInt(userInput);
+            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
+                window.undo();
+                window.processHit(correctedThrow);
+            } else {
+                alert("Please enter a valid dart score (0-180).");
+            }
+        }
+    };
+
+    window.toggleAI = function() {
+        window.aiEnabled = !window.aiEnabled;
+        const btn = document.getElementById('ai-toggle-btn');
+        const debugBox = document.getElementById('ai-debug-box');
+        if(window.aiEnabled) {
+            btn.innerText = "🤖 AI: ON";
+            btn.style.color = "#4caf50";
+            btn.style.borderColor = "#4caf50";
+            if (debugBox) {
+                debugBox.style.display = "block";
+                debugBox.innerText = "AI Started. Waiting for turn...";
+            }
+            if (localInputMode !== 'darts') {
+                localInputMode = 'darts';
+                window.render();
+            }
+        } else {
+            btn.innerText = "🤖 AI: OFF";
+            btn.style.color = "#888";
+            btn.style.borderColor = "#444";
+            if (debugBox) {
+                debugBox.style.display = "none";
+                debugBox.innerText = "";
+            }
+            window.lastDetectedDarts = []; 
+        }
+    };
+
+    window.toggleLocalMode = function() {
+        localInputMode = localInputMode === 'total' ? 'darts' : 'total';
+        window.render();
+    };
+
+    window.shareInvite = function() {
+        if (peer && peer.id) {
+            const url = window.location.origin + window.location.pathname + "?join=" + peer.id;
+            if (navigator.share) { navigator.share({ title: 'Join my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Invite link copied to clipboard!")); }
+        }
+    };
+
+    window.shareSpectator = function() {
+        if (peer && peer.id) {
+            const url = window.location.origin + window.location.pathname + "?spectate=" + peer.id;
+            if (navigator.share) { navigator.share({ title: 'Watch my Darts Match!', url: url }).catch(e => {}); } 
+            else { navigator.clipboard.writeText(url).then(() => alert("Spectator link copied to clipboard!")); }
+        }
+    };
+
+    window.toggleMic = function() {
+        isMicMuted = !isMicMuted;
+        if (stream && stream.getAudioTracks().length > 0) { stream.getAudioTracks()[0].enabled = !isMicMuted; }
+        const peerVideo = document.getElementById('peer');
+        if (peerVideo) peerVideo.muted = isMicMuted;
+        const btn = document.getElementById('mic-btn');
+        if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
+        else { btn.innerText = "MIC ON"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
+    };
+
+    window.toggleCaller = function() {
+        isCallerMuted = !isCallerMuted;
+        const btn = document.getElementById('caller-btn');
+        if (isCallerMuted) { btn.innerText = "VOICE OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
+        else { btn.innerText = "VOICE ON"; btn.style.color = "#4caf50"; btn.style.borderColor = "#444"; }
+    };
+
+    window.cycleZoom = function() {
+        if (!stream) return;
+        currentZoom = currentZoom === 1 ? 1.5 : (currentZoom === 1.5 ? 2 : 1);
+        const btn = document.getElementById('zoom-btn');
+        if (btn) btn.innerText = currentZoom === 1 ? "ZOOM" : `ZOOM ${currentZoom}x`;
+        document.getElementById('me').style.transform = `scale(${currentZoom})`;
+        if (!isLocalMatch) { broadcast({ type: 'ZOOM', level: currentZoom }); }
+    };
+
+    window.swapCam = async function() {
+        if (!stream || state.mode === 'single') return;
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoCameras = devices.filter(d => d.kind === 'videoinput');
+            if (videoCameras.length <= 1) { alert("Only one camera found on this device."); return; }
+
+            const oldVideoTrack = stream.getVideoTracks()[0];
+            oldVideoTrack.stop();
+            let newStream;
+            if (isMobile) {
+                currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+                try { newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch (e) { isMobile = false; }
+            }
+            if (!isMobile) {
+                currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
+                newStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+            }
+
+            const newVideoTrack = newStream.getVideoTracks()[0];
+            stream.removeTrack(oldVideoTrack);
+            stream.addTrack(newVideoTrack);
+            document.getElementById('me').srcObject = stream;
+            
+            if (currentCall && currentCall.peerConnection) {
+                const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                if (videoSender) { await videoSender.replaceTrack(newVideoTrack); }
+            }
+        } catch (e) {}
+    };
+
+    window.quitMatch = function() {
+        if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+            window.location.href = window.location.pathname;
+        }
+    };
+
+    window.clearCacheUpdate = function() {
+        const btns = document.querySelectorAll('.cache-clear-btn');
+        btns.forEach(btn => {
+            btn.innerText = "Clearing Cache & Updating...";
+            btn.style.color = "#4caf50";
+        });
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) { registration.unregister(); }
             });
         }
-    });
+        if (window.caches) { caches.keys().then(function(names) { for (let name of names) caches.delete(name); }); }
+        setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
+    };
 
     window.np = function(val) {
         if(val === 'C') { numpadVal = ""; }
@@ -1308,6 +1413,137 @@
         if (!isLocalMatch) broadcast(state);
     };
 
+    async function requestWakeLock() {
+        try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } 
+        catch (err) {}
+    }
+    
+    document.addEventListener('visibilitychange', () => {
+        if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
+        if (!stream || state.mode === 'single' || state.mode === 'bot') return;
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+            const isHidden = document.visibilityState === 'hidden';
+            videoTrack.enabled = !isHidden; 
+            if (!isLocalMatch) { broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
+        }
+    });
+
+    function broadcast(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
+
+    function playDartSound(type) {
+        if (isCallerMuted) return;
+        if (state.gameType === 'atc' || state.gameType === 'cricket') return;
+
+        let audioSrc = "";
+        if (type === 'bust') { audioSrc = "sounds/bust.wav"; } 
+        else if (type === 'gameshot') { audioSrc = "sounds/gameshot.wav"; } 
+        else if (type === 'gameon') { audioSrc = "sounds/gameon.wav"; } 
+        else if (typeof type === 'number' && type >= 0 && type <= 180) { audioSrc = `sounds/${type}.wav`; }
+
+        if (audioSrc !== "") {
+            const dartAudio = document.getElementById('dart-audio');
+            if (dartAudio) { dartAudio.src = audioSrc; dartAudio.play().catch(e => {}); }
+        }
+    }
+
+    function unlockAudio() {
+        const peerVideo = document.getElementById('peer');
+        if (peerVideo && peerVideo.paused && peerVideo.srcObject) { peerVideo.play().catch(e => {}); }
+        const meVideo = document.getElementById('me');
+        if (meVideo && meVideo.paused && meVideo.srcObject) { meVideo.play().catch(e => {}); }
+        const dartAudio = document.getElementById('dart-audio');
+        if (dartAudio && dartAudio.src === "") {
+            dartAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            dartAudio.play().catch(e => {});
+        }
+    }
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+
+    function createDummyStream() {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1; canvas.height = 1;
+            return canvas.captureStream(1); 
+        } catch (e) { 
+            return null;
+        }
+    }
+
+    async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
+        if (!peerConnection) return;
+        try {
+            const senders = peerConnection.getSenders();
+            const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
+            if (!videoSender || !videoSender.getParameters) return;
+            const parameters = videoSender.getParameters();
+            if (!parameters.encodings || parameters.encodings.length === 0) { parameters.encodings = [{}]; }
+            parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000; 
+            await videoSender.setParameters(parameters);
+        } catch (e) {}
+    }
+
+    async function saveStatsToCloud() {
+        if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
+        const validGames = ["301", "501", "701", "1001", "170_race"];
+        if(state.mode === 'single' || state.mode === 'bot') return;
+        try {
+            let myP = state.p[myIndex];
+            if(state.mode === 'local') myP = state.p[0]; 
+
+            let isWin = (state.winner === myIndex) || (state.mode === 'local' && state.winner === 0);
+            let resultStr = isWin ? "WON" : "LOST";
+            let oppName = state.mode === 'local' ? state.p[1].name : state.p[myIndex === 0 ? 1 : 0].name;
+            let matchText = `${resultStr} vs ${oppName} [${state.gameType}]`;
+            let dateStr = new Date().toLocaleDateString();
+            let finalAvg = myP.d > 0 ? ((myP.pts / myP.d) * 3).toFixed(1) : "0.0";
+            let matchId = Date.now().toString();
+
+            const { doc, getDoc, updateDoc, arrayUnion } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+            const userRef = doc(window.db, "users", window.auth.currentUser.uid);
+            const userSnap = await getDoc(userRef);
+            
+            if(userSnap.exists()) {
+                let dbData = userSnap.data();
+                let newPts = dbData.totalPts || 0;
+                let newDarts = dbData.totalDarts || 0;
+                let newHc = dbData.highCheckout || 0;
+                let newCoAtt = dbData.coAtt || 0;
+                let newCoHit = dbData.coHit || 0;
+                
+                let matchPts = 0; let matchDarts = 0;
+                let matchCoAtt = 0; let matchCoHit = 0;
+                
+                if(validGames.includes(state.gameType)) {
+                    matchPts = myP.pts; matchDarts = myP.d; matchCoAtt = myP.coAtt || 0; matchCoHit = myP.coHit || 0;
+                    newPts += matchPts; newDarts += matchDarts; newCoAtt += matchCoAtt; newCoHit += matchCoHit;
+                    newHc = Math.max(newHc, myP.hc);
+                }
+
+                let p1Avg = state.p[0].d > 0 ? ((state.p[0].pts / state.p[0].d) * 3).toFixed(1) : "0.0";
+                let p2Avg = state.p[1].d > 0 ? ((state.p[1].pts / state.p[1].d) * 3).toFixed(1) : "0.0";
+                let p1F9 = state.p[0].f9d > 0 ? ((state.p[0].f9pts / state.p[0].f9d) * 3).toFixed(1) : "0.0";
+                let p2F9 = state.p[1].f9d > 0 ? ((state.p[1].f9pts / state.p[1].f9d) * 3).toFixed(1) : "0.0";
+
+                let newHistObj = { 
+                    id: matchId, date: dateStr, desc: matchText, avg: finalAvg, 
+                    pts: matchPts, darts: matchDarts, coAtt: matchCoAtt, coHit: matchCoHit,
+                    p1Name: state.p[0].name, p2Name: state.p[1].name,
+                    p1Avg: p1Avg, p2Avg: p2Avg, p1F9: p1F9, p2F9: p2F9,
+                    p1Hc: state.p[0].hc, p2Hc: state.p[1].hc,
+                    p1140: state.p[0].n140, p2140: state.p[1].n140,
+                    p1180: state.p[0].n180, p2180: state.p[1].n180
+                };
+                await updateDoc(userRef, { 
+                    totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
+                    matchHistory: arrayUnion(newHistObj)
+                });
+                statsSavedThisMatch = true;
+            }
+        } catch(e) {}
+    }
+
     window.initApp = async function() {
         requestWakeLock();
         statsSavedThisMatch = false; 
@@ -1382,6 +1618,10 @@
         }
 
         try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const spectateId = urlParams.get('spectate');
+            const joinId = urlParams.get('join');
+
             if (!spectateId) {
                 if (state.mode === 'single') { stream = null; } 
                 else {
@@ -1566,63 +1806,6 @@
         window.render();
     }
 
-    window.toggleMic = function() {
-        isMicMuted = !isMicMuted;
-        if (stream && stream.getAudioTracks().length > 0) { stream.getAudioTracks()[0].enabled = !isMicMuted; }
-        const peerVideo = document.getElementById('peer');
-        if (peerVideo) peerVideo.muted = isMicMuted;
-        const btn = document.getElementById('mic-btn');
-        if (isMicMuted) { btn.innerText = "MIC OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
-        else { btn.innerText = "MIC ON"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#444"; }
-    };
-
-    window.toggleCaller = function() {
-        isCallerMuted = !isCallerMuted;
-        const btn = document.getElementById('caller-btn');
-        if (isCallerMuted) { btn.innerText = "VOICE OFF"; btn.style.color = "#aaa"; btn.style.borderColor = "#666"; } 
-        else { btn.innerText = "VOICE ON"; btn.style.color = "#4caf50"; btn.style.borderColor = "#444"; }
-    };
-
-    window.cycleZoom = function() {
-        if (!stream) return;
-        currentZoom = currentZoom === 1 ? 1.5 : (currentZoom === 1.5 ? 2 : 1);
-        const btn = document.getElementById('zoom-btn');
-        if (btn) btn.innerText = currentZoom === 1 ? "ZOOM" : `ZOOM ${currentZoom}x`;
-        document.getElementById('me').style.transform = `scale(${currentZoom})`;
-        if (!isLocalMatch) { broadcast({ type: 'ZOOM', level: currentZoom }); }
-    };
-
-    window.swapCam = async function() {
-        if (!stream || state.mode === 'single') return;
-        try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const videoCameras = devices.filter(d => d.kind === 'videoinput');
-            if (videoCameras.length <= 1) { alert("Only one camera found on this device."); return; }
-
-            const oldVideoTrack = stream.getVideoTracks()[0];
-            oldVideoTrack.stop();
-            let newStream;
-            if (isMobile) {
-                currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-                try { newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch (e) { isMobile = false; }
-            }
-            if (!isMobile) {
-                currentCamIndex = (currentCamIndex + 1) % videoCameras.length;
-                newStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: videoCameras[currentCamIndex].deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } });
-            }
-
-            const newVideoTrack = newStream.getVideoTracks()[0];
-            stream.removeTrack(oldVideoTrack);
-            stream.addTrack(newVideoTrack);
-            document.getElementById('me').srcObject = stream;
-            
-            if (currentCall && currentCall.peerConnection) {
-                const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-                if (videoSender) { await videoSender.replaceTrack(newVideoTrack); }
-            }
-        } catch (e) {}
-    };
-
     window.processAtcDart = function(multiplier) {
         if (!isLocalMatch && state.mode !== 'single' && state.turn !== myIndex) return;
         if(botTimeout) clearTimeout(botTimeout);
@@ -1704,7 +1887,7 @@
                     if (d.mult === 2 || (d.val === 25 && d.label === 'DB')) { p.coAtt++; }
                 }
                 tempS -= d.pts;
-                if (tempS <= 1 && tempS !== 0) break; 
+                if (tempS <= 1 && tempS !== 0) break; // Bust
             }
         } else {
             val = numpadVal === '' ? 0 : parseInt(numpadVal);
@@ -2099,11 +2282,8 @@
             botTimeout = null;
         }
     };
-</script>
 
-<script>
-// --- AI AUTO-SCORER MODULE ---
-(function() {
+    // --- AI AUTO-SCORER MATH & LOOP ---
     function parseDartClass(className) {
         className = className.toUpperCase().trim();
         let mult = 1; let val = 0;
@@ -2226,7 +2406,6 @@
             if (debugBox) debugBox.innerText = "Network Error: " + err.message;
         }
     }, 2500); 
-})();
 </script>
 </body>
 </html>
