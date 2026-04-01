@@ -468,7 +468,7 @@
 
 <div class="v-container">
 <div id="ai-debug-box" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); border: 1px solid #ffeb3b; color: #ffeb3b; padding: 4px 8px; border-radius: 4px; font-size: 11px; z-index: 100; display: none; font-weight: bold; max-width: 50%; pointer-events: none;"></div>
-    <div id="ai-debug-box" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); border: 1px solid #ffeb3b; color: #ffeb3b; padding: 4px 8px; border-radius: 4px; font-size: 11px; z-index: 100; display: none; font-weight: bold; max-width: 50%; pointer-events: none;"></div>
+  
     <div id="box-me" class="v-box visible">
         <div class="cam-label" id="cam-label-me">YOU</div>
         <video id="me" autoplay playsinline webkit-playsinline muted></video>
@@ -518,26 +518,14 @@
 
 <div class="controls-wrapper">
     <div class="controls" id="standard-controls">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -5px;">
-        <div style="display: flex; gap: 5px;">
-            <button class="header-btn" id="undo-btn" onclick="window.undo()" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
-            <button class="header-btn" id="edit-last-btn" onclick="window.editLastThrowPopup()" style="background:transparent; border:1px solid #ffcc00; color:#ffcc00; font-size:14px; padding:4px 12px; margin-left: 5px;">✎ EDIT</button>
-            <button class="header-btn" id="ai-toggle-btn" onclick="window.toggleAI()" style="background:transparent; border:1px solid #444; color:#888; font-size:14px; padding:4px 12px; margin-left: 5px;">🤖 AI: OFF</button>
-        </div>
-        <button id="mode-toggle-btn" class="header-btn" onclick="window.toggleLocalMode()" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
-    </div>
-</div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -5px;">
             <div style="display: flex; gap: 5px;">
-                <button class="header-btn" id="undo-btn" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
-<button class="header-btn" id="edit-last-btn" onclick="window.editLastThrowPopup()" style="background:transparent; border:1px solid #ffcc00; color:#ffcc00; font-size:14px; padding:4px 12px; margin-left: 5px;">✎ EDIT</button>
-<button class="header-btn" id="ai-toggle-btn" onclick="window.toggleAI()" style="background:transparent; border:1px solid #444; color:#888; font-size:14px; padding:4px 12px; margin-left: 5px;">🤖 AI: OFF</button> style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
-                <button class="header-btn" id="edit-last-btn" style="background:transparent; border:1px solid #ffcc00; color:#ffcc00; font-size:14px; padding:4px 12px;">✎ EDIT</button>
+                <button class="header-btn" id="undo-btn" onclick="window.undo()" style="background:transparent; border:1px solid #444; color:white; font-size:14px; padding:4px 12px;">⟲ UNDO</button>
+                <button class="header-btn" id="edit-last-btn" onclick="window.editLastThrowPopup()" style="background:transparent; border:1px solid #ffcc00; color:#ffcc00; font-size:14px; padding:4px 12px; margin-left: 5px;">✎ EDIT</button>
+                <button class="header-btn" id="ai-toggle-btn" onclick="window.toggleAI()" style="background:transparent; border:1px solid #444; color:#888; font-size:14px; padding:4px 12px; margin-left: 5px;">🤖 AI: OFF</button>
             </div>
-            <button id="mode-toggle-btn" class="header-btn" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
-        </div>
-
-        <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
+            <button id="mode-toggle-btn" class="header-btn" onclick="window.toggleLocalMode()" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); font-weight: bold; padding: 6px 10px;">MODE: TOTAL SCORE</button>
+        </div> style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
             <div id="numpad-display">0</div>
             <div class="np-grid">
                 <button class="np-btn" onclick="np(1)">1</button>
@@ -1686,6 +1674,7 @@
             document.getElementById('waiting-layer').classList.add('hidden');
             if (myIndex === 0 && !isLocalMatch && state.p[0].pts === 0 && state.p[1].pts === 0 && state.p[0].l === 0 && state.p[1].l === 0) {
                 showFirstThrowUI();
+if (myIndex === 0) { window.broadcast(state); }
             }
         } else {
             if (data.p) {
