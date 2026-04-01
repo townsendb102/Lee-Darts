@@ -16,7 +16,11 @@
     
     <title>🎯 RAF Darts Scorer 🎯</title>
     <style>
-        /* --- MODERN PREMIUM THEME --- */
+        /* --- THEME VARIABLES --- */
+        body.theme-classic { --blue: #10b981; --dark: #0f172a; --card: #1e293b; --active: #334155; }
+        body.theme-neon { --blue: #ff00ff; --dark: #0a001a; --card: #20003b; --active: #3d0066; }
+        body.theme-pub { --blue: #f59e0b; --dark: #1c1917; --card: #292524; --active: #44403c; }
+
         :root {
             --accent-glow: rgba(255,255,255,0.05);
             --danger: #ef4444; 
@@ -26,190 +30,203 @@
             --btn-hover: rgba(255,255,255,0.15);
         }
 
-        /* Fixed Theme Definitions */
-        body.theme-classic { --accent: #10b981; --bg-main: #0f172a; --bg-card: #1e293b; --bg-active: #334155; --blue: #10b981; }
-        body.theme-neon { --accent: #ff00ff; --bg-main: #0a001a; --bg-card: #20003b; --bg-active: #3d0066; --blue: #ff00ff; }
-        body.theme-pub { --accent: #f59e0b; --bg-main: #1c1917; --bg-card: #292524; --bg-active: #44403c; --blue: #f59e0b; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        html, body { 
+            height: 100%; width: 100%; 
+            overflow: hidden; 
+            overscroll-behavior: none; 
+            margin: 0; padding: 0; 
+            background: var(--dark);
+        }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        
-        html, body { height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; background: #000; }
-        
-        /* REBALANCED GRID - Camera fills space, prevents squashing */
+        /* RESTORED ORIGINAL GRID TO PREVENT IPHONE SQUASHING */
         body { 
-            background: var(--bg-main); color: var(--text-main); 
+            background: var(--dark); color: var(--text-main); 
             display: grid;
-            grid-template-rows: calc(45px + env(safe-area-inset-top)) 1fr auto auto calc(15px + env(safe-area-inset-bottom));
+            grid-template-rows: calc(45px + env(safe-area-inset-top)) minmax(20dvh, 35dvh) minmax(100px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
             transition: background 0.3s ease;
         }
 
-        /* GLOBAL FOOTER CREDIT */
-        .site-footer { 
-            position: fixed; 
-            bottom: max(3px, env(safe-area-inset-bottom)); 
-            left: 0; 
-            right: 0; 
-            text-align: center; 
-            font-size: 9px; 
-            font-weight: 800; 
-            color: rgba(255,255,255,0.25); 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            z-index: 99999; 
-            pointer-events: none; 
-            padding-bottom: 2px;
+        .install-btn { background: var(--blue) !important; color: #000 !important; display: none; margin-bottom: 15px; border: none !important; font-weight: 900;}
+        
+        /* SPECTATOR MODE OVERRIDES */
+        body.spectator-mode { display: block; } 
+        body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
+        body.spectator-mode #box-me { visibility: hidden !important; opacity: 0 !important; z-index: -1 !important; display: none !important; }
+        body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 100% !important; height: 100% !important; left: 0 !important; border: none !important; }
+        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100%; width: 100vw; z-index: 0; border: none; display: block !important; }
+        body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; }
+        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; padding-bottom: env(safe-area-inset-bottom); }
+        body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
+        
+        body.spectator-mode .player-card { 
+            flex: 0 0 auto; width: 125px; 
+            background: rgba(15,23,42,0.6) !important; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            justify-content: space-evenly; backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            pointer-events: auto; padding: 15px; border-top: none;
         }
+        body.spectator-mode .player-card.active { 
+            background: rgba(15,23,42,0.9) !important; border: 2px solid var(--blue); 
+            box-shadow: 0 0 20px var(--accent-glow); }
+        
+        body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
+        body.spectator-mode .p-name { font-size: 18px; text-align: center; margin-bottom: 5px; color: var(--blue); }
+        body.spectator-mode .score-val { font-size: 40px; }
+        body.spectator-mode .legs-count { text-align: center; }
+        body.spectator-mode .checkout-hint { font-size: 12px; }
+        
+        body.single-mode { grid-template-rows: calc(45px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
+        body.single-mode .v-container { display: none !important; }
+        body.single-mode #card-1 { display: none !important; }
+        body.single-mode .score-area { flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        body.single-mode #card-0 { max-width: 320px; width: 100%; border-top: 4px solid var(--blue); }
+        body.single-mode.spectator-mode .score-area { flex-direction: row; justify-content: center; }
+        body.single-mode.spectator-mode #card-0 { width: 150px; }
+        body.single-mode #mic-btn, body.single-mode #zoom-btn, body.single-mode #flip-btn { display: none !important; }
 
-        .install-btn { background: var(--accent) !important; color: #000 !important; display: none; margin-bottom: 15px; border: none !important; }
+        body.local-mode { grid-template-rows: calc(45px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
+        body.local-mode .v-container { display: none !important; }
+        body.local-mode header > div:first-child { display: none; }
+        body.local-mode header { justify-content: flex-end; }
+        body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn-top { display: none !important; }
 
-        /* LAYERS & OVERLAYS */
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
-            position: fixed; inset: 0; background: var(--bg-main); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+            position: fixed; inset: 0; background: var(--dark); z-index: 10000; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+            overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
         }
         #winner-layer, #first-throw-layer, #waiting-layer { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10001; }
         #login-layer { z-index: 20000; } 
         #profile-layer { z-index: 15000; }
         #history-layer, #friends-layer { z-index: 16000; }
         #match-details-layer { z-index: 17000; }
-
-        .setup-card { background: var(--bg-card); padding: 30px 25px; border-radius: 24px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+        
+        /* RESTORED SPLIT SCREEN CSS FOR BULL THROW */
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 2px solid var(--blue); }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(45px + 35dvh + env(safe-area-inset-top)); background: rgba(0, 0, 0, 0.95); }
+        
+        .setup-card { 
+            background-color: var(--card); padding: 30px 25px; border-radius: 24px; width: 100%; max-width: 400px; border: 1px solid rgba(255,255,255,0.05); 
+            display: flex; flex-direction: column; gap: 12px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
         .setup-card h2 { color: var(--text-main); margin-bottom: 5px; font-weight: 900; letter-spacing: -0.5px;}
 
         /* DASHBOARD CARDS */
         .dc-card { padding: 20px 15px; border-radius: 16px; cursor: pointer; text-align: left; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: transform 0.1s; border: 1px solid rgba(255,255,255,0.05); }
         .dc-card:active { transform: scale(0.95); }
         .dc-card-title { font-size: 20px; font-weight: 900; text-transform: uppercase; font-style: italic; margin-bottom: 4px; }
-        .dc-card-sub { font-size: 11px; opacity: 0.85; font-weight: 500; line-height: 1.3; }
-        .bg-cyan { background: linear-gradient(135deg, #0284c7, #38bdf8); }
-        .bg-blue { background: linear-gradient(135deg, #2563eb, #60a5fa); }
-        .bg-dark-grad { background: linear-gradient(135deg, #1e293b, #0f172a); }
+        .dc-card-sub { font-size: 11px; opacity: 0.9; font-weight: 500; line-height: 1.3; }
+        
+        .bg-cyan { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
+        .bg-blue { background: linear-gradient(135deg, #4338ca, #60a5fa); }
+        .bg-dark-grad { background: linear-gradient(135deg, var(--active), var(--card)); }
 
-        /* PILLS */
         .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
-        .pill { background: var(--btn-bg); padding: 10px 14px; border-radius: 12px; font-size: 12px; font-weight: 800; color: var(--text-muted); cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.05); text-align: center; flex: 1; min-width: 70px;}
-        .pill.active { background: var(--accent); color: #000; border-color: var(--accent); box-shadow: 0 4px 10px var(--accent-glow);}
+        .pill { background: var(--btn-bg); padding: 12px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; color: var(--text-muted); cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.05); text-align: center; flex: 1; min-width: 70px;}
+        .pill.active { background: var(--blue); color: #000; border-color: var(--blue); }
 
-        .input-group { margin-bottom: 8px; text-align: left; }
-        .input-group label { display: block; font-size: 11px; font-weight: 900; margin-bottom: 4px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .setup-input { width: 100%; background: var(--btn-bg); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 12px; border-radius: 12px; font-size: 16px; outline: none; font-weight: bold; }
-        .setup-input:focus { border-color: var(--accent); }
-        
-        .btn-start { background: var(--accent); color: #000; width: 100%; padding: 14px; font-size: 18px; font-weight: 900; border: none; border-radius: 12px; cursor: pointer; margin-top: 10px; text-transform: uppercase; box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: block !important; visibility: visible !important;}
-        .btn-start:active { transform: scale(0.98); }
-        .btn-start:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-        .btn-update { background: transparent; border: none; color: var(--text-muted); font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; font-weight: 700; }
-
-        /* HEADER */
-        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 10px; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10;}
-        .header-title-container { display: flex; align-items: center; max-width: 35vw; overflow: hidden; }
-        .header-id-trunc { color: var(--accent); font-weight: 500; font-size: 11px; margin-left: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 60px; vertical-align: middle;}
-        
-        .header-controls { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 8px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap;}
-
-        /* CAMERAS */
-        .v-container { position: relative; background: #000; overflow: hidden; min-height: 25vh; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; transition: opacity 0.3s ease; width: 100%; height: 100%; }
-        .v-box.visible { opacity: 1; z-index: 1; }
-        video { width: 100%; height: 100%; object-fit: contain; background: #000; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); padding: 4px 10px; font-size: 10px; border-radius: 8px; color: var(--accent); font-weight: 800; letter-spacing: 1px; z-index: 10; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
-        
-        .paused-overlay { position: absolute; inset: 0; background: rgba(0,0,0, 0.85); color: var(--accent); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 800; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
-        .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
-
-        /* BULL THROW SPLIT-SCREEN FIX */
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: auto !important; }
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0 !important; right: 50% !important; border-right: 1px solid var(--accent); }
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50% !important; right: 0 !important; }
-
-        /* COMPACT PLAYER CARDS */
-        .score-area { display: flex; flex-direction: column; padding: 6px 12px; gap: 6px; min-height: 0; z-index: 5;}
-        .player-card { flex: 1; background: var(--bg-card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 6px 15px; border-top: 4px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 0;}
-        .player-card.active { background: var(--bg-active); border-top: 4px solid var(--accent); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
-        
-        .p-name { font-size: 14px; color: var(--text-muted); font-weight: 800; margin-bottom: 0px; display: flex; align-items: center; gap: 8px; }
-        .player-card.active .p-name { color: white; }
-        .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        
-        .score-val { font-size: clamp(28px, 6vh, 48px); font-weight: 900; line-height: 0.9; color: white; flex: 1; text-align: center; }
-        
-        .stats-col { display: flex; flex-direction: column; font-size: 10px; color: var(--text-muted); font-weight: 700; gap: 2px; }
-        .stats-col b { color: white; font-size: 12px; }
-        .legs-count { text-align: right; font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; }
-        .legs-count span { display: block; font-size: 18px; color: white; line-height: 1; }
-        .checkout-hint { position: absolute; top: 8px; right: 15px; color: var(--accent); font-weight: 900; font-size: 12px; }
-        .missed-db-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); font-size: 9px; padding: 3px 6px; border-radius: 4px; margin-top: 2px; cursor: pointer; width: fit-content; align-self: center; font-weight: bold;}
-
-        /* CRICKET CENTER */
-        #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--bg-card); border-radius: 12px; padding: 4px; justify-content: space-evenly; margin: 0 5px; }
-        .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
-        .cric-mark { flex: 1; text-align: center; font-size: 14px; font-weight: 900; color: var(--accent); }
-        .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: var(--btn-bg); border-radius: 4px; padding: 2px 0; }
-        .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; }
-
-        /* COMPACT CONTROLS - Fixes Numpad stretching */
-        .controls-wrapper { background: #000; padding: 8px 10px 10px 10px; border-top: 1px solid rgba(255,255,255,0.05); min-height: 0; z-index: 5;}
-        .controls { display: grid; gap: 6px; }
-        #standard-controls { display: flex; flex-direction: column; gap: 6px; height: 100%; }
-        
-        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-        .action-btns { display: flex; gap: 6px; }
-        .action-btn { background: #222; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 10px; cursor: pointer;}
-        
-        #numpad-display { font-size: 24px; font-weight: 900; text-align: center; height: 32px; line-height: 32px; color: var(--accent); letter-spacing: 2px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 4px;}
-        .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
-        .np-btn { background: #1a1a1a; color: white; font-size: 20px; font-weight: 800; border-radius: 10px; border: 1px solid #333; height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.1s;}
-        .np-btn:active { background: var(--accent); color: #000; transform: scale(0.96); }
-        .np-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .np-btn.del { color: var(--danger); font-size: 14px;}
-        .np-btn.enter { background: var(--accent); color: #000; font-size: 16px;}
-        .np-btn.enter:active { background: #059669; }
-        
-        /* DART-BY-DART GRID */
-        #darts-mode-ui { display: none; flex-direction: column; gap: 4px; height: 100%; }
-        .dbd-top { display: flex; gap: 6px; align-items: center; }
-        .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 28px; font-size: 14px; font-weight: 900; border-radius: 6px; height: 28px; }
-        .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-        .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 14px; font-weight: 800; border-radius: 6px; height: 38px; display: flex; align-items: center; justify-content: center; cursor: pointer;}
-        .dbd-btn:active { background: var(--accent); color: black; }
-        .dbd-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-        /* MISC TABLES & PROFILE */
-        .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); cursor: pointer; margin: 0 auto 15px auto; display: block; background: #111;}
-        .hidden { display: none !important; }
-        
         .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
-        .stats-table th { padding-bottom: 12px; font-size: 16px; width: 30%; font-weight: 800; color: var(--accent); }
+        .stats-table th { padding-bottom: 12px; font-size: 16px; width: 30%; font-weight: 800; color: var(--blue); }
         .stats-table th:nth-child(2) { font-size: 12px; width: 40%; color: var(--text-muted); }
-        .stats-table td { padding: 8px 0; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 700; color: white; }
+        .stats-table td { padding: 10px 0; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 700; color: white; }
         .stats-table td:nth-child(2) { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
         .stats-table tr:last-child td { border-bottom: none; }
         
-        .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; margin-bottom: 8px; text-align: left; }
-        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; align-items: center;}
-        .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); display: none; }
+        .input-group { margin-bottom: 8px; text-align: left; }
+        .input-group label { display: block; font-size: 11px; font-weight: 900; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
+        .setup-input { width: 100%; background: var(--btn-bg); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 14px; border-radius: 14px; font-size: 16px; outline: none; transition: border 0.2s; font-weight: bold;}
+        .setup-input:focus { border-color: var(--blue); }
+        .setup-input option { background: var(--dark); color: white; }
         
-        #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 15px; border-radius: 12px; z-index: 30000; display: none; box-shadow: 0px 10px 25px rgba(0,0,0,0.5); border: 2px solid #fff; font-weight: bold; text-align: center; width: 90%; max-width: 350px; }
+        .btn-start { background: var(--blue); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 900; border: none; border-radius: 14px; cursor: pointer; margin-top: 15px; text-transform: uppercase; display: block !important; visibility: visible !important;}
+        .btn-start:active { transform: scale(0.98); }
+        .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* MODES & SPECTATOR RULES */
-        body.spectator-mode { display: block; } 
-        body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
-        body.spectator-mode #box-me { display: none !important; }
-        body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 100% !important; height: 100% !important; left: 0 !important; border: none !important; }
-        body.spectator-mode .v-container { position: fixed; inset: 0; height: 100%; width: 100vw; z-index: 0; border: none; display: block !important; }
-        body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; }
-        body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
-        body.spectator-mode .player-card { flex: 0 0 auto; width: 125px; background: rgba(0,0,0,0.5) !important; border: 1px solid rgba(255, 255, 255, 0.1); justify-content: space-evenly; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; pointer-events: auto; padding: 15px; border-top: none; }
-        body.spectator-mode .player-card.active { background: rgba(0,0,0,0.8) !important; border: 2px solid var(--accent); box-shadow: 0 0 25px var(--accent-glow); }
+        .btn-update { background: transparent; border: none; color: var(--text-muted); font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; font-weight: bold;}
+
+        /* HEADER */
+        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 12px 12px; background: #000; font-size: 12px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10;}
+        .header-title-container { display: flex; align-items: center; max-width: 35vw; overflow: hidden; }
+        .header-id-trunc { color: var(--blue); font-weight: 500; font-size: 11px; margin-left: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 60px; vertical-align: middle;}
+        .header-controls { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
+        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap;}
+
+        /* CAMERAS - RESTORED TO ORIGINAL CSS */
+        .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
+        .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
+        .v-box.visible { opacity: 1; z-index: 1; pointer-events: auto; }
+        video { width: 100%; height: 100%; object-fit: contain; background: #000; transition: transform 0.3s ease; transform-origin: center center; }
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 6px 12px; font-size: 10px; border-radius: 8px; color: var(--blue); font-weight: 900; letter-spacing: 1px; z-index: 10; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
+        .paused-overlay { position: absolute; inset: 0; background: rgba(0,0,0, 0.85); color: var(--blue); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 900; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
+        .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
+
+        /* PLAYER CARDS */
+        .score-area { display: flex; flex-direction: column; padding: 10px; gap: 8px; min-height: 0; z-index: 5;}
+        .player-card { flex: 1; background: var(--card); border-radius: 16px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border-top: 4px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 0;}
+        .player-card.active { background: var(--active); border-top: 4px solid var(--blue); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
         
-        body.single-mode { grid-template-rows: calc(45px + env(safe-area-inset-top)) 1fr auto calc(20px + env(safe-area-inset-bottom)) !important; }
-        body.single-mode .v-container, body.single-mode #card-1, body.single-mode #mic-btn, body.single-mode #zoom-btn, body.single-mode #flip-btn { display: none !important; }
-        body.single-mode .score-area { flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
-        body.single-mode #card-0 { max-width: 400px; width: 100%; border-top: 4px solid var(--accent); background: var(--bg-active); }
+        .p-name { font-size: 15px; color: var(--text-muted); font-weight: 900; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; text-transform: uppercase;}
+        .player-card.active .p-name { color: white; }
+        .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        .score-val { font-size: clamp(35px, 7dvh, 65px); font-weight: 900; line-height: 0.9; color: white; flex: 1; text-align: center; letter-spacing: -1px;}
+        
+        .stats-col { display: flex; flex-direction: column; font-size: 10px; color: var(--text-muted); font-weight: 800; gap: 2px; }
+        .stats-col b { color: white; font-size: 13px; }
+        .legs-count { text-align: right; font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; }
+        .legs-count span { display: block; font-size: 20px; color: white; line-height: 1; margin-bottom: 2px;}
+        .checkout-hint { position: absolute; top: 10px; right: 15px; color: var(--blue); font-weight: 900; font-size: 13px; }
+        .missed-db-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); font-size: 9px; padding: 4px 8px; border-radius: 6px; margin-top: 4px; cursor: pointer; width: fit-content; align-self: center; font-weight: bold;}
 
-        body.local-mode { grid-template-rows: calc(45px + env(safe-area-inset-top)) 1fr auto calc(20px + env(safe-area-inset-bottom)) !important; }
-        body.local-mode .v-container, body.local-mode header > div:first-child, body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn-top { display: none !important; }
-        body.local-mode header { justify-content: flex-end; }
+        /* CRICKET CENTER */
+        #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--card); border-radius: 14px; padding: 6px; border: 1px solid rgba(255,255,255,0.05); justify-content: space-evenly; margin: 0 5px; }
+        .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
+        .cric-mark { flex: 1; text-align: center; font-size: 16px; font-weight: 900; color: var(--blue); }
+        .cric-num { flex: 1; text-align: center; font-size: 13px; font-weight: 900; color: white; background: var(--btn-bg); border-radius: 6px; padding: 2px 0; }
+        .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; }
+
+        /* CONTROLS */
+        .controls-wrapper { width: 100%; min-height: 90px; background: #000; padding: 10px 10px 15px 10px; border-top: 1px solid rgba(255,255,255,0.05); z-index: 5;}
+        .controls { display: grid; gap: 8px; }
+        #standard-controls { display: flex; flex-direction: column; gap: 8px; height: 100%; }
+        
+        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .action-btns { display: flex; gap: 8px; }
+        .action-btn { background: #222; color: white; border: 1px solid #444; padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer;}
+        
+        #numpad-display { font-size: 28px; font-weight: 900; text-align: center; height: 35px; line-height: 35px; color: var(--blue); letter-spacing: 2px; background: rgba(0,0,0,0.5); border-radius: 8px; margin-bottom: 4px;}
+        .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex: 1;}
+        .np-btn { background: #1e293b; color: white; font-size: 22px; font-weight: 800; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 12px 0; cursor: pointer; transition: background 0.1s; display: flex; align-items: center; justify-content: center;}
+        .np-btn:active { background: var(--blue); color: #000; transform: scale(0.96); }
+        .np-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .np-btn.del { color: var(--danger); font-size: 16px;}
+        .np-btn.enter { background: var(--blue); color: #000; font-size: 18px;}
+        
+        /* DART-BY-DART GRID */
+        #darts-mode-ui { display: none; flex-direction: column; gap: 6px; height: 100%; }
+        .dbd-top { display: flex; gap: 6px; align-items: center; }
+        .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 32px; font-size: 16px; font-weight: 900; border-radius: 8px; height: 32px; }
+        .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+        .dbd-btn { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); color: white; font-size: 14px; font-weight: 800; border-radius: 8px; padding: 8px 0; cursor: pointer; text-align: center;}
+        .dbd-btn:active { background: var(--blue); color: black; }
+        .dbd-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* MISC TABLES & PROFILE */
+        .site-footer { display: flex; align-items: center; justify-content: center; background: #000; color: var(--text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.05); z-index: 10002; padding-bottom: env(safe-area-inset-bottom); }
+        .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--blue); cursor: pointer; margin: 0 auto 15px auto; display: block; background: #111;}
+        .hidden { display: none !important; }
+        
+        .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 8px; text-align: left; }
+        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; align-items: center;}
+        .in-game-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid var(--blue); display: none; }
+        
+        #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--blue); color: black; padding: 15px; border-radius: 14px; z-index: 30000; display: none; box-shadow: 0px 10px 30px rgba(0,0,0,0.5); font-weight: bold; text-align: center; width: 90%; max-width: 350px; }
     </style>
 
     <script>
@@ -262,21 +279,19 @@
 </head>
 <body class="theme-classic">
 
-<div class="global-credit">Created by Ben Townsend of The Leeming Arrows</div>
-
 <audio id="dart-audio" playsinline webkit-playsinline></audio>
 
 <div id="challenge-popup">
     <div id="challenge-text" style="font-weight: 900; font-size: 16px; margin-bottom: 10px;">⚔️ CHALLENGE RECEIVED!</div>
     <div style="display:flex; gap:10px; justify-content:center;">
-        <button id="accept-challenge-btn" style="background:#000; color:white; border:none; padding:12px 15px; border-radius:8px; font-weight:900; flex:1; cursor:pointer;">ACCEPT</button>
-        <button id="decline-challenge-btn" style="background:var(--danger); color:white; border:none; padding:12px 15px; border-radius:8px; font-weight:900; flex:1; cursor:pointer;">DECLINE</button>
+        <button id="accept-challenge-btn" style="background:#000; color:white; border:none; padding:12px 15px; border-radius:10px; font-weight:900; flex:1; cursor:pointer;">ACCEPT</button>
+        <button id="decline-challenge-btn" style="background:var(--danger); color:white; border:none; padding:12px 15px; border-radius:10px; font-weight:900; flex:1; cursor:pointer;">DECLINE</button>
     </div>
 </div>
 
 <div id="login-layer">
     <div class="setup-card">
-        <img src="icon-192.png" style="width: 80px; height: 80px; margin: 0 auto 10px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+        <img src="icon-192.png" style="width: 80px; height: 80px; margin: 0 auto 10px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.5);">
         <h2>RAF DARTS SCORER</h2>
         <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 15px;">Log in to save stats and play friends</p>
         <div class="input-group"><input type="email" id="email-input" class="setup-input" placeholder="Email Address"></div>
@@ -285,7 +300,7 @@
         <button id="signup-btn" class="btn-start" style="background: var(--btn-bg); color: white; margin-top: 10px;">SIGN UP</button>
         <p id="auth-error" style="color: var(--danger); margin-top: 10px; font-size: 12px;"></p>
         <hr style="border: 1px solid rgba(255,255,255,0.05); margin: 20px 0; width: 100%;">
-        <button id="guest-btn" class="btn-start" style="background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 0;">PLAY AS GUEST</button>
+        <button id="guest-btn" class="btn-start" style="background: transparent; border: 2px solid var(--blue); color: var(--text-main); margin-top: 0;">PLAY AS GUEST</button>
     </div>
 </div>
 
@@ -297,14 +312,14 @@
         <input type="file" id="pic-upload" hidden accept="image/*">
         <p style="font-size: 10px; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px;">Tap image to change</p>
         
-        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
-            <input type="text" id="edit-name-input" class="setup-input" placeholder="Display Name..." style="flex: 1; padding: 12px; font-size: 14px;">
+        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+            <input type="text" id="edit-name-input" class="setup-input" placeholder="Display Name..." style="flex: 1; padding: 14px; font-size: 14px;">
             <button id="save-name-btn" class="btn-start" style="width: auto; margin: 0; padding: 0 15px; font-size: 14px;">SAVE</button>
         </div>
         
         <div class="input-group" style="margin-bottom: 20px;">
             <label style="color: white;">App Theme</label>
-            <select id="theme-select" class="setup-input" style="padding: 12px; font-size: 14px;">
+            <select id="theme-select" class="setup-input" style="padding: 14px; font-size: 14px;">
                 <option value="classic">Modern Emerald</option>
                 <option value="neon">Neon Cyberpunk</option>
                 <option value="pub">Pub Gold</option>
@@ -312,18 +327,18 @@
         </div>
         
         <div style="display: flex; gap: 10px; margin-bottom: 5px;">
-            <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px; flex: 1; border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 10px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; font-weight: bold;">Lifetime Avg</div>
-                <div style="font-size: 28px; color: var(--accent); font-weight: 900;" id="prof-avg">0.0</div>
+            <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 16px; flex: 1; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-size: 10px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; font-weight: 900;">Lifetime Avg</div>
+                <div style="font-size: 28px; color: var(--blue); font-weight: 900;" id="prof-avg">0.0</div>
             </div>
-            <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px; flex: 1; border: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 10px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; font-weight: bold;">Checkout %</div>
-                <div style="font-size: 28px; color: var(--accent); font-weight: 900;" id="prof-co">0%</div>
+            <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 16px; flex: 1; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-size: 10px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; font-weight: 900;">Checkout %</div>
+                <div style="font-size: 28px; color: var(--blue); font-weight: 900;" id="prof-co">0%</div>
             </div>
         </div>
         
         <div style="text-align: right; margin-bottom: 20px;">
-            <button id="reset-stats-btn" style="background:transparent; border:none; color:var(--danger); font-size:11px; text-decoration:underline; cursor:pointer; font-weight: bold;">Reset Stats & History</button>
+            <button id="reset-stats-btn" style="background:transparent; border:none; color:var(--danger); font-size:11px; text-decoration:underline; cursor:pointer; font-weight: 800;">Reset Stats & History</button>
         </div>
         <hr style="border: 1px solid rgba(255,255,255,0.05); margin: 0 0 15px 0; width: 100%;">
         
@@ -361,11 +376,11 @@
     <div class="setup-card" style="max-height: 85vh; display: flex; flex-direction: column; width: 100%; max-width: 400px;">
         <h2 style="margin-bottom: 15px;">FRIENDS LIST</h2>
         <div id="friends-list-container" style="flex: 1; overflow-y: auto; margin-bottom: 15px; text-align: left; padding-right: 5px;"></div>
-        <div style="display: flex; gap: 5px; margin-bottom: 5px;">
-            <input type="email" id="friend-email" class="setup-input" placeholder="Friend's Email..." style="flex: 1; padding: 12px; font-size: 14px;">
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <input type="email" id="friend-email" class="setup-input" placeholder="Friend's Email..." style="flex: 1; padding: 14px; font-size: 14px;">
             <button id="add-friend-btn" class="btn-start" style="width: auto; margin: 0; padding: 0 15px; font-size: 14px;">ADD</button>
         </div>
-        <p id="friend-error" style="color: var(--accent); font-size: 11px; line-height: 1.4; margin-bottom: 15px;"></p>
+        <p id="friend-error" style="color: var(--blue); font-size: 11px; line-height: 1.4; margin-bottom: 15px; font-weight: bold;"></p>
         <button id="close-friends-btn" class="btn-start" style="background: var(--btn-bg); color: white; margin-top: auto;">BACK</button>
     </div>
 </div>
@@ -374,26 +389,26 @@
     <div id="home-menu" style="width: 100%; max-width: 420px; padding: 10px; z-index: 10;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <div style="display: flex; align-items: center; gap: 14px;">
-                <img src="icon-192.png" style="width: 54px; height: 54px; border-radius: 14px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+                <img src="icon-192.png" style="width: 56px; height: 56px; border-radius: 14px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
                 <div>
                     <h2 style="color: var(--text-main); font-weight: 900; margin:0; font-size: 26px; letter-spacing: -0.5px; font-style: italic;">RAF DARTS</h2>
                     <div style="color: var(--text-muted); font-size: 11px; font-weight: 900; letter-spacing: 1px;">DIGITAL SCORER</div>
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button id="open-profile-btn" class="header-btn" style="display: none; background: var(--bg-card); color: var(--text-main); padding: 10px; border-radius: 50%; width: 44px; height: 44px; font-size: 18px;">👤</button>
-                <button id="logout-btn" class="header-btn" style="display: none; background: var(--bg-card); color: var(--danger); padding: 10px; border-radius: 50%; width: 44px; height: 44px; font-size: 18px;">🚪</button>
+                <button id="open-profile-btn" class="header-btn" style="display: none; background: var(--bg-card); color: var(--text-main); padding: 10px; border-radius: 50%; width: 44px; height: 44px; font-size: 18px; border: 1px solid rgba(255,255,255,0.1);">👤</button>
+                <button id="logout-btn" class="header-btn" style="display: none; background: var(--bg-card); color: var(--danger); padding: 10px; border-radius: 50%; width: 44px; height: 44px; font-size: 18px; border: 1px solid rgba(255,255,255,0.1);">🚪</button>
             </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div class="dc-card bg-cyan" onclick="window.openSetup('local')">
-                <div class="dc-card-title" style="font-size: 32px; margin-bottom: 12px;">🎯</div>
+                <div class="dc-card-title" style="font-size: 34px; margin-bottom: 12px;">🎯</div>
                 <div class="dc-card-title">PLAY<br>LOCAL</div>
                 <div class="dc-card-sub">Same device game</div>
             </div>
             <div class="dc-card bg-blue" onclick="window.openSetup('online')">
-                <div class="dc-card-title" style="font-size: 32px; margin-bottom: 12px;">🌍</div>
+                <div class="dc-card-title" style="font-size: 34px; margin-bottom: 12px;">🌍</div>
                 <div class="dc-card-title">PLAY<br>ONLINE</div>
                 <div class="dc-card-sub">Remote opponents</div>
             </div>
@@ -503,7 +518,7 @@
 <div id="waiting-layer" class="hidden">
     <div class="setup-card">
         <h2 style="margin-bottom: 20px; font-size: 22px;">Waiting for Opponent...</h2>
-        <h1 style="color: var(--accent); margin-bottom: 20px; font-size: 32px; letter-spacing: 2px;" id="wait-id">...</h1>
+        <h1 style="color: var(--blue); margin-bottom: 20px; font-size: 32px; letter-spacing: 2px;" id="wait-id">...</h1>
         <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 15px;">Send this ID to your friend</p>
         <button class="btn-start" onclick="window.shareInvite()">SHARE INVITE LINK</button>
     </div>
@@ -524,7 +539,7 @@
 
 <div id="winner-layer" class="hidden">
     <div class="setup-card">
-        <h1 id="winner-name" style="color: var(--accent); font-weight: 900; margin: 10px 0 20px 0; font-size: 30px; text-transform: uppercase;">P1 Wins!</h1>
+        <h1 id="winner-name" style="color: var(--blue); font-weight: 900; margin: 10px 0 20px 0; font-size: 30px; text-transform: uppercase;">P1 Wins!</h1>
         <table class="stats-table">
             <tr><th id="ws-n0">P1</th><th>STATS</th><th id="ws-n1">P2</th></tr>
             <tr><td id="ws-avg0">0.0</td><td id="ws-label-avg">Match Avg</td><td id="ws-avg1">0.0</td></tr>
@@ -545,12 +560,12 @@
     </div>
     <div class="header-controls">
         <button class="header-btn" id="mic-btn" onclick="window.toggleMic()" style="color: var(--danger);">MIC OFF</button>
-        <button class="header-btn" id="caller-btn" onclick="window.toggleCaller()" style="color: var(--accent);">VOICE ON</button>
+        <button class="header-btn" id="caller-btn" onclick="window.toggleCaller()" style="color: var(--blue);">VOICE ON</button>
         <button class="header-btn" id="zoom-btn" onclick="window.cycleZoom()">ZOOM</button>
         <button class="header-btn" id="flip-btn" onclick="window.swapCam()">FLIP</button>
         <button class="header-btn" id="spectate-btn" onclick="window.shareSpectator()" style="color: #38bdf8;">SPECTATE</button>
         <button class="header-btn" id="share-btn-top" onclick="window.shareInvite()">INVITE</button>
-        <button class="header-btn" id="quit-btn" onclick="window.location.href = window.location.pathname;" style="background: var(--danger); color: white;">QUIT</button>
+        <button class="header-btn" id="quit-btn" onclick="window.location.href = window.location.pathname;" style="background: var(--danger); color: white; border-color: var(--danger);">QUIT</button>
     </div>
 </header>
 
@@ -560,7 +575,7 @@
         <video id="me" autoplay playsinline webkit-playsinline muted></video>
     </div>
     <div id="box-peer" class="v-box">
-        <div class="cam-label">OPPONENT</div>
+        <div class="cam-label">OPPONENT / STREAM</div>
         <div id="peer-paused-msg" class="paused-overlay">OPPONENT PAUSED</div>
         <div id="reconnect-overlay" class="paused-overlay" style="background: rgba(15, 23, 42, 0.9); color: #eab308;">CONNECTION LOST...</div>
         <video id="peer" autoplay playsinline webkit-playsinline></video>
@@ -609,10 +624,10 @@
                 <button class="action-btn" id="undo-btn" onclick="window.undo()">⟲ UNDO</button>
                 <button class="action-btn" id="edit-last-btn" onclick="window.editLastThrowPopup()">✎ EDIT</button>
             </div>
-            <button id="mode-toggle-btn" class="action-btn" style="color: var(--accent); background: transparent; border: 1px solid var(--accent);" onclick="window.toggleLocalMode()">TOTAL ENTRY</button>
+            <button id="mode-toggle-btn" class="action-btn" style="color: var(--blue); background: transparent; border: 1px solid var(--blue);" onclick="window.toggleLocalMode()">TOTAL ENTRY</button>
         </div>
 
-        <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 6px; height: 100%;">
+        <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
             <div id="numpad-display">0</div>
             <div class="np-grid">
                 <button class="np-btn" onclick="window.np(1)">1</button>
@@ -624,7 +639,7 @@
                 <button class="np-btn" onclick="window.np(7)">7</button>
                 <button class="np-btn" onclick="window.np(8)">8</button>
                 <button class="np-btn" onclick="window.np(9)">9</button>
-                <button class="np-btn del" onclick="window.np('C')">DEL</button>
+                <button class="np-btn del" style="color:var(--danger);" onclick="window.np('C')">DEL</button>
                 <button class="np-btn" onclick="window.np(0)">0</button>
                 <button class="np-btn enter" id="np-enter-btn" onclick="window.np('E')">ENTER</button>
             </div>
@@ -635,8 +650,8 @@
                 <div class="dbd-slot" id="dbd-slot-1">-</div>
                 <div class="dbd-slot" id="dbd-slot-2">-</div>
                 <div class="dbd-slot" id="dbd-slot-3">-</div>
-                <button class="action-btn" id="dbd-del-btn" style="width:45px; font-size: 16px; padding:0;" onclick="window.dbdDel()">⌫</button>
-                <button class="action-btn" id="dbd-enter-btn" style="background:var(--accent); color:#000; width:55px; font-size: 13px; padding:0;" onclick="window.dbdEnter()">OK</button>
+                <button class="action-btn" id="dbd-del-btn" style="width:50px; font-size: 16px; padding:0;" onclick="window.dbdDel()">⌫</button>
+                <button class="action-btn" id="dbd-enter-btn" style="background:var(--blue); color:#000; width:60px; font-size: 14px; padding:0;" onclick="window.dbdEnter()">OK</button>
             </div>
             <div style="display: flex; gap: 6px; margin: 4px 0;">
                 <button class="pill active" id="dbd-m-1" onclick="window.setDbdMult(1)">SINGLE</button>
@@ -644,17 +659,36 @@
                 <button class="pill" id="dbd-m-3" onclick="window.setDbdMult(3)">TREBLE</button>
             </div>
             <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;">
-                <button class="dbd-btn" onclick="window.hitDbd(20)">20</button><button class="dbd-btn" onclick="window.hitDbd(19)">19</button><button class="dbd-btn" onclick="window.hitDbd(18)">18</button><button class="dbd-btn" onclick="window.hitDbd(17)">17</button><button class="dbd-btn" onclick="window.hitDbd(16)">16</button><button class="dbd-btn" onclick="window.hitDbd(15)">15</button><button class="dbd-btn" onclick="window.hitDbd(14)">14</button><button class="dbd-btn" onclick="window.hitDbd(13)">13</button><button class="dbd-btn" onclick="window.hitDbd(12)">12</button><button class="dbd-btn" onclick="window.hitDbd(11)">11</button><button class="dbd-btn" onclick="window.hitDbd(10)">10</button><button class="dbd-btn" onclick="window.hitDbd(9)">9</button><button class="dbd-btn" onclick="window.hitDbd(8)">8</button><button class="dbd-btn" onclick="window.hitDbd(7)">7</button><button class="dbd-btn" onclick="window.hitDbd(6)">6</button><button class="dbd-btn" onclick="window.hitDbd(5)">5</button><button class="dbd-btn" onclick="window.hitDbd(4)">4</button><button class="dbd-btn" onclick="window.hitDbd(3)">3</button><button class="dbd-btn" onclick="window.hitDbd(2)">2</button><button class="dbd-btn" onclick="window.hitDbd(1)">1</button>
+                <button class="dbd-btn" onclick="window.hitDbd(20)">20</button>
+                <button class="dbd-btn" onclick="window.hitDbd(19)">19</button>
+                <button class="dbd-btn" onclick="window.hitDbd(18)">18</button>
+                <button class="dbd-btn" onclick="window.hitDbd(17)">17</button>
+                <button class="dbd-btn" onclick="window.hitDbd(16)">16</button>
+                <button class="dbd-btn" onclick="window.hitDbd(15)">15</button>
+                <button class="dbd-btn" onclick="window.hitDbd(14)">14</button>
+                <button class="dbd-btn" onclick="window.hitDbd(13)">13</button>
+                <button class="dbd-btn" onclick="window.hitDbd(12)">12</button>
+                <button class="dbd-btn" onclick="window.hitDbd(11)">11</button>
+                <button class="dbd-btn" onclick="window.hitDbd(10)">10</button>
+                <button class="dbd-btn" onclick="window.hitDbd(9)">9</button>
+                <button class="dbd-btn" onclick="window.hitDbd(8)">8</button>
+                <button class="dbd-btn" onclick="window.hitDbd(7)">7</button>
+                <button class="dbd-btn" onclick="window.hitDbd(6)">6</button>
+                <button class="dbd-btn" onclick="window.hitDbd(5)">5</button>
+                <button class="dbd-btn" onclick="window.hitDbd(4)">4</button>
+                <button class="dbd-btn" onclick="window.hitDbd(3)">3</button>
+                <button class="dbd-btn" onclick="window.hitDbd(2)">2</button>
+                <button class="dbd-btn" onclick="window.hitDbd(1)">1</button>
             </div>
             <div style="display:flex; gap:6px; margin-top: 4px;">
-                <button class="np-btn" style="flex:1; background: var(--bg-active); font-size:16px; height:35px; padding:0;" onclick="window.hitDbd(25)">BULL</button>
-                <button class="np-btn" style="flex:1; background: var(--btn-bg); color: var(--text-muted); font-size:16px; height:35px; padding:0;" onclick="window.hitDbd(0)">MISS</button>
+                <button class="np-btn" style="flex:1; background: var(--bg-active); font-size:16px; height: 38px; padding:0;" onclick="window.hitDbd(25)">BULL</button>
+                <button class="np-btn" style="flex:1; background: #111; color: var(--text-muted); font-size:16px; height: 38px; padding:0; border-color: #333;" onclick="window.hitDbd(0)">MISS</button>
             </div>
         </div>
     </div>
 
     <div class="controls" id="atc-controls" style="display: none; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-        <button class="np-btn" style="background: var(--btn-bg); color: var(--text-muted); font-size: 16px;" onclick="window.processAtcDart(0)">MISS</button>
+        <button class="np-btn" style="background: #111; color: var(--text-muted); font-size: 16px;" onclick="window.processAtcDart(0)">MISS</button>
         <button class="np-btn" onclick="window.processAtcDart(1)" id="atc-s">S</button>
         <button class="np-btn" onclick="window.processAtcDart(2)" id="atc-d">D</button>
         <button class="np-btn" onclick="window.processAtcDart(3)" id="atc-t">T</button>
@@ -667,14 +701,23 @@
             <button class="pill" id="cric-m-3" onclick="window.setCricMult(3)">TREBLE</button>
         </div>
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-            <button class="cric-num-btn" onclick="window.hitCricket(20)">20</button><button class="cric-num-btn" onclick="window.hitCricket(19)">19</button><button class="cric-num-btn" onclick="window.hitCricket(18)">18</button><button class="cric-num-btn" onclick="window.hitCricket(17)">17</button><button class="cric-num-btn" onclick="window.hitCricket(16)">16</button><button class="cric-num-btn" onclick="window.hitCricket(15)">15</button><button class="cric-num-btn" onclick="window.hitCricket(14)">14</button><button class="cric-num-btn" style="background: var(--bg-active);" onclick="window.hitCricket(25)">B</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(20)">20</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(19)">19</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(18)">18</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(17)">17</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(16)">16</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(15)">15</button>
+            <button class="cric-num-btn" onclick="window.hitCricket(14)">14</button>
+            <button class="cric-num-btn" style="background: var(--bg-active);" onclick="window.hitCricket(25)">B</button>
         </div>
         <div style="display: flex; gap: 6px; margin-top: 6px;">
             <button class="action-btn" onclick="window.undo()" style="flex: 1; justify-content: center; height: 45px; font-size: 14px;">⟲ UNDO</button>
-            <button class="np-btn" onclick="window.hitCricket(0)" style="flex: 2; background: var(--btn-bg); color: var(--text-muted); height: 45px; font-size: 14px; padding: 0;">MISS DART</button>
+            <button class="np-btn" onclick="window.hitCricket(0)" style="flex: 2; background: #111; border-color: #333; color: var(--text-muted); height: 45px; font-size: 14px; padding: 0;">MISS DART</button>
         </div>
     </div>
 </div>
+
+<footer class="site-footer"></footer>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -816,9 +859,8 @@
         };
     }
 
-    // THE FIX: Wait until the match begins to broadcast the challenge to Firebase
     window.issueChallenge = async function(friendUid) {
-        window.targetChallengeFriend = friendUid; // Saved globally for initApp()
+        window.targetChallengeFriend = friendUid; 
         document.getElementById('friends-layer').classList.add('hidden');
         document.getElementById('profile-layer').classList.add('hidden');
         document.getElementById('setup-layer').classList.remove('hidden');
@@ -980,7 +1022,7 @@
             let histHtml = '';
             let recent = window.currentUserDoc.matchHistory.slice(-15).reverse();
             recent.forEach(h => {
-                let color = h.desc.startsWith("WON") ? "var(--accent)" : "var(--danger)";
+                let color = h.desc.startsWith("WON") ? "var(--blue)" : "var(--danger)";
                 let safeId = h.id ? `'${h.id}'` : `null`;
                 let safeDate = `'${h.date}'`;
                 let safeDesc = `'${h.desc}'`;
@@ -989,7 +1031,7 @@
                     <div style="flex:1; cursor:pointer;" onclick="window.showMatchDetails(${safeId})">
                         <div style="color:${color}; font-weight:bold; line-height: 1.2;">${h.desc}</div>
                         <div style="color:var(--text-muted); font-size:11px; margin-top:3px; line-height:1.4;">Avg: <b style="color:white;">${h.avg}</b> | ${h.date}</div>
-                        <div style="color:var(--accent); font-size:10px; margin-top:2px;">Tap for stats 📊</div>
+                        <div style="color:var(--blue); font-size:10px; margin-top:2px;">Tap for stats 📊</div>
                     </div>
                     <button onclick="window.deleteHistoryItem(${safeId}, ${safeDate}, ${safeDesc}, ${h.pts || 0}, ${h.darts || 0}, ${h.coAtt || 0}, ${h.coHit || 0})" style="background:transparent; border:none; color:var(--danger); font-size:16px; cursor:pointer; padding:0 5px;">✖</button>
                 </div>`;
@@ -1013,12 +1055,12 @@
                     
                     list.innerHTML += `
                         <div class="friend-item">
-                            <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);">
+                            <img src="${fImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--blue);">
                             <div style="flex: 1;">
                                 <div style="color:white; font-weight:bold; font-size:14px; line-height:1.2;">${f.displayName}</div>
                                 <div style="color:var(--text-muted); font-size:10px; margin-top:3px; line-height:1.4;">Avg: ${fAvg} | High Out: ${fHc}</div>
                             </div>
-                            <button onclick="window.issueChallenge('${uid}')" style="background:var(--accent); color:black; border:none; padding:8px 12px; border-radius:8px; font-weight:900; cursor:pointer; font-size:10px;">⚔️ PLAY</button>
+                            <button onclick="window.issueChallenge('${uid}')" style="background:var(--blue); color:black; border:none; padding:8px 12px; border-radius:8px; font-weight:900; cursor:pointer; font-size:10px;">⚔️ PLAY</button>
                         </div>
                     `;
                 }
@@ -1100,7 +1142,6 @@
             document.getElementById('mode-input').value = 'online';
             window.setOpt('game-type-input', '501', document.getElementById('gt-pills').children[0]);
             
-            // Wait for Firebase auth to initialize user name, then auto init
             setTimeout(() => { 
                 if(window.currentUserDoc) document.getElementById('name-input').value = window.currentUserDoc.displayName;
                 window.initApp(); 
@@ -1232,7 +1273,6 @@
     let isLocalMatch = false;
     let localInputMode = 'total'; let numpadVal = "";
     
-    // NEW DART BY DART STATE
     let dbdMult = 1;
     let currentDarts = [];
 
@@ -1597,7 +1637,6 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
 
-                // Send the Challenge to Firebase AFTER we have successfully opened a room
                 if(window.targetChallengeFriend && window.db && window.updateDoc && window.doc) {
                     try {
                         await window.updateDoc(window.doc(window.db, "users", window.targetChallengeFriend), {
@@ -2017,9 +2056,11 @@
     }
 
     window.render = function() {
-        // --- FAILSAFE: Force remove bull-throw class if menu is gone ---
-        if (document.getElementById('first-throw-layer').classList.contains('hidden')) {
-            document.body.classList.remove('bull-throw');
+        // THE FIX: Explicitly strip the split-screen layout if the menu isn't visible
+        if (!isLocalMatch && state.mode !== 'single') {
+            if (document.getElementById('first-throw-layer').classList.contains('hidden')) {
+                document.body.classList.remove('bull-throw');
+            }
         }
 
         state.p.forEach((p, i) => {
@@ -2094,8 +2135,8 @@
             if (cardEl) cardEl.className = (state.turn === i) ? "player-card active" : "player-card";
         });
 
+        // THE FIX: Explicit Camera Swap Logic
         if (!document.body.classList.contains('spectator-mode')) {
-            
             if (state.gameType === 'atc') {
                 document.getElementById('cricket-center')?.classList.add('hidden');
                 if (document.getElementById('main-score-area')) { document.getElementById('main-score-area').style.flexDirection = (state.mode === 'single' || state.mode === 'local' || state.mode === 'bot') ? 'column' : 'row'; }
@@ -2181,7 +2222,7 @@
                         document.getElementById(`srow-${i}`).style.flexDirection = 'row';
                         document.getElementById(`srow-${i}`).style.alignItems = 'center';
                     }
-                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(30px, 5vh, 45px)';
+                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(35px, 6dvh, 60px)';
                 });
                 if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'flex';
                 if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'none';
@@ -2204,9 +2245,10 @@
                 if(document.getElementById('undo-btn')) document.getElementById('undo-btn').disabled = !isMyTurn;
             }
 
+            // THE FIX: Direct camera visibility swap based on current turn
             if (!isLocalMatch && !document.body.classList.contains('bull-throw') && state.mode !== 'single') {
-                if(document.getElementById('box-me')) document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
-                if(document.getElementById('box-peer')) document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
+                document.getElementById('box-me').className = (state.turn === myIndex) ? "v-box visible" : "v-box";
+                document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
             }
         } 
         
@@ -2223,6 +2265,7 @@
             }
         }
 
+        // SPECTATOR STREAM SWAP RELAY (Host side)
         if (spectatorCalls.length > 0) {
             const activeStream = (state.turn === myIndex || state.mode === 'single' || state.mode === 'bot') ? stream : document.getElementById('peer')?.srcObject;
             if (activeStream) {
