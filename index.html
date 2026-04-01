@@ -231,6 +231,78 @@
         
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 15px; border-radius: 14px; z-index: 30000; display: none; box-shadow: 0px 10px 30px rgba(0,0,0,0.5); border: 2px solid #fff; font-weight: bold; text-align: center; width: 90%; max-width: 350px; }
     </style>
+
+    <script>
+        // CONFIG LOGIC
+        window.openSetup = function(mode) {
+            document.getElementById('mode-input').value = mode;
+            document.getElementById('home-menu').style.display = 'none';
+            document.getElementById('config-menu').style.display = 'flex';
+            
+            document.getElementById('p2-name-group').style.display = (mode === 'local') ? 'block' : 'none';
+            document.getElementById('bot-level-group').style.display = (mode === 'bot') ? 'block' : 'none';
+            document.getElementById('dart-limit-group').style.display = 'none'; 
+            document.getElementById('legs-group').style.display = (mode === 'single') ? 'none' : 'block';
+            document.getElementById('p1-label').innerText = (mode === 'local') ? 'Player 1 Name' : 'Your Name';
+            
+            const friendBtn = document.getElementById('play-friend-btn');
+            const startBtn = document.getElementById('start-btn');
+            if (mode === 'online') {
+                if (friendBtn) friendBtn.style.display = 'block';
+                if (startBtn) startBtn.innerText = window.targetChallengeFriend ? 'SEND CHALLENGE' : 'CREATE ROOM (SHARE LINK)';
+            } else {
+                if (friendBtn) friendBtn.style.display = 'none';
+                if (startBtn) startBtn.innerText = 'START MATCH';
+                window.targetChallengeFriend = null; // Clear if cancelled
+            }
+
+            window.setOpt('game-type-input', '501', document.getElementById('gt-pills').children[0]);
+            document.getElementById('mode-input').dispatchEvent(new Event('change'));
+        };
+
+        window.closeSetup = function() {
+            document.getElementById('config-menu').style.display = 'none';
+            document.getElementById('home-menu').style.display = 'block';
+            window.targetChallengeFriend = null;
+        };
+
+        window.setOpt = function(selectId, val, btnEl) {
+            document.getElementById(selectId).value = val;
+            let siblings = btnEl.parentElement.children;
+            for (let b of siblings) { b.classList.remove('active'); }
+            btnEl.classList.add('active');
+            
+            let mode = document.getElementById('mode-input').value;
+            
+            if (selectId === 'game-type-input') {
+                if(mode === 'bot' && (val === 'atc' || val === '121' || val === '170' || val === 'cricket')) {
+                    alert("DartBot currently only supports standard games (301-1001).");
+                    window.setOpt('game-type-input', '501', document.getElementById('gt-pills').children[0]);
+                    return;
+                }
+                
+                if (val === 'atc' || val === '121' || val === 'cricket') {
+                    document.getElementById('legs-group').style.display = 'none';
+                    document.getElementById('dart-limit-group').style.display = 'none';
+                } else if (val === '170') {
+                    document.getElementById('legs-group').style.display = 'none';
+                    document.getElementById('dart-limit-group').style.display = 'block';
+                } else {
+                    document.getElementById('legs-group').style.display = (mode === 'single') ? 'none' : 'block';
+                    document.getElementById('dart-limit-group').style.display = 'none';
+                }
+            }
+            document.getElementById(selectId).dispatchEvent(new Event('change'));
+        };
+
+        // Function to open friend list from the Match Setup screen
+        window.openFriendsList = function() {
+            document.getElementById('config-menu').style.display = 'none';
+            document.getElementById('setup-layer').classList.add('hidden');
+            document.getElementById('friends-layer').classList.remove('hidden');
+            if(typeof window.renderProfileMenu === 'function') window.renderProfileMenu();
+        };
+    </script>
 </head>
 <body class="theme-classic">
 
@@ -253,11 +325,11 @@
         <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 15px;">Log in to save stats and play friends</p>
         <div class="input-group"><input type="email" id="email-input" class="setup-input" placeholder="Email Address"></div>
         <div class="input-group"><input type="password" id="password-input" class="setup-input" placeholder="Password"></div>
-        <button id="login-btn" class="btn-start">LOG IN</button>
-        <button id="signup-btn" class="btn-start" style="background: var(--btn-bg); color: white; margin-top: 10px;">SIGN UP</button>
+        <button id="login-btn" class="btn-start" onclick="document.getElementById('login-btn').click()">LOG IN</button>
+        <button id="signup-btn" class="btn-start" style="background: var(--btn-bg); color: white; margin-top: 10px;" onclick="document.getElementById('signup-btn').click()">SIGN UP</button>
         <p id="auth-error" style="color: var(--danger); margin-top: 10px; font-size: 12px;"></p>
         <hr style="border: 1px solid rgba(255,255,255,0.05); margin: 20px 0; width: 100%;">
-        <button id="guest-btn" class="btn-start" style="background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 0;">PLAY AS GUEST</button>
+        <button id="guest-btn" class="btn-start" style="background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 0;" onclick="document.getElementById('guest-btn').click()">PLAY AS GUEST</button>
     </div>
 </div>
 
@@ -536,7 +608,7 @@
     <div id="box-peer" class="v-box">
         <div class="cam-label">OPPONENT / STREAM</div>
         <div id="peer-paused-msg" class="paused-overlay">OPPONENT PAUSED</div>
-        <div id="reconnect-overlay" class="paused-overlay" style="background: rgba(13, 27, 42, 0.9); color: #ffeb3b;">CONNECTION LOST...</div>
+        <div id="reconnect-overlay" class="paused-overlay" style="background: rgba(13, 27, 42, 0.9); color: #ffeb3b;">CONNECTION LOST... RECONNECTING</div>
         <video id="peer" autoplay playsinline webkit-playsinline></video>
     </div>
 </div>
@@ -651,6 +723,8 @@
     </div>
 </div>
 
+<footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -752,8 +826,11 @@
                 }
             });
         } else {
-            loginLayer.style.display = 'flex'; 
-            setupLayer.classList.add('hidden');
+            const params = new URLSearchParams(window.location.search);
+            if (!params.get('join') && !params.get('spectate')) {
+                loginLayer.style.display = 'flex'; 
+                setupLayer.classList.add('hidden');
+            }
             document.getElementById('logout-btn').style.display = 'none'; 
             document.getElementById('open-profile-btn').style.display = 'none'; 
             window.currentUserDoc = null;
@@ -1554,10 +1631,10 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
 
-                if(window.targetChallengeFriend && window.db) {
+                // Send the Challenge to Firebase AFTER we have successfully opened a room
+                if(window.targetChallengeFriend && window.db && window.updateDoc && window.doc) {
                     try {
-                        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-                        await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
+                        await window.updateDoc(window.doc(window.db, "users", window.targetChallengeFriend), {
                             activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
                         });
                         document.getElementById('waiting-title').innerText = "Challenge Sent!";
@@ -1565,7 +1642,7 @@
                     } catch(e) {
                         alert("Error sending challenge. Check Firebase Firestore rules! " + e.message);
                     }
-                    window.targetChallengeFriend = null;
+                    window.targetChallengeFriend = null; // Clear it to prevent resending
                 }
                 
                 if (spectateId) { 
@@ -1766,6 +1843,7 @@
         if (!isLocalMatch) { window.broadcast(state); }
     }
 
+    let cricketMult = 1;
     window.setCricMult = function(m) {
         cricketMult = m;
         document.getElementById('cric-m-1').className = m === 1 ? 'cric-mult active' : 'cric-mult';
@@ -1846,6 +1924,7 @@
             if (isNaN(val) || val < 0 || val > 180) return;
         }
         
+        // Remember the throw for the edit popup
         state.lastThrow = { playerIndex: state.turn, value: val };
 
         if (p.ld < 9) { p.f9d += 3; }
@@ -1927,15 +2006,25 @@
     }
 
     window.editLastThrowPopup = function() {
-        if (!history || state.lastThrow === undefined) { alert("No previous throw to edit!"); return; }
+        if (!history || state.lastThrow === undefined) {
+            alert("No previous throw to edit!");
+            return;
+        }
+
         let lastVal = state.lastThrow.value;
         let pName = history.p[state.lastThrow.playerIndex].name;
+
         let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
 
         if (userInput !== null && userInput.trim() !== "") {
             let correctedThrow = parseInt(userInput);
-            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) { window.undo(); window.processHit(correctedThrow); } 
-            else { alert("Please enter a valid dart score (0-180)."); }
+
+            if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
+                window.undo();
+                window.processHit(correctedThrow);
+            } else {
+                alert("Please enter a valid dart score (0-180).");
+            }
         }
     };
 
