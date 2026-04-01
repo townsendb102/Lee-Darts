@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>🎯 RAF Darts Scorer 🎯</title>
     
+    <title>🎯 RAF Darts Scorer 🎯</title>
     <style>
         /* --- MODERN PREMIUM THEME --- */
         :root {
@@ -24,6 +26,7 @@
             --btn-hover: rgba(255,255,255,0.15);
         }
 
+        /* Fixed Theme Definitions */
         body.theme-classic { --accent: #10b981; --bg-main: #0f172a; --bg-card: #1e293b; --bg-active: #334155; --blue: #10b981; }
         body.theme-neon { --accent: #ff00ff; --bg-main: #0a001a; --bg-card: #20003b; --bg-active: #3d0066; --blue: #ff00ff; }
         body.theme-pub { --accent: #f59e0b; --bg-main: #1c1917; --bg-card: #292524; --bg-active: #44403c; --blue: #f59e0b; }
@@ -41,6 +44,22 @@
         }
 
         .install-btn { background: var(--accent) !important; color: #000 !important; display: none; margin-bottom: 15px; border: none !important; }
+
+        /* GLOBAL FOOTER CREDIT */
+        .site-footer { 
+            position: fixed; 
+            bottom: max(5px, env(safe-area-inset-bottom)); 
+            left: 0; 
+            right: 0; 
+            text-align: center; 
+            font-size: 10px; 
+            font-weight: 800; 
+            color: rgba(255,255,255,0.3); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            z-index: 99999; 
+            pointer-events: none; 
+        }
 
         /* LAYERS & OVERLAYS */
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
@@ -79,9 +98,9 @@
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
         .btn-update { background: transparent; border: none; color: var(--text-muted); font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; font-weight: 700; }
 
-        /* HEADER - FIXED OVERFLOW ISSUES */
-        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 15px 10px 15px; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .header-title-container { display: flex; align-items: center; max-width: 40vw; overflow: hidden; }
+        /* HEADER */
+        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 15px 10px 15px; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); height: calc(50px + env(safe-area-inset-top)); z-index: 10;}
+        .header-title-container { display: flex; align-items: center; max-width: 35vw; overflow: hidden; }
         .header-id-trunc { color: var(--accent); font-weight: 500; font-size: 11px; margin-left: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 60px; vertical-align: middle;}
         
         .header-controls { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
@@ -102,7 +121,7 @@
         .paused-overlay.visible { visibility: visible; opacity: 1; }
 
         /* PLAYER CARDS */
-        .score-area { display: flex; flex-direction: column; padding: 10px 15px; gap: 8px; min-height: 0; }
+        .score-area { display: flex; flex-direction: column; padding: 10px 15px; gap: 8px; min-height: 0; z-index: 5;}
         .player-card { flex: 1; background: var(--bg-card); border-radius: 16px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border-top: 4px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); min-height: 0;}
         .player-card.active { background: var(--bg-active); border-top: 4px solid var(--accent); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
         
@@ -150,7 +169,6 @@
         .cric-num.closed { opacity: 0.2; text-decoration: line-through; background: transparent; }
 
         /* MISC TABLES & PROFILE */
-        .site-footer { padding: 10px; text-align: center; font-size: 10px; font-weight: 900; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-top: 1px solid rgba(255,255,255,0.05); }
         .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); margin: 0 auto 15px auto; display: block; background: #111;}
         .hidden { display: none !important; }
         
@@ -165,6 +183,8 @@
         .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; align-items: center;}
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); display: none; }
         
+        #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 15px; border-radius: 12px; z-index: 30000; display: none; box-shadow: 0px 10px 25px rgba(0,0,0,0.5); border: 2px solid #fff; font-weight: bold; text-align: center; width: 90%; max-width: 350px; }
+        
         /* MODES & SPECTATOR RULES */
         body.spectator-mode { display: block; } 
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
@@ -172,7 +192,6 @@
         body.spectator-mode #box-peer { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 100% !important; height: 100% !important; left: 0 !important; border: none !important; }
         body.spectator-mode .v-container { position: fixed; inset: 0; height: 100%; width: 100vw; z-index: 0; border: none; display: block !important; }
         body.spectator-mode header { position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; }
-        body.spectator-mode .site-footer { position: fixed; bottom: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; padding-bottom: env(safe-area-inset-bottom); }
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
         body.spectator-mode .player-card { flex: 0 0 auto; width: 125px; background: rgba(0,0,0,0.5) !important; border: 1px solid rgba(255, 255, 255, 0.1); justify-content: space-evenly; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; pointer-events: auto; padding: 15px; border-top: none; }
         body.spectator-mode .player-card.active { background: rgba(0,0,0,0.8) !important; border: 2px solid var(--accent); box-shadow: 0 0 25px var(--accent-glow); }
@@ -236,6 +255,8 @@
     </script>
 </head>
 <body class="theme-classic">
+
+<footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
 
 <audio id="dart-audio" playsinline webkit-playsinline></audio>
 
@@ -344,7 +365,7 @@
 </div>
 
 <div id="setup-layer" class="hidden">
-    <div id="home-menu" style="width: 100%; max-width: 420px; padding: 10px;">
+    <div id="home-menu" style="width: 100%; max-width: 420px; padding: 10px; z-index: 10;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <div style="display: flex; align-items: center; gap: 14px;">
                 <img src="icon-192.png" style="width: 54px; height: 54px; border-radius: 14px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
@@ -394,7 +415,7 @@
         </div>
     </div>
 
-    <div id="config-menu" class="setup-card" style="display: none;">
+    <div id="config-menu" class="setup-card" style="display: none; z-index: 10;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
             <button onclick="window.closeSetup()" style="background:transparent; border:none; color:var(--text-muted); font-size:14px; font-weight:900; cursor:pointer; padding: 5px;">← CANCEL</button>
             <h3 style="color:var(--text-main); margin:0; font-weight: 900; letter-spacing: -0.5px;">MATCH SETUP</h3>
@@ -675,8 +696,6 @@
     </div>
 </div>
 
-<footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -694,6 +713,8 @@
     const app = initializeApp(firebaseConfig);
     window.auth = getAuth(app); 
     window.db = getFirestore(app);
+    window.doc = doc;
+    window.updateDoc = updateDoc;
 
     const loginLayer = document.getElementById('login-layer');
     const setupLayer = document.getElementById('setup-layer');
@@ -772,7 +793,7 @@
                     
                     const challenge = window.currentUserDoc.activeChallenge;
                     if(challenge && challenge.time > Date.now() - 60000) { 
-                        showChallengePopup(challenge);
+                        window.showChallengePopup(challenge);
                     } else if (document.getElementById('challenge-popup').style.display === 'block') {
                         document.getElementById('challenge-popup').style.display = 'none';
                     }
@@ -799,7 +820,7 @@
         }
     });
     
-    function showChallengePopup(challenge) {
+    window.showChallengePopup = function(challenge) {
         const popup = document.getElementById('challenge-popup');
         document.getElementById('challenge-text').innerText = `⚔️ ${challenge.hostName} challenged you!`;
         popup.style.display = 'block';
@@ -1066,6 +1087,15 @@
         const joinId = urlParams.get('join');
         const spectateId = urlParams.get('spectate');
 
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) {
+            quitBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to quit the match and return to the menu?")) {
+                    window.location.href = window.location.pathname;
+                }
+            });
+        }
+
         if (spectateId) {
             document.body.classList.add('spectator-mode');
             document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
@@ -1076,7 +1106,7 @@
             document.getElementById('setup-layer').classList.remove('hidden');
             document.getElementById('mode-input').value = 'online';
             window.setOpt('game-type-input', '501', document.getElementById('gt-pills').children[0]);
-            window.initApp(); // Auto Init!
+            window.initApp(); 
         } else if (joinId) {
             document.getElementById('legs-group').style.display = 'none';
             document.getElementById('game-type-group').style.display = 'none';
@@ -1088,8 +1118,11 @@
             document.getElementById('mode-input').value = 'online';
             window.setOpt('game-type-input', '501', document.getElementById('gt-pills').children[0]);
             
-            // Wait 500ms for Firebase to load name, then Auto Init!
-            setTimeout(() => { window.initApp(); }, 500);
+            // Wait for Firebase auth to initialize user name, then auto init
+            setTimeout(() => { 
+                if(window.currentUserDoc) document.getElementById('name-input').value = window.currentUserDoc.displayName;
+                window.initApp(); 
+            }, 800);
         }
     });
 
@@ -1582,14 +1615,16 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
 
-                if(window.targetChallengeFriend && window.db) {
+                // Send the Challenge to Firebase AFTER we have successfully opened a room
+                if(window.targetChallengeFriend && window.db && window.updateDoc && window.doc) {
                     try {
-                        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-                        await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
+                        await window.updateDoc(window.doc(window.db, "users", window.targetChallengeFriend), {
                             activeChallenge: { hostName: window.currentUserDoc.displayName, matchId: id, time: Date.now() }
                         });
                         alert("Challenge sent! Waiting for them to accept...");
-                    } catch(e) {}
+                    } catch(e) {
+                        console.error("Failed to send challenge: ", e);
+                    }
                     window.targetChallengeFriend = null;
                 }
                 
@@ -2159,7 +2194,7 @@
                         document.getElementById(`srow-${i}`).style.flexDirection = 'row';
                         document.getElementById(`srow-${i}`).style.alignItems = 'center';
                     }
-                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(35px, 6dvh, 60px)';
+                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(40px, 8dvh, 70px)';
                 });
                 if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'flex';
                 if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'none';
