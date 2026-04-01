@@ -35,37 +35,38 @@
         
         html, body { height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; background: #000; }
         
-        /* STRICT GRID - Prevents Squashing */
+        /* STRICT & BALANCED GRID - Prevents Layout Crushing */
         body { 
             background: var(--bg-main); color: var(--text-main); 
             display: grid;
-            grid-template-rows: calc(50px + env(safe-area-inset-top)) minmax(15dvh, 35dvh) minmax(90px, 1fr) auto calc(20px + env(safe-area-inset-bottom));
+            grid-template-rows: calc(45px + env(safe-area-inset-top)) minmax(18vh, 32vh) minmax(100px, 1fr) auto calc(20px + env(safe-area-inset-bottom));
             transition: background 0.3s ease;
         }
 
-        .install-btn { background: var(--accent) !important; color: #000 !important; display: none; margin-bottom: 15px; border: none !important; }
-
         /* GLOBAL FOOTER CREDIT */
-        .site-footer { 
-            position: fixed; 
-            bottom: max(5px, env(safe-area-inset-bottom)); 
-            left: 0; 
-            right: 0; 
-            text-align: center; 
-            font-size: 10px; 
-            font-weight: 800; 
-            color: rgba(255,255,255,0.3); 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            z-index: 99999; 
-            pointer-events: none; 
+        .global-credit {
+            position: fixed;
+            bottom: max(3px, env(safe-area-inset-bottom));
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 9px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.25);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 99999;
+            pointer-events: none; /* Prevents blocking taps */
+            padding-bottom: 2px;
         }
+
+        .install-btn { background: var(--accent) !important; color: #000 !important; display: none; margin-bottom: 15px; border: none !important; }
 
         /* LAYERS & OVERLAYS */
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
             position: fixed; inset: 0; background: var(--bg-main); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
         }
-        #winner-layer, #first-throw-layer, #waiting-layer { background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 10001; }
+        #winner-layer, #first-throw-layer, #waiting-layer { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10001; }
         #login-layer { z-index: 20000; } 
         #profile-layer { z-index: 15000; }
         #history-layer, #friends-layer { z-index: 16000; }
@@ -75,116 +76,117 @@
         .setup-card h2 { color: var(--text-main); margin-bottom: 5px; font-weight: 900; letter-spacing: -0.5px;}
 
         /* DASHBOARD CARDS */
-        .dc-card { padding: 22px 18px; border-radius: 20px; cursor: pointer; text-align: left; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: transform 0.1s; border: 1px solid rgba(255,255,255,0.1); }
+        .dc-card { padding: 20px 15px; border-radius: 16px; cursor: pointer; text-align: left; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: transform 0.1s; border: 1px solid rgba(255,255,255,0.1); }
         .dc-card:active { transform: scale(0.95); }
-        .dc-card-title { font-size: 22px; font-weight: 900; text-transform: uppercase; font-style: italic; margin-bottom: 4px; }
-        .dc-card-sub { font-size: 12px; opacity: 0.85; font-weight: 500; line-height: 1.3; }
+        .dc-card-title { font-size: 20px; font-weight: 900; text-transform: uppercase; font-style: italic; margin-bottom: 4px; }
+        .dc-card-sub { font-size: 11px; opacity: 0.85; font-weight: 500; line-height: 1.3; }
         .bg-cyan { background: linear-gradient(135deg, #0284c7, #38bdf8); }
         .bg-blue { background: linear-gradient(135deg, #2563eb, #60a5fa); }
         .bg-dark-grad { background: linear-gradient(135deg, #1e293b, #0f172a); }
 
         /* PILLS */
         .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
-        .pill { background: var(--btn-bg); padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 800; color: var(--text-muted); cursor: pointer; border: 1px solid rgba(255,255,255,0.05); flex: 1; text-align: center; min-width: 80px; transition: all 0.2s;}
+        .pill { background: var(--btn-bg); padding: 10px 14px; border-radius: 12px; font-size: 12px; font-weight: 800; color: var(--text-muted); cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.05); text-align: center; flex: 1; min-width: 70px;}
         .pill.active { background: var(--accent); color: #000; border-color: var(--accent); box-shadow: 0 4px 10px var(--accent-glow);}
 
-        .input-group { margin-bottom: 12px; text-align: left; }
-        .input-group label { display: block; font-size: 11px; font-weight: 900; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-        .setup-input { width: 100%; background: var(--btn-bg); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 14px; border-radius: 14px; font-size: 16px; outline: none; font-weight: bold; }
+        .input-group { margin-bottom: 8px; text-align: left; }
+        .input-group label { display: block; font-size: 11px; font-weight: 900; margin-bottom: 4px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .setup-input { width: 100%; background: var(--btn-bg); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 12px; border-radius: 12px; font-size: 16px; outline: none; font-weight: bold; }
         .setup-input:focus { border-color: var(--accent); }
         
-        .btn-start { background: var(--accent); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 900; border: none; border-radius: 14px; cursor: pointer; margin-top: 10px; text-transform: uppercase; box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: block !important; visibility: visible !important;}
+        .btn-start { background: var(--accent); color: #000; width: 100%; padding: 14px; font-size: 18px; font-weight: 900; border: none; border-radius: 12px; cursor: pointer; margin-top: 10px; text-transform: uppercase; box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: block !important; visibility: visible !important;}
         .btn-start:active { transform: scale(0.98); }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
         .btn-update { background: transparent; border: none; color: var(--text-muted); font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; font-weight: 700; }
 
-        /* HEADER */
-        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 15px 10px 15px; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); height: calc(50px + env(safe-area-inset-top)); z-index: 10;}
+        /* HEADER - FIXED OVERFLOW ISSUES */
+        header { display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 10px; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10;}
         .header-title-container { display: flex; align-items: center; max-width: 35vw; overflow: hidden; }
         .header-id-trunc { color: var(--accent); font-weight: 500; font-size: 11px; margin-left: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 60px; vertical-align: middle;}
         
-        .header-controls { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
+        .header-controls { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 8px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap;}
 
         /* CAMERAS */
         .v-container { position: relative; background: #000; overflow: hidden; min-height: 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .v-box { position: absolute; inset: 0; opacity: 0; z-index: -1; transition: opacity 0.3s ease; }
         .v-box.visible { opacity: 1; z-index: 1; }
-        video { width: 100%; height: 100%; object-fit: contain; }
-        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); padding: 6px 12px; font-size: 10px; border-radius: 8px; color: var(--accent); font-weight: 800; z-index: 10; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); }
+        video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+        .cam-label { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); padding: 4px 10px; font-size: 10px; border-radius: 8px; color: var(--accent); font-weight: 800; letter-spacing: 1px; z-index: 10; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
+        .paused-overlay { position: absolute; inset: 0; background: rgba(0,0,0, 0.85); color: var(--accent); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 800; letter-spacing: 1px; z-index: 5; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
+        .paused-overlay.visible { visibility: visible; opacity: 1; z-index: 10; }
 
+        /* BULL THROW LAYOUT */
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 1px solid var(--accent); }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
 
-        .paused-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; z-index: 100; visibility: hidden; opacity: 0; transition: 0.3s; }
-        .paused-overlay.visible { visibility: visible; opacity: 1; }
-
-        /* PLAYER CARDS */
-        .score-area { display: flex; flex-direction: column; padding: 10px 15px; gap: 8px; min-height: 0; z-index: 5;}
-        .player-card { flex: 1; background: var(--bg-card); border-radius: 16px; display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; border-top: 4px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); min-height: 0;}
-        .player-card.active { background: var(--bg-active); border-top: 4px solid var(--accent); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
+        /* PLAYER CARDS - COMPACT PADDING */
+        .score-area { display: flex; flex-direction: column; padding: 8px 12px; gap: 8px; min-height: 0; z-index: 5;}
+        .player-card { flex: 1; background: var(--bg-card); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; padding: 8px 15px; border-top: 4px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 0;}
+        .player-card.active { background: var(--bg-active); border-top: 4px solid var(--accent); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
         
-        .p-name { font-size: 14px; color: var(--text-muted); font-weight: 800; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+        .p-name { font-size: 14px; color: var(--text-muted); font-weight: 800; margin-bottom: 0px; display: flex; align-items: center; gap: 8px; }
         .player-card.active .p-name { color: white; }
         .score-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         
-        .score-val { font-size: clamp(35px, 6dvh, 60px); font-weight: 900; line-height: 1; color: white; flex: 1; text-align: center; }
+        .score-val { font-size: clamp(30px, 6dvh, 55px); font-weight: 900; line-height: 0.9; color: white; flex: 1; text-align: center; }
         
         .stats-col { display: flex; flex-direction: column; font-size: 10px; color: var(--text-muted); font-weight: 700; gap: 2px; }
         .stats-col b { color: white; font-size: 12px; }
         .legs-count { text-align: right; font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; }
         .legs-count span { display: block; font-size: 18px; color: white; line-height: 1; }
         .checkout-hint { position: absolute; top: 10px; right: 15px; color: var(--accent); font-weight: 900; font-size: 12px; }
-        .missed-db-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); font-size: 10px; padding: 4px 8px; border-radius: 6px; margin-top: 4px; cursor: pointer; width: fit-content; align-self: center; font-weight: bold;}
+        .missed-db-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; cursor: pointer; width: fit-content; align-self: center; font-weight: bold;}
 
-        /* CONTROLS */
-        .controls-wrapper { background: #000; padding: 10px 12px 25px 12px; border-top: 1px solid rgba(255,255,255,0.05); min-height: 0;}
-        .action-bar { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
-        .action-btn { background: #222; color: white; border: 1px solid #444; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer; }
-        
-        #numpad-display { font-size: 28px; font-weight: 900; text-align: center; color: var(--accent); height: 35px; line-height: 35px; letter-spacing: 2px; background: rgba(0,0,0,0.5); border-radius: 8px; margin-bottom: 8px;}
-        .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .np-btn { background: #1a1a1a; color: white; font-size: 22px; font-weight: 800; border-radius: 12px; border: 1px solid #333; padding: 10px 0; cursor: pointer; transition: background 0.1s;}
-        .np-btn:active { background: var(--accent); color: black; transform: scale(0.96); }
-        .np-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .np-btn.del { color: var(--danger); font-size: 16px;}
-        .np-btn.enter { background: var(--accent); color: #000; font-size: 18px;}
-        .np-btn.enter:active { background: #059669; }
-
-        /* DART-BY-DART GRID */
-        #darts-mode-ui { display: none; flex-direction: column; gap: 6px; height: 100%; }
-        .dbd-top { display: flex; gap: 6px; align-items: center; }
-        .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 32px; font-size: 16px; font-weight: 900; border-radius: 8px; height: 32px; }
-        .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-        .dbd-btn { background: #111; border: 1px solid #333; color: white; font-size: 14px; font-weight: 800; border-radius: 6px; padding: 6px 0; cursor: pointer; text-align: center;}
-        .dbd-btn:active { background: var(--accent); color: black; }
-        .dbd-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-        /* CRICKET UI */
-        #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--bg-card); border-radius: 12px; padding: 6px; border: 1px solid rgba(255,255,255,0.05); justify-content: space-evenly; margin: 0 5px;}
+        /* CRICKET CENTER */
+        #cricket-center { flex: 0 0 110px; display: flex; flex-direction: column; background: var(--bg-card); border-radius: 12px; padding: 4px; justify-content: space-evenly; margin: 0 5px; }
         .cric-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; }
-        .cric-mark { flex: 1; text-align: center; font-size: 16px; font-weight: 900; color: var(--accent); }
-        .cric-num { flex: 1; text-align: center; font-size: 13px; font-weight: 900; color: white; background: var(--btn-bg); border-radius: 6px; padding: 2px 0; }
-        .cric-num.closed { opacity: 0.2; text-decoration: line-through; background: transparent; }
+        .cric-mark { flex: 1; text-align: center; font-size: 14px; font-weight: 900; color: var(--accent); }
+        .cric-num { flex: 1; text-align: center; font-size: 12px; font-weight: 900; color: white; background: var(--btn-bg); border-radius: 4px; padding: 2px 0; }
+        .cric-num.closed { opacity: 0.3; text-decoration: line-through; background: transparent; }
 
+        /* CONTROLS - COMPACT PADDING */
+        .controls-wrapper { background: #000; padding: 8px 10px 15px 10px; border-top: 1px solid rgba(255,255,255,0.05); min-height: 0; z-index: 5;}
+        .controls { display: grid; gap: 6px; }
+        #standard-controls { display: flex; flex-direction: column; gap: 6px; height: 100%; }
+        
+        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .action-btns { display: flex; gap: 6px; }
+        .action-btn { background: #222; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 10px; cursor: pointer;}
+        
+        #numpad-display { font-size: 24px; font-weight: 900; text-align: center; height: 32px; line-height: 32px; color: var(--accent); letter-spacing: 2px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 6px;}
+        .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1;}
+        .np-btn { background: #1a1a1a; color: white; font-size: 20px; font-weight: 800; border-radius: 8px; border: 1px solid #333; padding: 8px 0; cursor: pointer; transition: background 0.1s;}
+        .np-btn:active { background: var(--accent); color: #000; transform: scale(0.96); }
+        .np-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .np-btn.del { color: var(--danger); font-size: 14px;}
+        .np-btn.enter { background: var(--accent); color: #000; font-size: 16px;}
+        .np-btn.enter:active { background: #059669; }
+        
+        /* DART-BY-DART GRID */
+        #darts-mode-ui { display: none; flex-direction: column; gap: 4px; height: 100%; }
+        .dbd-top { display: flex; gap: 6px; align-items: center; }
+        .dbd-slot { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: white; text-align: center; line-height: 28px; font-size: 14px; font-weight: 900; border-radius: 6px; height: 28px; }
+        .dbd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+        
         /* MISC TABLES & PROFILE */
-        .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); margin: 0 auto 15px auto; display: block; background: #111;}
+        .profile-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); cursor: pointer; margin: 0 auto 15px auto; display: block; background: #111;}
         .hidden { display: none !important; }
         
         .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
         .stats-table th { padding-bottom: 12px; font-size: 16px; width: 30%; font-weight: 800; color: var(--accent); }
         .stats-table th:nth-child(2) { font-size: 12px; width: 40%; color: var(--text-muted); }
-        .stats-table td { padding: 10px 0; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 700; color: white; }
+        .stats-table td { padding: 8px 0; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 700; color: white; }
         .stats-table td:nth-child(2) { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
         .stats-table tr:last-child td { border-bottom: none; }
         
-        .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 8px; text-align: left; }
-        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; align-items: center;}
+        .friend-item { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; margin-bottom: 8px; text-align: left; }
+        .history-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; align-items: center;}
         .in-game-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); display: none; }
         
         #challenge-popup { position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 15px; border-radius: 12px; z-index: 30000; display: none; box-shadow: 0px 10px 25px rgba(0,0,0,0.5); border: 2px solid #fff; font-weight: bold; text-align: center; width: 90%; max-width: 350px; }
-        
+
         /* MODES & SPECTATOR RULES */
         body.spectator-mode { display: block; } 
         body.spectator-mode .controls-wrapper, body.spectator-mode .header-controls, body.spectator-mode #legs-group { display: none !important; }
@@ -256,7 +258,7 @@
 </head>
 <body class="theme-classic">
 
-<footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
+<div class="global-credit">Created by Ben Townsend of The Leeming Arrows</div>
 
 <audio id="dart-audio" playsinline webkit-playsinline></audio>
 
@@ -606,7 +608,7 @@
             <button id="mode-toggle-btn" class="action-btn" style="color: var(--accent); background: transparent; border: 1px solid var(--accent);" onclick="window.toggleLocalMode()">TOTAL ENTRY</button>
         </div>
 
-        <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 10px; height: 100%;">
+        <div id="total-mode-ui" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
             <div id="numpad-display">0</div>
             <div class="np-grid">
                 <button class="np-btn" onclick="window.np(1)">1</button>
@@ -624,44 +626,25 @@
             </div>
         </div>
 
-        <div id="darts-mode-ui" style="display: none; flex-direction: column; gap: 8px; height: 100%;">
+        <div id="darts-mode-ui" style="display: none; flex-direction: column; gap: 6px; height: 100%;">
             <div class="dbd-top">
                 <div class="dbd-slot" id="dbd-slot-1">-</div>
                 <div class="dbd-slot" id="dbd-slot-2">-</div>
                 <div class="dbd-slot" id="dbd-slot-3">-</div>
-                <button class="action-btn" id="dbd-del-btn" style="width:50px; font-size: 16px;" onclick="window.dbdDel()">⌫</button>
-                <button class="action-btn" id="dbd-enter-btn" style="background:var(--accent); color:#000; width:60px; font-size: 14px;" onclick="window.dbdEnter()">OK</button>
+                <button class="action-btn" id="dbd-del-btn" style="width:45px; font-size: 16px;" onclick="window.dbdDel()">⌫</button>
+                <button class="action-btn" id="dbd-enter-btn" style="background:var(--accent); color:#000; width:55px; font-size: 13px;" onclick="window.dbdEnter()">OK</button>
             </div>
-            <div style="display: flex; gap: 6px; margin: 6px 0;">
+            <div style="display: flex; gap: 6px; margin: 4px 0;">
                 <button class="pill active" id="dbd-m-1" onclick="window.setDbdMult(1)">SINGLE</button>
                 <button class="pill" id="dbd-m-2" onclick="window.setDbdMult(2)">DOUBLE</button>
                 <button class="pill" id="dbd-m-3" onclick="window.setDbdMult(3)">TREBLE</button>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;">
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(20)">20</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(19)">19</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(18)">18</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(17)">17</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(16)">16</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(15)">15</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(14)">14</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(13)">13</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(12)">12</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(11)">11</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(10)">10</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(9)">9</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(8)">8</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(7)">7</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(6)">6</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(5)">5</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(4)">4</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(3)">3</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(2)">2</button>
-                <button class="np-btn" style="font-size: 16px; padding: 10px 0;" onclick="window.hitDbd(1)">1</button>
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;">
+                <button class="dbd-btn" onclick="window.hitDbd(20)">20</button><button class="dbd-btn" onclick="window.hitDbd(19)">19</button><button class="dbd-btn" onclick="window.hitDbd(18)">18</button><button class="dbd-btn" onclick="window.hitDbd(17)">17</button><button class="dbd-btn" onclick="window.hitDbd(16)">16</button><button class="dbd-btn" onclick="window.hitDbd(15)">15</button><button class="dbd-btn" onclick="window.hitDbd(14)">14</button><button class="dbd-btn" onclick="window.hitDbd(13)">13</button><button class="dbd-btn" onclick="window.hitDbd(12)">12</button><button class="dbd-btn" onclick="window.hitDbd(11)">11</button><button class="dbd-btn" onclick="window.hitDbd(10)">10</button><button class="dbd-btn" onclick="window.hitDbd(9)">9</button><button class="dbd-btn" onclick="window.hitDbd(8)">8</button><button class="dbd-btn" onclick="window.hitDbd(7)">7</button><button class="dbd-btn" onclick="window.hitDbd(6)">6</button><button class="dbd-btn" onclick="window.hitDbd(5)">5</button><button class="dbd-btn" onclick="window.hitDbd(4)">4</button><button class="dbd-btn" onclick="window.hitDbd(3)">3</button><button class="dbd-btn" onclick="window.hitDbd(2)">2</button><button class="dbd-btn" onclick="window.hitDbd(1)">1</button>
             </div>
-            <div style="display:flex; gap:6px; margin-top: 6px;">
-                <button class="np-btn" style="flex:1; background: var(--bg-active);" onclick="window.hitDbd(25)">BULL</button>
-                <button class="np-btn" style="flex:1; background: var(--btn-bg); color: var(--text-muted);" onclick="window.hitDbd(0)">MISS</button>
+            <div style="display:flex; gap:6px; margin-top: 4px;">
+                <button class="np-btn" style="flex:1; background: var(--bg-active); font-size:16px; padding:8px 0;" onclick="window.hitDbd(25)">BULL</button>
+                <button class="np-btn" style="flex:1; background: var(--btn-bg); color: var(--text-muted); font-size:16px; padding:8px 0;" onclick="window.hitDbd(0)">MISS</button>
             </div>
         </div>
     </div>
@@ -674,27 +657,21 @@
     </div>
 
     <div class="controls" id="cricket-controls" style="display: none;">
-        <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+        <div style="display: flex; gap: 6px; margin-bottom: 6px;">
             <button class="pill active" id="cric-m-1" onclick="window.setCricMult(1)">SINGLE</button>
             <button class="pill" id="cric-m-2" onclick="window.setCricMult(2)">DOUBLE</button>
             <button class="pill" id="cric-m-3" onclick="window.setCricMult(3)">TREBLE</button>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-            <button class="np-btn" style="font-size: 18px; padding: 12px 0;" onclick="window.hitCricket(20)">20</button>
-            <button class="np-btn" style="font-size: 18px; padding: 12px 0;" onclick="window.hitCricket(19)">19</button>
-            <button class="np-btn" style="font-size: 18px; padding: 12px 0;" onclick="window.hitCricket(18)">18</button>
-            <button class="np-btn" style="font-size: 18px; padding: 12px 0;" onclick="window.hitCricket(17)">17</button>
-            <button class="np-btn" style="font-size: 18px; padding: 12px 0;" onclick="window.hitCricket(16)">16</button>
-            <button class="np-btn" style="font-size: 18px; padding: 12px 0;" onclick="window.hitCricket(15)">15</button>
-            <button class="np-btn" style="font-size: 18px; padding: 12px 0;" onclick="window.hitCricket(14)">14</button>
-            <button class="np-btn" style="font-size: 18px; padding: 12px 0; background: var(--bg-active);" onclick="window.hitCricket(25)">B</button>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+            <button class="cric-num-btn" onclick="window.hitCricket(20)">20</button><button class="cric-num-btn" onclick="window.hitCricket(19)">19</button><button class="cric-num-btn" onclick="window.hitCricket(18)">18</button><button class="cric-num-btn" onclick="window.hitCricket(17)">17</button><button class="cric-num-btn" onclick="window.hitCricket(16)">16</button><button class="cric-num-btn" onclick="window.hitCricket(15)">15</button><button class="cric-num-btn" onclick="window.hitCricket(14)">14</button><button class="cric-num-btn" style="background: var(--bg-active);" onclick="window.hitCricket(25)">B</button>
         </div>
-        <div style="display: flex; gap: 8px; margin-top: 8px;">
-            <button class="action-btn" onclick="window.undo()" style="flex: 1; justify-content: center; height: 50px; font-size: 14px;">⟲ UNDO</button>
-            <button class="np-btn" onclick="window.hitCricket(0)" style="flex: 2; background: var(--btn-bg); color: var(--text-muted); height: 50px; font-size: 16px; padding: 0;">MISS DART</button>
+        <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <button class="action-btn" onclick="window.undo()" style="flex: 1; justify-content: center; height: 45px; font-size: 14px;">⟲ UNDO</button>
+            <button class="np-btn" onclick="window.hitCricket(0)" style="flex: 2; background: var(--btn-bg); color: var(--text-muted); height: 45px; font-size: 14px; padding: 0;">MISS DART</button>
         </div>
     </div>
 </div>
+
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -836,13 +813,15 @@
         };
     }
 
+    // THE FIX: Wait until the match begins to broadcast the challenge to Firebase
     window.issueChallenge = async function(friendUid) {
-        window.targetChallengeFriend = friendUid;
+        window.targetChallengeFriend = friendUid; // Saved globally for initApp()
         document.getElementById('friends-layer').classList.add('hidden');
         document.getElementById('profile-layer').classList.add('hidden');
         document.getElementById('setup-layer').classList.remove('hidden');
         if(typeof window.openSetup === 'function') window.openSetup('online');
     };
+
     document.getElementById('open-profile-btn').addEventListener('click', () => {
         setupLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
@@ -1452,6 +1431,7 @@
         }, 1500);
     }
 
+    /* THE FIX: Re-attached explicitly to the global window */
     window.toggleBullPhase = function(isActive) {
         if (isActive) { document.body.classList.add('bull-throw'); } 
         else { document.body.classList.remove('bull-throw'); }
@@ -1615,7 +1595,7 @@
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('wait-id').innerText = id;
 
-                // Send the Challenge to Firebase AFTER we have successfully opened a room
+                // THE FIX: Wait until the match begins to broadcast the challenge to Firebase
                 if(window.targetChallengeFriend && window.db && window.updateDoc && window.doc) {
                     try {
                         await window.updateDoc(window.doc(window.db, "users", window.targetChallengeFriend), {
@@ -2107,6 +2087,10 @@
             if (cardEl) cardEl.className = (state.turn === i) ? "player-card active" : "player-card";
         });
 
+        // THE SPECTATOR UPDATE & UI SWAP LOGIC
+        const urlParams = new URLSearchParams(window.location.search);
+        const spectateId = urlParams.get('spectate');
+
         if (!spectateId) {
             
             if (state.gameType === 'atc') {
@@ -2194,7 +2178,7 @@
                         document.getElementById(`srow-${i}`).style.flexDirection = 'row';
                         document.getElementById(`srow-${i}`).style.alignItems = 'center';
                     }
-                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(40px, 8dvh, 70px)';
+                    if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).style.fontSize = 'clamp(35px, 6dvh, 60px)';
                 });
                 if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'flex';
                 if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'none';
@@ -2222,6 +2206,7 @@
                 if(document.getElementById('box-peer')) document.getElementById('box-peer').className = (state.turn !== myIndex) ? "v-box visible" : "v-box";
             }
         } else {
+            // SPECTATOR MODE DYNAMIC LABEL UPDATE
             const camLabel = document.querySelector('#box-peer .cam-label');
             if (camLabel) camLabel.innerText = state.p[state.turn].name.toUpperCase();
         }
