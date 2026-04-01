@@ -39,11 +39,11 @@
         
         html, body { height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; margin: 0; padding: 0; background: var(--bg-main); }
 
-        /* RESTORED ORIGINAL GRID TO PREVENT IPHONE SQUASHING */
+        /* RESTORED ORIGINAL WORKING GRID - PREVENTS SQUASHING */
         body { 
             background: var(--bg-main); color: var(--text-main); 
             display: grid;
-            grid-template-rows: calc(50px + env(safe-area-inset-top)) minmax(20dvh, 40dvh) minmax(90px, 1fr) auto calc(20px + env(safe-area-inset-bottom));
+            grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(20dvh, 40dvh) minmax(90px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
             transition: background 0.3s ease;
         }
 
@@ -90,14 +90,14 @@
         body.spectator-mode .legs-count { text-align: center; }
         body.spectator-mode .checkout-hint { font-size: 12px; }
         
-        body.single-mode { grid-template-rows: calc(50px + env(safe-area-inset-top)) 1fr auto calc(20px + env(safe-area-inset-bottom)) !important; }
+        body.single-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
         body.single-mode .v-container, body.single-mode #card-1, body.single-mode #mic-btn, body.single-mode #zoom-btn, body.single-mode #flip-btn { display: none !important; }
         body.single-mode .score-area { flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
         body.single-mode #card-0 { max-width: 400px; width: 100%; border-top: 4px solid var(--accent); background: var(--bg-active); }
         body.single-mode.spectator-mode .score-area { flex-direction: row; justify-content: center; }
         body.single-mode.spectator-mode #card-0 { width: 150px; }
 
-        body.local-mode { grid-template-rows: calc(50px + env(safe-area-inset-top)) 1fr auto calc(20px + env(safe-area-inset-bottom)) !important; }
+        body.local-mode { grid-template-rows: calc(40px + env(safe-area-inset-top)) 1fr auto calc(25px + env(safe-area-inset-bottom)) !important; }
         body.local-mode .v-container, body.local-mode header > div:first-child, body.local-mode #mic-btn, body.local-mode #zoom-btn, body.local-mode #flip-btn, body.local-mode #spectate-btn, body.local-mode #share-btn-top { display: none !important; }
         body.local-mode header { justify-content: flex-end; }
 
@@ -161,7 +161,7 @@
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) .v-box { visibility: visible !important; opacity: 1 !important; z-index: 1 !important; width: 50% !important; }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-me { left: 0; border-right: 2px solid var(--accent); }
         body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #box-peer { left: 50%; }
-        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(50px + 35dvh + env(safe-area-inset-top)); background: rgba(0, 0, 0, 0.95); }
+        body.bull-throw:not(.local-mode):not(.spectator-mode):not(.single-mode) #first-throw-layer { top: calc(40px + 45dvh + env(safe-area-inset-top)); background: rgba(0, 0, 0, 0.95); }
 
         /* PLAYER CARDS */
         .score-area { display: flex; flex-direction: column; padding: 10px; gap: 8px; min-height: 0; z-index: 5;}
@@ -247,13 +247,15 @@
             
             const friendBtn = document.getElementById('play-friend-btn');
             const startBtn = document.getElementById('start-btn');
+            
+            // FIX: Ensure Play With A Friend ONLY shows for online
             if (mode === 'online') {
                 if (friendBtn) friendBtn.style.display = 'block';
                 if (startBtn) startBtn.innerText = window.targetChallengeFriend ? 'SEND CHALLENGE' : 'CREATE ROOM (SHARE LINK)';
             } else {
                 if (friendBtn) friendBtn.style.display = 'none';
                 if (startBtn) startBtn.innerText = 'START MATCH';
-                window.targetChallengeFriend = null; // Clear if cancelled
+                window.targetChallengeFriend = null; 
             }
 
             window.setOpt('game-type-input', '501', document.getElementById('gt-pills').children[0]);
@@ -860,7 +862,6 @@
         };
     }
 
-    // NEW EXPLICIT CHALLENGE ROUTING
     window.issueChallenge = async function(friendUid) {
         window.targetChallengeFriend = friendUid;
         document.getElementById('friends-layer').classList.add('hidden');
@@ -1270,6 +1271,10 @@
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user"; let currentCamIndex = 0;
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinId = urlParams.get('join');
+    const spectateId = urlParams.get('spectate');
+
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
         160:"T20 T20 D20",158:"T20 T20 D19",157:"T20 T19 D20",156:"T20 T20 D18",
@@ -1555,7 +1560,7 @@
                 window.playDartSound('gameon');
                 window.render(); 
             } else { window.showFirstThrowUI(); }
-            return;
+            return; // THIS PREVENTS LOCAL PLAYER FROM ASKING FOR CAMERA
         }
 
         if (state.mode === 'single') {
@@ -1613,6 +1618,7 @@
                 }
             });
             
+            // --- NEW WAITING LAYER LOGIC ---
             document.getElementById('setup-layer').classList.add('hidden');
             if (!joinId && !spectateId) {
                 document.getElementById('waiting-layer').classList.remove('hidden');
@@ -1924,7 +1930,6 @@
             if (isNaN(val) || val < 0 || val > 180) return;
         }
         
-        // Remember the throw for the edit popup
         state.lastThrow = { playerIndex: state.turn, value: val };
 
         if (p.ld < 9) { p.f9d += 3; }
