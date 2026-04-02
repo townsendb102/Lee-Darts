@@ -1853,13 +1853,21 @@
             document.body.classList.add('spectator-mode');
             document.getElementById('start-btn').innerText = "JOIN AS SPECTATOR";
             document.getElementById('name-input').placeholder = "Your Name (Optional)";
+            
+            // Hide all unnecessary setup options for spectators
+            document.getElementById('game-type-group').style.display = 'none';
+            document.getElementById('legs-group').style.display = 'none';
+            document.getElementById('dart-limit-group').style.display = 'none';
+            document.getElementById('bot-level-group').style.display = 'none';
+
             document.getElementById('home-menu').style.display = 'none';
             document.getElementById('config-menu').style.display = 'flex';
             document.getElementById('login-layer').style.display = 'none';
             document.getElementById('setup-layer').classList.remove('hidden');
             document.getElementById('mode-input').value = 'online';
-            window.setOpt('game-type-input', '501', document.getElementById('gt-pills').children[0]);
-            window.initApp(); 
+            
+            // NOTE: Removed the auto-triggered window.initApp() here. 
+            // It now correctly waits for the user to type their name and physically press the button.
         } else if (joinId) {
             document.getElementById('legs-group').style.display = 'none';
             document.getElementById('game-type-group').style.display = 'none';
