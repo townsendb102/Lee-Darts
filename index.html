@@ -105,14 +105,14 @@
         body.local-mode header { justify-content: flex-end; }
 
         /* OVERLAYS & SETUPS */
-        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer, #checkouts-layer { 
+        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer, #checkouts-layer, #brain-training-layer { 
             position: fixed;
             inset: 0; background: var(--bg-main); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
         #winner-layer, #first-throw-layer, #waiting-layer { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10001; }
         #login-layer { z-index: 20000; } 
-        #profile-layer, #checkouts-layer { z-index: 15000; }
+        #profile-layer, #checkouts-layer, #brain-training-layer { z-index: 15000; }
         #history-layer, #friends-layer { z-index: 16000; }
         #match-details-layer { z-index: 17000; }
 
@@ -140,6 +140,7 @@
         .setup-input:focus { border-color: var(--accent); }
         .setup-input option { background: var(--dark); color: white; }
         
+        /* FIX: Removed !important to allow Javascript to toggle elements */
         .btn-start { background: var(--accent); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 900; border: none; border-radius: 14px; cursor: pointer; margin-top: 15px; text-transform: uppercase; display: block; }
         .btn-start:active { transform: scale(0.98); }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -243,6 +244,97 @@
     </style>
 
     <script>
+        // NEW BRAIN TRAINING LOGIC
+        window.btState = { streak: 0, answer: 0, currentInput: "" };
+
+        window.startBrainTraining = function() {
+            document.getElementById('home-menu').style.display = 'none';
+            document.getElementById('setup-layer').classList.add('hidden');
+            document.getElementById('brain-training-layer').classList.remove('hidden');
+            window.btState.streak = 0;
+            document.getElementById('bt-streak').innerText = "0";
+            window.btGenerateQuestion();
+        };
+
+        window.closeBrainTraining = function() {
+            document.getElementById('brain-training-layer').classList.add('hidden');
+            document.getElementById('setup-layer').classList.remove('hidden');
+            document.getElementById('home-menu').style.display = 'block';
+        };
+
+        window.btGenerateQuestion = function() {
+            window.btState.currentInput = "";
+            document.getElementById('bt-answer-display').innerText = "?";
+            document.getElementById('bt-question').style.borderColor = "var(--accent)";
+            
+            let types = ['treble', 'double', 'subtraction', 'addition'];
+            let type = types[Math.floor(Math.random() * types.length)];
+            let qText = "";
+            let ans = 0;
+            
+            if (type === 'treble') {
+                let n = Math.floor(Math.random() * 20) + 1;
+                qText = `Treble ${n}`;
+                ans = n * 3;
+            } else if (type === 'double') {
+                let n = Math.floor(Math.random() * 20) + 1;
+                qText = `Double ${n}`;
+                ans = n * 2;
+            } else if (type === 'subtraction') {
+                let start = Math.floor(Math.random() * 300) + 40;
+                let hit = Math.floor(Math.random() * 100) + 1;
+                qText = `${start} - ${hit}`;
+                ans = start - hit;
+            } else if (type === 'addition') {
+                let d1 = Math.floor(Math.random() * 60) + 1;
+                let d2 = Math.floor(Math.random() * 60) + 1;
+                let d3 = Math.floor(Math.random() * 60) + 1;
+                qText = `${d1} + ${d2} + ${d3}`;
+                ans = d1 + d2 + d3;
+            }
+            
+            window.btState.answer = ans;
+            document.getElementById('bt-question').innerText = qText;
+        };
+
+        window.btNp = function(val) {
+            if (val === 'C') {
+                window.btState.currentInput = "";
+            } else {
+                if (window.btState.currentInput.length < 4) {
+                    window.btState.currentInput += val;
+                }
+            }
+            document.getElementById('bt-answer-display').innerText = window.btState.currentInput || "?";
+        };
+
+        window.btSubmit = function() {
+            let userAns = parseInt(window.btState.currentInput);
+            if (isNaN(userAns)) return;
+            
+            if (userAns === window.btState.answer) {
+                // Correct
+                if(window.playDartSound) window.playDartSound('gameshot'); 
+                window.btState.streak++;
+                document.getElementById('bt-streak').innerText = window.btState.streak;
+                document.getElementById('bt-question').style.borderColor = "#10b981"; // Green flash
+                setTimeout(() => {
+                    window.btGenerateQuestion();
+                }, 300);
+            } else {
+                // Wrong
+                if(window.playDartSound) window.playDartSound('bust');
+                window.btState.streak = 0;
+                document.getElementById('bt-streak').innerText = window.btState.streak;
+                document.getElementById('bt-question').style.borderColor = "#ef4444"; // Red flash
+                document.getElementById('bt-answer-display').innerText = "?";
+                window.btState.currentInput = "";
+                setTimeout(() => {
+                    document.getElementById('bt-question').style.borderColor = "var(--accent)";
+                }, 400);
+            }
+        };
+
         // CONFIG LOGIC
         window.openSetup = function(mode, defaultGame = '501') {
             document.getElementById('mode-input').value = mode;
@@ -456,6 +548,38 @@
     </div>
 </div>
 
+<div id="brain-training-layer" class="hidden">
+    <div class="setup-card" style="max-height: 85vh; width: 100%; max-width: 400px; display: flex; flex-direction: column; padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin: 0; text-align: left; font-size: 20px;">🚽 BIG BEN'S BRAIN TRAINING</h2>
+            <button onclick="window.closeBrainTraining()" style="background:transparent; border:none; color:var(--danger); font-size:24px; cursor:pointer;">✖</button>
+        </div>
+        
+        <div style="text-align:center; font-size:14px; color:var(--text-muted); margin-bottom: 10px;">Streak: <span id="bt-streak" style="color:white; font-weight:bold;">0</span></div>
+        
+        <div id="bt-question" style="background: rgba(0,0,0,0.5); border: 2px solid var(--accent); color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; font-size: 30px; font-weight: 900; text-align: center; min-height: 90px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s;">
+            Question Here
+        </div>
+        
+        <div id="bt-answer-display" style="font-size: 35px; font-weight: 900; text-align: center; height: 45px; line-height: 45px; color: var(--accent); letter-spacing: 2px; background: rgba(0,0,0,0.5); border-radius: 8px; margin-bottom: 15px;">?</div>
+        
+        <div class="np-grid" style="width: 100%; flex: 1;">
+            <button class="np-btn" onclick="window.btNp(1)">1</button>
+            <button class="np-btn" onclick="window.btNp(2)">2</button>
+            <button class="np-btn" onclick="window.btNp(3)">3</button>
+            <button class="np-btn" onclick="window.btNp(4)">4</button>
+            <button class="np-btn" onclick="window.btNp(5)">5</button>
+            <button class="np-btn" onclick="window.btNp(6)">6</button>
+            <button class="np-btn" onclick="window.btNp(7)">7</button>
+            <button class="np-btn" onclick="window.btNp(8)">8</button>
+            <button class="np-btn" onclick="window.btNp(9)">9</button>
+            <button class="np-btn" onclick="window.btNp('C')" style="color:#ff4d4d; font-size:16px;">DEL</button>
+            <button class="np-btn" onclick="window.btNp(0)">0</button>
+            <button class="np-btn enter" onclick="window.btSubmit()">ENTER</button>
+        </div>
+    </div>
+</div>
+
 <div id="setup-layer" class="hidden">
     <div id="home-menu" style="width: 100%; max-width: 420px; padding: 10px; z-index: 10;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
@@ -500,6 +624,14 @@
                 <div class="dc-card-sub">Random finish training</div>
             </div>
             <div style="font-size: 35px; opacity: 0.4;">🎯</div>
+        </div>
+        
+        <div class="dc-card bg-dark-grad" onclick="window.startBrainTraining()" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--accent);">
+            <div>
+                <div class="dc-card-title">BIG BEN'S BRAIN TRAINING</div>
+                <div class="dc-card-sub">Improve your dart maths</div>
+            </div>
+            <div style="font-size: 35px; opacity: 0.4;">🚽</div>
         </div>
 
         <div class="dc-card bg-dark-grad" onclick="window.openSetup('bot')" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
