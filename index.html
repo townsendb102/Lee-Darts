@@ -239,7 +239,7 @@
     </style>
 
     <script>
-        // GLOBALS
+        // NEW CHECKOUT PRACTICE GENERATOR
         window.getRandomCheckout = function() {
             const invalid = [169, 168, 166, 165, 163, 162, 159];
             let num;
@@ -249,7 +249,7 @@
             return num;
         };
 
-        // NEW CHECKOUT PRACTICE BYPASS
+        // NEW DIRECT LAUNCHER FOR CHECKOUT PRACTICE
         window.startCheckoutPractice = function() {
             document.getElementById('home-menu').style.display = 'none';
             document.getElementById('setup-layer').classList.add('hidden');
@@ -258,11 +258,10 @@
             state.mode = 'single';
             state.gameType = 'checkout';
             
-            // Bypass setup entirely and assign default values
             state.p[0].name = window.currentUserDoc ? window.currentUserDoc.displayName : "Player 1";
             state.p[0].targetStart = window.getRandomCheckout();
             state.p[0].s = state.p[0].targetStart;
-            state.p[0].l = 0; // Using 'l' to track successful finishes/streaks
+            state.p[0].l = 0; // Using 'l' to track successful hits/streak
             state.p[0].d = 0;
             state.p[0].ld = 0;
             
@@ -1369,6 +1368,10 @@
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user"; let currentCamIndex = 0;
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinId = urlParams.get('join');
+    const spectateId = urlParams.get('spectate');
+
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
         160:"T20 T20 D20",158:"T20 T20 D19",157:"T20 T19 D20",156:"T20 T20 D18",
@@ -1412,7 +1415,7 @@
         7:"3 D2",6:"D3",5:"1 D2",4:"D2",
         3:"1 D1",2:"D1"
     };
-    
+
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
         try {
@@ -1435,7 +1438,7 @@
             if (!isLocalMatch) { window.broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
-    
+
     window.broadcast = function(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
 
     function unlockAudio() {
@@ -1512,10 +1515,33 @@
     };
 
     window.updateDbdDisplay = function() {
+        let tempScore = state.p[state.turn].s;
+        let sumPts = 0;
+        
         for(let i=0; i<3; i++) {
             let slot = document.getElementById(`dbd-slot-${i+1}`);
-            if(currentDarts[i]) { slot.innerText = currentDarts[i].label; } 
+            if(currentDarts[i]) { 
+                slot.innerText = currentDarts[i].label; 
+                sumPts += currentDarts[i].pts;
+            } 
             else { slot.innerText = "-"; }
+        }
+        
+        // Live Score Subtraction for X01/Checkout games
+        const x01Games = ['301', '501', '701', '1001', '121', '170', '170_race', 'checkout'];
+        if (x01Games.includes(state.gameType)) {
+            let currentScoreEl = document.getElementById(`s-${state.turn}`);
+            let coHintEl = document.getElementById(`co-${state.turn}`);
+            
+            let newS = tempScore - sumPts;
+            
+            if (newS < 0 || newS === 1) {
+                if (currentScoreEl) currentScoreEl.innerText = "BUST";
+                if (coHintEl) coHintEl.innerText = "";
+            } else {
+                if (currentScoreEl) currentScoreEl.innerText = newS;
+                if (coHintEl) coHintEl.innerText = checkouts[newS] || "";
+            }
         }
     };
     
@@ -2481,6 +2507,10 @@
         } else if (state.mode === 'bot' && state.turn === 0 && botTimeout) {
             clearTimeout(botTimeout);
             botTimeout = null;
+        }
+
+        if (localInputMode === 'darts' && currentDarts.length > 0) {
+            window.updateDbdDisplay();
         }
     };
 
