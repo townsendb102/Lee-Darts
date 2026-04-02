@@ -41,7 +41,8 @@
 
         /* RESTORED ORIGINAL WORKING GRID - PREVENTS SQUASHING */
         body { 
-            background: var(--bg-main); color: var(--text-main); 
+            background: var(--bg-main);
+            color: var(--text-main); 
             display: grid;
             grid-template-rows: calc(40px + env(safe-area-inset-top)) minmax(20dvh, 40dvh) minmax(90px, 1fr) auto calc(25px + env(safe-area-inset-bottom));
             transition: background 0.3s ease;
@@ -51,7 +52,7 @@
 
         /* GLOBAL FOOTER CREDIT */
         .site-footer { 
-            position: fixed; 
+            position: fixed;
             bottom: max(3px, env(safe-area-inset-bottom)); 
             left: 0; 
             right: 0; 
@@ -60,7 +61,7 @@
             font-weight: 800; 
             color: rgba(255,255,255,0.3); 
             text-transform: uppercase; 
-            letter-spacing: 1px; 
+            letter-spacing: 1px;
             z-index: 99999; 
             pointer-events: none; 
             padding-bottom: 2px;
@@ -77,11 +78,13 @@
         body.spectator-mode .score-area { position: fixed; top: 50%; transform: translateY(-50%); width: 100%; z-index: 10; background: transparent; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 15px; pointer-events: none; }
         
         body.spectator-mode .player-card { 
-            flex: 0 0 auto; width: 125px; 
+            flex: 0 0 auto;
+            width: 125px; 
             background: rgba(15,23,42,0.6) !important; 
             border: 1px solid rgba(255, 255, 255, 0.1); 
             justify-content: space-evenly; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border-radius: 16px; pointer-events: auto; padding: 15px; border-top: none;
+            border-radius: 16px;
+            pointer-events: auto; padding: 15px; border-top: none;
         }
         body.spectator-mode .player-card.active { background: rgba(15,23,42,0.9) !important; border: 2px solid var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
         body.spectator-mode .score-row { flex-direction: column; gap: 15px; }
@@ -103,7 +106,9 @@
 
         /* OVERLAYS & SETUPS */
         #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer { 
-            position: fixed; inset: 0; background: var(--bg-main); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+            position: fixed;
+            inset: 0; background: var(--bg-main); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
         #winner-layer, #first-throw-layer, #waiting-layer { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10001; }
         #login-layer { z-index: 20000; } 
@@ -276,7 +281,6 @@
             btnEl.classList.add('active');
             
             let mode = document.getElementById('mode-input').value;
-            
             if (selectId === 'game-type-input') {
                 if(mode === 'bot' && (val === 'atc' || val === '121' || val === '170' || val === 'cricket')) {
                     alert("DartBot currently only supports standard games (301-1001).");
@@ -754,6 +758,7 @@
         setupLayer.classList.remove('hidden');
         document.getElementById('name-input').value = "Guest";
     });
+    
     document.getElementById('signup-btn').addEventListener('click', () => {
         const email = document.getElementById('email-input').value;
         const pass = document.getElementById('password-input').value;
@@ -766,14 +771,17 @@
             else err.innerText = error.message;
         });
     });
+    
     document.getElementById('login-btn').addEventListener('click', () => {
         signInWithEmailAndPassword(window.auth, document.getElementById('email-input').value, document.getElementById('password-input').value)
             .catch((error) => { document.getElementById('auth-error').innerText = "Invalid Email or Password."; });
     });
+    
     document.getElementById('logout-btn').addEventListener('click', () => {
         if(window.userUnsub) window.userUnsub();
         signOut(window.auth).then(() => { window.location.href = window.location.pathname; });
     });
+    
     onAuthStateChanged(window.auth, async (user) => {
         if (user) {
             loginLayer.style.display = 'none'; 
@@ -828,14 +836,15 @@
         } else {
             const params = new URLSearchParams(window.location.search);
             if (!params.get('join') && !params.get('spectate')) {
-                loginLayer.style.display = 'flex'; 
+                loginLayer.style.display = 'flex';
                 setupLayer.classList.add('hidden');
             }
             document.getElementById('logout-btn').style.display = 'none'; 
-            document.getElementById('open-profile-btn').style.display = 'none'; 
+            document.getElementById('open-profile-btn').style.display = 'none';
             window.currentUserDoc = null;
         }
     });
+    
     document.getElementById('theme-select').addEventListener('change', async function() {
         const selectedTheme = this.value;
         document.body.classList.remove('theme-classic', 'theme-neon', 'theme-pub');
@@ -844,6 +853,7 @@
             await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), { theme: selectedTheme });
         }
     });
+    
     window.showChallengePopup = function(challenge) {
         const popup = document.getElementById('challenge-popup');
         document.getElementById('challenge-text').innerText = `⚔️ ${challenge.hostName} challenged you!`;
@@ -874,30 +884,37 @@
         profileLayer.classList.remove('hidden');
         window.renderProfileMenu();
     });
+    
     document.getElementById('close-profile-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         setupLayer.classList.remove('hidden');
     });
+    
     document.getElementById('open-history-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         historyLayer.classList.remove('hidden');
     });
+    
     document.getElementById('close-history-btn').addEventListener('click', () => {
         historyLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
     });
+    
     document.getElementById('close-md-btn').addEventListener('click', () => {
         document.getElementById('match-details-layer').classList.add('hidden');
         document.getElementById('history-layer').classList.remove('hidden');
     });
+    
     document.getElementById('open-friends-btn').addEventListener('click', () => {
         profileLayer.classList.add('hidden');
         friendsLayer.classList.remove('hidden');
     });
+    
     document.getElementById('close-friends-btn').addEventListener('click', () => {
         friendsLayer.classList.add('hidden');
         profileLayer.classList.remove('hidden');
     });
+    
     document.getElementById('reset-stats-btn').addEventListener('click', async () => {
         if(confirm("Are you sure you want to completely reset your Lifetime Stats? This clears your Average, Checkout %, High Out, and Match History.")) {
             try {
@@ -908,6 +925,7 @@
             } catch(e) { alert("Error resetting stats."); }
         }
     });
+    
     window.showMatchDetails = function(matchId) {
         if (!matchId) {
             alert("Detailed stats are not available for this legacy match.");
@@ -930,6 +948,7 @@
         document.getElementById('md-1401').innerText = h.p2140 || "0";
         document.getElementById('md-1800').innerText = h.p1180 || "0";
         document.getElementById('md-1801').innerText = h.p2180 || "0";
+        
         document.getElementById('history-layer').classList.add('hidden');
         document.getElementById('match-details-layer').classList.remove('hidden');
     };
@@ -941,8 +960,7 @@
         try {
             const userRef = doc(window.db, "users", window.auth.currentUser.uid);
             let historyArray = window.currentUserDoc.matchHistory || [];
-            let targetItem = historyArray.find(h => h.id === matchId) ||
-                historyArray.find(h => h.date === matchDate && h.desc === matchDesc);
+            let targetItem = historyArray.find(h => h.id === matchId) || historyArray.find(h => h.date === matchDate && h.desc === matchDesc);
             
             if (!targetItem) return;
 
@@ -951,9 +969,9 @@
             let newTotalDarts = Math.max(0, (window.currentUserDoc.totalDarts || 0) - (targetItem.darts || 0));
             let newCoAtt = Math.max(0, (window.currentUserDoc.coAtt || 0) - (targetItem.coAtt || 0));
             let newCoHit = Math.max(0, (window.currentUserDoc.coHit || 0) - (targetItem.coHit || 0));
+            
             await updateDoc(userRef, { matchHistory: newHistory, totalPts: newTotalPts, totalDarts: newTotalDarts, coAtt: newCoAtt, coHit: newCoHit });
-        } catch(e) { alert("Error deleting match.");
-        }
+        } catch(e) { alert("Error deleting match."); }
     };
 
     document.getElementById('save-name-btn').addEventListener('click', async () => {
@@ -964,6 +982,7 @@
             setTimeout(() => document.getElementById('save-name-btn').innerText = "SAVE", 2000);
         }
     });
+    
     document.getElementById('prof-pic').addEventListener('click', () => { document.getElementById('pic-upload').click(); });
     document.getElementById('pic-upload').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -986,6 +1005,7 @@
         }
         reader.readAsDataURL(file);
     });
+    
     document.getElementById('add-friend-btn').addEventListener('click', async () => {
         const email = document.getElementById('friend-email').value.trim().toLowerCase();
         const err = document.getElementById('friend-error');
@@ -1005,8 +1025,7 @@
             err.style.color = "#4caf50";
             err.innerText = "Friend Added!";
             window.renderProfileMenu();
-        } else { err.style.color = "#ff4d4d"; err.innerText = "User not found.";
-        }
+        } else { err.style.color = "#ff4d4d"; err.innerText = "User not found."; }
     });
 
     window.renderProfileMenu = async function() {
@@ -1014,14 +1033,13 @@
         document.getElementById('prof-email').innerText = window.auth.currentUser.email;
         if(window.currentUserDoc.photoURL) document.getElementById('prof-pic').src = window.currentUserDoc.photoURL;
         
-        let avg = window.currentUserDoc.totalDarts > 0 ?
-            ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
-        let coPerc = window.currentUserDoc.coAtt > 0 ?
-            Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
+        let avg = window.currentUserDoc.totalDarts > 0 ? ((window.currentUserDoc.totalPts / window.currentUserDoc.totalDarts) * 3).toFixed(1) : "0.0";
+        let coPerc = window.currentUserDoc.coAtt > 0 ? Math.round((window.currentUserDoc.coHit / window.currentUserDoc.coAtt) * 100) + "%" : "0%";
         
         document.getElementById('prof-avg').innerText = avg;
         document.getElementById('prof-co').innerText = coPerc;
         const histContainer = document.getElementById('history-list-container');
+        
         if(window.currentUserDoc.matchHistory && window.currentUserDoc.matchHistory.length > 0) {
             let histHtml = '';
             let recent = window.currentUserDoc.matchHistory.slice(-15).reverse();
@@ -1145,11 +1163,14 @@
             setTimeout(() => { window.location.href = window.location.pathname + '?update=' + new Date().getTime(); }, 800);
         });
     });
+    
     let statsSavedThisMatch = false;
+    
     async function saveStatsToCloud() {
         if(!window.db || statsSavedThisMatch || !window.auth || !window.auth.currentUser) return;
         const validGames = ["301", "501", "701", "1001", "170_race"];
         if(state.mode === 'single' || state.mode === 'bot') return;
+        
         try {
             let myP = state.p[myIndex];
             if(state.mode === 'local') myP = state.p[0]; 
@@ -1203,10 +1224,12 @@
                     p1140: state.p[0].n140, p2140: state.p[1].n140,
                     p1180: state.p[0].n180, p2180: state.p[1].n180
                 };
+                
                 await updateDoc(userRef, { 
                     totalPts: newPts, totalDarts: newDarts, highCheckout: newHc, coAtt: newCoAtt, coHit: newCoHit,
                     matchHistory: arrayUnion(newHistObj)
                 });
+                
                 statsSavedThisMatch = true;
             }
         } catch(e) {}
@@ -1250,6 +1273,7 @@
             };
         }
     });
+    
     const isIos = () => { const userAgent = window.navigator.userAgent.toLowerCase(); return /iphone|ipad|ipod/.test(userAgent); };
 
     let stream, peer, currentCall, botTimeout;
@@ -1269,10 +1293,6 @@
 
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let currentFacingMode = "user"; let currentCamIndex = 0;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join');
-    const spectateId = urlParams.get('spectate');
 
     const checkouts = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
@@ -1317,7 +1337,7 @@
         7:"3 D2",6:"D3",5:"1 D2",4:"D2",
         3:"1 D1",2:"D1"
     };
-
+    
     async function limitVideoBitrate(peerConnection, maxBitrateKbps) {
         if (!peerConnection) return;
         try {
@@ -1340,7 +1360,7 @@
             if (!isLocalMatch) { window.broadcast({ type: 'CAM_PAUSED', paused: isHidden }); }
         }
     });
-
+    
     window.broadcast = function(data) { if (!isLocalMatch) conns.forEach(c => { if (c && c.open) c.send(data); }); }
 
     function unlockAudio() {
@@ -1391,9 +1411,11 @@
         document.getElementById('dbd-m-2').className = m === 2 ? 'pill active' : 'pill';
         document.getElementById('dbd-m-3').className = m === 3 ? 'pill active' : 'pill';
     };
+    
     window.hitDbd = function(val) {
         if(currentDarts.length >= 3) return;
-        let label = ""; let pts = 0;
+        let label = "";
+        let pts = 0;
         
         if (val === 0) { label = "MISS"; pts = 0; dbdMult = 1; } 
         else if (val === 25) {
@@ -1421,11 +1443,12 @@
             else { slot.innerText = "-"; }
         }
     };
+    
     window.dbdEnter = function() {
         if(currentDarts.length === 0) return;
         window.processHit(null, currentDarts);
     };
-
+    
     window.logMissedDouble = function(pIndex) {
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot' && state.turn !== myIndex) return;
         state.p[pIndex].coAtt = (state.p[pIndex].coAtt || 0) + 1;
@@ -1473,7 +1496,7 @@
         document.getElementById('ft-step-1').classList.remove('hidden');
         document.getElementById('ft-step-2').classList.add('hidden');
         if (!isLocalMatch && state.mode !== 'single' && state.mode !== 'bot') { 
-            window.toggleBullPhase(true); 
+            window.toggleBullPhase(true);
             window.broadcast({ type: 'BULL_PHASE', active: true }); 
         }
     }
@@ -1503,7 +1526,7 @@
         window.render();
         if (!isLocalMatch) window.broadcast(state);
     };
-
+    
     window.initApp = async function() {
         const log = document.getElementById('error-log');
         const startBtn = document.getElementById('start-btn');
@@ -1515,14 +1538,14 @@
         state.gameType = document.getElementById('game-type-input') ? document.getElementById('game-type-input').value : '501';
         state.limit170 = parseInt(document.getElementById('dart-limit-input').value) || 9;
         isLocalMatch = (state.mode === 'local' || state.mode === 'bot');
-
+        
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '1001') startScore = 1001;
         if (state.gameType === '121') startScore = 121;
         if (state.gameType === 'atc') startScore = 1;
-        if (state.gameType === 'cricket') startScore = 0; 
+        if (state.gameType === 'cricket') startScore = 0;
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
@@ -1531,7 +1554,8 @@
         state.p[0].target170 = 170;
         state.p[0].s = startScore;
         state.p[0].marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
-        state.p[0].coAtt = 0; state.p[0].coHit = 0;
+        state.p[0].coAtt = 0;
+        state.p[0].coHit = 0;
 
         state.p[1].target170 = 170;
         state.p[1].s = startScore;
@@ -1676,6 +1700,7 @@
                     call.on('stream', s => { currentCall = call; if(s) { window.attachPeerVideo(s); } window.render(); });
                 }
             });
+            
             peer.on('connection', c => {
                 conns.push(c);
                 c.on('open', () => c.send({ type: 'SYNC', state }));
@@ -1689,16 +1714,18 @@
                     });
                 });
             });
+            
             peer.on('error', err => {
                 if (log) log.innerText = "Connection Error: " + err.type; 
                 if (startBtn) startBtn.disabled = false; 
             });
+            
         } catch (e) {
             if (log) log.innerText = "Camera/Mic error. (" + e.message + ")";
             if (startBtn) startBtn.disabled = false;
         }
     };
-
+    
     window.attachPeerVideo = function(s) {
         const peerVideo = document.getElementById('peer');
         peerVideo.srcObject = s;
@@ -1709,6 +1736,7 @@
         const c = peer.connect(id);
         conns.push(c);
         c.on('open', () => { if (!isSpectator) c.send({ type: 'JOIN', name: state.p[1].name, avatar: state.p[1].avatar }); });
+        
         c.on('data', d => {
             window.handleData(d);
             
@@ -1718,6 +1746,7 @@
                 }
             });
         });
+        
         if (isSpectator) {
             const dummy = createDummyStream();
             const specCall = dummy ? peer.call(id, dummy, { metadata: { spectator: true } }) : peer.call(id, null, { metadata: { spectator: true } });
@@ -1933,9 +1962,9 @@
         }
         
         state.lastThrow = { playerIndex: state.turn, value: val };
-
         if (p.ld < 9) { p.f9d += 3; }
-        p.d += 3; p.ld += 3;
+        p.d += 3;
+        p.ld += 3;
 
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
@@ -1949,11 +1978,13 @@
         if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
             if (state.gameType === '121') { p.l = Math.max(0, p.l - 1); p.s = 121 + p.l; } 
             else { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; }
-            p.ld = 0; soundToPlay = 0;
+            p.ld = 0;
+            soundToPlay = 0;
             if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
         }
         else if (p.s - val >= 0 && p.s - val !== 1) {
-            p.s -= val; p.pts += val; 
+            p.s -= val;
+            p.pts += val; 
             if (p.ld <= 9) { p.f9pts += val; }
             if (val === 180) p.n180++;
             else if (val >= 140) p.n140++;
@@ -1986,7 +2017,8 @@
                 if ((state.gameType === '121' && p.ld >= 9) || (state.gameType === '170' && p.ld >= state.limit170)) {
                     if (state.gameType === '170') { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; } 
                     else { p.s = 121 + p.l; }
-                    p.ld = 0; soundToPlay = 'bust'; 
+                    p.ld = 0;
+                    soundToPlay = 'bust'; 
                     if (state.mode !== 'single') state.turn = (state.turn === 0) ? 1 : 0;
                 } else if (state.mode !== 'single') {
                     state.turn = (state.turn === 0) ? 1 : 0; 
@@ -2020,12 +2052,10 @@
 
         let lastVal = state.lastThrow.value;
         let pName = history.p[state.lastThrow.playerIndex].name;
-
         let userInput = prompt(`Oops! Edit ${pName}'s last throw:`, lastVal);
 
         if (userInput !== null && userInput.trim() !== "") {
             let correctedThrow = parseInt(userInput);
-
             if (!isNaN(correctedThrow) && correctedThrow >= 0 && correctedThrow <= 180) {
                 window.undo();
                 window.processHit(correctedThrow);
@@ -2034,7 +2064,7 @@
             }
         }
     };
-
+    
     window.triggerRematch = function() {
         let startScore = 501;
         if (state.gameType === '301') startScore = 301;
@@ -2081,7 +2111,7 @@
             
             const avatarImg = document.getElementById(`avatar-${i}`);
             if (avatarImg) {
-                 if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
+                if (p.avatar && p.avatar !== "") { avatarImg.src = p.avatar; avatarImg.style.display = 'inline-block'; } 
                 else { avatarImg.style.display = 'none'; }
             }
             
@@ -2156,7 +2186,7 @@
             const cardEl = document.getElementById(`card-${i}`);
             if (cardEl) cardEl.className = (state.turn === i) ? "player-card active" : "player-card";
         });
-
+        
         if (!document.body.classList.contains('spectator-mode')) {
             
             if (state.gameType === 'atc') {
@@ -2260,7 +2290,6 @@
                 if(document.getElementById('standard-controls')) document.getElementById('standard-controls').style.display = 'flex';
                 if(document.getElementById('atc-controls')) document.getElementById('atc-controls').style.display = 'none';
                 if(document.getElementById('cricket-controls')) document.getElementById('cricket-controls').style.display = 'none';
-                
                 if (localInputMode === 'darts') {
                     if(document.getElementById('total-mode-ui')) document.getElementById('total-mode-ui').style.display = 'none';
                     if(document.getElementById('darts-mode-ui')) document.getElementById('darts-mode-ui').style.display = 'flex';
