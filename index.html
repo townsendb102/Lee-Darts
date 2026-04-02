@@ -308,8 +308,6 @@
 </head>
 <body class="theme-classic">
 
-<div class="global-credit">Created by Ben Townsend of The Leeming Arrows</div>
-
 <audio id="dart-audio" playsinline webkit-playsinline></audio>
 
 <div id="challenge-popup">
@@ -1643,7 +1641,7 @@
                 document.getElementById('wait-id').innerText = id;
 
                 // Send the Challenge to Firebase AFTER we have successfully opened a room
-                if(window.targetChallengeFriend && window.db && window.updateDoc && window.doc) {
+                if(window.targetChallengeFriend && window.db) {
                     try {
                         const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
                         await updateDoc(doc(window.db, "users", window.targetChallengeFriend), {
