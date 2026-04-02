@@ -57,7 +57,7 @@
         }
 
         /* Re-enable text selection for inputs */
-        input, select, textarea { -webkit-user-select: auto; user-select: auto; }}
+        input, select, textarea { -webkit-user-select: auto; user-select: auto; }
 
         /* RESTORED ORIGINAL WORKING GRID - PREVENTS SQUASHING */
         body { 
@@ -166,13 +166,32 @@
 
         .btn-update { background: transparent; border: none; color: var(--text-muted); font-size: 12px; margin-top: 15px; cursor: pointer; text-decoration: underline; font-weight: bold;}
 
-        /* HEADER - FIXED OVERFLOW ISSUES */
-        header { height: calc(50px + env(safe-area-inset-top)); overflow: hidden; display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 10px; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; }
-        .header-title-container { display: flex; align-items: center; max-width: 35vw; overflow: hidden; white-space: nowrap; }
-        .header-id-trunc { color: var(--accent); font-weight: 500; font-size: 11px; margin-left: 5px; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 60px; vertical-align: middle; }
-        .header-controls { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; max-width: 60vw; }
-.header-controls::-webkit-scrollbar { display: none; }
-        .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap;}
+       /* HEADER - FIXED SLIDE LOGIC */
+        header { 
+            height: calc(50px + env(safe-area-inset-top));
+            width: 100%;
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: env(safe-area-inset-top) 0 10px 10px;
+            background: #000;
+            border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; overflow: hidden; 
+        }
+        .header-title-container { 
+            display: flex; align-items: center; max-width: 35vw; overflow: hidden; white-space: nowrap; flex-shrink: 0; padding-right: 10px;
+        }
+        .header-id-trunc { 
+            color: var(--accent); font-weight: 500; font-size: 11px; margin-left: 5px; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 60px; vertical-align: middle;
+        }
+        .header-controls { 
+            flex: 1;
+            display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; 
+            overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; 
+            padding-bottom: 10px; margin-bottom: -10px;
+            padding-right: 10px; touch-action: pan-x;
+        }
+        .header-controls::-webkit-scrollbar { display: none; }
+        .header-btn { 
+            background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+        }
 
         /* CAMERAS */
         .v-container { position: relative; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
