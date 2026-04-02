@@ -239,6 +239,41 @@
     </style>
 
     <script>
+        // GLOBALS
+        window.getRandomCheckout = function() {
+            const invalid = [169, 168, 166, 165, 163, 162, 159];
+            let num;
+            do {
+                num = Math.floor(Math.random() * 169) + 2; // 2 to 170
+            } while (invalid.includes(num));
+            return num;
+        };
+
+        // NEW CHECKOUT PRACTICE BYPASS
+        window.startCheckoutPractice = function() {
+            document.getElementById('home-menu').style.display = 'none';
+            document.getElementById('setup-layer').classList.add('hidden');
+            document.body.classList.add('single-mode');
+
+            state.mode = 'single';
+            state.gameType = 'checkout';
+            
+            // Bypass setup entirely and assign default values
+            state.p[0].name = window.currentUserDoc ? window.currentUserDoc.displayName : "Player 1";
+            state.p[0].targetStart = window.getRandomCheckout();
+            state.p[0].s = state.p[0].targetStart;
+            state.p[0].l = 0; // Using 'l' to track successful finishes/streaks
+            state.p[0].d = 0;
+            state.p[0].ld = 0;
+            
+            state.turn = 0;
+            myIndex = 0;
+            isLocalMatch = true;
+
+            window.playDartSound('gameon');
+            window.render();
+        };
+
         // CONFIG LOGIC
         window.openSetup = function(mode) {
             document.getElementById('mode-input').value = mode;
@@ -254,7 +289,6 @@
             const friendBtn = document.getElementById('play-friend-btn');
             const startBtn = document.getElementById('start-btn');
             
-            // FIX: Ensure Play With A Friend ONLY shows for online matches
             if (mode === 'online') {
                 if (friendBtn) friendBtn.style.display = 'block';
                 if (startBtn) startBtn.innerText = window.targetChallengeFriend ? 'SEND CHALLENGE' : 'CREATE ROOM (SHARE LINK)';
@@ -453,6 +487,14 @@
                 <div class="dc-card-sub">Single player training</div>
             </div>
             <div style="font-size: 35px; opacity: 0.4;">📈</div>
+        </div>
+
+        <div class="dc-card bg-dark-grad" onclick="window.startCheckoutPractice()" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--accent);">
+            <div>
+                <div class="dc-card-title">CHECKOUT PRACTICE</div>
+                <div class="dc-card-sub">Random finish training</div>
+            </div>
+            <div style="font-size: 35px; opacity: 0.4;">🎯</div>
         </div>
 
         <div class="dc-card bg-dark-grad" onclick="window.openSetup('bot')" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
@@ -870,7 +912,6 @@
         };
     }
 
-    // NEW EXPLICIT CHALLENGE ROUTING
     window.issueChallenge = async function(friendUid) {
         window.targetChallengeFriend = friendUid;
         document.getElementById('friends-layer').classList.add('hidden');
@@ -1105,6 +1146,40 @@
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
     });
     
+    // NEW CHECKOUT PRACTICE GENERATOR
+    window.getRandomCheckout = function() {
+        const invalid = [169, 168, 166, 165, 163, 162, 159];
+        let num;
+        do {
+            num = Math.floor(Math.random() * 169) + 2; // 2 to 170
+        } while (invalid.includes(num));
+        return num;
+    };
+
+    // NEW DIRECT LAUNCHER FOR CHECKOUT PRACTICE
+    window.startCheckoutPractice = function() {
+        document.getElementById('home-menu').style.display = 'none';
+        document.getElementById('setup-layer').classList.add('hidden');
+        document.body.classList.add('single-mode');
+
+        state.mode = 'single';
+        state.gameType = 'checkout';
+        
+        state.p[0].name = window.currentUserDoc ? window.currentUserDoc.displayName : "Player 1";
+        state.p[0].targetStart = window.getRandomCheckout();
+        state.p[0].s = state.p[0].targetStart;
+        state.p[0].l = 0; // Using 'l' to track successful hits/streak
+        state.p[0].d = 0;
+        state.p[0].ld = 0;
+        
+        state.turn = 0;
+        myIndex = 0;
+        isLocalMatch = true;
+
+        window.playDartSound('gameon');
+        window.render();
+    };
+    
     window.addEventListener('load', () => {
         const quitBtn = document.getElementById('quit-btn');
         if (quitBtn) {
@@ -1286,8 +1361,8 @@
     let currentDarts = [];
 
     let state = { mode: 'online', gameType: '501', botLevel: 5, limit170: 9, turn: 0, startingPlayer: 0, bestOf: 5, p: [
-        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
-        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
+        { name: "P1", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, targetStart: 0, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }, 
+        { name: "P2", avatar: "", s: 501, l: 0, pts: 0, d: 0, ld: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, target170: 170, targetStart: 0, coAtt: 0, coHit: 0, marks: {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0} }
     ]};
     let history = null;
 
@@ -1795,6 +1870,7 @@
                     player.f9d = player.f9d ?? 0; player.hc = player.hc ?? 0;
                     player.n140 = player.n140 ?? 0; player.n180 = player.n180 ?? 0;
                     player.target170 = player.target170 || 170;
+                    player.targetStart = player.targetStart || 0;
                     player.coAtt = player.coAtt || 0; player.coHit = player.coHit || 0;
                     player.marks = player.marks || {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
                     if(data.p[i].avatar !== undefined) player.avatar = data.p[i].avatar; 
@@ -1975,7 +2051,25 @@
         if (state.gameType === '170_race') startScore = 170;
 
         let soundToPlay = val;
-        if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
+        
+        // CHECKOUT PRACTICE LOGIC
+        if (state.gameType === 'checkout') {
+            if (p.s - val === 0) { // Success
+                soundToPlay = 'gameshot';
+                p.l++; // Increment success streak
+                p.targetStart = window.getRandomCheckout();
+                p.s = p.targetStart;
+                p.ld = 0;
+            } else if (p.s - val < 0 || p.s - val === 1 || p.ld >= 3) { // Bust or missed 3 darts
+                soundToPlay = 'bust';
+                p.s = p.targetStart; // Reset for retry
+                p.ld = 0;
+            } else {
+                p.s -= val; // Valid dart, but not checked out yet
+            }
+            state.turn = 0;
+        }
+        else if (val === 0 && (state.gameType === '121' || state.gameType === '170')) {
             if (state.gameType === '121') { p.l = Math.max(0, p.l - 1); p.s = 121 + p.l; } 
             else { p.target170 = (p.target170 || 170) - 1; p.s = p.target170; }
             p.ld = 0;
@@ -2079,7 +2173,12 @@
         statsSavedThisMatch = false;
         state.p.forEach(x => { 
             x.target170 = 170;
-            x.s = state.gameType === '170' ? 170 : startScore; 
+            if (state.gameType === 'checkout') {
+                x.targetStart = window.getRandomCheckout();
+                x.s = x.targetStart;
+            } else {
+                x.s = state.gameType === '170' ? 170 : startScore; 
+            }
             x.l = 0; x.pts = 0; x.d = 0; x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
             x.coAtt = 0; x.coHit = 0;
             x.marks = {10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,25:0};
@@ -2089,7 +2188,7 @@
         document.getElementById('winner-layer').classList.add('hidden');
         if (!isLocalMatch) window.broadcast(state);
 
-        if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket') { 
+        if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket' || state.gameType === 'checkout') { 
             window.playDartSound('gameon');
             if (!isLocalMatch) window.broadcast({ type: 'SOUND', sound: 'gameon' });
             window.render(); 
@@ -2133,6 +2232,18 @@
                 if(document.getElementById(`co-stat-${i}`)) document.getElementById(`co-stat-${i}`).style.display = 'none';
                 if(document.getElementById(`miss-btn-${i}`)) document.getElementById(`miss-btn-${i}`).classList.add('hidden');
             }
+            else if (state.gameType === 'checkout') {
+                if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
+                if(document.getElementById(`avg-${i}`)) document.getElementById(`avg-${i}`).innerText = p.d;
+                if(document.getElementById(`s-${i}`)) document.getElementById(`s-${i}`).innerText = p.s;
+                if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
+                
+                if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'block';
+                if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).innerHTML = `<span id="l-${i}">${p.l}</span>STREAK`;
+                
+                if(document.getElementById(`co-stat-${i}`)) document.getElementById(`co-stat-${i}`).style.display = 'none';
+                if(document.getElementById(`miss-btn-${i}`)) document.getElementById(`miss-btn-${i}`).classList.add('hidden');
+            }
             else if (state.gameType === '121' || state.gameType === '170') {
                 if(document.getElementById(`avg-label-${i}`)) document.getElementById(`avg-label-${i}`).innerText = "DARTS THROWN: ";
                 if (state.gameType === '170') { 
@@ -2167,8 +2278,10 @@
                 }
 
                 if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).innerText = checkouts[p.s] || "";
-                if(document.getElementById(`l-area-${i}`)) document.getElementById(`l-area-${i}`).style.display = 'block';
-                if(document.getElementById(`l-${i}`)) document.getElementById(`l-${i}`).innerText = p.l;
+                if(document.getElementById(`l-area-${i}`)) {
+                    document.getElementById(`l-area-${i}`).style.display = 'block';
+                    document.getElementById(`l-area-${i}`).innerHTML = `<span id="l-${i}">${p.l}</span>LEGS`;
+                }
                 if(document.getElementById(`co-${i}`)) document.getElementById(`co-${i}`).style.display = 'block';
                 if(document.getElementById(`co-stat-${i}`)) document.getElementById(`co-stat-${i}`).style.display = 'block';
                 if(document.getElementById(`co-perc-${i}`)) document.getElementById(`co-perc-${i}`).innerText = coStatStr;
@@ -2336,7 +2449,7 @@
         }
 
         const winnerLayer = document.getElementById('winner-layer');
-        if (state.winner !== undefined) {
+        if (state.winner !== undefined && state.gameType !== 'checkout') {
             saveStatsToCloud();
             const w = state.p[state.winner];
             if(document.getElementById('winner-name')) document.getElementById('winner-name').innerText = w.name + " WINS!";
