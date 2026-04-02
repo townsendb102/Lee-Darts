@@ -140,7 +140,6 @@
         .setup-input:focus { border-color: var(--accent); }
         .setup-input option { background: var(--dark); color: white; }
         
-        /* FIX: Removed !important to allow Javascript to toggle elements */
         .btn-start { background: var(--accent); color: #000; width: 100%; padding: 16px; font-size: 18px; font-weight: 900; border: none; border-radius: 14px; cursor: pointer; margin-top: 15px; text-transform: uppercase; display: block; }
         .btn-start:active { transform: scale(0.98); }
         .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -244,25 +243,52 @@
     </style>
 
     <script>
-        // --- UPGRADED BRAIN TRAINING LOGIC ---
-        window.btState = { streak: 0, answer: 0, currentInput: "", mode: 'add', inputType: 'numpad', target: 0, darts: [] };
+        // --- BIG BEN'S BRAIN TRAINING LOGIC V2 ---
+        window.btState = { 
+            streak: 0, answer: 0, currentInput: "", mode: 'add', currentQuestionMode: 'add',
+            inputType: 'numpad', target: 0, darts: [], 
+            highScores: { add: 0, sub: 0, checkout: 0, random: 0 }
+        };
 
-        window.startBrainTraining = function(mode = 'add') {
+        window.openBrainTrainingMenu = function() {
             document.getElementById('home-menu').style.display = 'none';
             document.getElementById('setup-layer').classList.add('hidden');
             document.getElementById('brain-training-layer').classList.remove('hidden');
             
+            // Ensure High Scores from Firebase are loaded into state
+            if (window.currentUserDoc && window.currentUserDoc.btHighScores) {
+                window.btState.highScores = window.currentUserDoc.btHighScores;
+            }
+            
+            // Update Menu UI
+            document.getElementById('hs-add').innerText = window.btState.highScores.add || 0;
+            document.getElementById('hs-sub').innerText = window.btState.highScores.sub || 0;
+            document.getElementById('hs-checkout').innerText = window.btState.highScores.checkout || 0;
+            document.getElementById('hs-random').innerText = window.btState.highScores.random || 0;
+            
+            document.getElementById('bt-menu-view').style.display = 'flex';
+            document.getElementById('bt-game-view').style.display = 'none';
+            document.getElementById('bt-main-title').innerText = "🚽 BRAIN TRAINING";
+        };
+
+        window.startBrainTraining = function(mode) {
+            document.getElementById('bt-menu-view').style.display = 'none';
+            document.getElementById('bt-game-view').style.display = 'flex';
+            
             window.btState.mode = mode;
             window.btState.streak = 0;
             document.getElementById('bt-streak').innerText = "0";
+            document.getElementById('bt-current-hs').innerText = window.btState.highScores[mode] || 0;
             
-            // UI toggles based on mode
-            document.getElementById('bt-mode-title').innerText = mode === 'add' ? "➕ ADDITION" : mode === 'sub' ? "➖ SUBTRACTION" : "🎯 CHECKOUTS";
+            let titleStr = mode === 'add' ? "➕ ADDITION" : mode === 'sub' ? "➖ SUBTRACTION" : mode === 'checkout' ? "🎯 CHECKOUTS" : "🔀 RANDOM MIX";
+            document.getElementById('bt-main-title').innerText = titleStr;
             
             window.btGenerateQuestion();
         };
 
         window.closeBrainTraining = function() {
+            // If closing while mid-streak, check to save high score
+            window.btCheckHighScore(true); 
             document.getElementById('brain-training-layer').classList.add('hidden');
             document.getElementById('setup-layer').classList.remove('hidden');
             document.getElementById('home-menu').style.display = 'block';
@@ -278,23 +304,30 @@
             let qText = "";
             let ans = 0;
             
-            if (window.btState.mode === 'checkout') {
-                // Checkout Mode
+            // Handle Random Mode selection for THIS question
+            let activeMode = window.btState.mode;
+            if (activeMode === 'random') {
+                const modes = ['add', 'sub', 'checkout'];
+                activeMode = modes[Math.floor(Math.random() * modes.length)];
+            }
+            window.btState.currentQuestionMode = activeMode;
+            
+            if (activeMode === 'checkout') {
                 window.btState.inputType = 'darts';
                 let validTargets = Object.keys(window.checkoutsMap).filter(k => k <= 170 && k >= 2);
                 ans = parseInt(validTargets[Math.floor(Math.random() * validTargets.length)]);
                 qText = `Checkout ${ans}`;
                 window.btState.target = ans;
             } else {
-                // Add/Sub Mode: 50% chance for Numpad, 50% for Multiple Choice
+                // 50% Numpad, 50% Multiple Choice
                 window.btState.inputType = Math.random() > 0.5 ? 'numpad' : 'mc';
                 
-                if (window.btState.mode === 'add') {
+                if (activeMode === 'add') {
                     let n1 = Math.floor(Math.random() * 60) + 1;
                     let n2 = Math.floor(Math.random() * 60) + 1;
                     qText = `${n1} + ${n2}`;
                     ans = n1 + n2;
-                } else if (window.btState.mode === 'sub') {
+                } else if (activeMode === 'sub') {
                     let start = Math.floor(Math.random() * 100) + 40;
                     let hit = Math.floor(Math.random() * 60) + 1;
                     qText = `${start} - ${hit}`;
@@ -313,7 +346,6 @@
             document.getElementById('bt-dart-keyboard').style.display = window.btState.inputType === 'darts' ? 'block' : 'none';
             
             if (window.btState.inputType === 'mc') {
-                // Generate wrong answers close to the real answer
                 let answers = [window.btState.answer];
                 while(answers.length < 4) {
                     let offset = Math.floor(Math.random() * 10) - 5;
@@ -322,7 +354,7 @@
                         answers.push(fakeAns);
                     }
                 }
-                answers.sort(() => Math.random() - 0.5); // Shuffle
+                answers.sort(() => Math.random() - 0.5); 
                 for(let i=0; i<4; i++) {
                     let btn = document.getElementById(`bt-mc-${i+1}`);
                     btn.innerText = answers[i];
@@ -337,7 +369,6 @@
             document.getElementById('bt-answer-display').innerText = window.btState.currentInput || "?";
         };
 
-        // Simplified Dart entry for Checkouts
         window.btAddDart = function(label, value, isDouble) {
             if(window.btState.darts.length >= 3) return;
             window.btState.darts.push({ label, value, isDouble });
@@ -352,7 +383,7 @@
             let isCorrect = false;
             let feedback = "";
             
-            if (window.btState.mode === 'checkout') {
+            if (window.btState.currentQuestionMode === 'checkout') {
                 let darts = window.btState.darts;
                 if (darts.length === 0) return;
                 
@@ -365,7 +396,7 @@
                     let userRoute = darts.map(d => d.label).join(" ");
                     
                     if (userRoute === standardRoute) {
-                        feedback = `Perfect! Standard Route: ${standardRoute}. \nAlternative: Try experimenting with different trebles to leave a double you prefer!`;
+                        feedback = `Perfect! Standard Route: ${standardRoute}. \nAlternative: Experiment with different trebles to leave a double you prefer!`;
                     } else {
                         feedback = `Great finish! You went: ${userRoute}. \nThe standard pro route is: ${standardRoute}.`;
                     }
@@ -385,17 +416,46 @@
                 window.btState.streak++;
                 document.getElementById('bt-streak').innerText = window.btState.streak;
                 document.getElementById('bt-question').style.borderColor = "#10b981";
-                setTimeout(() => window.btGenerateQuestion(), window.btState.mode === 'checkout' ? 3500 : 500);
+                
+                // Update local high score live if beaten
+                window.btCheckHighScore(false);
+                
+                setTimeout(() => window.btGenerateQuestion(), window.btState.currentQuestionMode === 'checkout' ? 3500 : 500);
             } else {
                 if(window.playDartSound) window.playDartSound('bust');
+                // Save to Firebase if streak ends and it was a record
+                window.btCheckHighScore(true);
+                
                 window.btState.streak = 0;
                 document.getElementById('bt-streak').innerText = window.btState.streak;
                 document.getElementById('bt-question').style.borderColor = "#ef4444";
                 setTimeout(() => {
                     document.getElementById('bt-question').style.borderColor = "var(--accent)";
-                    if (window.btState.mode !== 'checkout') window.btState.currentInput = "";
+                    if (window.btState.currentQuestionMode !== 'checkout') window.btState.currentInput = "";
                     document.getElementById('bt-answer-display').innerText = "?";
-                }, window.btState.mode === 'checkout' ? 2500 : 800);
+                }, window.btState.currentQuestionMode === 'checkout' ? 3000 : 800);
+            }
+        };
+
+        window.btCheckHighScore = async function(isStreakEnded) {
+            let mode = window.btState.mode; // The overall selected mode (add/sub/checkout/random)
+            let currentStreak = window.btState.streak;
+            let isNewRecord = false;
+            
+            if (currentStreak > (window.btState.highScores[mode] || 0)) {
+                window.btState.highScores[mode] = currentStreak;
+                document.getElementById('bt-current-hs').innerText = currentStreak;
+                isNewRecord = true;
+            }
+            
+            // Only push to Firebase if the streak ended/they left AND it's a new record
+            if (isStreakEnded && isNewRecord && window.auth && window.auth.currentUser) {
+                try {
+                    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+                    await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), {
+                        btHighScores: window.btState.highScores
+                    });
+                } catch(e) { console.log("Failed to save high score.", e); }
             }
         };
         // ------------------------------------------
@@ -617,62 +677,82 @@
     <div class="setup-card" style="max-height: 95vh; width: 100%; max-width: 400px; display: flex; flex-direction: column; padding: 20px;">
         
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 id="bt-mode-title" style="margin: 0; text-align: left; font-size: 20px;">🚽 BRAIN TRAINING</h2>
+            <h2 id="bt-main-title" style="margin: 0; text-align: left; font-size: 20px;">🚽 BRAIN TRAINING</h2>
             <button onclick="window.closeBrainTraining()" style="background:transparent; border:none; color:var(--danger); font-size:24px; cursor:pointer;">✖</button>
         </div>
 
-        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
-            <button class="pill" onclick="window.startBrainTraining('add')">➕ ADD</button>
-            <button class="pill" onclick="window.startBrainTraining('sub')">➖ SUB</button>
-            <button class="pill active" onclick="window.startBrainTraining('checkout')">🎯 CHECKOUT</button>
-        </div>
-        
-        <div style="text-align:center; font-size:14px; color:var(--text-muted); margin-bottom: 10px;">Streak: <span id="bt-streak" style="color:white; font-weight:bold;">0</span></div>
-        
-        <div id="bt-question" style="background: rgba(0,0,0,0.5); border: 2px solid var(--accent); color: white; padding: 15px; border-radius: 12px; margin-bottom: 5px; font-size: 30px; font-weight: 900; text-align: center; min-height: 80px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s;">
-            Question Here
-        </div>
-
-        <div id="bt-feedback" style="font-size: 11px; color: var(--accent); min-height: 30px; margin-bottom: 10px; font-weight: bold; white-space: pre-wrap;"></div>
-        
-        <div id="bt-answer-display" style="font-size: 30px; font-weight: 900; text-align: center; height: 45px; line-height: 45px; color: white; letter-spacing: 2px; background: rgba(0,0,0,0.5); border-radius: 8px; margin-bottom: 15px;">?</div>
-        
-        <div id="bt-numpad" class="np-grid" style="width: 100%; flex: 1;">
-            <button class="np-btn" onclick="window.btNp(1)">1</button>
-            <button class="np-btn" onclick="window.btNp(2)">2</button>
-            <button class="np-btn" onclick="window.btNp(3)">3</button>
-            <button class="np-btn" onclick="window.btNp(4)">4</button>
-            <button class="np-btn" onclick="window.btNp(5)">5</button>
-            <button class="np-btn" onclick="window.btNp(6)">6</button>
-            <button class="np-btn" onclick="window.btNp(7)">7</button>
-            <button class="np-btn" onclick="window.btNp(8)">8</button>
-            <button class="np-btn" onclick="window.btNp(9)">9</button>
-            <button class="np-btn" onclick="window.btNp('C')" style="color:#ff4d4d; font-size:16px;">DEL</button>
-            <button class="np-btn" onclick="window.btNp(0)">0</button>
-            <button class="np-btn enter" onclick="window.btSubmit()">OK</button>
+        <div id="bt-menu-view" style="display: flex; flex-direction: column;">
+            <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 10px;">Select a training mode to begin:</p>
+            
+            <button class="btn-start" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;" onclick="window.startBrainTraining('add')">
+                <span>➕ ADDITION</span> <span style="color:#000; font-size:11px; background:var(--accent); padding:4px 8px; border-radius:8px;">PB: <span id="hs-add">0</span></span>
+            </button>
+            <button class="btn-start" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;" onclick="window.startBrainTraining('sub')">
+                <span>➖ SUBTRACTION</span> <span style="color:#000; font-size:11px; background:var(--accent); padding:4px 8px; border-radius:8px;">PB: <span id="hs-sub">0</span></span>
+            </button>
+            <button class="btn-start" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;" onclick="window.startBrainTraining('checkout')">
+                <span>🎯 CHECKOUTS</span> <span style="color:#000; font-size:11px; background:var(--accent); padding:4px 8px; border-radius:8px;">PB: <span id="hs-checkout">0</span></span>
+            </button>
+            <hr style="border: 1px solid rgba(255,255,255,0.05); margin: 15px 0;">
+            <button class="btn-start" style="margin-top: 0; background: linear-gradient(135deg, #ff00ff, #0ea5e9); color: white; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.2);" onclick="window.startBrainTraining('random')">
+                <span>🔀 RANDOM MIX</span> <span style="color:white; font-size:11px; background:rgba(0,0,0,0.5); padding:4px 8px; border-radius:8px;">PB: <span id="hs-random">0</span></span>
+            </button>
         </div>
 
-        <div id="bt-mc" class="np-grid" style="width: 100%; flex: 1; grid-template-columns: 1fr 1fr; display: none;">
-            <button class="np-btn" id="bt-mc-1" style="font-size: 28px;">0</button>
-            <button class="np-btn" id="bt-mc-2" style="font-size: 28px;">0</button>
-            <button class="np-btn" id="bt-mc-3" style="font-size: 28px;">0</button>
-            <button class="np-btn" id="bt-mc-4" style="font-size: 28px;">0</button>
-        </div>
+        <div id="bt-game-view" style="display: none; flex-direction: column; flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px;">
+                <button onclick="window.openBrainTrainingMenu()" style="background:var(--btn-bg); border:1px solid rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold; font-size:11px; padding: 6px 12px; border-radius: 8px;">← BACK</button>
+                <div style="text-align:right; font-size: 12px; color: var(--text-muted);">
+                    <div style="margin-bottom: 2px;">PB: <span id="bt-current-hs" style="color:var(--accent); font-weight:bold;">0</span></div>
+                    <div>STREAK: <span id="bt-streak" style="color:white; font-weight:900; font-size:18px;">0</span></div>
+                </div>
+            </div>
+            
+            <div id="bt-question" style="background: rgba(0,0,0,0.5); border: 2px solid var(--accent); color: white; padding: 15px; border-radius: 12px; margin-bottom: 5px; font-size: 30px; font-weight: 900; text-align: center; min-height: 80px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s;">
+                Question Here
+            </div>
 
-        <div id="bt-dart-keyboard" style="display: none; width: 100%;">
-             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px;">
-                <button class="np-btn" style="font-size:14px;" onclick="let n = prompt('Enter Single (1-20):'); if(n>=1 && n<=20) window.btAddDart('S'+n, parseInt(n), false);">SINGLE</button>
-                <button class="np-btn" style="font-size:14px;" onclick="let n = prompt('Enter Double (1-20):'); if(n>=1 && n<=20) window.btAddDart('D'+n, n*2, true);">DOUBLE</button>
-                <button class="np-btn" style="font-size:14px;" onclick="let n = prompt('Enter Treble (1-20):'); if(n>=1 && n<=20) window.btAddDart('T'+n, n*3, false);">TREBLE</button>
-             </div>
-             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px;">
-                 <button class="np-btn" style="font-size:14px; background:var(--bg-active);" onclick="window.btAddDart('25', 25, false)">25</button>
-                 <button class="np-btn" style="font-size:14px; background:var(--danger); color:white;" onclick="window.btAddDart('BULL', 50, true)">BULL</button>
-             </div>
-             <div style="display: flex; gap: 5px;">
-                <button class="np-btn" style="flex:1; background:#444; font-size:14px;" onclick="window.btClearDarts()">CLEAR</button>
-                <button class="np-btn enter" style="flex:2; font-size: 16px;" onclick="window.btSubmit()">CHECKOUT</button>
-             </div>
+            <div id="bt-feedback" style="font-size: 11px; color: var(--accent); min-height: 30px; margin-bottom: 10px; font-weight: bold; white-space: pre-wrap; line-height: 1.4;"></div>
+            
+            <div id="bt-answer-display" style="font-size: 30px; font-weight: 900; text-align: center; height: 45px; line-height: 45px; color: white; letter-spacing: 2px; background: rgba(0,0,0,0.5); border-radius: 8px; margin-bottom: 15px;">?</div>
+            
+            <div id="bt-numpad" class="np-grid" style="width: 100%; flex: 1;">
+                <button class="np-btn" onclick="window.btNp(1)">1</button>
+                <button class="np-btn" onclick="window.btNp(2)">2</button>
+                <button class="np-btn" onclick="window.btNp(3)">3</button>
+                <button class="np-btn" onclick="window.btNp(4)">4</button>
+                <button class="np-btn" onclick="window.btNp(5)">5</button>
+                <button class="np-btn" onclick="window.btNp(6)">6</button>
+                <button class="np-btn" onclick="window.btNp(7)">7</button>
+                <button class="np-btn" onclick="window.btNp(8)">8</button>
+                <button class="np-btn" onclick="window.btNp(9)">9</button>
+                <button class="np-btn" onclick="window.btNp('C')" style="color:#ff4d4d; font-size:16px;">DEL</button>
+                <button class="np-btn" onclick="window.btNp(0)">0</button>
+                <button class="np-btn enter" onclick="window.btSubmit()">OK</button>
+            </div>
+
+            <div id="bt-mc" class="np-grid" style="width: 100%; flex: 1; grid-template-columns: 1fr 1fr; display: none;">
+                <button class="np-btn" id="bt-mc-1" style="font-size: 28px;">0</button>
+                <button class="np-btn" id="bt-mc-2" style="font-size: 28px;">0</button>
+                <button class="np-btn" id="bt-mc-3" style="font-size: 28px;">0</button>
+                <button class="np-btn" id="bt-mc-4" style="font-size: 28px;">0</button>
+            </div>
+
+            <div id="bt-dart-keyboard" style="display: none; width: 100%;">
+                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px;">
+                    <button class="np-btn" style="font-size:14px;" onclick="let n = prompt('Enter Single (1-20):'); if(n>=1 && n<=20) window.btAddDart('S'+n, parseInt(n), false);">SINGLE</button>
+                    <button class="np-btn" style="font-size:14px;" onclick="let n = prompt('Enter Double (1-20):'); if(n>=1 && n<=20) window.btAddDart('D'+n, n*2, true);">DOUBLE</button>
+                    <button class="np-btn" style="font-size:14px;" onclick="let n = prompt('Enter Treble (1-20):'); if(n>=1 && n<=20) window.btAddDart('T'+n, n*3, false);">TREBLE</button>
+                 </div>
+                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px;">
+                     <button class="np-btn" style="font-size:14px; background:var(--bg-active);" onclick="window.btAddDart('25', 25, false)">25</button>
+                     <button class="np-btn" style="font-size:14px; background:var(--danger); color:white;" onclick="window.btAddDart('BULL', 50, true)">BULL</button>
+                 </div>
+                 <div style="display: flex; gap: 5px;">
+                    <button class="np-btn" style="flex:1; background:#444; font-size:14px;" onclick="window.btClearDarts()">CLEAR</button>
+                    <button class="np-btn enter" style="flex:2; font-size: 16px;" onclick="window.btSubmit()">CHECKOUT</button>
+                 </div>
+            </div>
         </div>
 
     </div>
@@ -724,7 +804,7 @@
             <div style="font-size: 35px; opacity: 0.4;">🎯</div>
         </div>
         
-        <div class="dc-card bg-dark-grad" onclick="window.startBrainTraining()" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--accent);">
+        <div class="dc-card bg-dark-grad" onclick="window.openBrainTrainingMenu()" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--accent);">
             <div>
                 <div class="dc-card-title">BIG BEN'S BRAIN TRAINING</div>
                 <div class="dc-card-sub">Improve your dart maths</div>
@@ -1007,6 +1087,223 @@
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
 
 <script type="module">
+    // --- BIG BEN'S BRAIN TRAINING LOGIC V2 ---
+    window.btState = { 
+        streak: 0, answer: 0, currentInput: "", mode: 'add', currentQuestionMode: 'add',
+        inputType: 'numpad', target: 0, darts: [], 
+        highScores: { add: 0, sub: 0, checkout: 0, random: 0 }
+    };
+
+    window.openBrainTrainingMenu = function() {
+        document.getElementById('home-menu').style.display = 'none';
+        document.getElementById('setup-layer').classList.add('hidden');
+        document.getElementById('brain-training-layer').classList.remove('hidden');
+        
+        // Ensure High Scores from Firebase are loaded into state
+        if (window.currentUserDoc && window.currentUserDoc.btHighScores) {
+            window.btState.highScores = window.currentUserDoc.btHighScores;
+        }
+        
+        // Update Menu UI
+        document.getElementById('hs-add').innerText = window.btState.highScores.add || 0;
+        document.getElementById('hs-sub').innerText = window.btState.highScores.sub || 0;
+        document.getElementById('hs-checkout').innerText = window.btState.highScores.checkout || 0;
+        document.getElementById('hs-random').innerText = window.btState.highScores.random || 0;
+        
+        document.getElementById('bt-menu-view').style.display = 'flex';
+        document.getElementById('bt-game-view').style.display = 'none';
+        document.getElementById('bt-main-title').innerText = "🚽 BRAIN TRAINING";
+    };
+
+    window.startBrainTraining = function(mode) {
+        document.getElementById('bt-menu-view').style.display = 'none';
+        document.getElementById('bt-game-view').style.display = 'flex';
+        
+        window.btState.mode = mode;
+        window.btState.streak = 0;
+        document.getElementById('bt-streak').innerText = "0";
+        document.getElementById('bt-current-hs').innerText = window.btState.highScores[mode] || 0;
+        
+        let titleStr = mode === 'add' ? "➕ ADDITION" : mode === 'sub' ? "➖ SUBTRACTION" : mode === 'checkout' ? "🎯 CHECKOUTS" : "🔀 RANDOM MIX";
+        document.getElementById('bt-main-title').innerText = titleStr;
+        
+        window.btGenerateQuestion();
+    };
+
+    window.closeBrainTraining = function() {
+        // If closing while mid-streak, check to save high score
+        window.btCheckHighScore(true); 
+        document.getElementById('brain-training-layer').classList.add('hidden');
+        document.getElementById('setup-layer').classList.remove('hidden');
+        document.getElementById('home-menu').style.display = 'block';
+    };
+
+    window.btGenerateQuestion = function() {
+        window.btState.currentInput = "";
+        window.btState.darts = [];
+        document.getElementById('bt-answer-display').innerText = "?";
+        document.getElementById('bt-question').style.borderColor = "var(--accent)";
+        document.getElementById('bt-feedback').innerText = "";
+        
+        let qText = "";
+        let ans = 0;
+        
+        // Handle Random Mode selection for THIS question
+        let activeMode = window.btState.mode;
+        if (activeMode === 'random') {
+            const modes = ['add', 'sub', 'checkout'];
+            activeMode = modes[Math.floor(Math.random() * modes.length)];
+        }
+        window.btState.currentQuestionMode = activeMode;
+        
+        if (activeMode === 'checkout') {
+            window.btState.inputType = 'darts';
+            let validTargets = Object.keys(window.checkoutsMap).filter(k => k <= 170 && k >= 2);
+            ans = parseInt(validTargets[Math.floor(Math.random() * validTargets.length)]);
+            qText = `Checkout ${ans}`;
+            window.btState.target = ans;
+        } else {
+            // 50% Numpad, 50% Multiple Choice
+            window.btState.inputType = Math.random() > 0.5 ? 'numpad' : 'mc';
+            
+            if (activeMode === 'add') {
+                let n1 = Math.floor(Math.random() * 60) + 1;
+                let n2 = Math.floor(Math.random() * 60) + 1;
+                qText = `${n1} + ${n2}`;
+                ans = n1 + n2;
+            } else if (activeMode === 'sub') {
+                let start = Math.floor(Math.random() * 100) + 40;
+                let hit = Math.floor(Math.random() * 60) + 1;
+                qText = `${start} - ${hit}`;
+                ans = start - hit;
+            }
+            window.btState.answer = ans;
+        }
+        
+        document.getElementById('bt-question').innerText = qText;
+        window.btUpdateUI();
+    };
+
+    window.btUpdateUI = function() {
+        document.getElementById('bt-numpad').style.display = window.btState.inputType === 'numpad' ? 'grid' : 'none';
+        document.getElementById('bt-mc').style.display = window.btState.inputType === 'mc' ? 'grid' : 'none';
+        document.getElementById('bt-dart-keyboard').style.display = window.btState.inputType === 'darts' ? 'block' : 'none';
+        
+        if (window.btState.inputType === 'mc') {
+            let answers = [window.btState.answer];
+            while(answers.length < 4) {
+                let offset = Math.floor(Math.random() * 10) - 5;
+                let fakeAns = window.btState.answer + offset;
+                if(fakeAns !== window.btState.answer && !answers.includes(fakeAns) && fakeAns > 0) {
+                    answers.push(fakeAns);
+                }
+            }
+            answers.sort(() => Math.random() - 0.5); 
+            for(let i=0; i<4; i++) {
+                let btn = document.getElementById(`bt-mc-${i+1}`);
+                btn.innerText = answers[i];
+                btn.onclick = () => window.btSubmit(answers[i]);
+            }
+        }
+    };
+
+    window.btNp = function(val) {
+        if (val === 'C') window.btState.currentInput = "";
+        else if (window.btState.currentInput.length < 4) window.btState.currentInput += val;
+        document.getElementById('bt-answer-display').innerText = window.btState.currentInput || "?";
+    };
+
+    window.btAddDart = function(label, value, isDouble) {
+        if(window.btState.darts.length >= 3) return;
+        window.btState.darts.push({ label, value, isDouble });
+        document.getElementById('bt-answer-display').innerText = window.btState.darts.map(d => d.label).join(" - ");
+    };
+    window.btClearDarts = function() {
+        window.btState.darts = [];
+        document.getElementById('bt-answer-display').innerText = "?";
+    };
+
+    window.btSubmit = function(mcAns = null) {
+        let isCorrect = false;
+        let feedback = "";
+        
+        if (window.btState.currentQuestionMode === 'checkout') {
+            let darts = window.btState.darts;
+            if (darts.length === 0) return;
+            
+            let total = darts.reduce((sum, d) => sum + d.value, 0);
+            let lastDart = darts[darts.length - 1];
+            
+            if (total === window.btState.target && lastDart.isDouble) {
+                isCorrect = true;
+                let standardRoute = window.checkoutsMap[window.btState.target];
+                let userRoute = darts.map(d => d.label).join(" ");
+                
+                if (userRoute === standardRoute) {
+                    feedback = `Perfect! Standard Route: ${standardRoute}. \nAlternative: Experiment with different trebles to leave a double you prefer!`;
+                } else {
+                    feedback = `Great finish! You went: ${userRoute}. \nThe standard pro route is: ${standardRoute}.`;
+                }
+            } else {
+                feedback = `Bust! That equals ${total} ${!lastDart.isDouble ? "(Didn't end on a double!)" : ""}`;
+            }
+        } else {
+            let userAns = mcAns !== null ? mcAns : parseInt(window.btState.currentInput);
+            if (isNaN(userAns)) return;
+            isCorrect = (userAns === window.btState.answer);
+        }
+        
+        document.getElementById('bt-feedback').innerText = feedback;
+        
+        if (isCorrect) {
+            if(window.playDartSound) window.playDartSound('gameshot'); 
+            window.btState.streak++;
+            document.getElementById('bt-streak').innerText = window.btState.streak;
+            document.getElementById('bt-question').style.borderColor = "#10b981";
+            
+            // Update local high score live if beaten
+            window.btCheckHighScore(false);
+            
+            setTimeout(() => window.btGenerateQuestion(), window.btState.currentQuestionMode === 'checkout' ? 3500 : 500);
+        } else {
+            if(window.playDartSound) window.playDartSound('bust');
+            // Save to Firebase if streak ends and it was a record
+            window.btCheckHighScore(true);
+            
+            window.btState.streak = 0;
+            document.getElementById('bt-streak').innerText = window.btState.streak;
+            document.getElementById('bt-question').style.borderColor = "#ef4444";
+            setTimeout(() => {
+                document.getElementById('bt-question').style.borderColor = "var(--accent)";
+                if (window.btState.currentQuestionMode !== 'checkout') window.btState.currentInput = "";
+                document.getElementById('bt-answer-display').innerText = "?";
+            }, window.btState.currentQuestionMode === 'checkout' ? 3000 : 800);
+        }
+    };
+
+    window.btCheckHighScore = async function(isStreakEnded) {
+        let mode = window.btState.mode; // The overall selected mode (add/sub/checkout/random)
+        let currentStreak = window.btState.streak;
+        let isNewRecord = false;
+        
+        if (currentStreak > (window.btState.highScores[mode] || 0)) {
+            window.btState.highScores[mode] = currentStreak;
+            document.getElementById('bt-current-hs').innerText = currentStreak;
+            isNewRecord = true;
+        }
+        
+        // Only push to Firebase if the streak ended/they left AND it's a new record
+        if (isStreakEnded && isNewRecord && window.auth && window.auth.currentUser) {
+            try {
+                const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+                await updateDoc(doc(window.db, "users", window.auth.currentUser.uid), {
+                    btHighScores: window.btState.highScores
+                });
+            } catch(e) { console.log("Failed to save high score.", e); }
+        }
+    };
+    // ------------------------------------------
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, collection, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
