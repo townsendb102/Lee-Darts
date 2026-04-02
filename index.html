@@ -35,25 +35,9 @@
         body.theme-neon { --accent: #ff00ff; --bg-main: #0a001a; --bg-card: #20003b; --bg-active: #3d0066; --blue: #ff00ff; --dark: #0a001a; --card: #20003b; --active: #3d0066; }
         body.theme-pub { --accent: #f59e0b; --bg-main: #1c1917; --bg-card: #292524; --bg-active: #44403c; --blue: #f59e0b; --dark: #1c1917; --card: #292524; --active: #44403c; }
 
-        * { 
-    box-sizing: border-box; 
-    -webkit-tap-highlight-color: transparent; 
-    margin: 0; 
-    padding: 0; 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-    touch-action: manipulation; /* FIX 1: Instantly disables double-tap-to-zoom on iOS */
-}
-
-html, body { 
-    height: 100%; 
-    width: 100%; 
-    overflow: hidden; 
-    overscroll-behavior: none; 
-    margin: 0; 
-    padding: 0; 
-    background: var(--bg-main); 
-    position: fixed; /* FIX 2: Completely locks the background so it can't bounce up and down */
-}
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        html, body { height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; margin: 0; padding: 0; background: var(--bg-main); }
 
         /* RESTORED ORIGINAL WORKING GRID - PREVENTS SQUASHING */
         body { 
@@ -167,8 +151,7 @@ html, body {
         header { height: calc(50px + env(safe-area-inset-top)); overflow: hidden; display: flex; align-items: center; justify-content: space-between; padding: env(safe-area-inset-top) 10px 10px; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; }
         .header-title-container { display: flex; align-items: center; max-width: 35vw; overflow: hidden; white-space: nowrap; }
         .header-id-trunc { color: var(--accent); font-weight: 500; font-size: 11px; margin-left: 5px; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 60px; vertical-align: middle; }
-        .header-controls { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.header-controls::-webkit-scrollbar { display: none; }
+        .header-controls { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
         .header-btn { background: #222; border: 1px solid #444; color: white; padding: 6px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap;}
 
         /* CAMERAS */
@@ -261,15 +244,21 @@ html, body {
     </style>
 
     <script>
-        // NEW BRAIN TRAINING LOGIC
-        window.btState = { streak: 0, answer: 0, currentInput: "" };
+        // --- UPGRADED BRAIN TRAINING LOGIC ---
+        window.btState = { streak: 0, answer: 0, currentInput: "", mode: 'add', inputType: 'numpad', target: 0, darts: [] };
 
-        window.startBrainTraining = function() {
+        window.startBrainTraining = function(mode = 'add') {
             document.getElementById('home-menu').style.display = 'none';
             document.getElementById('setup-layer').classList.add('hidden');
             document.getElementById('brain-training-layer').classList.remove('hidden');
+            
+            window.btState.mode = mode;
             window.btState.streak = 0;
             document.getElementById('bt-streak').innerText = "0";
+            
+            // UI toggles based on mode
+            document.getElementById('bt-mode-title').innerText = mode === 'add' ? "➕ ADDITION" : mode === 'sub' ? "➖ SUBTRACTION" : "🎯 CHECKOUTS";
+            
             window.btGenerateQuestion();
         };
 
@@ -281,74 +270,135 @@ html, body {
 
         window.btGenerateQuestion = function() {
             window.btState.currentInput = "";
+            window.btState.darts = [];
             document.getElementById('bt-answer-display').innerText = "?";
             document.getElementById('bt-question').style.borderColor = "var(--accent)";
+            document.getElementById('bt-feedback').innerText = "";
             
-            let types = ['treble', 'double', 'subtraction', 'addition'];
-            let type = types[Math.floor(Math.random() * types.length)];
             let qText = "";
             let ans = 0;
             
-            if (type === 'treble') {
-                let n = Math.floor(Math.random() * 20) + 1;
-                qText = `Treble ${n}`;
-                ans = n * 3;
-            } else if (type === 'double') {
-                let n = Math.floor(Math.random() * 20) + 1;
-                qText = `Double ${n}`;
-                ans = n * 2;
-            } else if (type === 'subtraction') {
-                let start = Math.floor(Math.random() * 300) + 40;
-                let hit = Math.floor(Math.random() * 100) + 1;
-                qText = `${start} - ${hit}`;
-                ans = start - hit;
-            } else if (type === 'addition') {
-                let d1 = Math.floor(Math.random() * 60) + 1;
-                let d2 = Math.floor(Math.random() * 60) + 1;
-                let d3 = Math.floor(Math.random() * 60) + 1;
-                qText = `${d1} + ${d2} + ${d3}`;
-                ans = d1 + d2 + d3;
+            if (window.btState.mode === 'checkout') {
+                // Checkout Mode
+                window.btState.inputType = 'darts';
+                let validTargets = Object.keys(window.checkoutsMap).filter(k => k <= 170 && k >= 2);
+                ans = parseInt(validTargets[Math.floor(Math.random() * validTargets.length)]);
+                qText = `Checkout ${ans}`;
+                window.btState.target = ans;
+            } else {
+                // Add/Sub Mode: 50% chance for Numpad, 50% for Multiple Choice
+                window.btState.inputType = Math.random() > 0.5 ? 'numpad' : 'mc';
+                
+                if (window.btState.mode === 'add') {
+                    let n1 = Math.floor(Math.random() * 60) + 1;
+                    let n2 = Math.floor(Math.random() * 60) + 1;
+                    qText = `${n1} + ${n2}`;
+                    ans = n1 + n2;
+                } else if (window.btState.mode === 'sub') {
+                    let start = Math.floor(Math.random() * 100) + 40;
+                    let hit = Math.floor(Math.random() * 60) + 1;
+                    qText = `${start} - ${hit}`;
+                    ans = start - hit;
+                }
+                window.btState.answer = ans;
             }
             
-            window.btState.answer = ans;
             document.getElementById('bt-question').innerText = qText;
+            window.btUpdateUI();
+        };
+
+        window.btUpdateUI = function() {
+            document.getElementById('bt-numpad').style.display = window.btState.inputType === 'numpad' ? 'grid' : 'none';
+            document.getElementById('bt-mc').style.display = window.btState.inputType === 'mc' ? 'grid' : 'none';
+            document.getElementById('bt-dart-keyboard').style.display = window.btState.inputType === 'darts' ? 'block' : 'none';
+            
+            if (window.btState.inputType === 'mc') {
+                // Generate wrong answers close to the real answer
+                let answers = [window.btState.answer];
+                while(answers.length < 4) {
+                    let offset = Math.floor(Math.random() * 10) - 5;
+                    let fakeAns = window.btState.answer + offset;
+                    if(fakeAns !== window.btState.answer && !answers.includes(fakeAns) && fakeAns > 0) {
+                        answers.push(fakeAns);
+                    }
+                }
+                answers.sort(() => Math.random() - 0.5); // Shuffle
+                for(let i=0; i<4; i++) {
+                    let btn = document.getElementById(`bt-mc-${i+1}`);
+                    btn.innerText = answers[i];
+                    btn.onclick = () => window.btSubmit(answers[i]);
+                }
+            }
         };
 
         window.btNp = function(val) {
-            if (val === 'C') {
-                window.btState.currentInput = "";
-            } else {
-                if (window.btState.currentInput.length < 4) {
-                    window.btState.currentInput += val;
-                }
-            }
+            if (val === 'C') window.btState.currentInput = "";
+            else if (window.btState.currentInput.length < 4) window.btState.currentInput += val;
             document.getElementById('bt-answer-display').innerText = window.btState.currentInput || "?";
         };
 
-        window.btSubmit = function() {
-            let userAns = parseInt(window.btState.currentInput);
-            if (isNaN(userAns)) return;
+        // Simplified Dart entry for Checkouts
+        window.btAddDart = function(label, value, isDouble) {
+            if(window.btState.darts.length >= 3) return;
+            window.btState.darts.push({ label, value, isDouble });
+            document.getElementById('bt-answer-display').innerText = window.btState.darts.map(d => d.label).join(" - ");
+        };
+        window.btClearDarts = function() {
+            window.btState.darts = [];
+            document.getElementById('bt-answer-display').innerText = "?";
+        };
+
+        window.btSubmit = function(mcAns = null) {
+            let isCorrect = false;
+            let feedback = "";
             
-            if (userAns === window.btState.answer) {
-                // Correct
+            if (window.btState.mode === 'checkout') {
+                let darts = window.btState.darts;
+                if (darts.length === 0) return;
+                
+                let total = darts.reduce((sum, d) => sum + d.value, 0);
+                let lastDart = darts[darts.length - 1];
+                
+                if (total === window.btState.target && lastDart.isDouble) {
+                    isCorrect = true;
+                    let standardRoute = window.checkoutsMap[window.btState.target];
+                    let userRoute = darts.map(d => d.label).join(" ");
+                    
+                    if (userRoute === standardRoute) {
+                        feedback = `Perfect! Standard Route: ${standardRoute}. \nAlternative: Try experimenting with different trebles to leave a double you prefer!`;
+                    } else {
+                        feedback = `Great finish! You went: ${userRoute}. \nThe standard pro route is: ${standardRoute}.`;
+                    }
+                } else {
+                    feedback = `Bust! That equals ${total} ${!lastDart.isDouble ? "(Didn't end on a double!)" : ""}`;
+                }
+            } else {
+                let userAns = mcAns !== null ? mcAns : parseInt(window.btState.currentInput);
+                if (isNaN(userAns)) return;
+                isCorrect = (userAns === window.btState.answer);
+            }
+            
+            document.getElementById('bt-feedback').innerText = feedback;
+            
+            if (isCorrect) {
+                if(window.playDartSound) window.playDartSound('gameshot'); 
                 window.btState.streak++;
                 document.getElementById('bt-streak').innerText = window.btState.streak;
-                document.getElementById('bt-question').style.borderColor = "#10b981"; // Green flash
-                setTimeout(() => {
-                    window.btGenerateQuestion();
-                }, 300);
+                document.getElementById('bt-question').style.borderColor = "#10b981";
+                setTimeout(() => window.btGenerateQuestion(), window.btState.mode === 'checkout' ? 3500 : 500);
             } else {
-                // Wrong
+                if(window.playDartSound) window.playDartSound('bust');
                 window.btState.streak = 0;
                 document.getElementById('bt-streak').innerText = window.btState.streak;
-                document.getElementById('bt-question').style.borderColor = "#ef4444"; // Red flash
-                document.getElementById('bt-answer-display').innerText = "?";
-                window.btState.currentInput = "";
+                document.getElementById('bt-question').style.borderColor = "#ef4444";
                 setTimeout(() => {
                     document.getElementById('bt-question').style.borderColor = "var(--accent)";
-                }, 400);
+                    if (window.btState.mode !== 'checkout') window.btState.currentInput = "";
+                    document.getElementById('bt-answer-display').innerText = "?";
+                }, window.btState.mode === 'checkout' ? 2500 : 800);
             }
         };
+        // ------------------------------------------
 
         // CONFIG LOGIC
         window.openSetup = function(mode, defaultGame = '501') {
@@ -564,21 +614,30 @@ html, body {
 </div>
 
 <div id="brain-training-layer" class="hidden">
-    <div class="setup-card" style="max-height: 85vh; width: 100%; max-width: 400px; display: flex; flex-direction: column; padding: 20px;">
+    <div class="setup-card" style="max-height: 95vh; width: 100%; max-width: 400px; display: flex; flex-direction: column; padding: 20px;">
+        
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 style="margin: 0; text-align: left; font-size: 20px;">🚽 BIG BEN'S BRAIN TRAINING</h2>
+            <h2 id="bt-mode-title" style="margin: 0; text-align: left; font-size: 20px;">🚽 BRAIN TRAINING</h2>
             <button onclick="window.closeBrainTraining()" style="background:transparent; border:none; color:var(--danger); font-size:24px; cursor:pointer;">✖</button>
+        </div>
+
+        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+            <button class="pill" onclick="window.startBrainTraining('add')">➕ ADD</button>
+            <button class="pill" onclick="window.startBrainTraining('sub')">➖ SUB</button>
+            <button class="pill active" onclick="window.startBrainTraining('checkout')">🎯 CHECKOUT</button>
         </div>
         
         <div style="text-align:center; font-size:14px; color:var(--text-muted); margin-bottom: 10px;">Streak: <span id="bt-streak" style="color:white; font-weight:bold;">0</span></div>
         
-        <div id="bt-question" style="background: rgba(0,0,0,0.5); border: 2px solid var(--accent); color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; font-size: 30px; font-weight: 900; text-align: center; min-height: 90px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s;">
+        <div id="bt-question" style="background: rgba(0,0,0,0.5); border: 2px solid var(--accent); color: white; padding: 15px; border-radius: 12px; margin-bottom: 5px; font-size: 30px; font-weight: 900; text-align: center; min-height: 80px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s;">
             Question Here
         </div>
+
+        <div id="bt-feedback" style="font-size: 11px; color: var(--accent); min-height: 30px; margin-bottom: 10px; font-weight: bold; white-space: pre-wrap;"></div>
         
-        <div id="bt-answer-display" style="font-size: 35px; font-weight: 900; text-align: center; height: 45px; line-height: 45px; color: var(--accent); letter-spacing: 2px; background: rgba(0,0,0,0.5); border-radius: 8px; margin-bottom: 15px;">?</div>
+        <div id="bt-answer-display" style="font-size: 30px; font-weight: 900; text-align: center; height: 45px; line-height: 45px; color: white; letter-spacing: 2px; background: rgba(0,0,0,0.5); border-radius: 8px; margin-bottom: 15px;">?</div>
         
-        <div class="np-grid" style="width: 100%; flex: 1;">
+        <div id="bt-numpad" class="np-grid" style="width: 100%; flex: 1;">
             <button class="np-btn" onclick="window.btNp(1)">1</button>
             <button class="np-btn" onclick="window.btNp(2)">2</button>
             <button class="np-btn" onclick="window.btNp(3)">3</button>
@@ -590,8 +649,32 @@ html, body {
             <button class="np-btn" onclick="window.btNp(9)">9</button>
             <button class="np-btn" onclick="window.btNp('C')" style="color:#ff4d4d; font-size:16px;">DEL</button>
             <button class="np-btn" onclick="window.btNp(0)">0</button>
-            <button class="np-btn enter" onclick="window.btSubmit()">ENTER</button>
+            <button class="np-btn enter" onclick="window.btSubmit()">OK</button>
         </div>
+
+        <div id="bt-mc" class="np-grid" style="width: 100%; flex: 1; grid-template-columns: 1fr 1fr; display: none;">
+            <button class="np-btn" id="bt-mc-1" style="font-size: 28px;">0</button>
+            <button class="np-btn" id="bt-mc-2" style="font-size: 28px;">0</button>
+            <button class="np-btn" id="bt-mc-3" style="font-size: 28px;">0</button>
+            <button class="np-btn" id="bt-mc-4" style="font-size: 28px;">0</button>
+        </div>
+
+        <div id="bt-dart-keyboard" style="display: none; width: 100%;">
+             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px;">
+                <button class="np-btn" style="font-size:14px;" onclick="let n = prompt('Enter Single (1-20):'); if(n>=1 && n<=20) window.btAddDart('S'+n, parseInt(n), false);">SINGLE</button>
+                <button class="np-btn" style="font-size:14px;" onclick="let n = prompt('Enter Double (1-20):'); if(n>=1 && n<=20) window.btAddDart('D'+n, n*2, true);">DOUBLE</button>
+                <button class="np-btn" style="font-size:14px;" onclick="let n = prompt('Enter Treble (1-20):'); if(n>=1 && n<=20) window.btAddDart('T'+n, n*3, false);">TREBLE</button>
+             </div>
+             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px;">
+                 <button class="np-btn" style="font-size:14px; background:var(--bg-active);" onclick="window.btAddDart('25', 25, false)">25</button>
+                 <button class="np-btn" style="font-size:14px; background:var(--danger); color:white;" onclick="window.btAddDart('BULL', 50, true)">BULL</button>
+             </div>
+             <div style="display: flex; gap: 5px;">
+                <button class="np-btn" style="flex:1; background:#444; font-size:14px;" onclick="window.btClearDarts()">CLEAR</button>
+                <button class="np-btn enter" style="flex:2; font-size: 16px;" onclick="window.btSubmit()">CHECKOUT</button>
+             </div>
+        </div>
+
     </div>
 </div>
 
@@ -1410,6 +1493,7 @@ html, body {
         myIndex = 0;
         isLocalMatch = true;
 
+        window.playDartSound('gameon');
         window.render();
     };
     
@@ -1550,20 +1634,10 @@ html, body {
         if (isCallerMuted) return;
         if (state.gameType === 'atc' || state.gameType === 'cricket') return;
 
-        // Ensure voice calls only play in the 4 main modes (Local, Online, Practice, Bot)
-        // This blocks them in Checkout Practice and Brain Training
-        const voiceCalls = ['bust', 'gameshot', 'matchshot', 'gameon'];
-        if (voiceCalls.includes(type)) {
-            if (state.gameType === 'checkout') return;
-            const btLayer = document.getElementById('brain-training-layer');
-            if (btLayer && !btLayer.classList.contains('hidden')) return;
-        }
-
         let audioSrc = "";
-        if (type === 'bust') { audioSrc = "sounds/Bust.wav"; } 
-        else if (type === 'gameshot') { audioSrc = "sounds/Gameshot.wav"; } 
-        else if (type === 'matchshot') { audioSrc = "sounds/Matchshot.wav"; } 
-        else if (type === 'gameon') { audioSrc = "sounds/Gameon.wav"; } 
+        if (type === 'bust') { audioSrc = "sounds/bust.wav"; } 
+        else if (type === 'gameshot') { audioSrc = "sounds/gameshot.wav"; } 
+        else if (type === 'gameon') { audioSrc = "sounds/gameon.wav"; } 
         else if (typeof type === 'number' && type >= 0 && type <= 180) { audioSrc = `sounds/${type}.wav`; }
 
         if (audioSrc !== "") {
@@ -2268,7 +2342,7 @@ html, body {
         if (state.gameType === '301') startScore = 301;
         if (state.gameType === '701') startScore = 701;
         if (state.gameType === '1001') startScore = 1001;
-        if (state.gameType === '121') startScore = 121 + p.l;
+        if (state.gameType === '121') startScore = 121;
         if (state.gameType === '170') startScore = 170;
         if (state.gameType === '170_race') startScore = 170;
 
@@ -2277,13 +2351,13 @@ html, body {
         // CHECKOUT PRACTICE LOGIC
         if (state.gameType === 'checkout') {
             if (p.s - val === 0) { // Success
-                soundToPlay = null;
+                soundToPlay = 'gameshot';
                 p.l++; // Increment success streak
                 p.targetStart = window.getRandomCheckout();
                 p.s = p.targetStart;
                 p.ld = 0;
             } else if (p.s - val < 0 || p.s - val === 1 || p.ld >= 3) { // Bust or missed 3 darts
-                soundToPlay = null;
+                soundToPlay = 'bust';
                 p.s = p.targetStart; // Reset for retry
                 p.ld = 0;
             } else {
@@ -2306,30 +2380,25 @@ html, body {
             else if (val >= 140) p.n140++;
 
             if (p.s === 0) { 
+                soundToPlay = 'gameshot';
                 if (val > p.hc) p.hc = val; 
                 p.l++; p.coHit++; 
                 if (localInputMode !== 'darts') p.coAtt++;
                 if (state.gameType === '170') { p.target170 = Math.min(170, (p.target170 || 170) + 1); }
                 
                 if (state.mode === 'single') {
-                    soundToPlay = 'gameshot';
                     state.p[0].s = state.gameType === '121' ? 121 + p.l : (state.gameType === '170' ? p.target170 : startScore);
                     state.p[0].ld = 0; state.turn = 0;
                 } else {
                     if (state.gameType !== '121' && state.gameType !== '170') {
                         const legsRequiredToWin = Math.ceil(state.bestOf / 2);
-                        if (p.l >= legsRequiredToWin) { 
-                            state.winner = state.turn; 
-                            soundToPlay = 'matchshot';
-                        } 
+                        if (p.l >= legsRequiredToWin) { state.winner = state.turn; } 
                         else {
-                            soundToPlay = 'gameshot';
                             state.p.forEach(x => { x.s = startScore; x.ld = 0; });
                             state.startingPlayer = (state.startingPlayer === 0) ? 1 : 0;
                             state.turn = state.startingPlayer;
                         }
                     } else {
-                        soundToPlay = 'gameshot';
                         p.s = state.gameType === '121' ? 121 + p.l : p.target170;
                         p.ld = 0; state.turn = (state.turn === 0) ? 1 : 0;
                     }
@@ -2416,10 +2485,8 @@ html, body {
         if (!isLocalMatch) window.broadcast(state);
 
         if (state.mode === 'single' || state.gameType === 'atc' || state.gameType === '121' || state.gameType === '170' || state.gameType === 'cricket' || state.gameType === 'checkout') { 
-            if (state.gameType !== 'checkout') {
-                window.playDartSound('gameon');
-                if (!isLocalMatch) window.broadcast({ type: 'SOUND', sound: 'gameon' });
-            }
+            window.playDartSound('gameon');
+            if (!isLocalMatch) window.broadcast({ type: 'SOUND', sound: 'gameon' });
             window.render(); 
         } 
         else if (isLocalMatch || myIndex === 0) { window.showFirstThrowUI(); } 
