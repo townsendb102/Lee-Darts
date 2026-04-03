@@ -125,19 +125,23 @@
         body.local-mode header { justify-content: flex-end; }
 
         /* OVERLAYS & SETUPS */
-        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer, #checkouts-layer, #brain-training-layer { 
+        #setup-layer, #winner-layer, #first-throw-layer, #waiting-layer, #login-layer, #profile-layer, #history-layer, #friends-layer, #match-details-layer, #checkouts-layer, #brain-training-layer, #tourney-setup-layer, #tourney-interstitial-layer, #tourney-end-layer { 
             position: fixed;
             inset: 0; background: var(--bg-main); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
-        #winner-layer, #first-throw-layer, #waiting-layer { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10001; }
+        #winner-layer, #first-throw-layer, #waiting-layer, #tourney-interstitial-layer { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10001; }
         #login-layer { z-index: 20000; } 
-        #profile-layer, #checkouts-layer, #brain-training-layer { z-index: 15000; }
+        #profile-layer, #checkouts-layer, #brain-training-layer, #tourney-setup-layer, #tourney-end-layer { z-index: 15000; }
         #history-layer, #friends-layer { z-index: 16000; }
         #match-details-layer { z-index: 17000; }
 
         .setup-card { background: var(--bg-card); padding: 30px 25px; border-radius: 24px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
         .setup-card h2 { color: var(--text-main); margin-bottom: 5px; font-weight: 900; letter-spacing: -0.5px;}
+
+        /* TOURNAMENT STYLES */
+        .tourney-player-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none; margin-bottom: 5px; }
+        .tourney-player-input:focus { border-color: var(--accent); }
 
         /* DASHBOARD CARDS */
         .dc-card { padding: 20px 15px; border-radius: 16px; cursor: pointer; text-align: left; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: transform 0.1s; border: 1px solid rgba(255,255,255,0.05); }
@@ -828,14 +832,20 @@
             </div>
         </div>
         
-        <div class="dc-card bg-dark-grad" onclick="window.openSetup('single')" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="dc-card bg-dark-grad" onclick="window.openTourneySetup()" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f59e0b;">
+            <div>
+                <div class="dc-card-title" style="color:#f59e0b;">🏆 TOURNAMENTS</div>
+                <div class="dc-card-sub">9 Matches (6 Singles, 3 Doubles)</div>
+            </div>
+            <div style="font-size: 35px; opacity: 0.4;">🏆</div>
+        </div>
+<div class="dc-card bg-dark-grad" onclick="window.openSetup('single')" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <div class="dc-card-title">PRACTICE MODE</div>
                 <div class="dc-card-sub">Single player training</div>
             </div>
             <div style="font-size: 35px; opacity: 0.4;">📈</div>
         </div>
-
         <div class="dc-card bg-dark-grad" onclick="window.startCheckoutPractice()" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--accent);">
             <div>
                 <div class="dc-card-title">CHECKOUT PRACTICE</div>
@@ -1123,7 +1133,96 @@
         </div>
     </div>
 </div>
+<div id="tourney-setup-layer" class="hidden">
+    <div class="setup-card" style="max-height: 95vh; display: flex; flex-direction: column; width: 100%; max-width: 400px; padding: 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <button onclick="window.closeTourneySetup()" style="background:transparent; border:none; color:var(--text-muted); font-size:14px; font-weight:900; cursor:pointer; padding: 5px;">← CANCEL</button>
+            <h3 style="color:#f59e0b; margin:0; font-weight: 900; letter-spacing: -0.5px;">TOURNAMENT</h3>
+            <div style="width: 70px;"></div>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Host inputs all players. 9 matches will be generated automatically (6 Singles, 3 Doubles).</p>
+        <div class="input-group">
+            <label style="color:#10b981;">Team 1 (Host)</label>
+            <input type="text" id="tourney-t1-name" class="setup-input" value="Home Team" style="margin-bottom: 5px; border-color:#10b981;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                <input type="text" id="t1-p1" class="tourney-player-input" placeholder="Player 1">
+                <input type="text" id="t1-p2" class="tourney-player-input" placeholder="Player 2">
+                <input type="text" id="t1-p3" class="tourney-player-input" placeholder="Player 3">
+                <input type="text" id="t1-p4" class="tourney-player-input" placeholder="Player 4">
+                <input type="text" id="t1-p5" class="tourney-player-input" placeholder="Player 5">
+                <input type="text" id="t1-p6" class="tourney-player-input" placeholder="Player 6">
+            </div>
+        </div>
+        <div class="input-group">
+            <label style="color:#ff00ff;">Team 2 (Guest)</label>
+            <input type="text" id="tourney-t2-name" class="setup-input" value="Away Team" style="margin-bottom: 5px; border-color:#ff00ff;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                <input type="text" id="t2-p1" class="tourney-player-input" placeholder="Player 1">
+                <input type="text" id="t2-p2" class="tourney-player-input" placeholder="Player 2">
+                <input type="text" id="t2-p3" class="tourney-player-input" placeholder="Player 3">
+                <input type="text" id="t2-p4" class="tourney-player-input" placeholder="Player 4">
+                <input type="text" id="t2-p5" class="tourney-player-input" placeholder="Player 5">
+                <input type="text" id="t2-p6" class="tourney-player-input" placeholder="Player 6">
+            </div>
+        </div>
+        <div class="input-group">
+            <label>Format (Each Match)</label>
+            <select id="tourney-legs" class="setup-input" style="padding: 10px; font-size: 14px;">
+                <option value="1">1 Leg (501)</option>
+                <option value="3" selected>Best of 3 (501)</option>
+                <option value="5">Best of 5 (501)</option>
+            </select>
+        </div>
+        <button class="btn-start" style="margin-top: 10px;" onclick="window.startTournament('local')">START LOCAL TOURNAMENT</button>
+        <button id="start-tourney-online-btn" class="btn-start" style="background:transparent; border:2px solid var(--blue); color:var(--blue); margin-top: 10px;" onclick="window.startTournament('online')">CREATE ONLINE TOURNAMENT</button>
+    </div>
+</div>
 
+<div id="tourney-interstitial-layer" class="hidden">
+    <div class="setup-card" style="max-width: 500px; padding: 30px;">
+        <h2 style="color: #f59e0b; margin-bottom: 5px;">TOURNAMENT HUB</h2>
+        <div style="font-size: 13px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 20px;">Match <span id="ti-match-num">1</span> of 9</div>
+        <div style="display: flex; justify-content: space-around; align-items: center; margin-bottom: 20px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="text-align: center;">
+                <div id="ti-t1-name" style="font-size: 12px; color: #10b981; font-weight: bold; margin-bottom: 5px;">Team 1</div>
+                <div id="ti-t1-score" style="font-size: 45px; font-weight: 900; color: white; line-height: 1;">0</div>
+            </div>
+            <div style="font-size: 20px; font-weight: 900; color: var(--text-muted);">VS</div>
+            <div style="text-align: center;">
+                <div id="ti-t2-name" style="font-size: 12px; color: #ff00ff; font-weight: bold; margin-bottom: 5px;">Team 2</div>
+                <div id="ti-t2-score" style="font-size: 45px; font-weight: 900; color: white; line-height: 1;">0</div>
+            </div>
+        </div>
+        <div style="margin-bottom: 25px;">
+            <div style="font-size: 11px; color: var(--accent); text-transform: uppercase; font-weight: 900; letter-spacing: 1px; margin-bottom: 8px;">Next Up</div>
+            <div id="ti-next-match" style="font-size: 22px; color: white; font-weight: 900; background: var(--bg-active); padding: 15px; border-radius: 12px;">P1 vs P2</div>
+        </div>
+        <button id="ti-start-btn" class="btn-start" onclick="window.startNextTourneyMatch()">START MATCH</button>
+        <button onclick="window.quitMatch()" style="background:transparent; border:none; color:var(--danger); font-size:12px; margin-top: 15px; cursor:pointer; font-weight:bold; text-decoration:underline;">Quit Tournament</button>
+    </div>
+</div>
+
+<div id="tourney-end-layer" class="hidden">
+    <div class="setup-card" style="max-height: 95vh; display: flex; flex-direction: column; width: 100%; max-width: 500px; padding: 20px;">
+        <h1 style="color: #f59e0b; margin-bottom: 5px;">TOURNAMENT COMPLETE!</h1>
+        <div id="te-result-title" style="font-size: 20px; color: white; font-weight: 900; margin-bottom: 20px;">TEAM A WINS!</div>
+        <div style="display: flex; justify-content: space-around; align-items: center; margin-bottom: 20px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="text-align: center;">
+                <div id="te-t1-name" style="font-size: 12px; color: #10b981; font-weight: bold; margin-bottom: 5px;">Team 1</div>
+                <div id="te-t1-score" style="font-size: 40px; font-weight: 900; color: white; line-height: 1;">0</div>
+            </div>
+            <div style="font-size: 16px; font-weight: 900; color: var(--text-muted);">-</div>
+            <div style="text-align: center;">
+                <div id="te-t2-name" style="font-size: 12px; color: #ff00ff; font-weight: bold; margin-bottom: 5px;">Team 2</div>
+                <div id="te-t2-score" style="font-size: 40px; font-weight: 900; color: white; line-height: 1;">0</div>
+            </div>
+        </div>
+        <div style="text-align: left; margin-bottom: 5px; font-size: 12px; color: var(--accent); font-weight: 900;">PLAYER STATS</div>
+        <div id="te-stats-container" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; text-align: left; font-size: 12px;"></div>
+        <button class="btn-start" style="margin-top: 0; margin-bottom: 10px; background: var(--blue);" onclick="window.downloadTourneyStats()">💾 SAVE STATS TO DEVICE</button>
+        <button class="btn-start" style="margin-top: 0; background: transparent; border: 2px solid var(--btn-bg); color: white;" onclick="window.quitMatch()">FINISH & RETURN</button>
+    </div>
+</div>
 <footer class="site-footer">Created by Ben Townsend of The Leeming Arrows</footer>
 
 <script type="module">
@@ -1717,7 +1816,194 @@
     document.addEventListener('visibilitychange', () => {
         if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
     });
-    
+    // --- TOURNAMENT LOGIC ---
+    window.tourneyState = {
+        active: false, mode: 'local',
+        teamA: { name: "Team 1", players: [], score: 0 },
+        teamB: { name: "Team 2", players: [], score: 0 },
+        matches: [], matchIndex: 0, stats: {} 
+    };
+    window.openTourneySetup = function() {
+        document.getElementById('home-menu').style.display = 'none';
+        document.getElementById('tourney-setup-layer').classList.remove('hidden');
+    };
+    window.closeTourneySetup = function() {
+        document.getElementById('tourney-setup-layer').classList.add('hidden');
+        document.getElementById('home-menu').style.display = 'block';
+    };
+    window.startTournament = function(mode) {
+        let t1 = []; let t2 = [];
+        for(let i=1; i<=6; i++) {
+            t1.push(document.getElementById(`t1-p${i}`).value || `P${i}`);
+            t2.push(document.getElementById(`t2-p${i}`).value || `P${i+6}`);
+        }
+
+        window.tourneyState = {
+            active: true, mode: mode,
+            teamA: { name: document.getElementById('tourney-t1-name').value || "Team 1", players: t1, score: 0 },
+            teamB: { name: document.getElementById('tourney-t2-name').value || "Team 2", players: t2, score: 0 },
+            matches: [], matchIndex: 0, stats: {}
+        };
+        let t = window.tourneyState;
+        
+        for(let i=0; i<6; i++) { t.matches.push({ type: 'single', a: [t.teamA.players[i]], b: [t.teamB.players[i]], winner: null }); }
+        t.matches.push({ type: 'double', a: [t.teamA.players[0], t.teamA.players[1]], b: [t.teamB.players[0], t.teamB.players[1]], winner: null });
+        t.matches.push({ type: 'double', a: [t.teamA.players[2], t.teamA.players[3]], b: [t.teamB.players[2], t.teamB.players[3]], winner: null });
+        t.matches.push({ type: 'double', a: [t.teamA.players[4], t.teamA.players[5]], b: [t.teamB.players[4], t.teamB.players[5]], winner: null });
+        [...t1, ...t2].forEach(name => { t.stats[name] = { pts: 0, darts: 0, f9pts: 0, f9d: 0, hc: 0, n140: 0, n180: 0, wins: 0, matches: 0 }; });
+        document.getElementById('tourney-setup-layer').classList.add('hidden');
+        
+        if (mode === 'local') {
+            document.body.classList.add('local-mode');
+            state.mode = 'local'; isLocalMatch = true;
+            window.showTourneyInterstitial();
+        } else {
+            state.mode = 'online';
+            isLocalMatch = false;
+            window.initApp(); 
+        }
+    };
+
+    window.showTourneyInterstitial = function() {
+        let t = window.tourneyState;
+        document.getElementById('tourney-interstitial-layer').classList.remove('hidden');
+        document.getElementById('ti-match-num').innerText = t.matchIndex + 1;
+        document.getElementById('ti-t1-name').innerText = t.teamA.name.toUpperCase();
+        document.getElementById('ti-t2-name').innerText = t.teamB.name.toUpperCase();
+        document.getElementById('ti-t1-score').innerText = t.teamA.score;
+        document.getElementById('ti-t2-score').innerText = t.teamB.score;
+        let match = t.matches[t.matchIndex];
+        let p1Str = match.a.join(" & "); let p2Str = match.b.join(" & ");
+        document.getElementById('ti-next-match').innerHTML = `<span style="color:#10b981;">${p1Str}</span> <span style="font-size:12px; color:#888;">vs</span> <span style="color:#ff00ff;">${p2Str}</span>`;
+
+        if(t.mode === 'online' && !isLocalMatch && peer && peer.id) {
+            window.broadcast({ type: 'TOURNEY_INTERSTITIAL', tourneyState: window.tourneyState });
+        }
+    };
+
+    window.startNextTourneyMatch = function() {
+        let t = window.tourneyState;
+        let match = t.matches[t.matchIndex];
+        
+        state.gameType = '501';
+        state.bestOf = parseInt(document.getElementById('tourney-legs').value) || 3;
+        state.p.forEach(x => { 
+            x.s = 501; x.l = 0; x.pts = 0; x.d = 0; x.ld = 0; x.f9pts = 0; x.f9d = 0; x.hc = 0; x.n140 = 0; x.n180 = 0; 
+            x.coAtt = 0; x.coHit = 0;
+        });
+        state.p[0].name = match.a.join(" & ");
+        state.p[1].name = match.b.join(" & ");
+        delete state.winner; state.turn = 0; state.startingPlayer = 0;
+        
+        document.getElementById('tourney-interstitial-layer').classList.add('hidden');
+        window.render();
+        if(t.mode === 'online' && !isLocalMatch) {
+            window.broadcast({ type: 'TOURNEY_NEXT_MATCH', state: state, tourneyState: window.tourneyState });
+        }
+        if (t.mode === 'local' || myIndex === 0) { window.showFirstThrowUI(); }
+    };
+
+    window.handleTourneyMatchEnd = function() {
+        if(window.tourneyMatchProcessed) return;
+        window.tourneyMatchProcessed = true;
+        
+        let t = window.tourneyState;
+        let match = t.matches[t.matchIndex];
+        
+        match.winner = state.winner === 0 ? 'A' : 'B';
+        if (match.winner === 'A') t.teamA.score++; else t.teamB.score++;
+        
+        ['A', 'B'].forEach((teamStr, i) => {
+            let players = i === 0 ? match.a : match.b;
+            let pst = state.p[i];
+            
+            players.forEach(pName => {
+                if(!t.stats[pName]) return;
+                let st = t.stats[pName];
+                let multiplier = match.type === 'double' ? 0.5 : 1; 
+                st.pts += (pst.pts * multiplier);
+                st.darts += (pst.d * multiplier);
+                st.f9pts += (pst.f9pts * multiplier);
+                st.f9d += (pst.f9d * multiplier);
+                st.n140 += (pst.n140 * multiplier);
+                st.n180 += (pst.n180 * multiplier);
+                if (pst.hc > st.hc) st.hc = pst.hc;
+                st.matches++;
+                if (state.winner === i) st.wins++;
+            });
+        });
+        t.matchIndex++;
+        
+        setTimeout(() => {
+            window.tourneyMatchProcessed = false;
+            if (t.matchIndex >= 9) { window.showTourneyEnd(); } 
+            else { window.showTourneyInterstitial(); }
+        }, 3000);
+    };
+
+    window.showTourneyEnd = function() {
+        let t = window.tourneyState;
+        document.getElementById('tourney-end-layer').classList.remove('hidden');
+        document.getElementById('te-t1-name').innerText = t.teamA.name.toUpperCase();
+        document.getElementById('te-t2-name').innerText = t.teamB.name.toUpperCase();
+        document.getElementById('te-t1-score').innerText = t.teamA.score;
+        document.getElementById('te-t2-score').innerText = t.teamB.score;
+
+        let resultTitle = document.getElementById('te-result-title');
+        if (t.teamA.score > t.teamB.score) { resultTitle.innerText = `${t.teamA.name.toUpperCase()} WINS!`; resultTitle.style.color = '#10b981'; }
+        else if (t.teamB.score > t.teamA.score) { resultTitle.innerText = `${t.teamB.name.toUpperCase()} WINS!`; resultTitle.style.color = '#ff00ff'; }
+        else { resultTitle.innerText = "IT'S A DRAW!"; resultTitle.style.color = '#ffeb3b'; }
+
+        let html = '';
+        [...t.teamA.players, ...t.teamB.players].forEach(name => {
+            let st = t.stats[name];
+            let avg = st.darts > 0 ? ((st.pts / st.darts) * 3).toFixed(1) : "0.0";
+            let f9avg = st.f9d > 0 ? ((st.f9pts / st.f9d) * 3).toFixed(1) : "0.0";
+            
+            html += `<div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <div style="font-weight: 900; color: white; font-size: 14px; margin-bottom: 3px;">${name}</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; color: #aaa;">
+                    <div>AVG: <span style="color:var(--accent); font-weight:bold;">${avg}</span></div>
+                    <div>180s: <span style="color:white; font-weight:bold;">${Math.floor(st.n180)}</span></div>
+                    <div>HIGH OUT: <span style="color:white; font-weight:bold;">${st.hc}</span></div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('te-stats-container').innerHTML = html;
+
+        if(t.mode === 'online' && !isLocalMatch && peer && peer.id) {
+            window.broadcast({ type: 'TOURNEY_END', tourneyState: window.tourneyState });
+        }
+    };
+
+    window.downloadTourneyStats = function() {
+        let t = window.tourneyState;
+        let txt = `RAF DARTS TOURNAMENT RESULTS\n==========================\n\n`;
+        txt += `${t.teamA.name}: ${t.teamA.score}\n`;
+        txt += `${t.teamB.name}: ${t.teamB.score}\n\n`;
+        
+        txt += `PLAYER STATS\n------------\n`;
+        for (let [name, st] of Object.entries(t.stats)) {
+            let avg = st.darts > 0 ? ((st.pts / st.darts) * 3).toFixed(2) : "0.00";
+            let f9avg = st.f9d > 0 ? ((st.f9pts / st.f9d) * 3).toFixed(2) : "0.00";
+            txt += `${name}\n  Match Avg: ${avg} | First 9 Avg: ${f9avg}\n  180s: ${Math.floor(st.n180)} | 140s: ${Math.floor(st.n140)} | High Checkout: ${st.hc}\n\n`;
+        }
+        
+        let blob = new Blob([txt], { type: 'text/plain' });
+        let url = URL.createObjectURL(blob);
+        
+        // Create a temporary link to trigger the download
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = 'raf-darts-tournament-results.txt';
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }; // Close the function properly
+
     // CHECKOUT CHART DATA & LOGIC
     window.checkoutsMap = {
         170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
